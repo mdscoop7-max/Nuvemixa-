@@ -38,3 +38,7 @@
 /* Wide official logo, including the word NUVEMIXA, in the footer. */
 .tm-footer-v2 .footer-logo .nv-brand-image{display:block!important;width:255px!important;max-width:100%!important;height:auto!important;object-fit:contain!important;filter:none!important}
 @media(max-width:760px){.tm-footer-v2 .footer-logo .nv-brand-image{width:215px!important}}
+
+/* Official compact logo footer parity 20261105 */
+.tm-footer-v2 .footer-logo .nv-brand-image{width:180px!important;max-width:100%!important;height:auto!important;max-height:65px!important;object-fit:contain!important}
+@media(max-width:760px){.tm-footer-v2 .footer-logo .nv-brand-image{width:160px!important;max-height:58px!important}}
