@@ -632,3 +632,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{o
  .services{padding:8px!important}
  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px}
 }
+
+/* Exact approved NUVEMIXA logo image; no new icons, no duplicated wordmark. */
+.header.wrap .wordmark::before{content:none!important;display:none!important}
+.header.wrap .wordmark,.site-header .tm-brand{display:inline-flex!important;align-items:center!important;text-decoration:none!important;min-width:0!important;flex-shrink:0!important}
+.header.wrap .wordmark .nv-brand-image,.site-header .tm-brand .nv-brand-image{display:block!important;width:clamp(174px,20vw,262px)!important;max-width:100%!important;height:auto!important;max-height:72px!important;object-fit:contain!important;filter:none!important}
+.tm-footer-v2 .footer-logo .nv-brand-image{display:block!important;width:clamp(190px,20vw,255px)!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
+@media(max-width:760px){.header.wrap .wordmark .nv-brand-image,.site-header .tm-brand .nv-brand-image{width:clamp(158px,45vw,214px)!important;max-height:61px!important}.tm-footer-v2 .footer-logo .nv-brand-image{width:215px!important}}
