@@ -540,6 +540,55 @@ def admin_merchant_preview():
     return response
 
 
+@app.route("/admin/research-preview")
+def admin_research_preview():
+    """Show verified catalogue completeness, not invented market demand."""
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    findings = []
+    for item in catalog_items():
+        confirmed_cost = bool(item.get("cost_verified"))
+        confirmed_supplier = bool(item.get("supplier_verified"))
+        findings.append({
+            "id": str(item.get("id", "")),
+            "name": item["name"],
+            "category": item["category_name"],
+            "supplier_verified": confirmed_supplier,
+            "purchase_cost_verified": confirmed_cost,
+            "stock_verified": item.get("stock_status") in ("in_stock", "out_of_stock"),
+            "selling_price_verified": bool(item.get("price_verified")),
+            "market_demand": None,
+            "competition_score": None,
+            "estimated_profit": None,
+        })
+    response = jsonify({
+        "status": "internal_research_only",
+        "market_data_connected": False,
+        "products": findings,
+        "total": len(findings),
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/integrations")
+def admin_integrations():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    response = jsonify({
+        "status": "configuration_presence_only",
+        "orders_live_enabled": live_orders_enabled(),
+        "woocommerce_configured": woo_configured(),
+        "merchant_publishing_enabled": False,
+        "rankfix_configured": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment_key_present": bool(os.getenv("MOLLIE_API_KEY")),
+        "contact_configured": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+        "note": "Configuration presence does not confirm external connectivity.",
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
