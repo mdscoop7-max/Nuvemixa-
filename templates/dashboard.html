@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard | TrendMix</title>
+<title>Dashboard | NUVEMIXA</title>
 <link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;color:#101b35;background:#f7fbff;--blue:#0866f5;--border:#e2edf9;--muted:#61738d}
@@ -48,10 +48,10 @@
 {% endfor %}
 <a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener"><span class="side-icon" aria-hidden="true">↗</span>Winkel bekijken</a>
 </nav>
-<div class="side-bottom"><b>Trend Mix beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
+<div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">TM</span><div>Trend Mix<small>Beheerweergave · testfase</small></div></div></header>
+<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">TM</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div></header>
 <main class="admin">
 {% if section == "dashboard" %}
 <div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
@@ -116,7 +116,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "onderzoek" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>Voor het zoeken naar interessante producten en niches vergelijken we straks echte leveranciersaanbiedingen, zoekvraag, concurrentie, inkoopprijzen, marges en levertijden. Zoekgegevens of leveranciersfeeds zijn nog niet aangesloten.</p><span class="integration-status">Nog niet gekoppeld</span></section>
 {% elif section == "rankfix" %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>Deze aparte module is bedoeld voor Trend Mix-scans, SEO/GEO-rapporten, bewijsdekking en concrete verbeteracties. Er is nog geen betrouwbare RankFix API-koppeling ingesteld; daarom tonen we geen verzonnen scanscores.</p><span class="integration-status">Koppeling in voorbereiding</span></section>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>Deze aparte module is bedoeld voor NUVEMIXA-scans, SEO/GEO-rapporten, bewijsdekking en concrete verbeteracties. Er is nog geen betrouwbare RankFix API-koppeling ingesteld; daarom tonen we geen verzonnen scanscores.</p><span class="integration-status">Koppeling in voorbereiding</span></section>
 {% elif section == "google-shopping" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Productfeeds, productvermeldingen en Shopping-campagnes komen hier zodra leveranciersproducten, definitieve prijzen, checkout en Google Merchant Center zijn gecontroleerd en gekoppeld.</p><span class="integration-status">Nog niet gekoppeld</span></section>
 {% elif section == "statistieken" %}
