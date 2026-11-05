@@ -6,14 +6,17 @@ import secrets
 import urllib.request
 import urllib.error
 from pathlib import Path
-from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort
+from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, jsonify
+from werkzeug.security import check_password_hash
+from datetime import datetime, timezone
+import time
 from product_art import render_product_svg
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=bool(os.getenv("VERCEL_ENV")),
+    SESSION_COOKIE_SECURE=os.getenv("NUVEMIXA_COOKIE_SECURE", "true").lower() == "true",
     SESSION_COOKIE_SAMESITE="Lax",
     MAX_CONTENT_LENGTH=65536,
     MAX_FORM_MEMORY_SIZE=32768,
@@ -449,10 +452,100 @@ def product(product_id):
     return redirect(product_item["product_url"], code=302)
 
 
+
+# NUVEMIXA admin controls: deny access unless an administrator password hash is configured.
+# Use a persistent SECRET_KEY; never store credentials in the repository.
+_ADMIN_LOGIN_ATTEMPTS = {}
+_ADMIN_MAX_ATTEMPTS = 6
+_ADMIN_ATTEMPT_WINDOW = 900
+
+
+def admin_is_authenticated():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and session.get("nv_admin") is True
+
+
+def admin_configured():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and bool(os.getenv("SECRET_KEY"))
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if not admin_configured():
+        return render_template("admin_login.html", config_missing=True, error=None), 503
+    if admin_is_authenticated():
+        return redirect(url_for("control"))
+    error = None
+    if request.method == "POST":
+        ip = request.remote_addr or "unknown"
+        now = time.monotonic()
+        attempts = [t for t in _ADMIN_LOGIN_ATTEMPTS.get(ip, []) if now - t < _ADMIN_ATTEMPT_WINDOW]
+        if len(attempts) >= _ADMIN_MAX_ATTEMPTS:
+            return render_template("admin_login.html", config_missing=False, error="Te veel pogingen. Probeer het later opnieuw."), 429
+        password = request.form.get("password", "")
+        try:
+            valid = bool(password) and check_password_hash(os.environ["NUVEMIXA_ADMIN_PASSWORD_HASH"], password)
+        except (ValueError, TypeError):
+            valid = False
+        if valid:
+            _ADMIN_LOGIN_ATTEMPTS.pop(ip, None)
+            session.clear()
+            session["nv_admin"] = True
+            return redirect(url_for("control"))
+        attempts.append(now)
+        _ADMIN_LOGIN_ATTEMPTS[ip] = attempts
+        error = "Het wachtwoord klopt niet."
+    return render_template("admin_login.html", config_missing=False, error=error)
+
+
+@app.route("/admin/logout", methods=["POST"])
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
+def merchant_product_checks(item):
+    """Fail closed until the supplier confirms all mandatory selling details."""
+    missing = []
+    if not item.get("supplier_verified"):
+        missing.append("leverancier")
+    if not item.get("product_data_verified"):
+        missing.append("productgegevens")
+    if item.get("stock_status") not in ("in_stock", "out_of_stock"):
+        missing.append("voorraad")
+    if not item.get("price_verified") or not (float(item.get("price") or 0) > 0):
+        missing.append("prijs")
+    if not item.get("image_verified"):
+        missing.append("productafbeelding")
+    if not item.get("delivery_verified"):
+        missing.append("verzending")
+    if not item.get("brand") and not item.get("identifier_exists_verified"):
+        missing.append("merk/productidentificatie")
+    return missing
+
+
+@app.route("/admin/merchant-preview")
+def admin_merchant_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    items = list(catalog_items())
+    checked = [{"id": str(p.get("id", "")), "name": p["name"],
+                "missing": merchant_product_checks(p)} for p in items]
+    response = jsonify({
+        "status": "internal_preview_only", "published": False,
+        "total": len(checked),
+        "ready": sum(not p["missing"] for p in checked),
+        "products": checked,
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
 def control():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
     all_products = load_all_products()
     category_counts = {}
     for product in all_products:
@@ -506,6 +599,14 @@ def control():
     search = request.args.get("q", "").strip()[:120]
     filtered_products = filter_products(all_products, search=search) if search else all_products
 
+    merchant_checks = [merchant_product_checks(p) for p in all_products]
+    integration_status = {
+        "merchant": {"ready": sum(not errors for errors in merchant_checks), "total": len(all_products)},
+        "rankfix": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment": bool(os.getenv("MOLLIE_API_KEY")),
+        "woo": woo_configured(),
+        "contact": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+    }
     view_template = "control.html" if request.path == "/catalogus-overzicht" else "dashboard.html"
     return render_template(
         view_template,
@@ -525,6 +626,7 @@ def control():
         },
         category_counts=sorted(category_counts.items()),
         categories=CATEGORIES,
+        integration_status=integration_status,
     )
 
 
