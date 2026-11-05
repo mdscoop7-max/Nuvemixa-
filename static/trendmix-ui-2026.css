@@ -756,3 +756,49 @@ body:has(.cart-page){background:#f6f9fd!important}
     transition:none!important;transform:none!important
   }
 }
+
+
+/* NUVEMIXA laptop logo and standalone categories color 20261105 */
+/* The complete existing horizontal logo is shown as-is, never a square tile. */
+.header.wrap .wordmark::before,
+.site-header .tm-brand::before,
+.tm-footer-v2 .footer-logo::before{content:none!important;display:none!important}
+.header.wrap .wordmark,.site-header .tm-brand,.tm-footer-v2 .footer-logo{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  padding:0!important;border-radius:0!important
+}
+.header.wrap .wordmark .nv-brand-image,
+.site-header .tm-brand .nv-brand-image{
+  width:clamp(180px,19vw,245px)!important;
+  height:auto!important;
+  max-height:70px!important;
+  object-fit:contain!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important
+}
+/* Category menu has its own unmistakable gold-orange surface, separate from navy nav. */
+.tm-digital-nav.tm-menu-compact{
+  background:linear-gradient(110deg,#e7a12d 0%,#ffd37a 52%,#eaaa39 100%)!important;
+  border-top:1px solid #d08c22!important;
+  border-bottom:2px solid #c98719!important
+}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary{
+  background:#fff!important;
+  color:#0b315b!important;
+  border:1px solid #b67f26!important;
+  box-shadow:0 3px 10px #72501e26!important;
+  font-weight:850!important
+}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary:hover{
+  background:#fff4d7!important;color:#0b315b!important
+}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary svg{color:#0b315b!important}
+.tm-digital-nav .tm-category-dropdown[open]>.categorylinks.tm-category-menu-links{
+  background:#fff!important
+}
+@media(max-width:760px){
+ .header.wrap .wordmark .nv-brand-image,
+ .site-header .tm-brand .nv-brand-image{width:clamp(145px,48vw,200px)!important;max-height:58px!important}
+}
