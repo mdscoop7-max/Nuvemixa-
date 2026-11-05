@@ -1161,8 +1161,10 @@ def trendmix_security_headers(response):
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     if os.getenv("VERCEL_ENV"):
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact") or request.path.startswith("/api/"):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
         response.headers["Cache-Control"] = "no-store"
+    if request.path in ("/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith("/admin/"):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     # Browser caching speeds up repeat page visits without caching private pages,
     # cart state, API replies or customer information.
     if request.path.startswith("/static/") and response.status_code == 200:
