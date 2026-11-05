@@ -22,3 +22,15 @@
 @media(max-width:760px){.tm-newsletter{margin-top:38px;padding:10px 0}.tm-newsletter-inner{width:calc(100% - 20px)!important;grid-template-columns:1fr;gap:20px;padding:24px 18px;min-height:0}.tm-newsletter-copy{align-items:flex-start;gap:14px}.tm-newsletter-icon{width:48px;height:48px;font-size:22px;flex:0 0 auto}.tm-newsletter h2{font-size:20px}.tm-newsletter p{font-size:12px}.tm-newsletter-form button{padding:0 15px}.tm-footer-v2{padding:34px 0 92px!important}.tm-footer-v2>.shell{width:calc(100% - 30px)!important}.tm-footer-grid{grid-template-columns:1fr 1fr;gap:30px 18px}.tm-footer-brand,.tm-footer-help{grid-column:1/-1}.tm-footer-trust{grid-template-columns:1fr 1fr;gap:18px 10px}.tm-footer-info{grid-template-columns:1fr;gap:18px}.tm-footer-v2 .footer-bottom{align-items:flex-start;gap:14px;flex-direction:column}.tm-footer-v2 .footer-bottom nav{flex-wrap:wrap;gap:12px 18px}}
 
 
+
+/* NUVEMIXA footer: enforce accessible contrast despite global light palette. */
+.site-footer.tm-footer.tm-footer-v2{background:#10233e!important;color:#f7fbff!important;border-top:1px solid #2e4c6c!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-brand p,.site-footer.tm-footer.tm-footer-v2 .tm-footer-help p{color:#cbdcf0!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-muted{color:#b8cce3!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column h3,.site-footer.tm-footer.tm-footer-v2 .footer-logo,.site-footer.tm-footer.tm-footer-v2 .footer-logo .brand-name{color:#fff!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column a,.site-footer.tm-footer.tm-footer-v2 .footer-link-button{color:#d9e8fa!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column a:hover{color:#fff!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-trust,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info{border-color:#385574!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-trust strong,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info strong{color:#fff!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-trust small,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info p,.site-footer.tm-footer.tm-footer-v2 .footer-bottom{color:#bfd0e5!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-bottom a{color:#e3eefb!important}
