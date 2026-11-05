@@ -639,3 +639,44 @@ a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{o
 .header.wrap .wordmark .nv-brand-image,.site-header .tm-brand .nv-brand-image{display:block!important;width:clamp(174px,20vw,262px)!important;max-width:100%!important;height:auto!important;max-height:72px!important;object-fit:contain!important;filter:none!important}
 .tm-footer-v2 .footer-logo .nv-brand-image{display:block!important;width:clamp(190px,20vw,255px)!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
 @media(max-width:760px){.header.wrap .wordmark .nv-brand-image,.site-header .tm-brand .nv-brand-image{width:clamp(158px,45vw,214px)!important;max-height:61px!important}.tm-footer-v2 .footer-logo .nv-brand-image{width:215px!important}}
+
+
+/* NUVEMIXA compact official logo sizing 20261105 */
+/* Same approved artwork everywhere; only displayed dimensions change. */
+.header.wrap .wordmark .nv-brand-image,
+.site-header .tm-brand .nv-brand-image{
+  display:block!important;
+  width:176px!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:60px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+.header.wrap .wordmark,
+.site-header .tm-brand{max-width:100%!important}
+.tm-footer-v2 .footer-logo .nv-brand-image{
+  display:block!important;
+  width:180px!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:65px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+@media(max-width:760px){
+  .header.wrap .wordmark .nv-brand-image,
+  .site-header .tm-brand .nv-brand-image{
+    width:146px!important;
+    max-width:100%!important;
+    max-height:52px!important;
+  }
+  .tm-footer-v2 .footer-logo .nv-brand-image{
+    width:160px!important;
+    max-height:58px!important;
+  }
+}
+@media(max-width:365px){
+  .header.wrap .wordmark .nv-brand-image,
+  .site-header .tm-brand .nv-brand-image{width:134px!important;max-height:48px!important}
+}
