@@ -34,3 +34,7 @@
 .site-footer.tm-footer.tm-footer-v2 .tm-footer-trust strong,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info strong{color:#fff!important}
 .site-footer.tm-footer.tm-footer-v2 .tm-footer-trust small,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info p,.site-footer.tm-footer.tm-footer-v2 .footer-bottom{color:#bfd0e5!important}
 .site-footer.tm-footer.tm-footer-v2 .footer-bottom a{color:#e3eefb!important}
+
+/* Wide official logo, including the word NUVEMIXA, in the footer. */
+.tm-footer-v2 .footer-logo .nv-brand-image{display:block!important;width:255px!important;max-width:100%!important;height:auto!important;object-fit:contain!important;filter:none!important}
+@media(max-width:760px){.tm-footer-v2 .footer-logo .nv-brand-image{width:215px!important}}
