@@ -589,6 +589,84 @@ def admin_integrations():
     return response
 
 
+
+# Local administrative records are separate from the public test catalogue.
+# All mutations require both administrator login and the existing CSRF middleware.
+def admin_local_records(kind):
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        return None, "Admin database is nog niet ingesteld."
+    try:
+        from nuvemixa_admin_store import list_suppliers, list_research
+        return (list_suppliers() if kind == "suppliers" else list_research()), None
+    except (OSError, RuntimeError) as exc:
+        app.logger.error("NUVEMIXA admin storage unavailable: %s", exc)
+        return None, "Admin database is tijdelijk niet beschikbaar."
+
+
+@app.route("/admin/suppliers", methods=["POST"])
+def admin_add_supplier():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_supplier
+    try:
+        add_supplier(
+            request.form.get("name", ""), request.form.get("contact_email", ""),
+            request.form.get("website", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except (ValueError, __import__("sqlite3").IntegrityError):
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Supplier record write failed")
+        result = "fout"
+    return redirect(url_for("control", section="leveranciers", result=result), code=303)
+
+
+@app.route("/admin/research", methods=["POST"])
+def admin_add_research_note():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_research
+    try:
+        add_research(
+            request.form.get("category", ""), request.form.get("product_name", ""),
+            request.form.get("source", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except ValueError:
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Research note write failed")
+        result = "fout"
+    return redirect(url_for("control", section="onderzoek", result=result), code=303)
+
+
+def recent_woo_orders():
+    """Read WooCommerce orders only if already configured. Never fabricate orders."""
+    if not woo_configured():
+        return None, "WooCommerce niet gekoppeld."
+    result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
+    if not isinstance(result, list):
+        return None, "WooCommerce niet bereikbaar of antwoord ongeldig."
+    # Only display operational fields; no addresses, phone or customer details.
+    filtered = []
+    for item in result:
+        if not isinstance(item, dict):
+            continue
+        filtered.append({
+            "id": str(item.get("id", ""))[:40],
+            "status": str(item.get("status", "onbekend"))[:45],
+            "date": str(item.get("date_created", ""))[:25],
+            "total": str(item.get("total", ""))[:40],
+            "currency": str(item.get("currency", "EUR"))[:10],
+        })
+    return filtered, None
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
@@ -656,6 +734,9 @@ def control():
         "woo": woo_configured(),
         "contact": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
     }
+    supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
+    research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
+    order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
     view_template = "control.html" if request.path == "/catalogus-overzicht" else "dashboard.html"
     return render_template(
         view_template,
@@ -676,6 +757,12 @@ def control():
         category_counts=sorted(category_counts.items()),
         categories=CATEGORIES,
         integration_status=integration_status,
+        supplier_rows=supplier_rows,
+        supplier_error=supplier_error,
+        research_rows=research_rows,
+        research_error=research_error,
+        order_rows=order_rows,
+        order_error=order_error,
     )
 
 
