@@ -705,6 +705,24 @@ def admin_merchant_feed_preview():
     return response
 
 
+@app.route("/admin/supplier-feed-preview", methods=["POST"])
+def admin_supplier_feed_preview():
+    if not admin_is_authenticated():
+        abort(403)
+    uploaded = request.files.get("feed")
+    if not uploaded or not uploaded.filename.lower().endswith(".csv"):
+        return jsonify({"error": "Upload een CSV-bestand."}), 400
+    raw = uploaded.stream.read(60001)
+    from nuvemixa_integrations import supplier_csv_preview
+    try:
+        result = supplier_csv_preview(raw)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
