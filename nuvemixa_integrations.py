@@ -60,7 +60,7 @@ def merchant_feed_preview(items, base_url="https://nuvemixa.alwaysdata.net"):
     No feed URL is publicly published, submitted to Google or listed in robots.txt.
     """
     ET.register_namespace("g", "http://base.google.com/ns/1.0")
-    root = ET.Element("rss", {"version": "2.0", "xmlns:g": "http://base.google.com/ns/1.0"})
+    root = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(root, "channel")
     ET.SubElement(channel, "title").text = "NUVEMIXA interne Merchant-preview (niet gepubliceerd)"
     ET.SubElement(channel, "link").text = base_url
