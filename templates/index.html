@@ -1,18 +1,18 @@
 {% from '_tm_icons.html' import tm_icon %}
 <!doctype html>
 <html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0866f5"><title>TrendMix | Slimme gadgets en meer</title>
-<meta name="description" content="Ontdek gadgets, Smart Home, Beauty & Care en Lifestyle & Sport bij TrendMix. Bekijk onze selectie slimme en praktische producten.">
-<link rel="canonical" href="https://trendmix-jet.vercel.app/"><link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
+<meta name="theme-color" content="#0866f5"><title>NUVEMIXA | Slimme gadgets en meer</title>
+<meta name="description" content="Ontdek gadgets, Smart Home, Beauty & Care en Lifestyle & Sport bij NUVEMIXA. Bekijk onze selectie slimme en praktische producten.">
+<link rel="canonical" href="https://nuvemixa.alwaysdata.net/"><link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='storefront-v2.css',v='20261017-footer1') }}">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://trendmix-jet.vercel.app/#organization","name":"TrendMix","url":"https://trendmix-jet.vercel.app/"},{"@type":"WebSite","@id":"https://trendmix-jet.vercel.app/#website","name":"TrendMix","url":"https://trendmix-jet.vercel.app/","publisher":{"@id":"https://trendmix-jet.vercel.app/#organization"},"potentialAction":{"@type":"SearchAction","target":"https://trendmix-jet.vercel.app/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://nuvemixa.alwaysdata.net/#organization","name":"NUVEMIXA","url":"https://nuvemixa.alwaysdata.net/"},{"@type":"WebSite","@id":"https://nuvemixa.alwaysdata.net/#website","name":"NUVEMIXA","url":"https://nuvemixa.alwaysdata.net/","publisher":{"@id":"https://nuvemixa.alwaysdata.net/#organization"},"potentialAction":{"@type":"SearchAction","target":"https://nuvemixa.alwaysdata.net/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
 
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="TrendMix">
-<meta property="og:title" content="TrendMix | Slimme gadgets en meer">
-<meta property="og:description" content="Ontdek gadgets, Smart Home, Beauty & Care en Lifestyle & Sport bij TrendMix.">
-<meta property="og:url" content="https://trendmix-jet.vercel.app/">
-<meta property="og:image" content="https://trendmix-jet.vercel.app/static/images/hero/gadgets.jpg">
+<meta property="og:site_name" content="NUVEMIXA">
+<meta property="og:title" content="NUVEMIXA | Slimme gadgets en meer">
+<meta property="og:description" content="Ontdek gadgets, Smart Home, Beauty & Care en Lifestyle & Sport bij NUVEMIXA.">
+<meta property="og:url" content="https://nuvemixa.alwaysdata.net/">
+<meta property="og:image" content="https://nuvemixa.alwaysdata.net/static/images/hero/gadgets.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/static/trendmix-hero-fix.css">
 </head><body>
@@ -21,7 +21,7 @@
 {% include '_tm_category_nav.html' %}
 <main class="wrap">
 {% if request.args.get('contact') == 'sent' %}<p class="notice">Je bericht is verzonden.</p>{% elif request.args.get('contact') == 'error' %}<p class="notice">Je bericht kon niet worden verzonden.</p>{% endif %}
-<section class="tm-new-hero" aria-label="Gadgets"><a href="#producten" aria-label="Bekijk producten in Gadgets"><img src="/static/images/hero/gadgets.jpg" alt="TrendMix Gadgets collectie" fetchpriority="high" decoding="async"><div class="tm-desktop-hero-copy" aria-hidden="true"><span class="tm-desktop-brand">Trend<span>Mix</span></span><span class="tm-desktop-tag">GADGETS</span><h2>Unieke gadgets voor een slimmer leven</h2><p>Bijzondere en praktische gadgets die je dagelijks leven makkelijker en leuker maken.</p><span class="tm-desktop-cta">Bekijk gadgets →</span></div></a></section>
+<section class="tm-new-hero" aria-label="Gadgets"><a href="#producten" aria-label="Bekijk producten in Gadgets"><img src="/static/images/hero/gadgets.jpg" alt="NUVEMIXA Gadgets collectie" fetchpriority="high" decoding="async"><div class="tm-desktop-hero-copy" aria-hidden="true"><span class="tm-desktop-brand">Trend<span>Mix</span></span><span class="tm-desktop-tag">GADGETS</span><h2>Unieke gadgets voor een slimmer leven</h2><p>Bijzondere en praktische gadgets die je dagelijks leven makkelijker en leuker maken.</p><span class="tm-desktop-cta">Bekijk gadgets →</span></div></a></section>
 {% if search_query %}<section class="products" id="results"><div class="heading"><h2>Zoekresultaten voor “{{ search_query }}”</h2><span>{{ search_results|length }} resultaten</span></div><div class="productgrid">{% for product in search_results %}{% include '_storefront_card.html' %}{% else %}<p>Geen resultaten gevonden.</p>{% endfor %}</div></section>{% endif %}
 <section class="products" id="producten"><div class="heading"><h1>Ontdek onze producten</h1><a href="/shop">Bekijk alles →</a></div><div class="productgrid">{% for product in featured_products[:20] %}{% include '_storefront_card.html' %}{% endfor %}</div></section>
 <section class="products categoryshowcase"><div class="heading"><div><h2>Shop per categorie</h2><p class="categoryintro">Ontdek onze collecties en vind wat bij jou past.</p></div><a href="/shop">Alle categorieën →</a></div><div class="categorygrid"><a class="categorytile tile-blue" href="/gadgets"><span class="categoryart category-menu-icon" aria-hidden="true">{{ tm_icon('device') }}</span><strong>Gadgets</strong><span class="categorydesc">Tech en slimme accessoires</span><small>{{ counts['gadgets'] }} producten</small><span class="categorycta">Bekijk producten <span aria-hidden="true">→</span></span></a><a class="categorytile tile-orange" href="/smart-home"><span class="categoryart category-menu-icon" aria-hidden="true">{{ tm_icon('home') }}</span><strong>Smart Home</strong><span class="categorydesc">Slimme apparaten en automatisering</span><small>{{ counts['smart-home'] }} producten</small><span class="categorycta">Bekijk producten <span aria-hidden="true">→</span></span></a><a class="categorytile tile-pink" href="/beauty-care"><span class="categoryart category-menu-icon" aria-hidden="true">{{ tm_icon('beauty') }}</span><strong>Beauty & Care</strong><span class="categorydesc">Verzorging en beautytools</span><small>{{ counts['beauty-care'] }} producten</small><span class="categorycta">Bekijk producten <span aria-hidden="true">→</span></span></a><a class="categorytile tile-purple" href="/lifestyle-sport"><span class="categoryart category-menu-icon" aria-hidden="true">{{ tm_icon('sport') }}</span><strong>Lifestyle & Sport</strong><span class="categorydesc">Fitness, sport en onderweg</span><small>{{ counts['lifestyle-sport'] }} producten</small><span class="categorycta">Bekijk producten <span aria-hidden="true">→</span></span></a></div></section>
