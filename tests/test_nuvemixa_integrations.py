@@ -80,7 +80,6 @@ class IntegrationSafetyTests(unittest.TestCase):
             self.assertEqual(result["published"], 0)
 
     def test_supplier_feed_rejects_invalid_csv(self):
-        from unittest import TestCase
         with self.assertRaises(ValueError):
             supplier_csv_preview(b"example,missing,headers\\n1,2,3\\n")
         with self.assertRaises(ValueError):
@@ -93,11 +92,14 @@ class IntegrationSafetyTests(unittest.TestCase):
         app.config["TESTING"] = True
         client = app.test_client()
         for path in ("/admin/rankfix/open", "/admin/mollie/check",
-                     "/admin/merchant-feed-preview.xml", "/admin/supplier-feed-preview"):
+                     "/admin/merchant-feed-preview.xml"):
             with self.subTest(path=path):
                 response = client.get(path)
                 self.assertEqual(response.status_code, 302)
                 self.assertIn("/admin/login", response.location)
+        # Upload is POST-only; anonymous requests must be blocked by CSRF/auth.
+        response = client.post("/admin/supplier-feed-preview", data={})
+        self.assertEqual(response.status_code, 403)
 
 if __name__ == "__main__":
     unittest.main()
