@@ -730,3 +730,29 @@ body:has(.cart-page){background:#f6f9fd!important}
  .cart-page .cart-row{grid-template-columns:62px minmax(0,1fr)!important}
  .cart-page .cart-row img,.cart-page .cart-row .cart-thumb{width:62px!important;height:62px!important}
 }
+
+
+/* NUVEMIXA unified modern store buttons 20261105 */
+/* Existing approved navy/white/orange theme is unchanged. Buttons are easier to tap. */
+:where(.herobutton,.item .add,.cart-checkout-box .checkout-button,.btn.btn-dark){
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;border-radius:12px!important;
+  font-weight:800!important;line-height:1.3!important;
+  transition:background-color .18s ease,box-shadow .18s ease,transform .18s ease;
+  touch-action:manipulation
+}
+:where(.herobutton,.cart-checkout-box .checkout-button,.btn.btn-dark):hover{
+  transform:translateY(-1px);box-shadow:0 9px 22px #0c315426!important
+}
+:where(.item .add):focus-visible,:where(.herobutton,.btn,.checkout-button):focus-visible{
+  outline:3px solid #f9a11b!important;outline-offset:3px!important
+}
+@media(max-width:760px){
+  :where(.item .add){min-height:46px!important}
+  .cart-page .cart-checkout-box .checkout-button{min-height:54px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  :where(.herobutton,.item .add,.cart-checkout-box .checkout-button,.btn.btn-dark){
+    transition:none!important;transform:none!important
+  }
+}
