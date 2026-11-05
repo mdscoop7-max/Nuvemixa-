@@ -28,7 +28,7 @@ jobs:
       - name: Syntax check
         run: python -m compileall -q app.py nuvemixa_admin_store.py trendmix_assistant.py tests
       - name: Backend security and database tests
-        run: python -m unittest discover -s tests -p 'test_nuvemixa_admin*.py' -v
+        run: python -m unittest discover -s tests -p 'test_nuvemixa_*.py' -v
       - name: Template and route smoke test
         run: |
           python - <<'PY'
