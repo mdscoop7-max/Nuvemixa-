@@ -1,0 +1,53 @@
+name: NUVEMIXA integration and regression tests
+on:
+  push:
+    branches:
+      - design/pixel-polish-responsive-20261027
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  storefront-admin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SECRET_KEY: test-only-ci-secret-for-regression
+      NUVEMIXA_ADMIN_PASSWORD_HASH: ""
+      NUVEMIXA_COOKIE_SECURE: "false"
+      TRENDMIX_LIVE_ORDERS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Syntax check
+        run: python -m compileall -q app.py nuvemixa_admin_store.py trendmix_assistant.py tests
+      - name: Backend security and database tests
+        run: python -m unittest discover -s tests -p 'test_nuvemixa_admin*.py' -v
+      - name: Template and route smoke test
+        run: |
+          python - <<'PY'
+          import os
+          from werkzeug.security import generate_password_hash
+          os.environ['NUVEMIXA_ADMIN_PASSWORD_HASH'] = generate_password_hash('ci-long-test-password')
+          from app import app
+          client = app.test_client()
+          routes = ['/', '/gadgets','/smart-home','/beauty-care','/home-living',
+                    '/lifestyle-sport','/shop','/aanbiedingen','/winkelwagen',
+                    '/contact','/faq','/admin/login']
+          for path in routes:
+              r = client.get(path)
+              assert r.status_code == 200, (path,r.status_code)
+          for path in ['/dashboard','/control','/catalogus-overzicht',
+                       '/admin/integrations','/admin/merchant-preview',
+                       '/admin/research-preview']:
+              r = client.get(path)
+              assert r.status_code == 302 and '/admin/login' in r.location, (path,r.status_code)
+          print('All public routes and protected admin routes OK')
+          PY
