@@ -24,6 +24,9 @@ def rankfix_scan_url(site_url=None):
     # Site admin must explicitly choose the actual RankFix server. Never send API tokens in URLs.
     if parsed.path not in ("", "/"):
         return None
+    trusted_host = os.getenv("RANKFIX_TRUSTED_HOST", "rankfix-app.onrender.com").strip().lower()
+    if parsed.hostname.lower() != trusted_host:
+        return None
     site = (site_url or os.getenv("SITE_URL") or "https://nuvemixa.alwaysdata.net/").strip()
     parsed_site = urllib.parse.urlsplit(site)
     if parsed_site.scheme != "https" or parsed_site.hostname != "nuvemixa.alwaysdata.net":
