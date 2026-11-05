@@ -71,9 +71,9 @@ class IntegrationSafetyTests(unittest.TestCase):
         self.assertEqual(merchant_feed_preview([product])[1], 0)
 
     def test_supplier_feed_checks_without_import(self):
-        csv_data = b"sku,name,price,stock\\nSKU-1,Test item,12.50,10\\nSKU-2,Second item,0,NA\\n"
+        csv_data = b"sku,name,price,stock\nSKU-1,Test item,12.50,10\nSKU-2,Second item,0,NA\n"
         with self.subTest("rows"):
-            result = supplier_csv_preview(csv_data.replace(b"\\\\n", b"\\n"))
+            result = supplier_csv_preview(csv_data)
             self.assertEqual(result["total"], 2)
             self.assertEqual(result["valid_format"], 1)
             self.assertEqual(result["imported"], 0)
@@ -81,7 +81,7 @@ class IntegrationSafetyTests(unittest.TestCase):
 
     def test_supplier_feed_rejects_invalid_csv(self):
         with self.assertRaises(ValueError):
-            supplier_csv_preview(b"example,missing,headers\\n1,2,3\\n")
+            supplier_csv_preview(b"example,missing,headers\n1,2,3\n")
         with self.assertRaises(ValueError):
             supplier_csv_preview(b"x" * 60001)
 
