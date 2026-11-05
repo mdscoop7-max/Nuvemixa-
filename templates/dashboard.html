@@ -37,11 +37,15 @@
 .side-links a:focus-visible{outline:3px solid #ed9b2e!important;outline-offset:-2px;background:#eaf4ff;color:#064eaa;box-shadow:inset 0 0 0 1px #8ac1ff}
 .side-links a.active:focus-visible{background:#d6e9ff}
 @media(max-width:760px){.side-links a:focus-visible{outline-offset:1px}}
+/* Approved NUVEMIXA brand on dashboard, including mobile sidebar */
+.sidebar .brand{padding:6px 9px 19px;min-height:70px}.sidebar .nv-dashboard-logo{width:100%;max-width:224px;height:auto;max-height:84px;object-fit:contain;display:block}.sidebar .brand:focus-visible{outline:3px solid #ffa928;outline-offset:2px}
+.admin-access{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.admin-access button{border:1px solid #bbd2eb;background:#fff;color:#15385f;font-weight:800;border-radius:10px;padding:9px 14px;cursor:pointer}
+@media(max-width:760px){.sidebar .nv-dashboard-logo{width:185px;max-height:63px}.sidebar .brand{padding:3px 8px 10px}}
 </style>
 </head>
 <body><div class="layout">
 <aside class="sidebar" aria-label="Dashboardnavigatie">
-<a class="brand" href="/dashboard"><span class="brand-mark" aria-hidden="true">▣</span><span><strong>Trend<span>Mix</span></strong><small>Shop Smart · Live Better</small></span></a>
+<a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo.png',v='20261105-approved') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
 <nav class="side-links" aria-label="Beheermenu" id="tmAdminNavigation">
 {% for key,label,ico in [('dashboard','Dashboard','⌂'),('producten','Producten','▣'),('categorieen','Categorieën','▦'),('bestellingen','Bestellingen','🛒'),('klanten','Klanten','♙'),('kortingen','Kortingen','◇'),('onderzoek','Productonderzoek & niches','⌕'),('calculator','Prijs & marge calculator','€'),('afbeeldingen','Afbeeldingen','▧'),('seo','SEO & GEO','◎'),('rankfix','RankFix AI','◈'),('google-ads','Google Ads','◉'),('google-shopping','Google Shopping & Merchant','▤'),('marketing','Marketing','☷'),('statistieken','Rapportages & statistieken','▥'),('leveranciers','Leveranciers & dropshipping','◫'),('talen','Talen','文'),('klantenservice','Klantenservice & berichten','✉'),('monitoring','Monitoring','◴'),('instellingen','Instellingen','⚙')] %}
 <a href="/dashboard?section={{ key }}" class="{% if section==key %}active{% endif %}" {% if section==key %}aria-current="page"{% endif %}><span class="side-icon" aria-hidden="true">{{ ico }}</span>{{ label }}</a>
@@ -51,7 +55,7 @@
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">TM</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div></header>
+<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">TM</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin">
 {% if section == "dashboard" %}
 <div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
@@ -73,7 +77,7 @@
 <nav class="quick" aria-label="Snelle acties"><a href="/dashboard?section=producten"><span class="bubble">＋</span><span><b>Producten beheren</b><small>Controleer de catalogus</small></span></a><a href="/dashboard?section=categorieen"><span class="bubble">▦</span><span><b>Beheer categorieën</b><small>Productgroepen</small></span></a><a href="/dashboard?section=kortingen"><span class="bubble">◇</span><span><b>Kortingsacties</b><small>Bekijk actiegegevens</small></span></a><a href="/dashboard?section=statistieken"><span class="bubble">▥</span><span><b>Bekijk rapporten</b><small>Catalogusstatistieken</small></span></a></nav>
 
 {% else %}
-<header class="section-header"><div><span class="section-kicker">TREND MIX · BEHEEROMGEVING</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
+<header class="section-header"><div><span class="section-kicker">NUVEMIXA · BEHEEROMGEVING</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
 {% if section == "producten" %}
 <section class="panel"><h2>Productcatalogus</h2><p>{{ filtered_products|length }} producten{% if search %} voor “{{ search }}”{% endif %} · productgegevens uit de huidige testcatalogus.</p>
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Categorie</th><th>Testprijs</th><th>Status</th></tr></thead><tbody>
@@ -114,11 +118,11 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 })();
 </script>
 {% elif section == "onderzoek" %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>Voor het zoeken naar interessante producten en niches vergelijken we straks echte leveranciersaanbiedingen, zoekvraag, concurrentie, inkoopprijzen, marges en levertijden. Zoekgegevens of leveranciersfeeds zijn nog niet aangesloten.</p><span class="integration-status">Nog niet gekoppeld</span></section>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>De bestaande testcatalogus is beschikbaar voor beoordeling. Echte marktgegevens, leveranciersprijzen en concurrentiecijfers zijn nog niet aangesloten. Start met <a href="/dashboard?section=producten">de productcatalogus</a> en gebruik de <a href="/dashboard?section=calculator">prijscalculator</a> om gecontroleerde productkosten door te rekenen.</p><span class="integration-status">Geen ongeverifieerde trends of winsten getoond</span></section>
 {% elif section == "rankfix" %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>Deze aparte module is bedoeld voor NUVEMIXA-scans, SEO/GEO-rapporten, bewijsdekking en concrete verbeteracties. Er is nog geen betrouwbare RankFix API-koppeling ingesteld; daarom tonen we geen verzonnen scanscores.</p><span class="integration-status">Koppeling in voorbereiding</span></section>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>RankFix blijft een aparte applicatie. NUVEMIXA toont pas gecontroleerde SEO/GEO-scanresultaten wanneer een beveiligde koppeling is geïnstalleerd en de scanbewijzen gevalideerd zijn. Automatische wijzigingen blijven uitgeschakeld.</p><span class="integration-status">{% if integration_status.rankfix %}API-instellingen aanwezig; verbinding niet geverifieerd{% else %}API-instellingen ontbreken{% endif %}</span></section>
 {% elif section == "google-shopping" %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Productfeeds, productvermeldingen en Shopping-campagnes komen hier zodra leveranciersproducten, definitieve prijzen, checkout en Google Merchant Center zijn gecontroleerd en gekoppeld.</p><span class="integration-status">Nog niet gekoppeld</span></section>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Gecontroleerde catalogus: <strong>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }}</strong> producten doorstaan de interne basiscontrole. Alleen bevestigde leverancier-, prijs-, voorraad-, verzend- en productgegevens komen in aanmerking. Er wordt niets naar Google gepubliceerd.</p><a href="{{ url_for('admin_merchant_preview') }}" class="integration-status">Bekijk interne productcontrole (JSON) →</a><p style="margin-top:14px">Voor echte publicatie zijn daarnaast een geverifieerd Merchant-account, betaal- en retourinformatie en de Google-koppeling noodzakelijk.</p></section>
 {% elif section == "statistieken" %}
 <section class="metrics"><div class="metric"><div class="metric-label">Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong></div><div class="metric"><div class="metric-label">Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong></div><div class="metric"><div class="metric-label">Gemarkeerde aanbiedingen</div><strong class="metric-value">{{ stats.offers }}</strong></div><div class="metric"><div class="metric-label">Gemiddelde testprijs</div><strong class="metric-value">{{ format_eur(stats.avg_price) }}</strong></div></section>
 <section class="panel panel-after"><h2>Omzet en conversie</h2><p>Nog niet meetbaar: er zijn geen geverifieerde verkoop- of analyticsgegevens aangesloten.</p></section>
