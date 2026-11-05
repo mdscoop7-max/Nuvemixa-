@@ -44,6 +44,14 @@
 /* Compact NUVEMIXA dashboard logo 20261105 */
 .sidebar .nv-dashboard-logo{display:block!important;width:170px!important;max-width:100%!important;height:auto!important;max-height:62px!important;object-fit:contain!important;object-position:left center!important}
 @media(max-width:760px){.sidebar .nv-dashboard-logo{width:148px!important;max-height:54px!important}}
+/* NUVEMIXA functional admin workspace */
+.nv-admin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0 25px;padding:20px;border:1px solid #d9e7f4;background:#f8fbff;border-radius:14px}
+.nv-admin-form label{display:grid;gap:6px;min-width:0;color:#183b61;font-size:13px;font-weight:750}
+.nv-admin-form input,.nv-admin-form textarea{width:100%;min-width:0;border:1px solid #bfd2e7;border-radius:10px;padding:12px;background:white;color:#102b4b;font:inherit;font-size:15px}
+.nv-admin-form label:has(textarea){grid-column:1/-1}
+.nv-admin-form button{min-height:46px;border:0;border-radius:11px;background:#0c305a;color:#fff;font-weight:800;padding:10px 18px;cursor:pointer;justify-self:start}
+.nv-admin-form :is(input,textarea,button):focus-visible{outline:3px solid #ffb548;outline-offset:2px}
+@media(max-width:760px){.nv-admin-form{grid-template-columns:1fr;padding:14px}.nv-admin-form label:has(textarea){grid-column:auto}.nv-admin-form button{width:100%}}
 </style>
 </head>
 <body><div class="layout">
@@ -121,11 +129,57 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 })();
 </script>
 {% elif section == "onderzoek" %}
+<section class="panel"><h2>Productonderzoek — eigen onderzoeksnotities</h2>
+<p>Leg niches en producten vast met de bron. Geen verzonnen zoekvolumes of prijzen. Gegevens blijven intern en worden niet automatisch gepubliceerd.</p>
+{% if research_error %}<div class="notice" role="status">{{ research_error }}</div>{% endif %}
+{% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Onderzoeksnotitie opgeslagen.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de verplichte velden.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
+{% if research_rows is not none %}
+<form action="{{ url_for('admin_add_research_note') }}" method="post" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Categorie<input name="category" maxlength="80" required placeholder="Bijvoorbeeld Smart Home"></label>
+<label>Product / niche<input name="product_name" maxlength="160" required placeholder="Naam of niche"></label>
+<label>Bron<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
+<label>Onderzoeksnotitie<textarea name="notes" maxlength="1500" rows="3" placeholder="Waarom interessant? Welke gegevens moeten worden bevestigd?"></textarea></label>
+<button type="submit">Onderzoek opslaan</button>
+</form>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product / niche</th><th>Categorie</th><th>Bron</th><th>Datum</th></tr></thead><tbody>
+{% for row in research_rows %}<tr><td><strong>{{ row.product_name }}</strong></td><td>{{ row.category }}</td><td>{{ row.source or 'Niet opgegeven' }}</td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="4">Nog geen opgeslagen onderzoeksnotities.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>De bestaande testcatalogus is beschikbaar voor beoordeling. Echte marktgegevens, leveranciersprijzen en concurrentiecijfers zijn nog niet aangesloten. Bekijk ook het <a href="{{ url_for('admin_research_preview') }}">interne onderzoeksrapport (JSON)</a>. Start met <a href="/dashboard?section=producten">de productcatalogus</a> en gebruik de <a href="/dashboard?section=calculator">prijscalculator</a> om gecontroleerde productkosten door te rekenen.</p><span class="integration-status">Geen ongeverifieerde trends of winsten getoond</span></section>
 {% elif section == "rankfix" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>RankFix blijft een aparte applicatie. NUVEMIXA toont pas gecontroleerde SEO/GEO-scanresultaten wanneer een beveiligde koppeling is geïnstalleerd en de scanbewijzen gevalideerd zijn. Automatische wijzigingen blijven uitgeschakeld.</p><span class="integration-status">{% if integration_status.rankfix %}API-instellingen aanwezig; verbinding niet geverifieerd{% else %}API-instellingen ontbreken{% endif %}</span></section>
 {% elif section == "google-shopping" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Gecontroleerde catalogus: <strong>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }}</strong> producten doorstaan de interne basiscontrole. Alleen bevestigde leverancier-, prijs-, voorraad-, verzend- en productgegevens komen in aanmerking. Er wordt niets naar Google gepubliceerd.</p><a href="{{ url_for('admin_merchant_preview') }}" class="integration-status">Bekijk interne productcontrole (JSON) →</a><p style="margin-top:14px">Voor echte publicatie zijn daarnaast een geverifieerd Merchant-account, betaal- en retourinformatie en de Google-koppeling noodzakelijk.</p></section>
+{% elif section == "leveranciers" %}
+<section class="panel"><h2>Leveranciersregister</h2>
+<p>Bewaar gecontroleerde leverancierscontacten. Het toevoegen van een leverancier activeert geen productfeed, voorraadkoppeling of automatische orderverwerking.</p>
+{% if supplier_error %}<div class="notice" role="status">{{ supplier_error }}</div>{% endif %}
+{% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Leverancier toegevoegd.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de gegevens of controleer of de leverancier al bestaat.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
+{% if supplier_rows is not none %}
+<form action="{{ url_for('admin_add_supplier') }}" method="post" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Leverancier<input name="name" maxlength="120" minlength="2" required placeholder="Bedrijfsnaam"></label>
+<label>Contact-e-mail<input name="contact_email" maxlength="254" type="email" placeholder="naam@bedrijf.nl"></label>
+<label>Website<input name="website" maxlength="500" type="url" placeholder="https://"></label>
+<label>Notities<textarea name="notes" rows="3" maxlength="1500" placeholder="Voorwaarden, retouradres, API-beschikbaarheid..."></textarea></label>
+<button type="submit">Leverancier opslaan</button>
+</form>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Leverancier</th><th>Contact</th><th>Status</th><th>Bijgewerkt</th></tr></thead><tbody>
+{% for row in supplier_rows %}<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.contact_email or 'Niet opgegeven' }}</td><td><span class="state-pill">{{ row.status }}</span></td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="4">Nog geen leveranciers opgeslagen.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+{% elif section == "bestellingen" %}
+<section class="panel"><h2>Bestellingen — gecontroleerde bron</h2>
+<p>Alleen-lezen overzicht van de recentste WooCommerce-orders als deze bestaande orderbron veilig is ingesteld. Geen fictieve omzet, klantadressen of betaalbevestigingen.</p>
+{% if order_error %}<div class="notice" role="status">{{ order_error }}</div>{% else %}
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Ordernummer</th><th>Datum</th><th>Status volgens WooCommerce</th><th>Bedrag volgens WooCommerce</th></tr></thead><tbody>
+{% for row in order_rows %}<tr><td><strong>#{{ row.id }}</strong></td><td>{{ row.date }}</td><td>{{ row.status }}</td><td>{{ row.currency }} {{ row.total }}</td></tr>{% else %}<tr><td colspan="4">De gekoppelde bron bevat geen bestellingen in de recentste resultaten.</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<a href="{{ url_for('admin_integrations') }}" class="integration-status">Controleer integratie-instellingen</a>
+</section>
 {% elif section == "statistieken" %}
 <section class="metrics"><div class="metric"><div class="metric-label">Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong></div><div class="metric"><div class="metric-label">Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong></div><div class="metric"><div class="metric-label">Gemarkeerde aanbiedingen</div><strong class="metric-value">{{ stats.offers }}</strong></div><div class="metric"><div class="metric-label">Gemiddelde testprijs</div><strong class="metric-value">{{ format_eur(stats.avg_price) }}</strong></div></section>
 <section class="panel panel-after"><h2>Omzet en conversie</h2><p>Nog niet meetbaar: er zijn geen geverifieerde verkoop- of analyticsgegevens aangesloten.</p></section>
