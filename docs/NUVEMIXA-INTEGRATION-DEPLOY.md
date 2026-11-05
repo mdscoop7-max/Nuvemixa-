@@ -55,3 +55,29 @@ Echte **database, betaalprovider, orderwebhooks, leveranciersfeed, Merchant Cent
 - Juist wachtwoord + logout + CSRF.
 - Merchant/testproducten: geen automatisch gepubliceerde feed.
 - Productresearch: geen gefingeerde marktdata.
+
+
+## Toegevoegd na de integratiecontrole van 5 november
+
+- `nuvemixa_admin_store.py` beheert een **eigen SQLite-database** voor leverancierscontacten en onderzoeksnotities. Standaard is de database uitgeschakeld; er worden geen klantgegevens of orders automatisch in opgeslagen.
+- Stel `NUVEMIXA_ADMIN_DB` in op een **schrijfbare locatie buiten het Git-repository**, bijvoorbeeld `/home/nuvemixa/private/nuvemixa-admin.sqlite3`. De bovenliggende map moet bestaan, mag niet via HTTP worden geserveerd en moet alleen voor de NUVEMIXA-gebruiker toegankelijk zijn. Neem deze database na ingebruikname op in versleutelde back-ups.
+- Administratie na veilige login:
+  - `/dashboard?section=leveranciers`: leverancierscontacten toevoegen en bekijken.
+  - `/dashboard?section=onderzoek`: eigen onderzoeksnotities toevoegen en bekijken.
+  - `/dashboard?section=bestellingen`: uitsluitend **lezen** van de nieuwste WooCommerce-orders wanneer bestaande WooCommerce-instellingen werken; anders een eerlijke foutmelding.
+  - `/dashboard?section=google-shopping`: product-per-product overzicht van ontbrekende bevestigingen. Geen productfeed naar Google gepubliceerd.
+- Nieuwe tests: `tests/test_nuvemixa_admin_store.py`, `tests/test_nuvemixa_admin.py`.
+- Nieuwe GitHub Actions workflow: `.github/workflows/nuvemixa-integration.yml`. Een workflowbestand in GitHub **bewijst niet dat CI geslaagd is**. Controleer de feitelijke workflow-uitvoer vóór livegang.
+- De volledige live-integratie met Mollie/betalingen, echte WooCommerce-orderacties, Dropshipping-API, RankFix API, Google Merchant Center en marktdata is **nog niet geactiveerd**. Deze functies vereisen afzonderlijke connectorinstellingen en integratietests.
+- `static/nuvemixa-logo.png` moet op de Alwaysdata-server worden geplaatst; de GitHub-textconnector heeft het door de gebruiker aangeleverde PNG-bestand niet meegecommit.
+
+### Extra QA vóór productie
+
+```bash
+cd /home/nuvemixa/www/nuvemixa
+.venv/bin/python -m unittest discover -s tests -p 'test_nuvemixa_admin*.py' -v
+.venv/bin/python -m compileall -q app.py nuvemixa_admin_store.py
+.venv/bin/python -c 'from wsgi import application; print("NUVEMIXA WSGI OK")'
+```
+
+Verifieer dat een anonieme GET naar `/dashboard` omleidt naar `/admin/login`; dat de adminlogin na het instellen van de vereiste geheime variabelen werkt; en dat het adminformulier voor leveranciers veilig opslaat zonder automatisch producten te publiceren.
