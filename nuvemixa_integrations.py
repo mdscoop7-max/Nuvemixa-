@@ -3,6 +3,8 @@
 Never creates Mollie payments, RankFix scans, supplier orders or Google publications.
 """
 import json
+import csv
+import io
 import os
 import re
 import ssl
@@ -102,3 +104,56 @@ def merchant_feed_preview(items, base_url="https://nuvemixa.alwaysdata.net"):
         ET.SubElement(row, "{http://base.google.com/ns/1.0}availability").text = p["stock_status"]
         count += 1
     return ET.tostring(root, encoding="utf-8", xml_declaration=True), count
+
+
+def supplier_csv_preview(raw):
+    """Validate UTF-8 CSV supplier inventory without writing or importing any products.
+
+    Required columns: sku,name,price,stock. All data is considered unverified.
+    """
+    if not isinstance(raw, bytes) or not raw or len(raw) > 60000:
+        raise ValueError("CSV moet tussen 1 en 60000 bytes zijn.")
+    try:
+        decoded = raw.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError("CSV moet UTF-8 zijn.") from exc
+    try:
+        rows = csv.DictReader(io.StringIO(decoded), delimiter=",")
+        fields = rows.fieldnames or []
+        required = {"sku", "name", "price", "stock"}
+        if not required.issubset(set(fields)):
+            raise ValueError("Verwachte kolommen: sku,name,price,stock.")
+        checked = []
+        seen = set()
+        for i, row in enumerate(rows):
+            if i >= 150:
+                raise ValueError("Maximaal 150 rijen per controle.")
+            sku = str(row.get("sku") or "").strip()[:100]
+            name = str(row.get("name") or "").strip()[:200]
+            price_text = str(row.get("price") or "").strip()
+            stock_text = str(row.get("stock") or "").strip()
+            problems = []
+            if not sku or sku in seen:
+                problems.append("SKU ontbreekt of is dubbel")
+            if not name:
+                problems.append("Productnaam ontbreekt")
+            try:
+                amount = Decimal(price_text)
+                if not amount.is_finite() or amount <= 0:
+                    problems.append("Ongeldige prijs")
+            except (InvalidOperation, ValueError):
+                problems.append("Ongeldige prijs")
+            if not stock_text.isdigit():
+                problems.append("Voorraad moet een heel getal zijn")
+            seen.add(sku)
+            checked.append({"row": i + 2, "sku": sku, "name": name,
+                            "problems": problems, "verified": False})
+        return {
+            "status": "preview_only", "imported": 0, "published": 0,
+            "total": len(checked),
+            "valid_format": sum(not item["problems"] for item in checked),
+            "rows": checked,
+            "note": "Formaatcontrole is geen leveranciersverificatie. Er is niets geïmporteerd.",
+        }
+    except csv.Error as exc:
+        raise ValueError("CSV heeft een onjuist formaat.") from exc
