@@ -727,6 +727,11 @@ def control():
     filtered_products = filter_products(all_products, search=search) if search else all_products
 
     merchant_checks = [merchant_product_checks(p) for p in all_products]
+    merchant_preview_rows = [
+        {"name": p["name"], "category": p.get("category_name") or p.get("category") or "",
+         "missing": missing}
+        for p, missing in zip(all_products, merchant_checks)
+    ] if section == "google-shopping" else []
     integration_status = {
         "merchant": {"ready": sum(not errors for errors in merchant_checks), "total": len(all_products)},
         "rankfix": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
@@ -757,6 +762,7 @@ def control():
         category_counts=sorted(category_counts.items()),
         categories=CATEGORIES,
         integration_status=integration_status,
+        merchant_preview_rows=merchant_preview_rows,
         supplier_rows=supplier_rows,
         supplier_error=supplier_error,
         research_rows=research_rows,
