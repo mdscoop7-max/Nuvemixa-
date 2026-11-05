@@ -81,3 +81,25 @@ cd /home/nuvemixa/www/nuvemixa
 ```
 
 Verifieer dat een anonieme GET naar `/dashboard` omleidt naar `/admin/login`; dat de adminlogin na het instellen van de vereiste geheime variabelen werkt; en dat het adminformulier voor leveranciers veilig opslaat zonder automatisch producten te publiceren.
+
+
+## Vier integraties en moderne knoppen — 5 november 2026
+
+**Beschikbaar op deze ontwikkelbranch, nog niet live gedeployed:**
+
+- **RankFix:** `/admin/rankfix/open` opent de bestaande RankFix-scanner met `https://nuvemixa.alwaysdata.net/` vooringevuld. De RankFix-app beheert zelf authenticatie. `RANKFIX_BASE_URL` moet naar de vertrouwde HTTPS-host verwijzen (standaard `https://rankfix-app.onrender.com`); `RANKFIX_TRUSTED_HOST` is standaard `rankfix-app.onrender.com`. Er worden **geen** API-tokens in URLs meegegeven. Dit is een echte scanner-handoff, geen scanresultaten-API of automatische scan.
+- **Mollie:** `/admin/mollie/check` doet uitsluitend een GET naar Mollie voor de beschikbare betaalmethoden. De sleutel staat alleen server-side in `MOLLIE_API_KEY`. Er wordt geen payment/order gemaakt of bevestigd. Werkelijke betaalverwerking, webhooks en terugbetalingen blijven openstaand.
+- **Google Merchant:** `/admin/merchant-feed-preview.xml` geeft alleen voor ingelogde beheerders een interne XML-preview. Een product moet expliciet `merchant_verified=true` hebben plus alle vastgestelde basisvelden. Geen feedpublicatie, accountverificatie of Google-synchronisatie.
+- **Leveranciers:** `/dashboard?section=leveranciers` biedt een CSV-uploadvoorvertoning. Vereiste velden: `sku,name,price,stock`; maximaal 60 KB en 150 rijen. Er worden **geen** producten toegevoegd, prijzen gewijzigd of bestellingen naar leveranciers gestuurd.
+- **Buttons:** donkerblauwe/oranje actiekleuren in de bestaande NUVEMIXA-template met contrast, focusranden, hover en grotere aanraakvlakken op mobiel.
+- Regressietests in `tests/test_nuvemixa_integrations.py`, meegenomen via de workflow `test_nuvemixa_*.py`.
+
+### Veiligheidscontrole vóór live-uitrol
+
+1. Controleer eerst of RankFix werkt vanaf de gekozen `RANKFIX_BASE_URL` en dat het eigen login/scanpad bereikbaar is.
+2. Zet `SECRET_KEY`, `NUVEMIXA_ADMIN_PASSWORD_HASH` en `NUVEMIXA_ADMIN_DB` op de **NUVEMIXA Alwaysdata-app**. Niet in GitHub zetten.
+3. Voeg de door de eigenaar goedgekeurde PNG `static/nuvemixa-logo.png` toe en verifieer de bestandsgrootte. Dit binaire bestand ontbreekt nog in GitHub.
+4. Draai `.venv/bin/python -m unittest discover -s tests -p 'test_nuvemixa_*.py' -v`, daarna WSGI-import en browsertests.
+5. Kies pas na goedgekeurde testresultaten of op **NUVEMIXA** op Alwaysdata gepusht mag worden. Luvyza blijft buiten scope.
+
+**Niet gereed:** live Mollie-betalingen, Google Shopping-publicatie, automatisch productfeedbeheer, RankFix API-responsen die in NUVEMIXA worden opgeslagen. Voor die functies zijn geverifieerde accounts, provider API's, webhooks en contracten nodig.
