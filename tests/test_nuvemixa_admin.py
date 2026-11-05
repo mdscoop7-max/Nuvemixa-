@@ -68,6 +68,54 @@ class TestNuvemixaAdmin(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.client.get("/dashboard").status_code, 302)
 
+    def test_admin_routes_never_cache_or_index(self):
+        for path in ("/admin/login", "/dashboard", "/control", "/catalogus-overzicht"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.headers["Cache-Control"], "no-store")
+                self.assertIn("noindex", response.headers["X-Robots-Tag"])
+
+    def test_admin_writes_require_authentication_and_csrf(self):
+        anonymous = self.client.post("/admin/suppliers", data={"name": "No access"})
+        self.assertEqual(anonymous.status_code, 403)
+        self.client.get("/admin/login")
+        with self.client.session_transaction() as sess:
+            token = sess["_tm_csrf"]
+        self.client.post("/admin/login", data={
+            "_csrf_token": token, "password": "unit-test-password-long"
+        })
+        missing_csrf = self.client.post("/admin/research", data={
+            "category": "Gadgets", "product_name": "Example"
+        })
+        self.assertEqual(missing_csrf.status_code, 403)
+
+    def test_supplier_and_research_forms_in_private_db(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.dict(os.environ, {"NUVEMIXA_ADMIN_DB": str(Path(folder) / "admin.sqlite3")}):
+                self.client.get("/admin/login")
+                with self.client.session_transaction() as sess:
+                    token = sess["_tm_csrf"]
+                response = self.client.post("/admin/login", data={
+                    "_csrf_token": token, "password": "unit-test-password-long"
+                })
+                self.assertEqual(response.status_code, 302)
+                with self.client.session_transaction() as sess:
+                    token = sess["_tm_csrf"]
+                created = self.client.post("/admin/suppliers", data={
+                    "_csrf_token": token, "name": "Example supplier",
+                    "website": "https://example.org"
+                })
+                self.assertEqual(created.status_code, 303)
+                self.assertEqual(self.client.get("/dashboard?section=leveranciers").status_code, 200)
+                research = self.client.post("/admin/research", data={
+                    "_csrf_token": token, "category": "Home & Living",
+                    "product_name": "Test niche"
+                })
+                self.assertEqual(research.status_code, 303)
+                self.assertEqual(self.client.get("/dashboard?section=onderzoek").status_code, 200)
+
     def test_test_catalog_is_not_merchant_ready(self):
         from app import merchant_product_checks
         errors = merchant_product_checks({
