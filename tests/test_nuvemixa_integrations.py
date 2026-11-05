@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
-from nuvemixa_integrations import rankfix_scan_url, mollie_readonly_check, merchant_feed_preview
+from nuvemixa_integrations import rankfix_scan_url, mollie_readonly_check, merchant_feed_preview, supplier_csv_preview
 
 class IntegrationSafetyTests(unittest.TestCase):
     def test_rankfix_handoff_with_nuvemixa_address(self):
@@ -70,6 +70,22 @@ class IntegrationSafetyTests(unittest.TestCase):
         product["merchant_verified"] = False
         self.assertEqual(merchant_feed_preview([product])[1], 0)
 
+    def test_supplier_feed_checks_without_import(self):
+        csv_data = b"sku,name,price,stock\\nSKU-1,Test item,12.50,10\\nSKU-2,Second item,0,NA\\n"
+        with self.subTest("rows"):
+            result = supplier_csv_preview(csv_data.replace(b"\\\\n", b"\\n"))
+            self.assertEqual(result["total"], 2)
+            self.assertEqual(result["valid_format"], 1)
+            self.assertEqual(result["imported"], 0)
+            self.assertEqual(result["published"], 0)
+
+    def test_supplier_feed_rejects_invalid_csv(self):
+        from unittest import TestCase
+        with self.assertRaises(ValueError):
+            supplier_csv_preview(b"example,missing,headers\\n1,2,3\\n")
+        with self.assertRaises(ValueError):
+            supplier_csv_preview(b"x" * 60001)
+
     def test_admin_routes_reject_anonymous(self):
         os.environ.setdefault("SECRET_KEY", "ci-integration-test-key")
         os.environ.setdefault("NUVEMIXA_COOKIE_SECURE", "false")
@@ -77,7 +93,7 @@ class IntegrationSafetyTests(unittest.TestCase):
         app.config["TESTING"] = True
         client = app.test_client()
         for path in ("/admin/rankfix/open", "/admin/mollie/check",
-                     "/admin/merchant-feed-preview.xml"):
+                     "/admin/merchant-feed-preview.xml", "/admin/supplier-feed-preview"):
             with self.subTest(path=path):
                 response = client.get(path)
                 self.assertEqual(response.status_code, 302)
