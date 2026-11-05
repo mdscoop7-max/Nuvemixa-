@@ -15,6 +15,13 @@ class MobileParityTests(unittest.TestCase):
         self.client = app.test_client()
         self.template_dir = Path(__file__).resolve().parent.parent / "templates"
 
+    def test_shared_mobile_templates_compile(self):
+        # Regression for the 2026-11-05 malformed Jinja include (%> instead of %}).
+        for template in ("_bottomnav.html", "_tm_mobile_extras.html", "_footer.html"):
+            with self.subTest(template=template):
+                self.assertNotIn("{% include '_tm_mobile_extras.html' %>", (self.template_dir / template).read_text(encoding="utf-8"))
+                app.jinja_env.get_template(template)
+
     def test_five_existing_category_routes_are_public(self):
         for slug in ("gadgets", "smart-home", "beauty-care", "home-living", "lifestyle-sport"):
             with self.subTest(slug=slug):
