@@ -3,8 +3,8 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Contact | TrendMix</title>
-  <meta name="description" content="Neem contact op met TrendMix over een product, bestelling of andere vraag.">
+  <title>Contact | NUVEMIXA</title>
+  <meta name="description" content="Neem contact op met NUVEMIXA over een product, bestelling of andere vraag.">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}/contact">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260930-1') }}">
@@ -15,7 +15,7 @@
 {% include "_header.html" %}
 <main class="shell info-page">
 {% if request.args.get('status') in ['error', 'unavailable'] %}<div class="tm-contact-alert" role="alert">Het contactformulier kon het bericht niet afleveren. Je bericht is niet verzonden. Probeer het later opnieuw.</div>{% elif request.args.get('status') == 'sent' %}<div class="tm-contact-alert tm-contact-success" role="status">Je bericht is verzonden.</div>{% endif %}
-  <a class="back-link" href="/">← Terug naar TrendMix</a>
+  <a class="back-link" href="/">← Terug naar NUVEMIXA</a>
   <article class="info-card contact-page-card">
     <div class="commerce-heading contact-heading"><div><span class="eyebrow" data-i18n="customerService">KLANTENSERVICE</span><h1>Waar kunnen we mee helpen?</h1></div><span class="commerce-badge">Digitaal bereikbaar</span></div>
     <p class="info-lead" data-i18n="contactLead">Heb je een vraag over een product, bestelling of levering? Vul het formulier in. We gebruiken je gegevens alleen om je vraag te beantwoorden.</p>
