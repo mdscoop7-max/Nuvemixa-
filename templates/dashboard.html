@@ -55,7 +55,7 @@
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">TM</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin">
 {% if section == "dashboard" %}
 <div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
