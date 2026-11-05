@@ -667,6 +667,44 @@ def recent_woo_orders():
     return filtered, None
 
 
+
+# Optional integrations are restricted to a logged-in administrator.
+@app.route("/admin/rankfix/open")
+def admin_rankfix_open():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import rankfix_scan_url
+    address = rankfix_scan_url()
+    if not address:
+        return "RankFix-adres niet veilig geconfigureerd.", 503
+    response = redirect(address, code=302)
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.route("/admin/mollie/check")
+def admin_mollie_check():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import mollie_readonly_check
+    response = jsonify(mollie_readonly_check())
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/merchant-feed-preview.xml")
+def admin_merchant_feed_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import merchant_feed_preview
+    xml, count = merchant_feed_preview(catalog_items())
+    response = Response(xml, content_type="application/xml; charset=utf-8")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-NUVEMIXA-Preview-Only"] = "true"
+    response.headers["X-NUVEMIXA-Eligible-Count"] = str(count)
+    return response
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
