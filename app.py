@@ -73,7 +73,7 @@ def load_catalog():
                     continue
                 global_seen.add(key)
                 unique_items.append(item)
-            # TrendMix testcatalogus: maximaal 20 artikelen per actieve hoofdcollectie.
+            # NUVEMIXA testcatalogus: maximaal 20 artikelen per actieve hoofdcollectie.
             # Bij een leverancierskoppeling vervangen we deze selectie door de echte feed.
             catalog[slug] = unique_items[:20]
         except (FileNotFoundError, json.JSONDecodeError, OSError):
@@ -122,7 +122,7 @@ BROKEN_IMAGE_HOSTS = ("loremflickr.com", "placeimg.com", "source.unsplash.com")
 
 
 def needs_generated_image(url):
-    """Lege of onbetrouwbare placeholder-afbeeldingen vervangen we door eigen TrendMix-art."""
+    """Lege of onbetrouwbare placeholder-afbeeldingen vervangen we door eigen NUVEMIXA-art."""
     url = str(url or "").strip()
     return not url or any(host in url for host in BROKEN_IMAGE_HOSTS)
 
@@ -142,9 +142,9 @@ def enrich_product(product, category_slug, index):
     item.setdefault("id", f"tm-{category_slug}-{slugify(item.get('name'))}-{index}")
     item.setdefault("slug", slugify(item.get("name")) or f"product-{index + 1}")
     item["en_name"] = PRODUCT_NAMES_EN.get(category_slug, {}).get(item["slug"], item["name"])
-    item["en_short_description"] = f"{item['en_name']} — a provisional selection from the TrendMix test catalogue."
+    item["en_short_description"] = f"{item['en_name']} — a provisional selection from the NUVEMIXA test catalogue."
     item["en_description"] = (
-        f"{item['en_name']} is a provisional product in the TrendMix catalogue. "
+        f"{item['en_name']} is a provisional product in the NUVEMIXA catalogue. "
         "The image is temporary and may differ from the final item. "
         "Specifications, pricing, supplier, availability and delivery times "
         "will be verified before commercial sales."
@@ -159,11 +159,11 @@ def enrich_product(product, category_slug, index):
         item["image"] = product_art_url(category_slug, item["slug"])
     item["images"] = [img for img in (item.get("images") or []) if not needs_generated_image(img)] or [item["image"]]
     item.setdefault("short_description", f"Bekijk {item['name']} binnen de {item['category_name']}-testcollectie.")
-    item.setdefault("description", item.get("short_description") or f"{item['name']} is onderdeel van de TrendMix-collectie.")
+    item.setdefault("description", item.get("short_description") or f"{item['name']} is onderdeel van de NUVEMIXA-collectie.")
     item.setdefault("specifications", {})
     item.setdefault("usps", [])
-    item.setdefault("seo_title", f"{item['name']} | TrendMix")
-    item.setdefault("seo_description", f"{item['name']} binnen {item['category_name']}. Bekijk prijs, productinformatie en alternatieven bij TrendMix.")
+    item.setdefault("seo_title", f"{item['name']} | NUVEMIXA")
+    item.setdefault("seo_description", f"{item['name']} binnen {item['category_name']}. Bekijk prijs, productinformatie en alternatieven bij NUVEMIXA.")
     item.setdefault("faq", [])
     item.setdefault("related_product_ids", [])
     item["product_url"] = product_url(item)
@@ -529,33 +529,33 @@ def control():
 
 
 INFO_PAGES = {
-    "over-trendmix": {"title": "Over TrendMix", "description": "Ontdek het verhaal achter TrendMix, onze vijf productcollecties en hoe we bouwen aan een overzichtelijke webshop met betrouwbare informatie vóór de commerciële opening.", "content": """
-        <p>TrendMix wordt ontwikkeld als een moderne webshop waarin overzicht, duidelijke informatie en een prettige winkelervaring centraal staan. Het assortiment is verdeeld over vijf vaste categorieën: Gadgets, Smart Home, Beauty & Care, Home & Living en Lifestyle & Sport.</p>
-        <h2>Waar we voor staan</h2><p>We willen klanten niet door een eindeloze catalogus laten zoeken. TrendMix kiest voor een overzichtelijk assortiment en productpagina’s waarop prijs, belangrijkste kenmerken, voorraad- en leverinformatie zo duidelijk mogelijk worden weergegeven.</p>
-        <h2>Van testfase naar echte webshop</h2><p>TrendMix bevindt zich momenteel in ontwikkeling. Producten en prijzen in de testcatalogus kunnen nog wijzigen. Echte bestellingen worden pas geactiveerd nadat leverancier, betaling, verzending, retourproces en bedrijfsgegevens definitief zijn ingericht en gecontroleerd.</p>
+    "over-trendmix": {"title": "Over NUVEMIXA", "description": "Ontdek het verhaal achter NUVEMIXA, onze vijf productcollecties en hoe we bouwen aan een overzichtelijke webshop met betrouwbare informatie vóór de commerciële opening.", "content": """
+        <p>NUVEMIXA wordt ontwikkeld als een moderne webshop waarin overzicht, duidelijke informatie en een prettige winkelervaring centraal staan. Het assortiment is verdeeld over vijf vaste categorieën: Gadgets, Smart Home, Beauty & Care, Home & Living en Lifestyle & Sport.</p>
+        <h2>Waar we voor staan</h2><p>We willen klanten niet door een eindeloze catalogus laten zoeken. NUVEMIXA kiest voor een overzichtelijk assortiment en productpagina’s waarop prijs, belangrijkste kenmerken, voorraad- en leverinformatie zo duidelijk mogelijk worden weergegeven.</p>
+        <h2>Van testfase naar echte webshop</h2><p>NUVEMIXA bevindt zich momenteel in ontwikkeling. Producten en prijzen in de testcatalogus kunnen nog wijzigen. Echte bestellingen worden pas geactiveerd nadat leverancier, betaling, verzending, retourproces en bedrijfsgegevens definitief zijn ingericht en gecontroleerd.</p>
         <h2>Transparantie</h2><p>Voor de commerciële livegang publiceren we de volledige identiteit en contactgegevens van de verkopende onderneming, de definitieve verkoopvoorwaarden en alle informatie die klanten nodig hebben vóór het sluiten van een overeenkomst.</p>
-        <h2>Vragen of feedback</h2><p>Zie je onduidelijke productinformatie of heb je een vraag over TrendMix? Gebruik dan de contactpagina. Feedback uit de testfase gebruiken we om de webshop verder te verbeteren.</p>
+        <h2>Vragen of feedback</h2><p>Zie je onduidelijke productinformatie of heb je een vraag over NUVEMIXA? Gebruik dan de contactpagina. Feedback uit de testfase gebruiken we om de webshop verder te verbeteren.</p>
     """},
-    "bestellen": {"title": "Bestellen & levering", "description": "Informatie over bestellen, prijzen, betalen, levering en orderbevestiging bij TrendMix.", "content": """
-        <p>Deze pagina beschrijft hoe het bestelproces van TrendMix wordt ingericht. Zolang de webshop in testfase is, worden geen definitieve betaal- of leverbeloften gedaan.</p>
+    "bestellen": {"title": "Bestellen & levering", "description": "Informatie over bestellen, prijzen, betalen, levering en orderbevestiging bij NUVEMIXA.", "content": """
+        <p>Deze pagina beschrijft hoe het bestelproces van NUVEMIXA wordt ingericht. Zolang de webshop in testfase is, worden geen definitieve betaal- of leverbeloften gedaan.</p>
         <h2>Product en prijs</h2><p>Vóór een commerciële bestelling tonen we de belangrijkste productkenmerken, de totale verkoopprijs inclusief toepasselijke belastingen en eventuele bijkomende kosten. Verzendkosten en andere kosten worden uiterlijk vóór het definitief plaatsen van de bestelling duidelijk gemaakt.</p>
         <h2>Bestellen</h2><p>Je voegt producten toe aan de winkelwagen, controleert aantallen en gegevens en krijgt vóór de definitieve bestelhandeling een overzicht van de bestelling. De bestelknop zal bij livegang ondubbelzinnig duidelijk maken dat de bestelling een betalingsverplichting inhoudt.</p>
-        <h2>Betalen</h2><p>De definitieve betaalmethoden worden vóór livegang gepubliceerd. TrendMix brengt geen betaalmethode of toeslag in rekening die niet vooraf duidelijk is vermeld.</p>
+        <h2>Betalen</h2><p>De definitieve betaalmethoden worden vóór livegang gepubliceerd. NUVEMIXA brengt geen betaalmethode of toeslag in rekening die niet vooraf duidelijk is vermeld.</p>
         <h2>Levering</h2><p>De beschikbare bezorglanden, verzendkosten, verwachte levertijd en eventuele beperkingen worden vóór de bestelling getoond zodra de leverancier en logistieke inrichting definitief zijn. Na een echte bestelling ontvangt de klant een bevestiging met de relevante bestelgegevens.</p>
-        <h2>Probleem met levering</h2><p>Is een bestelling na livegang niet of niet correct geleverd, dan kan de klant contact opnemen met TrendMix. De definitieve contactgegevens en procedure worden vóór livegang op deze website gepubliceerd.</p>
+        <h2>Probleem met levering</h2><p>Is een bestelling na livegang niet of niet correct geleverd, dan kan de klant contact opnemen met NUVEMIXA. De definitieve contactgegevens en procedure worden vóór livegang op deze website gepubliceerd.</p>
     """},
     "retouren": {"title": "Retour & herroeping", "description": "Informatie over wettelijke bedenktijd, herroeping, retourneren en terugbetaling.", "content": """
         <p>Bij online consumentenkoop geldt in de EU in veel gevallen een wettelijk herroepingsrecht. Voor goederen is de gebruikelijke bedenktijd 14 dagen vanaf ontvangst. Er bestaan wettelijke uitzonderingen; daarom wordt per relevant product duidelijk gemaakt wanneer het herroepingsrecht niet geldt.</p>
-        <h2>Een aankoop herroepen</h2><p>Wanneer TrendMix commercieel live gaat, leggen we vóór de koop duidelijk uit hoe je binnen de wettelijke termijn laat weten dat je de overeenkomst wilt herroepen. We publiceren ook het vereiste modelformulier en de definitieve contact- en retourgegevens.</p>
+        <h2>Een aankoop herroepen</h2><p>Wanneer NUVEMIXA commercieel live gaat, leggen we vóór de koop duidelijk uit hoe je binnen de wettelijke termijn laat weten dat je de overeenkomst wilt herroepen. We publiceren ook het vereiste modelformulier en de definitieve contact- en retourgegevens.</p>
         <h2>Product terugsturen</h2><p>Na een geldige herroeping moet het product binnen de wettelijke termijn worden teruggestuurd. Vóór de koop vermelden we wie de directe retourkosten draagt en, waar vereist, welke kosten daarbij te verwachten zijn.</p>
         <h2>Product beoordelen</h2><p>Tijdens de bedenktijd mag een consument een product beoordelen zoals dat redelijkerwijs in een winkel mogelijk is. Als verder gebruik tot waardevermindering leidt, kan daarvoor volgens de wettelijke regels een vergoeding gelden.</p>
         <h2>Terugbetaling</h2><p>Bij een geldige herroeping wordt de terugbetaling volgens de wettelijke regels uitgevoerd. Daarbij kan in bepaalde gevallen worden gewacht tot het product is ontvangen of bewijs van terugzending is geleverd.</p>
-        <h2>Online herroepingsfunctie</h2><p>De commerciële versie van TrendMix krijgt vóór livegang de vereiste online mogelijkheid om een daarvoor in aanmerking komende online aankoop eenvoudig te herroepen, inclusief ontvangstbevestiging.</p>
+        <h2>Online herroepingsfunctie</h2><p>De commerciële versie van NUVEMIXA krijgt vóór livegang de vereiste online mogelijkheid om een daarvoor in aanmerking komende online aankoop eenvoudig te herroepen, inclusief ontvangstbevestiging.</p>
     """},
-    "voorwaarden": {"title": "Algemene voorwaarden", "description": "Conceptuele opbouw van de verkoopvoorwaarden van TrendMix voor de commerciële livegang.", "content": """
+    "voorwaarden": {"title": "Algemene voorwaarden", "description": "Conceptuele opbouw van de verkoopvoorwaarden van NUVEMIXA voor de commerciële livegang.", "content": """
         <p>De definitieve algemene voorwaarden worden vóór de commerciële livegang juridisch gecontroleerd en gekoppeld aan de identiteit van de verkopende onderneming. Onderstaande onderdelen beschrijven alvast de structuur die klanten mogen verwachten; deze tekst is nog geen definitieve verkoopovereenkomst.</p>
         <h2>1. Toepasselijkheid en verkoper</h2><p>De voorwaarden zullen vermelden op welke overeenkomsten zij van toepassing zijn en wie de verkopende onderneming is, inclusief handelsnaam, vestigings- en contactgegevens en relevante registratienummers.</p>
-        <h2>2. Aanbod en productinformatie</h2><p>TrendMix beschrijft producten zo duidelijk mogelijk. Kennelijke fouten kunnen worden gecorrigeerd. Voor slimme en verbonden producten wordt waar relevant informatie toegevoegd over compatibiliteit, benodigde diensten en updates zodra die informatie door de leverancier is bevestigd.</p>
+        <h2>2. Aanbod en productinformatie</h2><p>NUVEMIXA beschrijft producten zo duidelijk mogelijk. Kennelijke fouten kunnen worden gecorrigeerd. Voor slimme en verbonden producten wordt waar relevant informatie toegevoegd over compatibiliteit, benodigde diensten en updates zodra die informatie door de leverancier is bevestigd.</p>
         <h2>3. Prijzen en kosten</h2><p>Consumentenprijzen worden duidelijk weergegeven inclusief toepasselijke belastingen. Eventuele verzend- of andere bijkomende kosten worden vóór de bestelling kenbaar gemaakt.</p>
         <h2>4. Totstandkoming van de overeenkomst</h2><p>De definitieve voorwaarden beschrijven wanneer een bestelling is geplaatst, wanneer een overeenkomst tot stand komt en hoe de klant daarvan een bevestiging ontvangt.</p>
         <h2>5. Betaling en levering</h2><p>Beschikbare betaalmethoden, levergebieden, verwachte levertijden en eventuele beperkingen worden vóór de koop duidelijk gemaakt.</p>
@@ -565,18 +565,18 @@ INFO_PAGES = {
         <h2>9. Privacy</h2><p>Persoonsgegevens worden alleen verwerkt voor duidelijk omschreven doeleinden en volgens het privacybeleid. Voor externe betaal-, verzend- of technische dienstverleners wordt uitgelegd welke rol zij hebben.</p>
         <h2>10. Wijzigingen</h2><p>Nieuwe voorwaarden gelden niet met terugwerkende kracht ten nadele van reeds gesloten overeenkomsten. De versie die bij een bestelling hoort, moet door de klant kunnen worden bewaard of geraadpleegd.</p>
     """},
-    "privacy": {"title": "Privacybeleid", "description": "Lees hoe TrendMix persoonsgegevens verwerkt tijdens de ontwikkeling van de webshop, welke gegevens nodig kunnen zijn en hoe we privacy-informatie aanvullen vóór livegang.", "content": """
-        <p>TrendMix wil alleen persoonsgegevens verwerken die nodig zijn om de webshop te laten functioneren, vragen te beantwoorden en — na commerciële livegang — bestellingen uit te voeren. Vóór livegang wordt dit privacybeleid aangevuld met de definitieve identiteit en contactgegevens van de verwerkingsverantwoordelijke.</p>
+    "privacy": {"title": "Privacybeleid", "description": "Lees hoe NUVEMIXA persoonsgegevens verwerkt tijdens de ontwikkeling van de webshop, welke gegevens nodig kunnen zijn en hoe we privacy-informatie aanvullen vóór livegang.", "content": """
+        <p>NUVEMIXA wil alleen persoonsgegevens verwerken die nodig zijn om de webshop te laten functioneren, vragen te beantwoorden en — na commerciële livegang — bestellingen uit te voeren. Vóór livegang wordt dit privacybeleid aangevuld met de definitieve identiteit en contactgegevens van de verwerkingsverantwoordelijke.</p>
         <h2>Welke gegevens</h2><p>Afhankelijk van de gebruikte functie kunnen naam, contactgegevens, aflever- en factuurgegevens, bestelgegevens en technische gegevens worden verwerkt. We vragen niet meer gegevens dan nodig is voor het betreffende doel.</p>
         <h2>Waarvoor</h2><p>Gegevens kunnen worden gebruikt voor klantenservice, uitvoering en administratie van bestellingen, fraudepreventie, wettelijke verplichtingen en het technisch functioneren van de webshop. De definitieve grondslagen en bewaartermijnen worden vóór livegang per doel beschreven.</p>
         <h2>Dienstverleners</h2><p>Voor onder meer hosting, betaling, e-mail en verzending kunnen externe dienstverleners nodig zijn. Zodra deze partijen definitief zijn gekozen, wordt relevante informatie hierover opgenomen in het privacybeleid.</p>
         <h2>Jouw privacyrechten</h2><p>De definitieve privacyverklaring legt uit hoe betrokkenen hun toepasselijke rechten kunnen uitoefenen, zoals inzage, correctie of verwijdering waar de wet dat toestaat.</p>
-        <h2>Beveiliging en contact</h2><p>TrendMix neemt passende technische en organisatorische maatregelen voor de functies die worden aangeboden. Het definitieve privacycontact wordt vóór commerciële livegang gepubliceerd.</p>
+        <h2>Beveiliging en contact</h2><p>NUVEMIXA neemt passende technische en organisatorische maatregelen voor de functies die worden aangeboden. Het definitieve privacycontact wordt vóór commerciële livegang gepubliceerd.</p>
     """},
     "cookies": {"title": "Cookies & voorkeuren", "description": "Informatie over functionele opslag, cookies en toekomstige toestemming.", "content": """
-        <p>TrendMix gebruikt tijdens de ontwikkeling functionele browseropslag voor onderdelen zoals taalvoorkeur en winkelwagenfunctionaliteit. Deze functies zijn bedoeld om de website technisch te laten werken en voorkeuren te onthouden.</p>
+        <p>NUVEMIXA gebruikt tijdens de ontwikkeling functionele browseropslag voor onderdelen zoals taalvoorkeur en winkelwagenfunctionaliteit. Deze functies zijn bedoeld om de website technisch te laten werken en voorkeuren te onthouden.</p>
         <h2>Functionele opslag</h2><p>Een taalkeuze of winkelwagen kan lokaal of via een sessie worden bewaard. Zonder deze technische functies kan een deel van de webshop minder goed werken.</p>
-        <h2>Analyse en marketing</h2><p>Voordat niet-noodzakelijke analyse- of marketingtechnologie wordt geactiveerd, wordt gecontroleerd welke toestemming en informatie daarvoor nodig is. TrendMix activeert zulke technologie niet als daarvoor eerst geldige toestemming vereist is.</p>
+        <h2>Analyse en marketing</h2><p>Voordat niet-noodzakelijke analyse- of marketingtechnologie wordt geactiveerd, wordt gecontroleerd welke toestemming en informatie daarvoor nodig is. NUVEMIXA activeert zulke technologie niet als daarvoor eerst geldige toestemming vereist is.</p>
         <h2>Voorkeuren wijzigen</h2><p>Bij livegang komt er, indien nodig voor de gebruikte technologie, een duidelijke manier om cookie- en privacyvoorkeuren te bekijken en te wijzigen. Browsergegevens kunnen daarnaast via de instellingen van de browser worden verwijderd.</p>
     """},
 }
@@ -822,7 +822,7 @@ def contact():
         "from": from_email,
         "to": [os.getenv("CONTACT_TO_EMAIL", from_email)],
         "reply_to": email,
-        "subject": f"TrendMix contactformulier: {name}",
+        "subject": f"NUVEMIXA contactformulier: {name}",
         "text": f"Naam: {name}\\nE-mail: {email}\\n\\nBericht:\\n{message}",
     }
     data = json.dumps(payload).encode("utf-8")
