@@ -15,7 +15,6 @@ jobs:
     timeout-minutes: 15
     env:
       SECRET_KEY: test-only-ci-secret-for-regression
-      NUVEMIXA_ADMIN_PASSWORD_HASH: ""
       NUVEMIXA_COOKIE_SECURE: "false"
       TRENDMIX_LIVE_ORDERS: "false"
     steps:
