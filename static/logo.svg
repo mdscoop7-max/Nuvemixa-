@@ -1,18 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 72" role="img" aria-labelledby="trendmix-logo-title trendmix-logo-desc">
-  <title id="trendmix-logo-title">TrendMix</title>
-  <desc id="trendmix-logo-desc">TrendMix webshop logo</desc>
-  <defs>
-    <linearGradient id="tm-blue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#20b8ff"/>
-      <stop offset="1" stop-color="#2563eb"/>
-    </linearGradient>
-  </defs>
-  <g transform="translate(4 6)">
-    <rect x="6" y="14" width="48" height="42" rx="11" fill="#0b1736"/>
-    <path d="M18 18V13C18 5 23 1 30 1s12 4 12 12v5" fill="none" stroke="url(#tm-blue)" stroke-width="6" stroke-linecap="round"/>
-    <text x="30" y="43" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#fff">TM</text>
-    <path d="M2 48c16 10 43 9 58-7" fill="none" stroke="url(#tm-blue)" stroke-width="5" stroke-linecap="round"/>
-  </g>
-  <text x="78" y="47" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="800" letter-spacing="-1.5" fill="#0b1736">Trend</text>
-  <text x="191" y="47" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="800" letter-spacing="-1.5" fill="#1687ff">Mix</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-labelledby="nv-title"><title id="nv-title">NUVEMIXA</title><defs><linearGradient id="bag" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#163e79"/><stop offset="1" stop-color="#071a35"/></linearGradient><linearGradient id="gold" x1="0" x2="1" y1="0" y2=".8"><stop stop-color="#ffe08c"/><stop offset=".5" stop-color="#f6ad21"/><stop offset="1" stop-color="#c9860b"/></linearGradient></defs><path d="M14 25h52l7 45a6 6 0 0 1-6 7H13a6 6 0 0 1-6-7z" fill="url(#bag)"/><path d="M26 27v-8a14 14 0 0 1 28 0v8" fill="none" stroke="#123e76" stroke-width="6" stroke-linecap="round"/><path d="M24 56l9-26h8l10 17 5-17h8L54 58h-8L37 42l-5 14z" fill="#fff"/><path d="M5 64c17 7 48 0 70-23" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/></svg>
