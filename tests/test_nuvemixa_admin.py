@@ -101,6 +101,10 @@ class TestNuvemixaAdmin(unittest.TestCase):
                     "_csrf_token": token, "password": "unit-test-password-long"
                 })
                 self.assertEqual(response.status_code, 302)
+                # A successful login clears the prior session (including its CSRF token).
+                # Load the authenticated supplier form to create a fresh form token.
+                form_response = self.client.get("/dashboard?section=leveranciers")
+                self.assertEqual(form_response.status_code, 200)
                 with self.client.session_transaction() as sess:
                     token = sess["_tm_csrf"]
                 created = self.client.post("/admin/suppliers", data={
