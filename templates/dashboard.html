@@ -55,6 +55,43 @@
 /* Merchant readiness rows */
 .nv-merchant-audit{margin-top:20px;border:1px solid #dde8f5;border-radius:14px;overflow-x:auto}
 .nv-merchant-audit .admin-table td:last-child{color:#4d6480;font-size:12px}
+
+/* NUVEMIXA premium dashboard buttons 20261105 */
+:root{--nv-action:#0b315c;--nv-action-hover:#154b82;--nv-orange:#f59d1b}
+.integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a,.admin-access button{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;padding:12px 18px;border-radius:12px;
+  font-size:13px;line-height:1.35;font-weight:800;letter-spacing:.01em;
+  text-decoration:none;white-space:normal;text-align:center;
+  transition:transform .16s ease,box-shadow .2s ease,background-color .2s ease,border-color .2s ease;
+  touch-action:manipulation
+}
+.integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a{
+  color:#fff!important;background:var(--nv-action)!important;
+  border:1px solid #0b315c!important;
+  box-shadow:0 5px 14px rgba(11,49,92,.16)!important;
+}
+.integration a.integration-status:hover,.panel a.integration-status:hover,
+.nv-admin-form button:hover,.side-bottom a:hover{
+  background:var(--nv-action-hover)!important;transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(11,49,92,.22)!important
+}
+.integration a.integration-status:first-of-type{border-color:var(--nv-orange)!important}
+.admin-access button{color:#0b315c;background:#fff;border:1px solid #bcd0e7}
+.admin-access button:hover{background:#fff4e2;border-color:var(--nv-orange)}
+.side-links a:hover,.quick a:hover{transform:translateY(-1px);box-shadow:0 9px 22px #0c31541a}
+:where(.integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.admin-access button,.quick a,.side-links a):focus-visible{
+  outline:3px solid #f5a623!important;outline-offset:3px!important
+}
+@media(max-width:760px){
+ .integration a.integration-status,.panel a.integration-status{width:100%;min-height:50px}
+ .nv-admin-form button{width:100%;min-height:50px}
+ .admin-access button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ .integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a,.admin-access button{transition:none!important;transform:none!important}
+}
+
 </style>
 </head>
 <body><div class="layout">
