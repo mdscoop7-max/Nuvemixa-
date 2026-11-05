@@ -92,6 +92,14 @@
  .integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a,.admin-access button{transition:none!important;transform:none!important}
 }
 
+/* Modern feed upload controls */
+.nv-admin-feed-form{display:flex;align-items:center;flex-wrap:wrap;gap:12px;border:1px solid #d8e7f6;background:#f7fbff;border-radius:16px;padding:18px;margin:16px 0 25px}
+.nv-admin-feed-form label{font-weight:800;font-size:13px}
+.nv-admin-feed-form input[type=file]{max-width:100%;font-size:13px;color:#244465}
+.nv-admin-feed-form button{min-height:46px;border-radius:12px;border:1px solid #0b315c;background:#0b315c;color:#fff;font-size:13px;font-weight:800;padding:12px 20px;cursor:pointer}
+.nv-admin-feed-form button:hover{background:#154b82}
+.nv-admin-feed-form :is(input,button):focus-visible{outline:3px solid #f5a623;outline-offset:3px}
+@media(max-width:760px){.nv-admin-feed-form{display:grid;grid-template-columns:minmax(0,1fr)}.nv-admin-feed-form button{width:100%}}
 </style>
 </head>
 <body><div class="layout">
@@ -200,6 +208,14 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </table></div>
 <p>Getoond: maximaal 50 producten. De volledige lijst staat in de JSON-controle.</p><p style="margin-top:14px">Voor echte publicatie zijn daarnaast een geverifieerd Merchant-account, betaal- en retourinformatie en de Google-koppeling noodzakelijk.</p></section>
 {% elif section == "leveranciers" %}
+<section class="panel"><h2>Leveranciersfeed controleren</h2>
+<p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
+<form method="post" action="{{ url_for('admin_supplier_feed_preview') }}" enctype="multipart/form-data" class="nv-admin-feed-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label for="supplier-feed">Kies een CSV-bestand (maximaal 60 KB)</label>
+<input id="supplier-feed" name="feed" type="file" accept=".csv,text/csv" required>
+<button type="submit">Controleer leveranciersfeed</button>
+</form></section>
 <section class="panel"><h2>Leveranciersregister</h2>
 <p>Bewaar gecontroleerde leverancierscontacten. Het toevoegen van een leverancier activeert geen productfeed, voorraadkoppeling of automatische orderverwerking.</p>
 {% if supplier_error %}<div class="notice" role="status">{{ supplier_error }}</div>{% endif %}
