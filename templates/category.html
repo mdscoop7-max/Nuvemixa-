@@ -1,5 +1,19 @@
 {% from '_tm_icons.html' import tm_icon %}
 <!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0866f5"><title>{{ category_name }} | NUVEMIXA</title><meta name="description" content="Bekijk de {{ category_name }} collectie bij NUVEMIXA: praktische producten, duidelijke informatie en een overzicht van ons assortiment."><link rel="canonical" href="https://nuvemixa.alwaysdata.net/{{ category_slug }}"><link rel="stylesheet" href="{{ url_for('static',filename='storefront-v2.css',v='20261017-footer1') }}"><link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
+{# Load shared navigation styles before header markup to prevent oversized icons during page changes. #}
+<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261106-nav-firstpaint1') }}">
+<style>
+/* Critical safe fallback during mobile navigation, even if shared CSS arrives late. */
+.header.wrap .wordmark .nv-brand-image{display:block;width:176px;max-width:100%;height:auto;max-height:60px;object-fit:contain}
+.header.wrap .wordmark::before{content:none!important;display:none!important}
+.tm-top-menu-trigger svg,.tm-menu-hamburger,.tm-menu-chevron{width:22px!important;height:22px!important;max-width:22px;max-height:22px;flex-shrink:0}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;list-style:none}
+.tm-digital-nav .tm-category-dropdown:not([open])>.categorylinks,
+.tm-digital-nav .tm-category-dropdown:not([open])>.tm-menu-quick-links{display:none!important}
+.tm-mobile-drawer[hidden],.tm-assistant[hidden],.contact-modal[hidden]{display:none!important}
+@media(max-width:760px){.header.wrap .wordmark .nv-brand-image{width:146px;max-height:52px}}
+</style>
+
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="NUVEMIXA">
 <meta property="og:title" content="{{ category_name }} | NUVEMIXA">
