@@ -77,3 +77,40 @@
   .site-footer.tm-footer.tm-footer-v2 .tm-footer-status{align-items:flex-start;flex-direction:column;gap:9px}
   .site-footer.tm-footer.tm-footer-v2 .footer-column a{font-size:13px;min-height:32px}
 }
+
+/* 2026-11-09: keep the NUVEMIXA mobile footer compact and aligned.
+   Footer only: no changes to category heroes, products or header. */
+.site-footer.tm-footer.tm-footer-v2{overflow-x:clip}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-grid,
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>*{min-width:0}
+.site-footer.tm-footer.tm-footer-v2 .footer-logo{
+  display:inline-flex!important;align-items:center!important;
+  width:min(100%,270px);max-width:100%!important;padding:0!important;
+  margin:0 0 10px!important;background:transparent!important;
+  border:0!important;box-shadow:none!important;
+}
+.site-footer.tm-footer.tm-footer-v2 .footer-logo .nv-brand-image{
+  display:block!important;width:100%!important;max-width:270px!important;
+  height:auto!important;max-height:none!important;object-fit:contain!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-brand p{overflow-wrap:break-word}
+.site-footer.tm-footer.tm-footer-v2 .footer-column a{overflow-wrap:anywhere}
+@media(max-width:600px){
+ .site-footer.tm-footer.tm-footer-v2{padding:28px 0 110px!important}
+ .site-footer.tm-footer.tm-footer-v2>.shell{width:calc(100% - 36px)!important}
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid{
+   grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   column-gap:20px!important;row-gap:26px!important;
+   padding-bottom:24px!important;
+ }
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.tm-footer-brand{grid-column:1/-1!important}
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.footer-column:last-child{grid-column:1/-1!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-column h3{font-size:15px!important;margin:0 0 10px!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-column a{font-size:12.5px!important;line-height:1.45!important;min-height:30px;padding:3px 0!important}
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-brand p{font-size:13px!important;margin-top:8px!important;line-height:1.55!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-logo{width:220px;max-width:80%!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-logo .nv-brand-image{max-width:220px!important}
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-status{gap:8px!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-bottom{padding-top:14px!important}
+}
