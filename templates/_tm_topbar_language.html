@@ -1,7 +1,7 @@
 <div class="tm-global-language tm-locale-flags" aria-label="Taal kiezen / Select language">
   <select id="tmGlobalLanguage" class="tm-locale-native" aria-label="Taal kiezen / Select language"><option value="nl">Nederlands</option><option value="en">English</option></select>
   <button type="button" class="tm-locale-trigger" aria-label="Taal kiezen / Select language" aria-haspopup="true" aria-expanded="false" aria-controls="tmLocaleChoices">
-    <span class="tm-locale-current"><svg viewBox="0 0 36 24" aria-hidden="true"><path fill="#ae1c28" d="M0 0h36v8H0z"/><path fill="#fff" d="M0 8h36v8H0z"/><path fill="#21468b" d="M0 16h36v8H0z"/></svg></span><span class="tm-locale-title" data-tm-tr data-tm-nl="Taal" data-tm-en="Language">Taal</span><span class="tm-locale-chevron" aria-hidden="true">⌄</span>
+    <span class="tm-locale-current"><svg viewBox="0 0 36 24" aria-hidden="true"><path fill="#ae1c28" d="M0 0h36v8H0z"/><path fill="#fff" d="M0 8h36v8H0z"/><path fill="#21468b" d="M0 16h36v8H0z"/></svg></span><span class="tm-locale-code" aria-hidden="true">NL</span><span class="tm-locale-title" data-tm-tr data-tm-nl="Taal" data-tm-en="Language">Taal</span><span class="tm-locale-chevron" aria-hidden="true">⌄</span>
   </button>
   <div class="tm-locale-choices" id="tmLocaleChoices" hidden>
     <button type="button" data-tm-locale-choice="nl" aria-label="Nederlands"><svg viewBox="0 0 36 24" aria-hidden="true"><path fill="#ae1c28" d="M0 0h36v8H0z"/><path fill="#fff" d="M0 8h36v8H0z"/><path fill="#21468b" d="M0 16h36v8H0z"/></svg><span>Nederlands</span></button>
@@ -30,7 +30,7 @@
     const wrap=document.querySelector('.tm-locale-flags');
     if(!wrap)return;
     const select=wrap.querySelector('#tmGlobalLanguage'),trigger=wrap.querySelector('.tm-locale-trigger'),menu=wrap.querySelector('.tm-locale-choices');
-    const sync=()=>{const code=select.value==='en'?'en':'nl';wrap.querySelector('.tm-locale-current').innerHTML=flags[code];wrap.querySelectorAll('[data-tm-locale-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tmLocaleChoice===code)))};
+    const sync=()=>{const code=select.value==='en'?'en':'nl';wrap.querySelector('.tm-locale-current').innerHTML=flags[code];wrap.querySelector('.tm-locale-code').textContent=code.toUpperCase();wrap.querySelectorAll('[data-tm-locale-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tmLocaleChoice===code)))};
     const close=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
     trigger.addEventListener('click',()=>{menu.hidden=!menu.hidden;trigger.setAttribute('aria-expanded',String(!menu.hidden));sync()});
     menu.querySelectorAll('[data-tm-locale-choice]').forEach(b=>b.addEventListener('click',()=>{select.value=b.dataset.tmLocaleChoice;select.dispatchEvent(new Event('change',{bubbles:true}));sync();close();trigger.focus()}));
@@ -43,3 +43,11 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+<style>
+/* Always show readable NL/EN next to the flag, including on narrow phones. */
+.tm-locale-flags .tm-locale-trigger{width:auto!important;min-width:105px!important;max-width:100%!important;gap:7px!important;padding:6px 9px!important;background:#fff!important;color:#092d58!important;border:2px solid #76adee!important}
+.tm-locale-flags .tm-locale-code{display:inline-block!important;font:800 14px/1.2 system-ui,sans-serif!important;letter-spacing:.3px!important;color:#082c55!important;white-space:nowrap!important;opacity:1!important}
+.tm-locale-flags .tm-locale-title{display:none!important}
+.tm-locale-flags .tm-locale-chevron{color:#0c4b88!important}
+@media(max-width:760px){.tm-locale-flags .tm-locale-trigger{min-width:100px!important;gap:6px!important;padding:6px 8px!important}.tm-locale-flags svg{width:29px!important;height:21px!important}}
+</style>
