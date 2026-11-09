@@ -1,0 +1,19 @@
+{
+  "name": "NUVEMIXA",
+  "short_name": "NUVEMIXA",
+  "description": "NUVEMIXA – slimme en praktische producten",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b2b53",
+  "theme_color": "#0866f5",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "/static/nuvemixa-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
