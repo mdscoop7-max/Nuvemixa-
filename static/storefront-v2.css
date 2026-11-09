@@ -197,3 +197,107 @@ body{padding-bottom:calc(94px + env(safe-area-inset-bottom,0px))}
     --tm-cta-ink: #18243b;
   }
 }
+
+
+/* Compact bilingual topbar dropdown; flags are inline SVG, not font-dependent emoji. */
+.tm-global-language{position:relative;margin-left:10px;z-index:30;font-size:13px}
+.tm-language-dropdown{position:relative}
+.tm-language-dropdown summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:34px;padding:5px 11px;border:1px solid rgba(255,255,255,.55);border-radius:8px;color:#fff;cursor:pointer;font-weight:700}
+.tm-language-dropdown summary::-webkit-details-marker{display:none}
+.tm-language-dropdown summary:focus-visible,.tm-language-options button:focus-visible{outline:3px solid #ffdb6e;outline-offset:2px}
+.tm-lang-flag{width:24px;height:16px;display:inline-flex;flex:none;overflow:hidden;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.18)}
+.tm-lang-flag[hidden]{display:none}
+.tm-lang-flag svg{display:block;width:24px;height:16px}
+.tm-language-arrow{font-size:17px;line-height:1}
+.tm-language-options{position:absolute;top:calc(100% + 5px);right:0;min-width:180px;padding:6px;background:#fff;color:#15233d;border:1px solid #d4ddea;border-radius:10px;box-shadow:0 8px 26px rgba(4,22,54,.22);z-index:50}
+.tm-language-options button{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:6px;color:#15233d;background:transparent;text-align:left;cursor:pointer;font-weight:650}
+.tm-language-options button:hover,.tm-language-options button.active{background:#edf4ff;color:#0658c6}
+
+
+/* TrendMix product-card polish: intentionally scoped; hero and header stay unchanged. */
+.item{min-width:0;transition:transform .2s ease,box-shadow .2s ease}
+.item .photo{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.item .photo img{width:100%;height:100%;object-fit:contain;transition:transform .3s ease}
+@media(hover:hover) and (pointer:fine){.item:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(8,34,78,.12)}.item:hover .photo img{transform:scale(1.045)}}
+.item .iteminfo{min-width:0}
+.item .iteminfo h3{overflow-wrap:anywhere}
+.item .iteminfo a:focus-visible,.item button:focus-visible{outline:3px solid #135ff1;outline-offset:3px}
+.item .iteminfo .add{min-height:44px;touch-action:manipulation}
+@media(max-width:680px){.item{border-radius:14px}.item .photo{min-height:0}.item .iteminfo h3{font-size:clamp(13px,3.6vw,16px);line-height:1.36}.item .iteminfo .add{width:100%;min-height:46px;font-size:13px}}
+@media(prefers-reduced-motion:reduce){.item,.item .photo img{transition:none}.item:hover,.item:hover .photo img{transform:none}}
+
+
+/* Planned checkout options: labels are deliberately not presented as active payment acceptance. */
+.tm-payment-section .tm-payment-methods{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.tm-payment-section .tm-pay-chip{display:inline-flex;align-items:center;gap:5px;min-height:36px;border-radius:8px;border:1px solid #d7e2ef;background:#fff;color:#112947;padding:8px 12px;font-weight:800;font-size:13px;letter-spacing:-.01em}
+.tm-payment-section .tm-pay-ideal{color:#a01983}.tm-payment-section .tm-pay-paypal{color:#103a79}.tm-payment-section .tm-pay-google span{font-weight:900;color:#4285f4}
+@media(max-width:600px){.tm-payment-section .tm-payment-methods{gap:7px}.tm-payment-section .tm-pay-chip{font-size:12px;padding:7px 9px;min-height:38px}}
+
+/* Payment graphics are previews only; final provider-approved brand assets come with activation. */
+.tm-payment-methods .tm-pay-chip{padding:4px 7px;min-height:40px;background:transparent;border:0}
+.tm-payment-methods .tm-pay-chip svg{display:block;max-width:100%;height:auto}
+
+
+/* Responsive finishing pass: product sections only; hero intentionally untouched. */
+.products,.productgrid,.productgrid>.item{min-width:0}
+.productgrid>.item{width:100%}
+.products .heading{min-width:0;flex-wrap:wrap}
+.products .heading h1,.products .heading h2{overflow-wrap:anywhere}
+.item .photo{width:100%}
+.item .iteminfo{min-height:0}
+.item .iteminfo h3{overflow-wrap:anywhere}
+.item .iteminfo .add{min-height:44px}
+@media(min-width:761px) and (max-width:1024px){
+ .productgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+ .productgrid .photo{height:180px}
+ .productgrid .iteminfo h3{font-size:14px}
+}
+@media(max-width:760px){
+ .products{padding-block:18px 8px}
+ .productgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .productgrid .photo{height:auto;aspect-ratio:1 / 1}
+ .productgrid .iteminfo{padding:12px}
+ .productgrid .iteminfo strong{font-size:16px}
+ .productgrid .iteminfo h3{font-size:14px;line-height:1.4;min-height:0}
+ .productgrid .add{min-height:46px;padding:10px 7px}
+ .productgrid .heartform button{width:36px;height:36px}
+}
+@media(max-width:355px){
+ .productgrid{gap:8px}
+ .productgrid .iteminfo{padding:9px}
+ .productgrid .iteminfo h3{font-size:12px}
+ .productgrid .iteminfo strong{font-size:14px}
+}
+
+
+/* Shop price filters and sorting. Scoped below the untouched hero. */
+.tm-shop-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:16px;margin:12px 0 20px;border:1px solid #dce6f3;border-radius:15px;background:#f8fbff}
+.tm-shop-filters .tm-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 135px;min-width:0}
+.tm-shop-filters label{font-size:12px;font-weight:800;color:#213c5e}
+.tm-shop-filters input,.tm-shop-filters select{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #bfcfe4;border-radius:9px;background:#fff;color:#14243d;font:inherit}
+.tm-filter-submit{background:#0866f5;color:#fff;border:0;border-radius:9px;padding:11px 18px;min-height:44px;font-weight:750;cursor:pointer}
+.tm-filter-reset{display:inline-flex;align-items:center;min-height:44px;color:#0866f5;font-weight:750;padding:9px}
+.tm-shop-filters :is(input,select,button,a):focus-visible{outline:3px solid #ffbb46;outline-offset:2px}
+@media(max-width:650px){.tm-shop-filters{gap:9px;padding:12px}.tm-shop-filters .tm-filter-field{flex:1 1 calc(50% - 9px)}.tm-shop-filters .tm-filter-field:nth-of-type(3){flex-basis:100%}.tm-filter-submit,.tm-filter-reset{flex:1 1 calc(50% - 9px);justify-content:center}}
+
+/* Refined store filters; no hero selectors. */
+.tm-shop-filters{display:grid!important;grid-template-columns:1fr 1fr 1.3fr auto auto!important;align-items:end!important;gap:12px!important;padding:20px!important;background:#eef6ff!important;border:1px solid #c8dcf6!important;border-radius:18px!important}
+.tm-shop-filters .tm-filter-field{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;min-width:0!important}
+.tm-shop-filters .tm-filter-field label{display:block!important;font-size:13px!important;font-weight:800!important;color:#173b68!important;margin:0!important}
+.tm-shop-filters input,.tm-shop-filters select{display:block!important;width:100%!important;min-height:46px!important;border:1px solid #b6cce9!important;border-radius:10px!important;padding:10px 12px!important;background:#fff!important;color:#18365a!important}
+.tm-shop-filters .tm-filter-submit{min-height:46px!important;background:#0866f5!important;color:#fff!important;border-radius:10px!important;padding:10px 17px!important;border:0!important}
+.tm-shop-filters .tm-filter-reset{min-height:46px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#fff!important;color:#1556a8!important;border:1px solid #bdd2ed!important;border-radius:10px!important;padding:10px!important}
+@media(max-width:900px){.tm-shop-filters{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:620px){.tm-shop-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:13px!important;gap:9px!important}.tm-shop-filters .tm-filter-field:nth-of-type(3){grid-column:1/-1!important}}
+@media(max-width:350px){.tm-shop-filters{grid-template-columns:1fr!important}.tm-shop-filters .tm-filter-field:nth-of-type(3){grid-column:auto!important}}
+
+/* Language choice: individual stacked options with real flag SVG from template. */
+.tm-language-dropdown .tm-language-options{display:flex!important;flex-direction:column!important;gap:8px!important;min-width:205px!important;padding:9px!important;background:#f4f8ff!important;border:1px solid #c8dafa!important;border-radius:12px!important;box-shadow:0 12px 24px #1a426729!important;z-index:70!important}
+.tm-language-dropdown .tm-language-options button{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;width:100%!important;min-height:44px!important;background:#fff!important;border:1px solid #d8e5f6!important;border-radius:9px!important;padding:9px 12px!important;color:#193b68!important;white-space:nowrap!important;text-align:left!important;font-weight:700!important}
+.tm-language-dropdown .tm-language-options button:hover,.tm-language-dropdown .tm-language-options button:focus-visible{background:#e5f1ff!important;border-color:#0872ee!important}
+.categorygrid .categorytile{min-height:200px!important;padding:22px!important;border-radius:18px!important;border:1px solid #d6e4f5!important;box-shadow:0 9px 24px #153a6411!important;gap:11px!important}
+.categorygrid .categorytile strong{font-size:clamp(16px,1.5vw,20px)!important;color:#15395d!important}
+.categorygrid .categorytile .categoryart{display:grid!important;place-items:center!important;width:46px!important;height:46px!important;border-radius:13px!important;background:#e4f2ff!important;color:#0875ee!important}
+.categorygrid .categorytile .categoryart svg{width:27px!important;height:27px!important;stroke:currentColor!important}
+.categorygrid .categorytile .categorycta{width:100%!important;margin-top:auto!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:10px 12px!important;border-radius:10px!important;background:#fff!important;color:#1264c1!important;font-weight:800!important}
+@media(max-width:650px){.categorygrid .categorytile{min-height:175px!important;padding:15px!important}}

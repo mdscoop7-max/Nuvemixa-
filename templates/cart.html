@@ -1,7 +1,7 @@
 {% from '_tm_icons.html' import tm_icon %}
 <!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Winkelwagen | TrendMix</title><link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260920-3') }}"><script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="robots" content="noindex,nofollow"><title>Winkelwagen | TrendMix</title><link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260920-3') }}"><script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
   <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script><link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261019-2') }}">
 </head>
 <body>
@@ -26,7 +26,7 @@
 {% else %}
 <div class="empty-state"><h3 data-i18n="cartEmpty">Je winkelwagen is leeg</h3><p data-i18n="cartEmptyText">Voeg producten toe vanuit een collectie.</p></div>
 {% endif %}
-<div class="cart-total modern-total"><span><small>Overzicht</small><strong data-i18n="total">Totaal</strong></span><strong>{{ format_eur(cart_total) }}</strong></div>
+<div class="cart-total modern-total"><span><small>Overzicht</small><strong>Productsubtotaal</strong></span><strong>{{ format_eur(cart_total) }}</strong></div><p role="note" style="padding:14px;background:#eaf3ff;border-radius:12px;line-height:1.6">Dit is alleen het productsubtotaal. Verzendkosten en definitieve voorwaarden worden vóór commerciële livegang vastgesteld. Betalen is nog niet mogelijk.</p>
 {% if cart %}<div class="cart-checkout-box"><div><small data-i18n="testCheckout">Checkout in testfase</small><strong>{{ format_eur(cart_total) }}</strong></div><a class="btn btn-dark checkout-button" href="/afrekenen" data-i18n="checkout">Naar afrekenen →</a></div>{% endif %}
 </section></main>
 {% include '_footer.html' %}

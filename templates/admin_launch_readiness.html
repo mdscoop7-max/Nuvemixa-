@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>TrendMix | Lancering controleren</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;background:#f2f7ff;color:#193554}*{box-sizing:border-box}body{margin:0}
+header{background:linear-gradient(120deg,#0b315c,#0876c6);color:white;padding:23px max(20px,calc((100% - 1080px)/2))}
+header a{color:white;text-decoration:none;border:1px solid #a9d9ff88;border-radius:10px;padding:9px 14px;display:inline-block}
+main{width:min(1080px,calc(100% - 32px));margin:35px auto 70px}
+h1{font-size:clamp(28px,4vw,43px);margin:0 0 12px;letter-spacing:-.03em}p{line-height:1.65;color:#47627d}
+.notice{padding:17px 20px;background:#e4f1ff;border:1px solid #b9d5f4;border-radius:15px;margin:23px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+article{background:#fff;border:1px solid #d7e5f6;border-radius:18px;padding:23px;box-shadow:0 8px 24px #153c6510}
+article h2{font-size:19px;margin:0 0 8px}.status{display:inline-block;font-size:12px;color:#895400;background:#fff2d9;border:1px solid #f1dbb0;border-radius:999px;padding:6px 10px;font-weight:800}
+article p{margin:12px 0 0}.footer{margin-top:26px;color:#4c6580}
+@media(max-width:680px){.grid{grid-template-columns:1fr}main{margin-top:22px}article{padding:18px}}
+</style></head><body>
+<header><a href="{{ url_for('admin_preview') }}">← Terug naar beheerdashboard</a></header>
+<main><h1>Controle vóór commerciële lancering</h1>
+<p>Dit is een beveiligd, alleen-lezen overzicht. Een werkende testfunctie telt niet automatisch als een verkoopklare integratie.</p>
+<div class="notice"><strong>Nog niet verkoopklaar.</strong> Echte bestellingen, betalingen of productpublicatie mogen pas worden geactiveerd na controle van alle onderstaande punten.</div>
+<div class="grid">{% for check in checks %}<article><h2>{{ check.title }}</h2><span class="status">{{ 'Bevestigd' if check.ready else 'Nog te bevestigen' }}</span><p>{{ check.detail }}</p></article>{% endfor %}</div>
+<p class="footer">De status verandert niet automatisch door het invullen van configuratievariabelen; leveranciers, betalingen en end-to-end werking moeten daadwerkelijk worden geverifieerd.</p>
+</main></body></html>

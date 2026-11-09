@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>TrendMix | Beheerdashboard</title>
+<style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#10254a;background:#f3f8ff}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0}a{color:inherit}button,input{font:inherit}
+.layout{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
+.sidebar{background:#fff;border-right:1px solid #e0ebfb;padding:25px 15px;display:flex;flex-direction:column;gap:28px}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 11px;font-size:26px;font-weight:900;letter-spacing:-1.2px;text-decoration:none;white-space:nowrap}.brand .mark{background:#0866f5;color:#fff;display:grid;place-items:center;border-radius:12px;width:42px;height:42px;font-size:23px}.brand em{color:#0876e7;font-style:normal}
+.nav{display:flex;flex-direction:column;gap:6px}.nav a,.nav .unavailable{display:flex;align-items:center;gap:13px;padding:13px 14px;text-decoration:none;border-radius:12px;color:#294469;font-size:14px;font-weight:700;min-height:45px}.nav a:hover{background:#edf5ff;color:#0759b5}.nav a.active{background:linear-gradient(90deg,#d8eaff,#edf6ff);color:#065acf;border-left:4px solid #0866f5;padding-left:10px}.nav .unavailable{opacity:.58;cursor:default}.nav .ico{width:21px;text-align:center;font-size:19px}.nav-separator{height:1px;background:#e4ecf8;margin:12px 10px}.sidebar-bottom{margin-top:auto;border:1px solid #cce0fa;border-radius:16px;padding:18px;background:linear-gradient(135deg,#e8f3ff,#f9fcff)}.sidebar-bottom strong{display:block;color:#0f4686}.sidebar-bottom p{font-size:12px;color:#587091;line-height:1.5}.sidebar-bottom a{display:block;text-align:center;padding:11px;border-radius:10px;background:#0866f5;color:#fff;font-weight:800;text-decoration:none;font-size:13px}
+.workspace{min-width:0;background:radial-gradient(ellipse at 72% 0%,#d2e7ff,transparent 34%),#f3f8ff}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:19px 30px;background:#ffffffb8;border-bottom:1px solid #e0ecfc}
+.search{display:flex;align-items:center;gap:12px;color:#5c7293;background:#f5f9ff;border:1px solid #d9e6f9;padding:14px 18px;border-radius:13px;max-width:550px;width:100%;font-size:14px}.search svg{width:20px;height:20px}.top-right{display:flex;align-items:center;gap:14px;font-size:13px;font-weight:750;white-space:nowrap}.avatar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;color:white;background:#0866f5;font-weight:850}
+.main{padding:29px 30px 60px;max-width:1570px;margin:auto}.headline{display:flex;justify-content:space-between;align-items:start;gap:16px;flex-wrap:wrap}.headline h1{font-size:clamp(29px,3vw,39px);letter-spacing:-.04em;margin:0 0 6px;color:#112a52}.headline p{margin:0;color:#617592}.date{border:1px solid #d5e2f3;background:white;border-radius:12px;padding:12px 16px;color:#345274;font-size:13px}.notice{margin:20px 0;background:#e8f4ff;border:1px solid #c1dbfa;border-radius:14px;color:#265888;padding:14px 18px;font-size:13px;line-height:1.55}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0}.card{background:#fff;border:1px solid #e2eafa;border-radius:18px;box-shadow:0 7px 24px #1a4e8810;padding:21px}.stat{min-height:160px;position:relative;overflow:hidden}.stat-top{display:flex;align-items:center;gap:12px}.stat-icon{width:49px;height:49px;border-radius:13px;display:grid;place-items:center;font-size:23px;color:#0866f5;background:#e4f2ff}.stat:nth-child(2) .stat-icon{background:#eceaff;color:#6d52d9}.stat:nth-child(3) .stat-icon{background:#e1f8f2;color:#12a988}.stat:nth-child(4) .stat-icon{background:#fff0df;color:#e87d18}.stat-label{font-size:13px;font-weight:750;color:#335071}.stat strong{display:block;font-size:31px;letter-spacing:-.04em;color:#101f40;margin:14px 0 5px}.stat small{display:block;color:#6a7f9a;font-size:12px;line-height:1.5}
+.panels{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:16px}.card h2{font-size:19px;color:#142d55;margin:0 0 12px;letter-spacing:-.02em}.card p{line-height:1.55;color:#637893;font-size:13px}.chart-empty{min-height:235px;display:grid;place-content:center;text-align:center;border-radius:12px;border:1px dashed #c5d9f4;background:repeating-linear-gradient(to top,#f8fbff 0px,#f8fbff 46px,#eaf1fc 47px,#f8fbff 48px);margin-top:23px}.chart-empty b{font-size:19px;color:#255b98}.chart-empty span{font-size:13px;color:#6a7d98;margin-top:6px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th{text-align:left;color:#526c8c;font-weight:800;background:#f2f7fe}.table td,.table th{padding:13px 9px;border-bottom:1px solid #e7eef8}.muted{color:#7386a0}.list{padding:0;margin:0;list-style:none}.list li{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #edf1f8;padding:11px 0;font-size:14px}.list li b{background:#e6f2ff;color:#1364b4;border-radius:8px;padding:5px 11px}
+.lower{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:17px}.action{display:flex;gap:12px;align-items:flex-start;text-decoration:none;background:linear-gradient(135deg,#e4f2ff,#f5faff);padding:19px;border:1px solid #d5e6f9;border-radius:16px;min-height:124px}.action:nth-child(2){background:linear-gradient(135deg,#ecebff,#f8f7ff)}.action:nth-child(3){background:linear-gradient(135deg,#e2f9f5,#f6fffd)}.action:nth-child(4){background:linear-gradient(135deg,#fff1e3,#fffaf4)}.action:hover{border-color:#7aafea;box-shadow:0 8px 22px #154a8117}.action-icon{font-size:24px;flex:none}.action strong{display:block;font-size:13px;color:#174475;margin-bottom:6px}.action span{font-size:12px;color:#58718f;line-height:1.5}
+.section-title{margin:29px 0 13px;font-size:21px}.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.feature-grid .card h2{font-size:16px}.feature-grid .card{min-height:158px}.pill{display:inline-flex;background:#eaf3ff;border:1px solid #cee0f8;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;color:#1b5fa5;text-decoration:none}.tag{display:inline-flex;background:#fff5e4;color:#946021;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:800}.nav a:focus-visible,.action:focus-visible,.sidebar-bottom a:focus-visible{outline:3px solid #f4b449;outline-offset:2px}
+@media(max-width:1150px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{padding:12px;gap:8px}.brand{font-size:23px}.nav{flex-direction:row;overflow-x:auto;gap:6px}.nav a,.nav .unavailable{white-space:nowrap}.nav-separator,.sidebar-bottom{display:none}.topbar{padding:13px 16px}.main{padding:22px 16px 40px}.panels,.lower{grid-template-columns:1fr}.top-right .account-label{display:none}}
+@media(max-width:530px){.stats{gap:9px}.stat{padding:14px;min-height:150px}.stat strong{font-size:26px}.stat-top{align-items:start;flex-direction:column;gap:7px}.stat-icon{width:37px;height:37px;font-size:19px}.actions,.feature-grid{grid-template-columns:1fr}.search{display:none}}
+</style></head><body>
+<div class="layout">
+<aside class="sidebar">
+<a href="/beheer" class="brand"><span class="mark">▣</span><span>Trend<em>Mix</em></span></a>
+<nav class="nav" aria-label="Dashboardmenu">
+<a class="active" href="/beheer" aria-current="page"><span class="ico">⌂</span>Dashboard</a>
+<a href="#producten"><span class="ico">▣</span>Producten</a>
+<a href="#categorieen"><span class="ico">▦</span>Categorieën</a>
+<a href="#bestellingen"><span class="ico">🛒</span>Bestellingen</a>
+<span class="unavailable"><span class="ico">♙</span>Klanten (later)</span>
+<span class="unavailable"><span class="ico">◇</span>Kortingen (later)</span>
+<a href="{{ url_for('admin_product_research') }}"><span class="ico">⌕</span>Productonderzoek</a>
+<a href="#bezoekers"><span class="ico">▥</span>Statistieken</a>
+<a href="{{ url_for('admin_launch_readiness') }}"><span class="ico">⚙</span>Instellingen</a>
+<div class="nav-separator"></div>
+<a href="{{ url_for('admin_support_drafts') }}"><span class="ico">☏</span>Klantenservice</a>
+<a href="{{ url_for('admin_integrations_monitor') }}"><span class="ico">✉</span>Monitoring</a>
+<a href="{{ url_for('admin_accounts_page') }}"><span class="ico">♙</span>Beheeraccounts</a>
+</nav>
+<div class="sidebar-bottom"><strong>Trend Mix · Lancering</strong><p>Controleer de openstaande punten voordat je echte verkoop inschakelt.</p><a href="{{ url_for('admin_launch_readiness') }}">Lancering controleren →</a></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><div class="search" aria-label="Dashboardinformatie">⌕ &nbsp; Trend Mix · Beheeroverzicht</div><div class="top-right"><span>🇳🇱 Nederlands</span><span class="avatar">TM</span><span class="account-label">Beheerder</span><a href="/" aria-label="Webshop openen" title="Webshop openen">↗</a></div></header>
+<main class="main"><div class="headline"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><div class="date">Trend Mix · Testomgeving</div></div>
+<div class="notice"><strong>Voorbereidingsfase:</strong> dit dashboard is alleen-lezen voor publieke producten en echte orders. De beheerhulpmiddelen bereiden gegevens voor; betalingen en leveranciers zijn nog niet live. Er worden geen fictieve bestellingen of omzet getoond.</div>
+<section id="statistieken" class="stats" aria-label="Statistieken">
+<div class="card stat"><div class="stat-top"><span class="stat-icon">▣</span><span class="stat-label">Testproducten</span></div><strong>{{ total_products }}</strong><small>{{ overview|length }} categorieën · Nog niet commercieel geverifieerd</small></div>
+<div class="card stat"><div class="stat-top"><span class="stat-icon">🛒</span><span class="stat-label">Bestellingen</span></div><strong>{{ order_stats.orders }}</strong><small>{{ order_stats.order_label }}</small></div>
+<div class="card stat"><div class="stat-top"><span class="stat-icon">€</span><span class="stat-label">Bevestigd verkocht</span></div><strong>{{ order_stats.sold_items }}</strong><small>Omzet: {{ order_stats.revenue_display }}</small></div>
+<div class="card stat"><div class="stat-top"><span class="stat-icon">▥</span><span class="stat-label">Paginaweergaven</span></div><strong>{{ visitor_stats.visits_display }}</strong><small>{{ visitor_stats.note }}</small></div>
+</section>
+<div class="panels">
+<section class="card" id="verkoop"><h2>Verkoopoverzicht</h2><p>Echte omzet verschijnt hier zodra betaalde bestellingen betrouwbaar zijn gekoppeld.</p><div class="chart-empty"><b>Geen bevestigde omzetgegevens</b><span>Er is nog geen gekoppelde betaalde orderbron.</span></div></section>
+<section class="card" id="bestellingen"><h2>Recente bestellingen</h2><p>Testcheckout telt nooit als een betaalde verkoop.</p><div class="table-wrap"><table class="table"><thead><tr><th>Bestelling</th><th>Bedrag</th><th>Betaalstatus</th></tr></thead><tbody><tr><td colspan="3" class="muted">Nog geen geverifieerde betaalde bestellingen beschikbaar.</td></tr></tbody></table></div><h2 style="margin-top:23px">Bestellingen en verkochte producten</h2><p>Een echte verkoop verschijnt pas na een bevestigde betaling en orderkoppeling.</p></section>
+</div>
+<div class="lower">
+<section class="card" id="producten"><h2>Producten per categorie</h2><ul class="list">{% for category in overview %}<li><span>{{ category.name }}</span><b>{{ category.count }}</b></li>{% endfor %}</ul></section>
+<section class="card" id="bezoekers"><h2>Bezoekersstatistieken</h2><p><strong>{{ visitor_stats.today_display }}</strong> paginaweergaven vandaag (UTC). Totaal: <strong>{{ visitor_stats.visits_display }}</strong>.</p><p class="pill">{{ visitor_stats.note }}</p><p>Anonieme paginaweergaven zijn geen unieke bezoekers. Verdere bezoekersanalyses en conversies vereisen aanvullende inrichting.</p></section>
+</div>
+<h2 class="section-title" id="categorieen">Snel naar je beheerfuncties</h2>
+<nav class="actions" aria-label="Snelle beheeracties">
+<a class="action" href="{{ url_for('manage_product_drafts') }}"><span class="action-icon">⊕</span><span><strong>Productconcepten</strong>Producten voorbereiden en bewaren zonder publicatie</span></a>
+<a class="action" href="{{ url_for('admin_supplier_pricing') }}"><span class="action-icon">▦</span><span><strong>Prijsberekening</strong>Kosten, btw en indicatieve marge berekenen</span></a>
+<a class="action" href="{{ url_for('admin_product_research') }}"><span class="action-icon">◇</span><span><strong>Productonderzoek</strong>Onderzoek nieuwe artikelen en leveranciers</span></a>
+<a class="action" href="{{ url_for('admin_launch_readiness') }}"><span class="action-icon">▥</span><span><strong>Lanceringscontrole</strong>Bekijk wat nog ontbreekt voor echte verkoop</span></a>
+</nav>
+<h2 class="section-title" id="hulpmiddelen">Beschikbare beheerhulpmiddelen</h2>
+<div class="feature-grid">
+<a class="card" href="{{ url_for('manage_product_drafts') }}" style="text-decoration:none"><h2>Producten en afbeeldingen</h2><p>Productconcepten maken, prijzen en omschrijvingen aanpassen en foto's veilig uploaden. Concepten worden nog niet gepubliceerd.</p><span class="pill">Open productbeheer</span></a>
+<a class="card" href="{{ url_for('admin_integrations_monitor') }}" style="text-decoration:none"><h2>Monitoring en rapporten</h2><p>De voorbereide controles en integraties bekijken.</p><span class="pill">Bekijk monitoring</span></a>
+<a class="card" href="{{ url_for('admin_support_drafts') }}" style="text-decoration:none"><h2>Klantenserviceconcepten</h2><p>Gecontroleerde antwoordconcepten maken zonder e-mails automatisch te verzenden.</p><span class="pill">Open concepten</span></a>
+<div class="card"><h2>Hoofdmenu en categorieën</h2><p>Indeling en categorieafbeeldingen wijzigen met behoud van de homepagehero.</p><span class="tag">Bewerkfunctie in voorbereiding</span></div>
+<div class="card"><h2>Voorraad en leveranciers</h2><p>EU-dropshippingfeeds, voorraad en levertijden synchroniseren na contract en aansluiting.</p><span class="tag">Leverancier vereist</span></div>
+<div class="card"><h2>SEO en inhoud</h2><p>Producttitels, omschrijvingen en categoriegegevens veilig onderhouden.</p><span class="tag">Bewerkfunctie in voorbereiding</span></div>
+</div>
+</main></div></div>
+</body></html>

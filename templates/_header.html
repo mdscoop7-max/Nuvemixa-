@@ -21,12 +21,12 @@
   </div>
   <nav class="main-nav" data-mobile-nav aria-label="Hoofdnavigatie">
     <div class="shell nav-inner">
-      <a href="/gadgets" class="nav-link nav-primary"><span data-category-name="gadgets">Gadgets</span></a>
-      <a href="/smart-home" class="nav-link"><span data-category-name="smart-home">Smart Home</span></a>
-      <a href="/beauty-care" class="nav-link"><span data-category-name="beauty-care">Beauty & Care</span></a>
-      <a href="/home-living" class="nav-link"><span data-category-name="home-living">Home & Living</span></a>
-      <a href="/lifestyle-sport" class="nav-link"><span data-category-name="lifestyle-sport">Lifestyle & Sport</span></a>
-      <a href="/aanbiedingen" class="nav-link nav-deals">Aanbiedingen</a>
+      <a href="/gadgets" class="nav-link{% if request.path == '/gadgets' or request.path.startswith('/gadgets/') %} is-active{% endif %}"{% if request.path == '/gadgets' %} aria-current="page"{% endif %}><span data-category-name="gadgets">Gadgets</span></a>
+      <a href="/smart-home" class="nav-link{% if request.path == '/smart-home' or request.path.startswith('/smart-home/') %} is-active{% endif %}"{% if request.path == '/smart-home' %} aria-current="page"{% endif %}><span data-category-name="smart-home">Smart Home</span></a>
+      <a href="/beauty-care" class="nav-link{% if request.path == '/beauty-care' or request.path.startswith('/beauty-care/') %} is-active{% endif %}"{% if request.path == '/beauty-care' %} aria-current="page"{% endif %}><span data-category-name="beauty-care">Beauty & Care</span></a>
+      <a href="/home-living" class="nav-link{% if request.path == '/home-living' or request.path.startswith('/home-living/') %} is-active{% endif %}"{% if request.path == '/home-living' %} aria-current="page"{% endif %}><span data-category-name="home-living">Home & Living</span></a>
+      <a href="/lifestyle-sport" class="nav-link{% if request.path == '/lifestyle-sport' or request.path.startswith('/lifestyle-sport/') %} is-active{% endif %}"{% if request.path == '/lifestyle-sport' %} aria-current="page"{% endif %}><span data-category-name="lifestyle-sport">Lifestyle & Sport</span></a>
+      <a href="/aanbiedingen" class="nav-link nav-deals{% if request.path == '/aanbiedingen' or request.path.startswith('/aanbiedingen/') %} is-active{% endif %}"{% if request.path == '/aanbiedingen' %} aria-current="page"{% endif %}>Aanbiedingen</a>
     </div>
   </nav>
 </header>

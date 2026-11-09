@@ -71,12 +71,15 @@ def test_homepage_has_hero_image_fallbacks():
     assert b"/img/product/" in response.data
 
 
-def test_sitemap_is_valid_xml_shape_and_has_products():
+def test_sitemap_has_verified_public_collection_urls_only():
     client = app.test_client()
     response = client.get("/sitemap.xml")
     assert response.status_code == 200
     assert b"<urlset" in response.data
-    assert b"/gadgets/" in response.data
+    assert b"/gadgets</loc>" in response.data
+    assert b"/shop</loc>" in response.data
+    # Supplier-unverified demo products must not be submitted as live listings.
+    assert b"/gadgets/" not in response.data
 
 
 def test_no_obsolete_affiliate_faq_copy_on_faq_page():
@@ -255,10 +258,12 @@ def test_global_language_dropdown_is_present_across_storefront():
         response = client.get(path)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
-        assert html.count('id="tmGlobalLanguage"') == 1, path
-        assert '<option value="nl">' in html, path
-        assert '<option value="en">' in html, path
+        assert html.count('class="tm-language-dropdown"') == 1, path
+        assert 'data-language="nl"' in html, path
+        assert 'data-language="en"' in html, path
         assert 'tm-global-language' in html, path
+        assert 'tm-flag-nl' in html and 'tm-flag-en' in html, path
+        assert 'viewBox="0 0 24 16"' in html, path
 
 
 def test_original_category_menu_and_svg_icons_survive_redesign():
@@ -268,7 +273,7 @@ def test_original_category_menu_and_svg_icons_survive_redesign():
         response = client.get(path)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
-        assert 'class="categories tm-digital-nav"' in html, path
+        assert 'class="categories tm-digital-nav tm-menu-compact"' in html, path
         assert 'class="tm-nav-icon"' in html, path
         assert '<svg' in html, path
         for category in ("/gadgets", "/smart-home", "/beauty-care",

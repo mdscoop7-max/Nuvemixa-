@@ -264,3 +264,56 @@ body.tm-new-storefront .tm-ref-product-row .product-body h3{font-size:12px!impor
 body.tm-new-storefront .tm-ref-products-head h2{font-size:23px!important}
 body.tm-new-storefront .tm-ref-products-head>a{font-size:12px!important}
 }
+
+
+/* Product photo viewing only — does not change home hero. */
+.detail-image img[data-product-image]{cursor:zoom-in}
+.detail-image img[data-product-image]:focus-visible{outline:3px solid #1763ff;outline-offset:4px}
+.tm-image-zoom{overflow:auto;overscroll-behavior:contain}
+.tm-image-zoom img{cursor:zoom-in;max-width:min(1200px,92vw);max-height:calc(100dvh - 130px);transition:transform .18s ease;transform-origin:center center}
+.tm-image-zoom img.is-enlarged{transform:scale(1.65);cursor:zoom-out}
+.tm-zoom-controls{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:10px;align-items:center;padding:7px;background:#142138;border:1px solid #8290ac;border-radius:24px;z-index:2}
+.tm-zoom-controls button{position:static;width:48px;height:48px;border-radius:50%;font-size:27px}
+.tm-zoom-controls button:disabled{opacity:.35;cursor:not-allowed}
+.tm-image-zoom button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(max-width:600px){.tm-image-zoom{padding:14px}.tm-image-zoom img{max-width:96vw;max-height:calc(100dvh - 120px)}.tm-image-zoom img.is-enlarged{transform:scale(1.45)}.tm-image-zoom .tm-zoom-close{top:10px;right:10px}}
+@media(prefers-reduced-motion:reduce){.tm-image-zoom img{transition:none}}
+
+
+/* Accessible product-detail and product-grid finishing touches. Hero remains untouched. */
+.product-detail .detail-gallery,.product-detail .detail-copy{min-width:0}
+.product-detail .detail-image{overflow:hidden;border-radius:18px}
+.product-detail .detail-image img{max-width:100%;height:auto;object-fit:contain}
+.product-detail .detail-thumbnails{display:flex;gap:10px;max-width:100%;overflow-x:auto;padding:5px 3px;scrollbar-width:thin}
+.product-detail .detail-thumbnails button{flex:0 0 auto;min-width:56px;min-height:56px;cursor:pointer}
+.product-detail .detail-thumbnails button:focus-visible{outline:3px solid #1264f3;outline-offset:3px}
+.product-card{min-width:0;transition:box-shadow .2s ease,transform .2s ease}
+.product-card .product-image{overflow:hidden}
+.product-card .product-image img{object-fit:contain;transition:transform .24s ease}
+.product-card .product-body{min-width:0}
+.product-card h3{overflow-wrap:anywhere}
+.product-card button{touch-action:manipulation}
+.product-card button:focus-visible,.product-card a:focus-visible{outline:3px solid #1264f3;outline-offset:3px}
+@media(hover:hover) and (pointer:fine){.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(7,30,69,.13)}.product-card:hover .product-image img{transform:scale(1.04)}}
+@media(max-width:680px){.product-detail .detail-image{border-radius:14px}.product-detail .detail-thumbnails button{min-width:60px;min-height:60px}.product-card .card-add{min-height:44px}.product-card h3{line-height:1.35}}
+@media(prefers-reduced-motion:reduce){.product-card,.product-card .product-image img{transition:none}.product-card:hover,.product-card:hover .product-image img{transform:none}}
+
+
+/* Product reviews: honest empty state until verified purchases exist. */
+.tm-reviews-section{margin:32px 0;padding:24px;border:1px solid #e0e9f5;border-radius:18px;background:#fff;color:#142849}
+.tm-reviews-section h2{margin:7px 0 20px;font-size:clamp(21px,2.5vw,29px);line-height:1.2}
+.tm-reviews-empty{display:flex;align-items:flex-start;gap:15px;padding:20px;border:1px dashed #b7cbe7;border-radius:14px;background:#f5f9ff}
+.tm-reviews-icon{font-size:35px;line-height:1;color:#0866f5}
+.tm-reviews-empty h3{margin:0 0 9px;font-size:17px;color:#152b4d}
+.tm-reviews-empty p{margin:0;line-height:1.65;color:#425778}
+@media(max-width:600px){.tm-reviews-section{padding:16px;margin:24px 0}.tm-reviews-empty{padding:16px;gap:11px}.tm-reviews-empty h3{font-size:15px}}
+
+/* Example review shown only as a visibly labeled design demonstration. */
+.tm-review-demo{padding:20px;border:1px solid #b8c9e5;background:#f6f9ff;border-radius:14px;color:#203754}
+.tm-review-demo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tm-review-demo-tag{border:1px solid #ba6c32;background:#fff2e4;color:#833f13;border-radius:6px;padding:5px 8px;font-size:11px;font-weight:900;letter-spacing:.02em}
+.tm-review-demo-stars{color:#e3a128;font-size:23px;letter-spacing:3px;margin:12px 0 6px}
+.tm-review-demo-quote{font-size:15px;line-height:1.6;margin:0 0 10px}
+.tm-review-demo small,.tm-review-real-status{font-size:12px;color:#435673}
+.tm-review-real-status{margin:12px 0 0}
+@media(max-width:600px){.tm-review-demo{padding:14px}.tm-review-demo-quote{font-size:14px}}

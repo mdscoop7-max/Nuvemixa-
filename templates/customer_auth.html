@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'register' %}Registreren{% else %}Inloggen{% endif %} | TrendMix{% endblock %}
+{% block content %}
+<section class="page-section" style="max-width:610px;margin:0 auto">
+ <div class="section-heading"><span class="section-label">MIJN TRENDMIX</span><h1>{% if mode == 'register' %}Maak een account{% else %}Welkom terug{% endif %}</h1><p>Een beveiligde testomgeving voor jouw TrendMix-account. Bestellingen en betalingen zijn nog niet gekoppeld.</p></div>
+ <div class="account-card" style="display:block;padding:clamp(20px,4vw,36px)">
+ {% if error %}<p role="alert" style="background:#fff0ed;border:1px solid #ffc7bd;color:#842c26;padding:13px;border-radius:12px">{{ error }}</p>{% endif %}
+ <form method="post" action="{% if mode == 'register' %}{{ url_for('register_customer') }}{% else %}{{ url_for('login_customer') }}{% endif %}" autocomplete="on" style="display:grid;gap:18px">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  {% if mode == 'register' %}<label style="display:grid;gap:7px;font-weight:750">Naam <input name="name" maxlength="80" autocomplete="name" required style="padding:13px;border:1px solid #bacfe9;border-radius:10px;font:inherit"></label>{% endif %}
+  <label style="display:grid;gap:7px;font-weight:750">E-mailadres <input type="email" name="email" maxlength="254" autocomplete="email" required style="padding:13px;border:1px solid #bacfe9;border-radius:10px;font:inherit"></label>
+  <label style="display:grid;gap:7px;font-weight:750">Wachtwoord <input type="password" name="password" minlength="{% if mode == 'register' %}12{% else %}1{% endif %}" maxlength="1024" autocomplete="{% if mode == 'register' %}new-password{% else %}current-password{% endif %}" required style="padding:13px;border:1px solid #bacfe9;border-radius:10px;font:inherit"></label>
+  {% if mode == 'register' %}<small>Gebruik minstens 12 tekens en een uniek wachtwoord. Er wordt nog geen verificatiemail verzonden.</small>{% endif %}
+  <button type="submit" class="btn btn-primary" style="min-height:49px;border-radius:12px">{% if mode == 'register' %}Account aanmaken{% else %}Veilig inloggen{% endif %}</button>
+ </form>
+ <p>{% if mode == 'register' %}Al een account? <a href="{{ url_for('login_customer') }}">Inloggen</a>{% else %}Nog geen account? <a href="{{ url_for('register_customer') }}">Account aanmaken</a>{% endif %}</p>
+ </div>
+</section>
+{% endblock %}

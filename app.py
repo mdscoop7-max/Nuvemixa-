@@ -3,11 +3,23 @@ import re
 import os
 import hmac
 import secrets
+import uuid
 import urllib.request
 import urllib.error
 from pathlib import Path
-from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort
+from flask import make_response, Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, send_from_directory
+from integration_readiness import status_rows
+from monitor_snapshots import save_report, latest_reports, METRICS
+from supplier_pricing import quote
+from product_research import review_candidate
+from admin_drafts import list_drafts, save_draft, remove_draft, add_support_draft, list_support_drafts
+from support_email_drafts import draft_reply
+from decimal import Decimal, InvalidOperation
+from customer_accounts import create_account, authenticate, account_by_id
+from admin_accounts import account as verify_admin_account, list_users as admin_list_users, add_user as admin_add_user, update_password as admin_update_password, remove_user as admin_remove_user
 from product_art import render_product_svg
+from catalog_readiness import review_product
+from visitor_metrics import record_page_view, summary as visitor_metrics_summary
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
@@ -163,7 +175,7 @@ def enrich_product(product, category_slug, index):
     item.setdefault("specifications", {})
     item.setdefault("usps", [])
     item.setdefault("seo_title", f"{item['name']} | TrendMix")
-    item.setdefault("seo_description", f"{item['name']} binnen {item['category_name']}. Bekijk prijs, productinformatie en alternatieven bij TrendMix.")
+    item.setdefault("seo_description", f"{item['name']} in de categorie {item['category_name']} bij TrendMix. Bekijk de beschikbare productinformatie en controleer specificaties en levering vóór bestelling.")
     item.setdefault("faq", [])
     item.setdefault("related_product_ids", [])
     item["product_url"] = product_url(item)
@@ -342,10 +354,25 @@ def csrf_token():
     return token
 
 
+@app.after_request
+def count_anonymous_page_views(response):
+    """Count public HTML GET responses only; exclude bots, administration and assets."""
+    if (request.method == "GET" and response.status_code == 200
+            and response.mimetype == "text/html"
+            and request.endpoint not in ("admin_preview",)
+            and not request.path.startswith(("/beheer", "/static/", "/api/"))
+            and not any(word in request.headers.get("User-Agent", "").lower()
+                        for word in ("bot", "crawler", "spider", "preview", "headless", "pytest"))):
+        record_page_view()
+    return response
+
+
 @app.before_request
 def verify_form_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
+    if request.endpoint == "admin_upload_photo":
+        request.max_content_length = 3 * 1024 * 1024
     # Read-only JSON assistant handles Origin separately.
     if request.endpoint == "trendmix_assistant":
         return
@@ -363,7 +390,7 @@ def verify_form_csrf():
 
 @app.context_processor
 def inject_helpers():
-    return {"slugify": slugify, "cart_count": cart_count(), "format_eur": format_eur, "wishlist_ids": set(session.get("trendmix_wishlist", [])), "csrf_token": csrf_token}
+    return {"slugify": slugify, "cart_count": cart_count(), "format_eur": format_eur, "wishlist_ids": set(session.get("trendmix_wishlist", [])), "csrf_token": csrf_token, "site_url": SITE_URL or request.url_root.rstrip("/")}
 
 
 
@@ -388,11 +415,36 @@ def shop():
     if category and category not in CATEGORY_DIRS:
         category = None
     if category:
-        category_name = category
-        filtered = filter_products(all_products, category=category_name, search=search)
+        filtered = filter_products(all_products, category=category, search=search)
     else:
         filtered = filter_products(all_products, search=search)
-    return render_template("shop.html", products=filtered, category=category, search=search, categories=CATEGORIES)
+    # Filters operate on the currently loaded test catalogue; no supplier claims.
+    min_price = request.args.get("min_price", "").strip()
+    max_price = request.args.get("max_price", "").strip()
+    sort = request.args.get("sort", "relevance")
+    if sort not in ("relevance", "price-low", "price-high", "name"):
+        sort = "relevance"
+    def valid_nonnegative_price(value):
+        try:
+            parsed = float(value)
+            return parsed if parsed >= 0 and parsed < float("inf") else None
+        except (ValueError, TypeError):
+            return None
+    minimum = valid_nonnegative_price(min_price) if min_price else None
+    maximum = valid_nonnegative_price(max_price) if max_price else None
+    if minimum is not None:
+        filtered = [p for p in filtered if float(p.get("price") or 0) >= minimum]
+    if maximum is not None:
+        filtered = [p for p in filtered if float(p.get("price") or 0) <= maximum]
+    if sort == "price-low":
+        filtered.sort(key=lambda p: float(p.get("price") or 0))
+    elif sort == "price-high":
+        filtered.sort(key=lambda p: float(p.get("price") or 0), reverse=True)
+    elif sort == "name":
+        filtered.sort(key=lambda p: str(p.get("name") or "").casefold())
+    return render_template("shop.html", products=filtered, category=category, search=search,
+                           min_price=min_price if minimum is not None else "",
+                           max_price=max_price if maximum is not None else "", sort=sort, categories=CATEGORIES)
 
 
 @app.route("/aanbiedingen")
@@ -406,9 +458,370 @@ def products_page():
     return redirect(url_for("shop"), code=302)
 
 
+def _current_admin():
+    auth = request.authorization
+    if not auth or auth.type != "basic":
+        return None
+    return verify_admin_account(auth.username or "", auth.password or "")
+
+
+def _admin_authorized():
+    return _current_admin() is not None
+
+
+def _admin_csrf_token():
+    if "admin_csrf" not in session:
+        session["admin_csrf"] = secrets.token_urlsafe(32)
+    return session["admin_csrf"]
+
+
+@app.route("/beheer")
+def admin_preview():
+    if not os.getenv("TRENDMIX_ADMIN_USER") or len(os.getenv("TRENDMIX_ADMIN_PASSWORD", "")) < 16:
+        abort(404)
+    if not _admin_authorized():
+        return Response("Beheer: aanmelden vereist", 401,
+                        {"WWW-Authenticate": 'Basic realm="TrendMix beheer"'})
+    overview = [
+        {"name": data["name"], "count": len(products.get(slug, []))}
+        for slug, data in CATEGORIES.items()
+    ]
+    # Do not infer successful sales from test checkouts or unpaid WooCommerce orders.
+    # A verified read-only order integration will supply actual paid totals later.
+    order_stats = {
+        "orders": "—",
+        "order_label": "Nog geen gekoppelde orderbron",
+        "sold_items": "—",
+        "revenue_display": "Niet beschikbaar",
+        "live_connected": False,
+    }
+    # No durable visitor analytics store exists yet. Never invent session counts.
+    metrics = visitor_metrics_summary()
+    visitor_stats = {
+        "visits_display": metrics["total"] if metrics else "—",
+        "today_display": metrics["today"] if metrics else "—",
+        "note": "Anonieme paginaweergaven (geen unieke bezoekers)" if metrics else "Meting niet beschikbaar",
+    }
+    response = Response(render_template("admin_preview.html",
+                                        overview=overview,
+                                        order_stats=order_stats,
+                                        visitor_stats=visitor_stats,
+                                        total_products=sum(row["count"] for row in overview), current_admin=_current_admin()))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+
+@app.route("/beheer/lancering")
+def admin_launch_readiness():
+    """Read-only launch gate: no secrets, no payments or supplier actions."""
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    checks = [
+        {"title": "EU-leveranciers", "ready": False, "detail": "Getekend contract, goedgekeurde leverancier en echte productfeed zijn nog niet bevestigd."},
+        {"title": "Producten en voorraad", "ready": False, "detail": "Live prijzen, afbeeldingsrechten, voorraad en levertijden moeten uit de leveranciersbron komen."},
+        {"title": "Betalingen", "ready": False, "detail": "Een geverifieerde betaalprovider, webhook en terugbetalingsproces zijn nog niet bevestigd."},
+        {"title": "Bestellingen en verzending", "ready": False, "detail": "Echte betaalde orders, fulfilment, verzendkosten en retouren zijn nog niet end-to-end getest."},
+        {"title": "Live productbeheer", "ready": False, "detail": "Concepten zijn beschikbaar; gecontroleerde publicatie met back-up en auditlog ontbreekt."},
+        {"title": "Volledige vertalingen", "ready": False, "detail": "NL/EN taalkeuze bestaat, maar de volledige site en voorwaarden zijn nog niet vertaald."},
+        {"title": "Bedrijfsgegevens en support", "ready": False, "detail": "Zakelijke contactgegevens, e-mailaflevering en juridische teksten vergen definitieve verificatie."},
+        {"title": "Laptop- en RankFix-test", "ready": False, "detail": "Mobiel, desktop, beveiliging en de volledige bestelstroom moeten nog samen getest worden."},
+    ]
+    response = make_response(render_template("admin_launch_readiness.html", checks=checks))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/beheer/accounts", methods=["GET", "POST"])
+def admin_accounts_page():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    actor = _current_admin()
+    if actor["role"] != "owner":
+        abort(403)
+    error = None
+    info = None
+    if request.method == "POST":
+        if not hmac.compare_digest(request.form.get("csrf", ""), session.get("admin_csrf", "")):
+            abort(403)
+        action = request.form.get("action", "")
+        try:
+            if action == "create":
+                admin_add_user(request.form.get("username", "").strip(),
+                               request.form.get("password", ""),
+                               request.form.get("role", ""))
+                info = "Gebruiker toegevoegd."
+            elif action == "password":
+                new_password = request.form.get("new_password", "")
+                if not verify_admin_account(actor["username"], request.form.get("current_password", "")):
+                    raise ValueError("Huidig wachtwoord klopt niet.")
+                admin_update_password(actor["username"], new_password)
+                info = "Wachtwoord gewijzigd. Gebruik bij de volgende aanmelding het nieuwe wachtwoord."
+            elif action == "delete":
+                target = request.form.get("username", "")
+                if not target or target == actor["username"]:
+                    raise ValueError("Eigenaar kan niet worden verwijderd.")
+                admin_remove_user(target)
+                info = "Gebruiker verwijderd."
+            else:
+                raise ValueError("Onbekende actie.")
+        except (ValueError, __import__("sqlite3").IntegrityError) as exc:
+            error = str(exc) if isinstance(exc, ValueError) else "Deze gebruikersnaam bestaat al."
+    response = make_response(render_template("admin_accounts.html",
+        current_admin=actor, users=admin_list_users(), csrf=_admin_csrf_token(), error=error, info=info),
+        400 if error else 200)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+def _admin_draft_guard():
+    if os.getenv("VERCEL_ENV") or not os.getenv("TRENDMIX_ADMIN_USER") or len(os.getenv("TRENDMIX_ADMIN_PASSWORD", "")) < 16:
+        abort(404)
+    actor = _current_admin()
+    if actor is None:
+        return Response("Beheer: aanmelden vereist", 401, {"WWW-Authenticate": 'Basic realm="TrendMix beheer"'})
+    if actor["role"] not in ("owner", "manager"):
+        abort(403)
+    return None
+
+
+@app.route("/beheer/monitoring", methods=["GET", "POST"])
+def admin_integrations_monitor():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    error = None
+    if request.method == "POST":
+        try:
+            source = request.form.get("source", "")
+            subject = request.form.get("subject", "")
+            metric = request.form.get("metric", "")
+            value = request.form.get("value", "")
+            if source not in METRICS or metric not in METRICS[source]:
+                raise ValueError("Ongeldige meting")
+            number = float(value)
+            save_report(source, subject, {metric: number})
+            return redirect(url_for("admin_integrations_monitor"), code=303)
+        except (ValueError, OverflowError):
+            error = "Niet opgeslagen: controleer bron, onderwerp, meting en getal."
+    response = make_response(render_template("admin_integrations.html",
+        integrations=status_rows(), reports=latest_reports(), metrics=METRICS, error=error),
+        400 if error else 200)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/beheer/productonderzoek", methods=["GET", "POST"])
+def admin_product_research():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    result, error = None, None
+    fields = {}
+    if request.method == "POST":
+        fields = {k: request.form.get(k, "") for k in (
+            "name", "category", "supplier", "price", "shipping", "selling",
+            "stock", "competition", "demand")}
+        try:
+            result = review_candidate(**fields)
+        except ValueError as exc:
+            error = str(exc)
+    response = make_response(render_template(
+        "admin_product_research.html", fields=fields, result=result, error=error, categories=CATEGORIES),
+        400 if error else 200)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/beheer/prijsberekening", methods=["GET", "POST"])
+def admin_supplier_pricing():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    result = None
+    error = None
+    fields = {}
+    if request.method == "POST":
+        fields = {key: request.form.get(key, "") for key in (
+            "purchase", "shipping", "packaging", "fees_fixed",
+            "fees_percent", "vat_percent", "margin_percent")}
+        try:
+            result = quote(**fields)
+        except ValueError as exc:
+            error = str(exc)
+    response = make_response(render_template(
+        "admin_supplier_pricing.html", result=result, error=error, fields=fields), 400 if error else 200)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/beheer/productconcepten", methods=["GET", "POST"])
+def manage_product_drafts():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    error = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        try:
+            draft_id = int(request.form.get("draft_id", "0"))
+            if action == "remove":
+                if draft_id <= 0:
+                    raise ValueError("Ongeldig concept")
+                remove_draft(draft_id)
+                return redirect(url_for("manage_product_drafts"), code=303)
+            if action != "save":
+                raise ValueError("Ongeldige bewerking")
+            name = request.form.get("name", "").strip()
+            category = request.form.get("category", "")
+            desc = request.form.get("description", "").strip()
+            image_url = request.form.get("image_url", "").strip()
+            price = Decimal(request.form.get("price", "").strip())
+            if not (2 <= len(name) <= 120 and category in CATEGORIES and len(desc) <= 2000 and price.is_finite() and Decimal("0") <= price <= Decimal("999999.99")):
+                raise ValueError("Controleer productnaam, categorie, prijs en omschrijving")
+            if image_url and (len(image_url)>500 or not (image_url.startswith("https://") or re.fullmatch(r"/beheer/foto/[a-f0-9]{32}\\.(?:png|jpg|webp)", image_url))):
+                raise ValueError("Afbeeldingslink moet HTTPS gebruiken")
+            cents = int(price.quantize(Decimal(".01")) * 100)
+            if not save_draft(name, category, cents, desc, image_url, draft_id if draft_id>0 else None):
+                raise ValueError("Concept niet gevonden")
+            return redirect(url_for("manage_product_drafts"), code=303)
+        except (ValueError, InvalidOperation, OverflowError):
+            error = "Niet opgeslagen. Controleer de velden en probeer opnieuw."
+    response = make_response(render_template("admin_product_drafts.html", drafts=list_drafts(), categories=CATEGORIES, error=error, uploaded_photo=request.args.get("photo", "")), 400 if error else 200)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/beheer/foto/upload", methods=["POST"])
+def admin_upload_photo():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    image = request.files.get("image")
+    if not image:
+        abort(400)
+    from io import BytesIO
+    from PIL import Image, UnidentifiedImageError
+    try:
+        data = image.read(2 * 1024 * 1024 + 1)
+        if len(data) > 2 * 1024 * 1024:
+            abort(413)
+        picture = Image.open(BytesIO(data))
+        picture.verify()
+        picture = Image.open(BytesIO(data))
+        if picture.width * picture.height > 12_000_000:
+            abort(413)
+        picture.thumbnail((1600, 1600))
+        picture = picture.convert("RGB")
+    except (UnidentifiedImageError, OSError, ValueError):
+        abort(400)
+    folder = BASE_DIR / "instance" / "admin_uploads"
+    folder.mkdir(parents=True, exist_ok=True)
+    filename = uuid.uuid4().hex + ".jpg"
+    picture.save(folder / filename, format="JPEG", quality=86)
+    return redirect(url_for("manage_product_drafts", photo=url_for("admin_photo", filename=filename)), code=303)
+
+
+@app.route("/beheer/foto/<filename>")
+def admin_photo(filename):
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    if not re.fullmatch(r"[a-f0-9]{32}\\.jpg", filename):
+        abort(404)
+    response = make_response(send_from_directory(BASE_DIR / "instance" / "admin_uploads", filename))
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Robots-Tag"] = "noindex"
+    return response
+
+
+@app.route("/beheer/klantenservice", methods=["GET", "POST"])
+def admin_support_drafts():
+    denied = _admin_draft_guard()
+    if denied is not None:
+        return denied
+    error = None
+    if request.method == "POST":
+        question = request.form.get("question", "").strip()
+        try:
+            answer, used_ai = draft_reply(question)
+            add_support_draft(question, answer)
+            return redirect(url_for("admin_support_drafts"), code=303)
+        except ValueError:
+            error = "Vul een klantvraag van 5 tot 3000 tekens in."
+    response = make_response(render_template("admin_support_drafts.html", drafts=list_support_drafts(), error=error), 400 if error else 200)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
 @app.route("/account")
 def account():
-    return render_template("account.html", categories=CATEGORIES)
+    customer = account_by_id(session["customer_id"]) if isinstance(session.get("customer_id"), int) else None
+    response = make_response(render_template("account.html", categories=CATEGORIES, customer=customer))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/registreren", methods=["GET", "POST"])
+def register_customer():
+    if os.getenv("VERCEL_ENV") or os.getenv("TRENDMIX_ACCOUNTS_ENABLED") == "false":
+        abort(404)
+    if request.method == "POST":
+        name = request.form.get("name", "")
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
+        if len(name.strip()) > 80 or len(email) > 254 or not (12 <= len(password) <= 1024):
+            error = "Controleer je naam, e-mailadres en wachtwoord (minimaal 12 tekens)."
+        else:
+            customer_id = create_account(name, email, password)
+            if customer_id:
+                session.clear()
+                session["customer_id"] = customer_id
+                return redirect(url_for("account"), code=303)
+            error = "Registratie is niet gelukt. Controleer je gegevens of gebruik Inloggen."
+        response = make_response(render_template("customer_auth.html", mode="register", error=error, categories=CATEGORIES), 400)
+    else:
+        response = make_response(render_template("customer_auth.html", mode="register", error=None, categories=CATEGORIES))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/inloggen", methods=["GET", "POST"])
+def login_customer():
+    if os.getenv("VERCEL_ENV") or os.getenv("TRENDMIX_ACCOUNTS_ENABLED") == "false":
+        abort(404)
+    if request.method == "POST":
+        email, password = request.form.get("email", ""), request.form.get("password", "")
+        customer, limited = authenticate(email[:254], password[:1025], request.remote_addr or "")
+        if customer:
+            session.clear()
+            session["customer_id"] = customer["id"]
+            return redirect(url_for("account"), code=303)
+        error = "Te veel pogingen. Probeer over 15 minuten opnieuw." if limited else "E-mailadres of wachtwoord niet correct."
+        response = make_response(render_template("customer_auth.html", mode="login", error=error, categories=CATEGORIES), 400 if not limited else 429)
+    else:
+        response = make_response(render_template("customer_auth.html", mode="login", error=None, categories=CATEGORIES))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@app.route("/uitloggen", methods=["POST"])
+def logout_customer():
+    session.clear()
+    return redirect(url_for("account"), code=303)
 
 
 @app.route("/wishlist", methods=["GET", "POST"])
@@ -607,6 +1020,13 @@ def product_detail(category_slug, product_slug):
             break
     if not match:
         return "Product niet gevonden", 404
+    # JSON-LD image links must be absolute; do not change rendered gallery URLs.
+    base_url = SITE_URL or request.url_root.rstrip("/")
+    match["seo_images"] = [
+        image if image.startswith(("https://", "http://")) else base_url + "/" + image.lstrip("/")
+        for image in match.get("images", [])
+    ]
+    match["seo_verified"] = review_product(raw)["ready"]
     related = [
         enrich_product(raw, category_slug, index)
         for index, raw in enumerate(products[category_slug])
@@ -615,6 +1035,7 @@ def product_detail(category_slug, product_slug):
     return render_template(
         "product.html",
         product=match,
+        show_demo_review=(not os.getenv("VERCEL_ENV") and os.getenv("TRENDMIX_SHOW_DEMO_REVIEWS") == "1"),
         product_index=match["index"],
         category_slug=category_slug,
         category_name=CATEGORIES[category_slug]["name"],
@@ -845,10 +1266,12 @@ def robots():
 @app.route("/sitemap.xml")
 def sitemap():
     site_url = SITE_URL or request.url_root.rstrip("/")
-    urls = [f"{site_url}/"] + [f"{site_url}/{slug}" for slug in CATEGORIES] + [f"{site_url}/{path}" for path in INFO_PAGES] + [f"{site_url}/faq"]
+    urls = [f"{site_url}/", f"{site_url}/shop"] + [f"{site_url}/{slug}" for slug in CATEGORIES] + [f"{site_url}/{path}" for path in INFO_PAGES] + [f"{site_url}/faq"]
     for slug, items in products.items():
         for index, raw in enumerate(items):
-            urls.append(f"{site_url}{enrich_product(raw, slug, index)['product_url']}")
+            # Do not submit unverified test products as indexable listings.
+            if review_product(raw)["ready"]:
+                urls.append(f"{site_url}{enrich_product(raw, slug, index)['product_url']}")
     from xml.sax.saxutils import escape
     xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + "".join(f"<url><loc>{escape(url)}</loc></url>" for url in urls) + "</urlset>"
     return Response(xml, mimetype="application/xml")

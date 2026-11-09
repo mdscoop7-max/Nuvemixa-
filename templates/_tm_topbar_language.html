@@ -1,8 +1,13 @@
-{% from '_tm_icons.html' import tm_icon %}
-<div class="tm-global-language" role="group" aria-label="Website language">
- <label for="tmGlobalLanguage" class="tm-lang-label">{{ tm_icon('globe') }}<span data-tm-tr data-tm-nl="Taal" data-tm-en="Language">Taal</span></label>
- <select id="tmGlobalLanguage" aria-label="Website language / Taal" autocomplete="off">
-  <option value="nl">NL · Nederlands</option>
-  <option value="en">EN · English</option>
- </select>
+<div class="tm-global-language" aria-label="Taal kiezen / Choose language">
+ <details class="tm-language-dropdown">
+  <summary aria-label="Kies taal / Choose language">
+   <span class="tm-lang-flag tm-flag-nl" aria-hidden="true"><svg viewBox="0 0 24 16" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="16" fill="#fff"/><path fill="#AE1C28" d="M0 0h24v5.333H0z"/><path fill="#21468B" d="M0 10.667h24V16H0z"/></svg></span>
+   <span class="tm-lang-flag tm-flag-en" aria-hidden="true" hidden><svg viewBox="0 0 24 16" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="16" fill="#012169"/><path d="M0 0l24 16M24 0L0 16" stroke="#fff" stroke-width="3.5"/><path d="M0 0l24 16M24 0L0 16" stroke="#C8102E" stroke-width="1.5"/><path d="M12 0v16M0 8h24" stroke="#fff" stroke-width="5"/><path d="M12 0v16M0 8h24" stroke="#C8102E" stroke-width="2.6"/></svg></span>
+   <span class="tm-language-current">Nederlands</span><span class="tm-language-arrow" aria-hidden="true">⌄</span>
+  </summary>
+  <div class="tm-language-options" role="group" aria-label="Beschikbare talen / Available languages">
+   <button type="button" data-language="nl" lang="nl"><span class="tm-lang-flag" aria-hidden="true"><svg viewBox="0 0 24 16" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="16" fill="#fff"/><path fill="#AE1C28" d="M0 0h24v5.333H0z"/><path fill="#21468B" d="M0 10.667h24V16H0z"/></svg></span>Nederlands</button>
+   <button type="button" data-language="en" lang="en"><span class="tm-lang-flag" aria-hidden="true"><svg viewBox="0 0 24 16" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="16" fill="#012169"/><path d="M0 0l24 16M24 0L0 16" stroke="#fff" stroke-width="3.5"/><path d="M0 0l24 16M24 0L0 16" stroke="#C8102E" stroke-width="1.5"/><path d="M12 0v16M0 8h24" stroke="#fff" stroke-width="5"/><path d="M12 0v16M0 8h24" stroke="#C8102E" stroke-width="2.6"/></svg></span>English</button>
+  </div>
+ </details>
 </div>

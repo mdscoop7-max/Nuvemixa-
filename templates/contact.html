@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260930-1') }}">
   <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script><script defer src="{{ url_for('static', filename='languages.js', v='20260930-2') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261019-2') }}">
+<script defer src="{{ url_for('static',filename='trendmix-bilingual-pages.js',v='20261027-a') }}"></script>
 </head>
 <body>
 {% include "_header.html" %}
@@ -17,17 +18,23 @@
 {% if request.args.get('status') in ['error', 'unavailable'] %}<div class="tm-contact-alert" role="alert">Het contactformulier kon het bericht niet afleveren. Je bericht is niet verzonden. Probeer het later opnieuw.</div>{% elif request.args.get('status') == 'sent' %}<div class="tm-contact-alert tm-contact-success" role="status">Je bericht is verzonden.</div>{% endif %}
   <a class="back-link" href="/">← Terug naar TrendMix</a>
   <article class="info-card contact-page-card">
-    <div class="commerce-heading contact-heading"><div><span class="eyebrow" data-i18n="customerService">KLANTENSERVICE</span><h1>Waar kunnen we mee helpen?</h1></div><span class="commerce-badge">Digitaal bereikbaar</span></div>
+    <div class="commerce-heading contact-heading"><div><span class="eyebrow" data-i18n="customerService">KLANTENSERVICE</span><h1 data-tm-service-nl="Waar kunnen we mee helpen?" data-tm-service-en="How can we help?">Waar kunnen we mee helpen?</h1></div><span class="commerce-badge" data-tm-service-nl="Digitaal bereikbaar" data-tm-service-en="Contact us online">Digitaal bereikbaar</span></div>
     <p class="info-lead" data-i18n="contactLead">Heb je een vraag over een product, bestelling of levering? Vul het formulier in. We gebruiken je gegevens alleen om je vraag te beantwoorden.</p>
-    <div class="contact-service-grid"><form class="contact-form contact-form-modal contact-page-form modern-form" action="/contact" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><div class="form-heading"><span>{{ tm_icon('mail') }}</span><div><h2>Stuur ons een bericht</h2><p>We gebruiken je gegevens alleen om je vraag te behandelen.</p></div></div>
+    <div class="contact-service-grid"><form class="contact-form contact-form-modal contact-page-form modern-form" action="/contact" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><div class="form-heading"><span>{{ tm_icon('mail') }}</span><div><h2 data-tm-service-nl="Stuur ons een bericht" data-tm-service-en="Send us a message">Stuur ons een bericht</h2><p data-tm-service-nl="We gebruiken je gegevens alleen om je vraag te behandelen." data-tm-service-en="We only use your details to handle your enquiry.">We gebruiken je gegevens alleen om je vraag te behandelen.</p></div></div>
       <div class="contact-form-row">
         <label><span data-i18n="contactName">Naam</span><input placeholder="Je naam" type="text" name="name" autocomplete="name" required></label>
         <label><span data-i18n="contactEmail">E-mail</span><input placeholder="naam@voorbeeld.nl" type="email" name="email" autocomplete="email" required></label>
       </div>
-      <label><span data-i18n="contactMessage">Bericht</span><textarea placeholder="Vertel kort waarmee we je kunnen helpen..." name="message" rows="8" required></textarea></label>
+      <label><span data-i18n="contactMessage">Bericht</span><textarea placeholder="Vertel kort waarmee we je kunnen helpen..." data-tm-service-placeholder-en="Briefly describe how we can help..." name="message" rows="8" required></textarea></label>
       <button type="submit" class="btn btn-dark" data-i18n="contactSubmit">Verstuur bericht →</button><div class="contact-form-status" hidden role="status" aria-live="polite"></div>
     </form><aside class="contact-service-aside"><div class="support-icon">{{ tm_icon('headset') }}</div><h2 data-i18n="contactHelpTitle">Waarmee kunnen we helpen?</h2><div><strong data-i18n="contactProductQuestion">Productvraag</strong><span data-i18n="contactProductHelp">Vraag naar specificaties of de collectie.</span></div><div><strong data-i18n="contactOrder">Bestelling</strong><span data-i18n="contactOrderHelp">Vermeld je ordernummer zodra echte bestellingen actief zijn.</span></div><div><strong data-i18n="contactDelivery">Levering & retour</strong><span data-i18n="contactDeliveryHelp">Bekijk ook Bestellen & levering en de FAQ.</span></div><a href="/faq" data-i18n="viewFaq">Bekijk veelgestelde vragen →</a></aside></div>
   </article>
+<section class="tm-business-contact" aria-labelledby="tmBusinessTitle" style="margin:24px 0;padding:22px;background:#f0f7ff;border:1px solid #bed7f3;border-radius:16px">
+  <h2 id="tmBusinessTitle" data-tm-service-nl="Bedrijfs- en contactinformatie" data-tm-service-en="Business and contact information">Bedrijfs- en contactinformatie</h2>
+  <p><strong data-tm-service-nl="Handelsnaam:" data-tm-service-en="Trading name:">Handelsnaam:</strong> TrendMix</p>
+  <p data-tm-service-nl="TrendMix is in ontwikkeling. Het zakelijke contactadres, KvK-nummer, btw-nummer en vestigingsadres worden pas gepubliceerd nadat ze door de eigenaar zijn bevestigd." data-tm-service-en="TrendMix is under development. The business contact email, registration number, VAT number and business address will only be published once confirmed by the owner.">TrendMix is in ontwikkeling. Het zakelijke contactadres, KvK-nummer, btw-nummer en vestigingsadres worden pas gepubliceerd nadat ze door de eigenaar zijn bevestigd.</p>
+  <p data-tm-service-nl="Gebruik het contactformulier alleen wanneer berichtverzending actief is. Bij een fout wordt duidelijk gemeld dat het bericht niet is verzonden." data-tm-service-en="Only use the contact form when message delivery is enabled. If delivery fails, the page clearly says your message was not sent.">Gebruik het contactformulier alleen wanneer berichtverzending actief is. Bij een fout wordt duidelijk gemeld dat het bericht niet is verzonden.</p>
+</section>
 </main>
 {% include "_footer.html" %}
 </body>

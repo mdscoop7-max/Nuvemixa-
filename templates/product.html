@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#f6f7fb">
   <title>{{ product.seo_title }}</title>
   <meta name="description" content="{{ product.seo_description }}">
-  <meta name="robots" content="index,follow">
-  <link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ product.product_url }}">
+  <meta name="robots" content="{% if product.seo_verified %}index,follow{% else %}noindex,follow{% endif %}">
+  <link rel="canonical" href="{{ site_url }}{{ product.product_url }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -16,12 +16,12 @@
   <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
   <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script>
   {% if product.images %}
-  <meta property="og:image" content="{{ product.images[0] }}">
+  <meta property="og:image" content="{{ product.images[0] if product.images[0].startswith('http') else site_url ~ product.images[0] }}">
   {% endif %}
   <meta property="og:title" content="{{ product.seo_title }}">
   <meta property="og:description" content="{{ product.seo_description }}">
   <meta property="og:type" content="product">
-  <meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ product.product_url }}">
+  <meta property="og:url" content="{{ site_url }}{{ product.product_url }}">
   <meta name="twitter:card" content="{% if product.images %}summary_large_image{% else %}summary{% endif %}">
   <script type="application/ld+json">
   {{ {
@@ -30,12 +30,13 @@
     "name":product.name,
     "description":product.description,
     "category":category_name,
-    "image":product.images,
+    "image":product.seo_images,
+    "url":site_url ~ product.product_url,
     "sku":product.id,
     "brand":({"@type":"Brand","name":product.brand} if product.brand else none),
     "offers":({
       "@type":"Offer",
-      "url":request.url_root.rstrip("/") ~ product.product_url,
+      "url":site_url ~ product.product_url,
       "price":"%.2f"|format(product.price),
       "priceCurrency":"EUR",
       "availability":("https://schema.org/InStock" if product.stock_status == "in_stock" else "https://schema.org/OutOfStock")
@@ -47,9 +48,9 @@
     "@context":"https://schema.org",
     "@type":"BreadcrumbList",
     "itemListElement":[
-      {"@type":"ListItem","position":1,"name":"Home","item":request.url_root.rstrip("/") ~ "/"},
-      {"@type":"ListItem","position":2,"name":category_name,"item":request.url_root.rstrip("/") ~ "/" ~ category_slug},
-      {"@type":"ListItem","position":3,"name":product.name,"item":request.url_root.rstrip("/") ~ product.product_url}
+      {"@type":"ListItem","position":1,"name":"Home","item":site_url ~ "/"},
+      {"@type":"ListItem","position":2,"name":category_name,"item":site_url ~ "/" ~ category_slug},
+      {"@type":"ListItem","position":3,"name":product.name,"item":site_url ~ product.product_url}
     ]
   }|tojson }}
   </script>
@@ -171,6 +172,18 @@
       <button type="submit"><span data-i18n="addCart">In winkelwagen</span> · € {{ "%.2f"|format(product.price)|replace(".", ",") }}</button>
     </form>
   </div>
+
+  <section class="tm-reviews-section" aria-labelledby="tm-reviews-title">
+    <div class="tm-reviews-heading"><span class="eyebrow dark">KLANTERVARINGEN</span><h2 id="tm-reviews-title">Reviews over dit product</h2></div>
+    {% if show_demo_review %}<div class="tm-review-demo" aria-label="Voorbeeld van een review, geen echte klantbeoordeling">
+      <div class="tm-review-demo-head"><strong>Voorbeeldreview</strong><span class="tm-review-demo-tag">TEST / DEMO — NIET ECHT</span></div>
+      <div class="tm-review-demo-stars" aria-label="Voorbeeld van vijf sterren, geen echte beoordeling" aria-hidden="true">★★★★★</div>
+      <p class="tm-review-demo-quote">“Het product is overzichtelijk beschreven en de foto's zijn duidelijk. Zo zou een klantreview straks worden weergegeven.”</p>
+      <small>Fictieve tekst voor de testweergave. Niet afkomstig van een klant en telt niet mee in beoordelingsscores.</small>
+    </div>
+    {% endif %}
+    <p class="tm-review-real-status">Er zijn nog geen geverifieerde klantbeoordelingen. Echte reviews verschijnen hier pas na een werkende reviewverificatie.</p>
+  </section>
 
   {% if related %}
   <section class="content-section related-section">

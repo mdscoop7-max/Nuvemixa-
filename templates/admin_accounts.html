@@ -1,0 +1,29 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Accountbeheer · TrendMix</title><style>
+:root{font-family:system-ui,Arial,sans-serif;color:#183757;background:#f1f7ff}*{box-sizing:border-box}body{margin:0}
+header{background:linear-gradient(110deg,#073767,#1475c0);color:white;padding:18px max(20px,calc((100vw - 1100px)/2))}
+header a{color:white;text-decoration:none;font-weight:750}main{max-width:1100px;margin:0 auto;padding:32px 20px 65px}h1{font-size:clamp(27px,4vw,40px);margin:0 0 8px}p{line-height:1.6;color:#536b83}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.panel{padding:25px;background:white;border:1px solid #d1e2f5;border-radius:19px;box-shadow:0 8px 25px #1a52821a;margin:0 0 19px}
+h2{margin:0 0 14px;font-size:21px}.field{display:flex;flex-direction:column;gap:6px;margin:14px 0}label{font-weight:750;font-size:13px}input,select{min-height:45px;padding:10px 12px;border:1px solid #b7cde5;border-radius:10px;font:inherit;width:100%}
+button{background:#0768ca;color:white;padding:12px 17px;border:0;border-radius:11px;min-height:45px;font:750 14px system-ui;cursor:pointer}button:hover{background:#084c94}
+button.danger{background:#a83a49}button.danger:hover{background:#882b38}
+.notice{background:#e5f4ff;border:1px solid #b3d9f6;border-radius:12px;padding:14px;margin:16px 0}.error{background:#fff0ee;border-color:#eeb3a8}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #e3edf8;padding:13px 8px}th{color:#547394;font-size:12px}small{color:#58718b}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #ffbf50;outline-offset:3px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.panel{padding:18px}table{font-size:13px}td,th{padding:9px 4px}}
+</style></head><body><header><a href="{{ url_for('admin_preview') }}">← TrendMix / Beheerdashboard</a></header>
+<main><h1>Account- en gebruikersbeheer</h1><p>Beveiligde lokale beheeromgeving. Aangemeld als <strong>{{ current_admin.username }}</strong> (eigenaar).</p>
+{% if info %}<div class="notice" role="status">{{ info }}</div>{% endif %}{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<div class="grid">
+<section class="panel"><h2>Gebruiker toevoegen</h2><p>Maak een eigen account voor een beheerder of medewerker.</p><form method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="action" value="create">
+<div class="field"><label for="user">Gebruikersnaam</label><input id="user" name="username" autocomplete="off" minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" required></div>
+<div class="field"><label for="pw">Tijdelijk wachtwoord (minimaal 16 tekens)</label><input id="pw" name="password" type="password" minlength="16" autocomplete="new-password" required></div>
+<div class="field"><label for="role">Rechten</label><select id="role" name="role"><option value="manager">Beheerder</option><option value="staff">Medewerker</option></select></div><button type="submit">Gebruiker toevoegen</button></form></section>
+<section class="panel"><h2>Mijn wachtwoord wijzigen</h2><p>Het oude wachtwoord stopt na wijziging met werken. Bewaar je nieuwe wachtwoord veilig.</p><form method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="action" value="password">
+<div class="field"><label for="oldpw">Huidig wachtwoord</label><input id="oldpw" name="current_password" type="password" autocomplete="current-password" required></div>
+<div class="field"><label for="newpw">Nieuw wachtwoord (minimaal 16 tekens)</label><input id="newpw" name="new_password" type="password" minlength="16" autocomplete="new-password" required></div><button type="submit">Wachtwoord wijzigen</button></form></section>
+</div>
+<section class="panel"><h2>Accounts en rechten</h2><p><small>De oorspronkelijke eigenaar is ingesteld via de lokale omgeving. Nieuwe accounts worden gehasht opgeslagen in de lokale SQLite-database.</small></p><div style="overflow-x:auto"><table><thead><tr><th>Gebruiker</th><th>Rol</th><th>Actie</th></tr></thead><tbody><tr><td>{{ current_admin.username }}</td><td>Eigenaar</td><td>Beveiligd</td></tr>
+{% for u in users if u.username != current_admin.username %}<tr><td>{{ u.username }}</td><td>{{ 'Beheerder' if u.role == 'manager' else 'Medewerker' }}</td><td><form method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="username" value="{{ u.username }}"><button type="submit" class="danger">Verwijderen</button></form></td></tr>{% endfor %}
+</tbody></table></div></section>
+<div class="notice"><strong>Let op:</strong> accounts zijn voorlopig voor lokale QA. Beheerders en medewerkers krijgen nog geen volledig uitgewerkte fijnmazige rechten of sessiebeheer. De webshop accepteert nog geen echte betalingen.</div>
+</main></body></html>

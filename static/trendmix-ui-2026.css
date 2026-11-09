@@ -502,3 +502,38 @@ body:has(.cart-page),body:has(.tm-product-page),body:has(.info-page){background:
 @media(prefers-reduced-motion:reduce){
   .tm-digital-nav .tm-menu-chevron{transition:none}
 }
+
+
+/* Active main-menu item follows the actual category URL; consistent across desktop/mobile. */
+.main-nav .nav-inner > a.nav-link.is-active,
+.main-nav .nav-inner > a.nav-link.is-active:hover,
+.main-nav .nav-inner > a.nav-link[aria-current="page"]{
+  background:#0866f5!important;color:#fff!important;border-radius:10px;
+  box-shadow:0 4px 13px rgba(8,102,245,.25);
+}
+.main-nav .nav-inner > a.nav-link.is-active span{color:inherit!important}
+.main-nav .nav-inner > a.nav-link:focus-visible{outline:3px solid #ffbf47!important;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.main-nav .nav-inner > a.nav-link{transition:none!important}}
+
+/* Category drawer/buttons and product details. No homepage hero changes. */
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary{width:min(100%,330px)!important;min-height:43px!important;padding:9px 14px!important;border-radius:11px!important;background:linear-gradient(110deg,#076cb8,#1789cf)!important;border-color:#1f7ec6!important;box-shadow:0 5px 15px #17619c24!important;font-size:13px!important}
+.tm-digital-nav .tm-category-menu-links a,.tm-digital-nav .tm-menu-quick-links a{border-radius:11px!important;min-height:40px!important;padding:9px 11px!important;font-size:13px!important;border:1px solid #dfebf8!important;background:#fff!important;color:#214769!important}
+.tm-digital-nav .tm-category-menu-links a:hover,.tm-digital-nav .tm-menu-quick-links a:hover{background:#eaf4ff!important;border-color:#b5d5fa!important}
+.tm-digital-nav .tm-category-menu-links a.selected,.tm-digital-nav .tm-category-menu-links a[aria-current=page]{background:#0866f5!important;color:#fff!important;border-color:#0866f5!important}
+.tm-product-page .product-availability{background:linear-gradient(115deg,#e9f5ff,#f6faff)!important;border:1px solid #bfdaf4!important;border-radius:15px!important;box-shadow:0 5px 19px #195c9d13!important;padding:17px 20px!important;color:#153a62!important}
+.tm-product-page .product-availability strong{color:#17558c!important;font-weight:850!important}
+.tm-product-page .product-availability span{color:#456887!important;font-size:14px!important}
+.tm-product-page .detail-points{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+.tm-product-page .detail-points>*{border-radius:999px!important;background:#e8f4ff!important;border:1px solid #c8dff6!important;color:#245d92!important;padding:8px 12px!important}
+.tm-product-page .detail-actions{gap:11px!important}
+.tm-product-page .detail-actions :is(button,.btn){min-height:49px!important;border-radius:12px!important;font-weight:800!important}
+.tm-product-page .detail-actions .btn-outline{background:#fff!important;color:#1262b7!important;border:1px solid #bbd5f4!important}
+@media(max-width:760px){.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary{width:min(100%,300px)!important}.tm-product-page .product-availability{padding:13px 15px!important}}
+
+/* Shared outline icon polish for navigation, product details and service content. */
+.tm-unified-icon{width:20px;height:20px;flex:none;vertical-align:middle;stroke:currentColor;stroke-width:1.85;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tm-product-page .tm-unified-icon,.tm-footer-v2 .tm-unified-icon{width:21px;height:21px}
+.tm-category-menu-links .tm-nav-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:none;border-radius:8px;background:#eaf3ff;color:#1969be}
+.tm-category-menu-links a.selected .tm-nav-icon,.tm-category-menu-links a[aria-current=page] .tm-nav-icon{background:#ffffff24;color:#fff}
+.tm-category-menu-links .tm-nav-icon svg{width:19px;height:19px;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:760px){.tm-unified-icon{width:19px;height:19px}}

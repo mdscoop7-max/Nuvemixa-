@@ -4,11 +4,12 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f6f7fb">
   <title>{{ title }} | TrendMix</title>
   <meta name="description" content="{{ description }}" data-meta-description>
-  <link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ path }}">
+  <link rel="canonical" href="{{ site_url }}{{ path }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css') }}">
   <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
   <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static',filename='trendmix-info.css',v='20261019-1') }}">
+<script defer src="{{ url_for('static',filename='trendmix-bilingual-pages.js',v='20261027-a') }}"></script>
 </head>
 <body>
 {% include "_header.html" %}

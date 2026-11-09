@@ -1,0 +1,92 @@
+/* TrendMix: filter and language fixes identified in laptop QA.
+   This file intentionally excludes all hero selectors and layout rules. */
+.legacy-main .shop-page .tm-shop-filters,
+.shop-page .tm-shop-filters {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) auto auto!important;
+  gap:12px!important;align-items:end!important;
+  width:100%!important;max-width:100%!important;box-sizing:border-box!important;
+  margin:16px 0 25px!important;padding:19px!important;
+  border:1px solid #c8daf5!important;border-radius:18px!important;
+  background:#eef6ff!important;box-shadow:0 9px 24px rgba(15,70,140,.08)!important;
+}
+.shop-page .tm-shop-filters .tm-filter-field{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  justify-content:flex-start!important;gap:7px!important;min-width:0!important;max-width:none!important;
+}
+.shop-page .tm-shop-filters .tm-filter-field>label{
+  display:block!important;width:100%!important;margin:0!important;padding:0!important;
+  font:800 13px/1.4 system-ui,Arial,sans-serif!important;color:#194671!important;
+}
+.shop-page .tm-shop-filters .tm-filter-field>input,
+.shop-page .tm-shop-filters .tm-filter-field>select{
+  box-sizing:border-box!important;display:block!important;width:100%!important;
+  max-width:100%!important;min-width:0!important;height:46px!important;min-height:46px!important;
+  margin:0!important;padding:10px 12px!important;
+  font:500 14px/1.4 system-ui,Arial,sans-serif!important;
+  background:#fff!important;color:#193d68!important;
+  border:1px solid #a9c6e9!important;border-radius:10px!important;
+  box-shadow:none!important;
+}
+.shop-page .tm-shop-filters .tm-filter-submit,
+.shop-page .tm-shop-filters .tm-filter-reset{
+  box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;
+  justify-content:center!important;min-width:0!important;min-height:46px!important;
+  width:auto!important;padding:10px 15px!important;margin:0!important;
+  border-radius:10px!important;font:800 13px/1.35 system-ui,Arial,sans-serif!important;
+  text-decoration:none!important;white-space:nowrap!important;cursor:pointer!important;
+}
+.shop-page .tm-shop-filters .tm-filter-submit{
+  border:1px solid #0866f5!important;background:#0866f5!important;color:#fff!important;
+}
+.shop-page .tm-shop-filters .tm-filter-reset{
+  border:1px solid #b7cff0!important;background:#fff!important;color:#1757a0!important;
+}
+.shop-page .tm-shop-filters :is(input,select,button,a):focus-visible{
+  outline:3px solid #0877e5!important;outline-offset:2px!important;
+}
+@media(max-width:1050px){
+ .shop-page .tm-shop-filters{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .shop-page .tm-shop-filters .tm-filter-submit,
+ .shop-page .tm-shop-filters .tm-filter-reset{width:100%!important}
+}
+@media(max-width:620px){
+ .shop-page .tm-shop-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:13px!important;gap:10px!important}
+ .shop-page .tm-shop-filters .tm-filter-field:nth-of-type(3){grid-column:1/-1!important}
+}
+@media(max-width:355px){
+ .shop-page .tm-shop-filters{grid-template-columns:1fr!important}
+ .shop-page .tm-shop-filters .tm-filter-field:nth-of-type(3){grid-column:auto!important}
+}
+/* Two proper stacked language buttons, independent of inherited top-bar CSS. */
+.tm-global-language .tm-language-dropdown{position:relative!important}
+.tm-global-language .tm-language-dropdown[open] .tm-language-options{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:8px!important;position:absolute!important;top:calc(100% + 5px)!important;right:0!important;
+  width:215px!important;max-width:calc(100vw - 18px)!important;
+  margin:0!important;padding:10px!important;
+  background:#f2f7ff!important;color:#19385e!important;
+  border:1px solid #bdd5f1!important;border-radius:13px!important;
+  box-shadow:0 12px 28px rgba(15,51,95,.22)!important;z-index:9999!important;
+}
+.tm-global-language .tm-language-options button[data-language]{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  flex-direction:row!important;gap:11px!important;
+  width:100%!important;min-width:0!important;min-height:46px!important;
+  margin:0!important;padding:9px 13px!important;
+  background:white!important;color:#19385e!important;border:1px solid #cadcf3!important;
+  border-radius:10px!important;font:750 14px/1.4 system-ui,Arial,sans-serif!important;
+  text-align:left!important;white-space:nowrap!important;cursor:pointer!important;
+}
+.tm-global-language .tm-language-options button[data-language].active,
+.tm-global-language .tm-language-options button[data-language][aria-pressed="true"]{
+  background:#dceeff!important;border-color:#0866f5!important;color:#084b9d!important;
+  box-shadow:inset 3px 0 #0866f5!important;
+}
+.tm-global-language .tm-language-options button[data-language]:hover{
+  background:#e9f4ff!important;border-color:#4299ed!important;
+}
+.tm-global-language .tm-language-options .tm-lang-flag{display:inline-flex!important;flex:0 0 24px!important}
+.tm-global-language .tm-language-options button[data-language]:focus-visible{
+  outline:3px solid #ffca62!important;outline-offset:2px!important;
+}

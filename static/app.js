@@ -32,6 +32,7 @@ function applyLanguage(lang){
   document.documentElement.lang=lang;
   document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;if(t[key]!==undefined)el.innerHTML=t[key]});
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const key=el.dataset.i18nPlaceholder;if(t[key]!==undefined)el.placeholder=t[key]});
+  document.querySelectorAll('[data-tm-tr]').forEach(el=>{const value=lang==='en'?el.dataset.tmEn:el.dataset.tmNl;if(value!==undefined)el.textContent=value;});
   localStorage.setItem('trendmix-language',lang);
   document.querySelectorAll('[data-language]').forEach(button=>{
     button.classList.toggle('active',button.dataset.language===lang);
@@ -57,9 +58,23 @@ document.addEventListener('DOMContentLoaded',()=>{
   const saved=localStorage.getItem('trendmix-language')||detectTrendMixLanguage();
   if(select){select.value=saved;select.addEventListener('change',e=>applyLanguage(e.target.value));}
   document.querySelectorAll('[data-language]').forEach(button=>{
-    button.addEventListener('click',()=>applyLanguage(button.dataset.language));
+    button.addEventListener('click',()=>{applyLanguage(button.dataset.language);button.closest('.tm-language-dropdown')?.removeAttribute('open');});
   });
   applyLanguage(saved);
+  function refreshTopbarLanguage(lang){
+    document.querySelectorAll('.tm-language-dropdown').forEach(menu=>{
+      const current=menu.querySelector('.tm-language-current');
+      if(current)current.textContent=lang==='en'?'English':'Nederlands';
+      const nl=menu.querySelector('.tm-flag-nl');
+      const en=menu.querySelector('.tm-flag-en');
+      if(nl)nl.hidden=lang==='en';
+      if(en)en.hidden=lang!=='en';
+    });
+  }
+  refreshTopbarLanguage(saved);
+  document.querySelectorAll('.tm-language-options [data-language]').forEach(button=>{
+    button.addEventListener('click',()=>refreshTopbarLanguage(button.dataset.language));
+  });
 
   const toggle=document.querySelector('[data-menu-toggle]');
   const nav=document.querySelector('[data-mobile-nav]');
@@ -151,13 +166,78 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   });
   document.querySelectorAll('.detail-image img').forEach(img=>{
-    img.addEventListener('click',()=>{
+    img.setAttribute('tabindex','0');
+    img.setAttribute('role','button');
+    img.setAttribute('aria-label','Vergroot productfoto');
+    const openGallery=()=>{
+      const pictures=[...document.querySelectorAll('.detail-thumbnails img')];
+      const sources=pictures.length?pictures.map(x=>x.currentSrc||x.src):[img.currentSrc||img.src];
+      let active=Math.max(0,sources.indexOf(img.currentSrc||img.src));
+      let enlarged=false;
+      const previousFocus=document.activeElement;
       const overlay=document.createElement('div');
       overlay.className='tm-image-zoom';
-      overlay.innerHTML='<button type="button" aria-label="Afbeelding sluiten">×</button><img src="'+img.src+'" alt="'+(img.alt||'')+'">';
-      overlay.addEventListener('click',e=>{if(e.target===overlay||e.target.tagName==='BUTTON')overlay.remove()});
+      overlay.setAttribute('role','dialog');
+      overlay.setAttribute('aria-modal','true');
+      overlay.setAttribute('aria-label','Productfoto groot bekijken');
+      const image=document.createElement('img');
+      image.alt=img.alt||'Productfoto';
+      const controls=document.createElement('div');
+      controls.className='tm-zoom-controls';
+      const makeButton=(label,symbol,callback)=>{
+        const button=document.createElement('button');
+        button.type='button';
+        button.textContent=symbol;
+        button.setAttribute('aria-label',label);
+        button.addEventListener('click',callback);
+        return button;
+      };
+      const close=()=>{
+        overlay.remove();
+        document.removeEventListener('keydown',onKey);
+        document.body.style.overflow=previousOverflow;
+        if(previousFocus&&typeof previousFocus.focus==='function')previousFocus.focus();
+      };
+      const show=()=>{
+        image.src=sources[active];
+        image.classList.remove('is-enlarged');
+        image.setAttribute('alt',(img.alt||'Productfoto')+' — afbeelding '+(active+1)+' van '+sources.length);
+        enlarged=false;
+        prev.disabled=next.disabled=sources.length<2;
+      };
+      const prev=makeButton('Vorige productfoto','‹',()=>{active=(active-1+sources.length)%sources.length;show();});
+      const next=makeButton('Volgende productfoto','›',()=>{active=(active+1)%sources.length;show();});
+      const toggle=makeButton('Inzoomen of uitzoomen','+',()=>{
+        enlarged=!enlarged;
+        image.classList.toggle('is-enlarged',enlarged);
+        toggle.textContent=enlarged?'−':'+';
+      });
+      const exit=makeButton('Foto sluiten','×',close);
+      exit.classList.add('tm-zoom-close');
+      controls.append(prev,toggle,next);
+      overlay.append(image,controls,exit);
+      image.addEventListener('click',()=>toggle.click());
+      overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+      const onKey=e=>{
+        if(e.key==='Escape'){e.preventDefault();close();}
+        else if(e.key==='ArrowLeft'){e.preventDefault();prev.click();}
+        else if(e.key==='ArrowRight'){e.preventDefault();next.click();}
+        else if(e.key==='Tab'){
+          const buttons=[prev,toggle,next,exit].filter(b=>!b.disabled);
+          const index=buttons.indexOf(document.activeElement);
+          if(e.shiftKey&&index<=0){e.preventDefault();buttons[buttons.length-1].focus();}
+          else if(!e.shiftKey&&index===buttons.length-1){e.preventDefault();buttons[0].focus();}
+        }
+      };
+      const previousOverflow=document.body.style.overflow;
+      document.body.style.overflow='hidden';
       document.body.appendChild(overlay);
-    });
+      document.addEventListener('keydown',onKey);
+      show();
+      exit.focus();
+    };
+    img.addEventListener('click',openGallery);
+    img.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openGallery();}});
   });
 });
 

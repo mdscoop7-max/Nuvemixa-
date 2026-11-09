@@ -3,18 +3,21 @@
 <html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0866f5"><title>TrendMix | Slimme gadgets en meer</title>
 <meta name="description" content="Ontdek gadgets, Smart Home, Beauty & Care en Lifestyle & Sport bij TrendMix. Bekijk onze selectie slimme en praktische producten.">
-<link rel="canonical" href="https://trendmix-jet.vercel.app/"><link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
+<link rel="canonical" href="{{ site_url }}/"><link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='storefront-v2.css',v='20261017-footer1') }}">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://trendmix-jet.vercel.app/#organization","name":"TrendMix","url":"https://trendmix-jet.vercel.app/"},{"@type":"WebSite","@id":"https://trendmix-jet.vercel.app/#website","name":"TrendMix","url":"https://trendmix-jet.vercel.app/","publisher":{"@id":"https://trendmix-jet.vercel.app/#organization"},"potentialAction":{"@type":"SearchAction","target":"https://trendmix-jet.vercel.app/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"{{ site_url }}/#organization","name":"TrendMix","url":"{{ site_url }}/"},{"@type":"WebSite","@id":"{{ site_url }}/#website","name":"TrendMix","url":"{{ site_url }}/","publisher":{"@id":"{{ site_url }}/#organization"},"potentialAction":{"@type":"SearchAction","target":"{{ site_url }}/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TrendMix">
 <meta property="og:title" content="TrendMix | Slimme gadgets en meer">
 <meta property="og:description" content="Ontdek gadgets, Smart Home, Beauty & Care en Lifestyle & Sport bij TrendMix.">
-<meta property="og:url" content="https://trendmix-jet.vercel.app/">
-<meta property="og:image" content="https://trendmix-jet.vercel.app/static/images/hero/gadgets.jpg">
+<meta property="og:url" content="{{ site_url }}/">
+<meta property="og:image" content="{{ site_url }}/static/images/hero/gadgets.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/static/trendmix-hero-fix.css">
+<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-forms-polish.css',v='20261027-b') }}">
+<script defer src="{{ url_for('static',filename='app.js',v='20261027-language') }}"></script>
+<script defer src="{{ url_for('static',filename='storefront-language.js',v='20261027-c') }}"></script>
 </head><body>
 <div class="topline"><div class="wrap topitems"><span>{{ tm_icon('truck', 'tm-inline-icon') }} Levering volgens productinformatie</span><span>{{ tm_icon('return', 'tm-inline-icon') }} Retourinformatie</span><span>{{ tm_icon('shield', 'tm-inline-icon') }} Checkout in testfase</span><span>{{ tm_icon('mail', 'tm-inline-icon') }} Klantenservice</span><a href="/account">Account</a><a href="/wishlist">{{ tm_icon('heart', 'tm-inline-icon') }} Favorieten</a><a href="/winkelwagen">{{ tm_icon('cart', 'tm-inline-icon') }} Winkelwagen ({{ cart_count|default(0) }})</a>{% include '_tm_topbar_language.html' %}</div></div>
 <header class="header wrap"><button type="button" class="tm-top-menu-trigger" data-tm-menu-trigger aria-label="Menu openen" aria-expanded="false" aria-controls="tmMobileDrawer"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><a class="wordmark" href="/">Trend<span>Mix</span></a><form class="search" action="/" method="get"><input name="q" type="search" value="{{ search_query|default('') }}" placeholder="Zoek naar producten, merken of specificaties…" aria-label="Zoek producten"><button type="submit">{{ tm_icon('search', 'tm-inline-icon') }} <span>Zoeken</span></button></form><a class="offer" href="/aanbiedingen">{{ tm_icon('tag', 'tm-inline-icon') }} Aanbiedingen</a></header>

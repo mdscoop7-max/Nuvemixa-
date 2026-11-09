@@ -1,10 +1,30 @@
 {% extends "base.html" %}
 {% from '_tm_icons.html' import tm_icon %}
-{% block title %}Account | TrendMix{% endblock %}
-{% block description %}TrendMix accountomgeving.{% endblock %}
+{% block title %}Mijn account | TrendMix{% endblock %}
 {% block content %}
-<section class="page-section account-page">
- <div class="section-heading"><span class="section-label">TRENDMIX ACCOUNT</span><h1>Mijn account</h1><p>Je persoonlijke TrendMix-omgeving.</p></div>
- <div class="account-card"><div class="account-icon">{{ tm_icon('user') }}</div><div class="account-content"><span class="account-status">IN ONTWIKKELING</span><h2>Accountfunctie volgt vóór commerciële livegang</h2><p class="account-description">Inloggen en registreren zijn nog niet geactiveerd. Zo wekken we niet de indruk dat er al een werkend klantaccount bestaat. Winkelwagen en favorieten kun je tijdens de testfase wel gebruiken.</p><div class="account-actions"><a href="/wishlist" class="btn btn-primary">Mijn favorieten →</a><a href="/shop" class="btn btn-outline">Naar de shop →</a></div></div></div>
+<section class="page-section account-page" aria-labelledby="account-title">
+ <div class="section-heading"><span class="section-label">MIJN TRENDMIX</span><h1 id="account-title">Mijn account</h1><p>Je persoonlijke accountomgeving bij TrendMix.</p></div>
+ <div class="account-card" style="display:block;max-width:850px;padding:clamp(22px,4vw,38px)">
+ {% if customer %}
+  <span class="account-status">INGELOGD · TESTOMGEVING</span>
+  <h2>Welkom, {{ customer.name }}</h2>
+  <p>Je bent veilig ingelogd met {{ customer.email }}.</p>
+  <p>Bestellingen, betalingen en persoonlijke verzendgegevens zijn nog niet gekoppeld. De testcheckout maakt geen betaalde bestelling aan.</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin:20px 0">
+   <a class="btn btn-outline" href="{{ url_for('wishlist') }}">Mijn favorieten</a>
+   <a class="btn btn-outline" href="{{ url_for('shop') }}">Shop bekijken</a>
+  </div>
+  <form method="post" action="{{ url_for('logout_customer') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary" type="submit">Uitloggen</button></form>
+ {% else %}
+  <div class="account-icon" aria-hidden="true">{{ tm_icon('user') }}</div>
+  <span class="account-status">BEVEILIGDE TESTOMGEVING</span>
+  <h2>Jouw TrendMix-account</h2>
+  <p>Maak een account of log in. Producten en winkelwagen blijven testfunctionaliteiten totdat leveranciers, betaling en orderverwerking zijn geactiveerd.</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
+   <a class="btn btn-primary" href="{{ url_for('register_customer') }}">Account aanmaken</a>
+   <a class="btn btn-outline" href="{{ url_for('login_customer') }}">Inloggen</a>
+  </div>
+ {% endif %}
+ </div>
 </section>
 {% endblock %}

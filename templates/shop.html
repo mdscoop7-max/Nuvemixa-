@@ -216,6 +216,21 @@ Ontdek alle TrendMix-producten in onze vijf collecties: gadgets, smart home, bea
 </div>
 
 
+<form class="tm-shop-filters" method="get" action="{{ url_for('shop') }}" aria-label="Prijsfilter en sortering">
+  {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+  {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+  <div class="tm-filter-field"><label for="tmMinPrice" data-tm-tr data-tm-nl="Vanaf €" data-tm-en="Min. price €">Vanaf €</label><input id="tmMinPrice" name="min_price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Min." value="{{ min_price|default('') }}"></div>
+  <div class="tm-filter-field"><label for="tmMaxPrice" data-tm-tr data-tm-nl="Tot €" data-tm-en="Max. price €">Tot €</label><input id="tmMaxPrice" name="max_price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Max." value="{{ max_price|default('') }}"></div>
+  <div class="tm-filter-field"><label for="tmSort" data-tm-tr data-tm-nl="Sorteren" data-tm-en="Sort by">Sorteren</label><select id="tmSort" name="sort">
+    <option value="relevance" {% if sort == 'relevance' %}selected{% endif %} data-tm-tr data-tm-nl="Standaard" data-tm-en="Default">Standaard</option>
+    <option value="price-low" {% if sort == 'price-low' %}selected{% endif %} data-tm-tr data-tm-nl="Prijs: laag naar hoog" data-tm-en="Price: low to high">Prijs: laag naar hoog</option>
+    <option value="price-high" {% if sort == 'price-high' %}selected{% endif %} data-tm-tr data-tm-nl="Prijs: hoog naar laag" data-tm-en="Price: high to low">Prijs: hoog naar laag</option>
+    <option value="name" {% if sort == 'name' %}selected{% endif %}>Naam A–Z</option>
+  </select></div>
+  <button class="tm-filter-submit" type="submit" data-tm-tr data-tm-nl="Toepassen" data-tm-en="Apply filters">Toepassen</button>
+  <a class="tm-filter-reset" href="{{ url_for('shop', category=category, q=search) }}" data-tm-tr data-tm-nl="Filters wissen" data-tm-en="Clear filters">Filters wissen</a>
+</form>
+
 <!-- ========================================================
      PRODUCTEN
 ========================================================= -->
