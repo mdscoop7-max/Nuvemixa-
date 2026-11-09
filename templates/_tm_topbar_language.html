@@ -1,8 +1,53 @@
-{% from '_tm_icons.html' import tm_icon %}
-<div class="tm-global-language" role="group" aria-label="Website language">
- <label for="tmGlobalLanguage" class="tm-lang-label">{{ tm_icon('globe') }}<span data-tm-tr data-tm-nl="Taal" data-tm-en="Language">Taal</span></label>
- <select id="tmGlobalLanguage" aria-label="Website language / Taal" autocomplete="off">
-  <option value="nl">NL · Nederlands</option>
-  <option value="en">EN · English</option>
- </select>
+<div class="tm-global-language tm-locale-flags" aria-label="Taal kiezen / Select language">
+  <select id="tmGlobalLanguage" class="tm-locale-native" aria-label="Taal kiezen / Select language"><option value="nl">Nederlands</option><option value="en">English</option></select>
+  <button type="button" class="tm-locale-trigger" aria-label="Taal kiezen / Select language" aria-haspopup="true" aria-expanded="false" aria-controls="tmLocaleChoices">
+    <span class="tm-locale-current"><svg viewBox="0 0 36 24" aria-hidden="true"><path fill="#ae1c28" d="M0 0h36v8H0z"/><path fill="#fff" d="M0 8h36v8H0z"/><path fill="#21468b" d="M0 16h36v8H0z"/></svg></span><span class="tm-locale-code" aria-hidden="true">NL</span><span class="tm-locale-title" data-tm-tr data-tm-nl="Taal" data-tm-en="Language">Taal</span><span class="tm-locale-chevron" aria-hidden="true">⌄</span>
+  </button>
+  <div class="tm-locale-choices" id="tmLocaleChoices" hidden>
+    <button type="button" data-tm-locale-choice="nl" aria-label="Nederlands"><svg viewBox="0 0 36 24" aria-hidden="true"><path fill="#ae1c28" d="M0 0h36v8H0z"/><path fill="#fff" d="M0 8h36v8H0z"/><path fill="#21468b" d="M0 16h36v8H0z"/></svg><span>Nederlands</span></button>
+    <button type="button" data-tm-locale-choice="en" aria-label="English"><svg viewBox="0 0 36 24" aria-hidden="true"><rect width="36" height="24" fill="#012169"/><path d="M0 0 36 24M36 0 0 24" stroke="#fff" stroke-width="6"/><path d="M0 0 36 24M36 0 0 24" stroke="#c8102e" stroke-width="2.5"/><path d="M18 0v24M0 12h36" stroke="#fff" stroke-width="9"/><path d="M18 0v24M0 12h36" stroke="#c8102e" stroke-width="4.5"/></svg><span>English</span></button>
+  </div>
 </div>
+<style>
+.tm-locale-flags{position:relative!important;display:inline-flex!important;align-items:center!important;margin-left:auto!important;z-index:150!important;font-family:system-ui,sans-serif}
+.tm-locale-flags .tm-locale-native{position:absolute!important;width:1px!important;min-width:0!important;max-width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}
+.tm-locale-flags .tm-locale-trigger{min-width:77px;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:11px;padding:6px 11px;background:#deedff;color:#103e79;border:2px solid #81b4f3;border-radius:12px;box-shadow:0 3px 8px #052f6220;cursor:pointer}
+.tm-locale-flags svg{width:34px;height:23px;display:block;flex:none;overflow:hidden;border:1px solid #90a5c4;border-radius:3px;background:#fff}
+.tm-locale-flags .tm-locale-chevron{font-size:20px;font-weight:900;line-height:1;color:#075cb9}
+.tm-locale-flags .tm-locale-choices{position:absolute;top:calc(100% + 7px);right:0;width:180px;padding:6px;background:#fff;border:1px solid #b2cdec;border-radius:12px;box-shadow:0 12px 26px #082b5440}
+.tm-locale-flags .tm-locale-choices[hidden]{display:none!important}
+.tm-locale-flags .tm-locale-choices button{display:flex;width:100%;align-items:center;gap:12px;min-height:44px;padding:8px;border:0;border-radius:8px;background:#fff;color:#15395f;font-size:13px;font-weight:750;text-align:left;cursor:pointer}
+.tm-locale-flags .tm-locale-choices button:hover,.tm-locale-flags .tm-locale-choices button[aria-pressed=true]{background:#e9f3ff}
+.tm-locale-flags :is(button):focus-visible{outline:3px solid #ffab2d!important;outline-offset:2px}
+.tm-locale-flags .tm-locale-title{font-weight:850;font-size:13px;line-height:1.2;color:#124b86;white-space:nowrap}
+.tm-locale-flags .tm-locale-trigger{min-width:121px!important;gap:9px!important;background:#e8f4ff!important}
+@media(max-width:760px){.tm-locale-flags .tm-locale-title{font-size:11px}.tm-locale-flags .tm-locale-trigger{min-width:111px!important;padding:6px 8px!important}}
+</style>
+<script>
+(function(){
+  const flags={nl:"<svg viewBox=\"0 0 36 24\" aria-hidden=\"true\"><path fill=\"#ae1c28\" d=\"M0 0h36v8H0z\"/><path fill=\"#fff\" d=\"M0 8h36v8H0z\"/><path fill=\"#21468b\" d=\"M0 16h36v8H0z\"/></svg>",en:"<svg viewBox=\"0 0 36 24\" aria-hidden=\"true\"><rect width=\"36\" height=\"24\" fill=\"#012169\"/><path d=\"M0 0 36 24M36 0 0 24\" stroke=\"#fff\" stroke-width=\"6\"/><path d=\"M0 0 36 24M36 0 0 24\" stroke=\"#c8102e\" stroke-width=\"2.5\"/><path d=\"M18 0v24M0 12h36\" stroke=\"#fff\" stroke-width=\"9\"/><path d=\"M18 0v24M0 12h36\" stroke=\"#c8102e\" stroke-width=\"4.5\"/></svg>"};
+  function init(){
+    const wrap=document.querySelector('.tm-locale-flags');
+    if(!wrap)return;
+    const select=wrap.querySelector('#tmGlobalLanguage'),trigger=wrap.querySelector('.tm-locale-trigger'),menu=wrap.querySelector('.tm-locale-choices');
+    const sync=()=>{const code=select.value==='en'?'en':'nl';wrap.querySelector('.tm-locale-current').innerHTML=flags[code];wrap.querySelector('.tm-locale-code').textContent=code.toUpperCase();wrap.querySelectorAll('[data-tm-locale-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tmLocaleChoice===code)))};
+    const close=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
+    trigger.addEventListener('click',()=>{menu.hidden=!menu.hidden;trigger.setAttribute('aria-expanded',String(!menu.hidden));sync()});
+    menu.querySelectorAll('[data-tm-locale-choice]').forEach(b=>b.addEventListener('click',()=>{select.value=b.dataset.tmLocaleChoice;select.dispatchEvent(new Event('change',{bubbles:true}));sync();close();trigger.focus()}));
+    document.addEventListener('click',e=>{if(!wrap.contains(e.target))close()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+    select.addEventListener('change',sync);
+    sync();
+    setTimeout(sync,0);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style>
+/* Always show readable NL/EN next to the flag, including on narrow phones. */
+.tm-locale-flags .tm-locale-trigger{width:auto!important;min-width:105px!important;max-width:100%!important;gap:7px!important;padding:6px 9px!important;background:#fff!important;color:#092d58!important;border:2px solid #76adee!important}
+.tm-locale-flags .tm-locale-code{display:inline-block!important;font:800 14px/1.2 system-ui,sans-serif!important;letter-spacing:.3px!important;color:#082c55!important;white-space:nowrap!important;opacity:1!important}
+.tm-locale-flags .tm-locale-title{display:none!important}
+.tm-locale-flags .tm-locale-chevron{color:#0c4b88!important}
+@media(max-width:760px){.tm-locale-flags .tm-locale-trigger{min-width:100px!important;gap:6px!important;padding:6px 8px!important}.tm-locale-flags svg{width:29px!important;height:21px!important}}
+</style>
