@@ -6,14 +6,17 @@ import secrets
 import urllib.request
 import urllib.error
 from pathlib import Path
-from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort
+from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, jsonify
+from werkzeug.security import check_password_hash
+from datetime import datetime, timezone
+import time
 from product_art import render_product_svg
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=bool(os.getenv("VERCEL_ENV")),
+    SESSION_COOKIE_SECURE=os.getenv("NUVEMIXA_COOKIE_SECURE", "true").lower() == "true",
     SESSION_COOKIE_SAMESITE="Lax",
     MAX_CONTENT_LENGTH=65536,
     MAX_FORM_MEMORY_SIZE=32768,
@@ -449,10 +452,283 @@ def product(product_id):
     return redirect(product_item["product_url"], code=302)
 
 
+
+# NUVEMIXA admin controls: deny access unless an administrator password hash is configured.
+# Use a persistent SECRET_KEY; never store credentials in the repository.
+_ADMIN_LOGIN_ATTEMPTS = {}
+_ADMIN_MAX_ATTEMPTS = 6
+_ADMIN_ATTEMPT_WINDOW = 900
+
+
+def admin_is_authenticated():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and session.get("nv_admin") is True
+
+
+def admin_configured():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and bool(os.getenv("SECRET_KEY"))
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if not admin_configured():
+        return render_template("admin_login.html", config_missing=True, error=None), 503
+    if admin_is_authenticated():
+        return redirect(url_for("control"))
+    error = None
+    if request.method == "POST":
+        ip = request.remote_addr or "unknown"
+        now = time.monotonic()
+        attempts = [t for t in _ADMIN_LOGIN_ATTEMPTS.get(ip, []) if now - t < _ADMIN_ATTEMPT_WINDOW]
+        if len(attempts) >= _ADMIN_MAX_ATTEMPTS:
+            return render_template("admin_login.html", config_missing=False, error="Te veel pogingen. Probeer het later opnieuw."), 429
+        password = request.form.get("password", "")
+        try:
+            valid = bool(password) and check_password_hash(os.environ["NUVEMIXA_ADMIN_PASSWORD_HASH"], password)
+        except (ValueError, TypeError):
+            valid = False
+        if valid:
+            _ADMIN_LOGIN_ATTEMPTS.pop(ip, None)
+            session.clear()
+            session["nv_admin"] = True
+            return redirect(url_for("control"))
+        attempts.append(now)
+        _ADMIN_LOGIN_ATTEMPTS[ip] = attempts
+        error = "Het wachtwoord klopt niet."
+    return render_template("admin_login.html", config_missing=False, error=error)
+
+
+@app.route("/admin/logout", methods=["POST"])
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
+def merchant_product_checks(item):
+    """Fail closed until the supplier confirms all mandatory selling details."""
+    missing = []
+    if not item.get("supplier_verified"):
+        missing.append("leverancier")
+    if not item.get("product_data_verified"):
+        missing.append("productgegevens")
+    if item.get("stock_status") not in ("in_stock", "out_of_stock"):
+        missing.append("voorraad")
+    if not item.get("price_verified") or not (float(item.get("price") or 0) > 0):
+        missing.append("prijs")
+    if not item.get("image_verified"):
+        missing.append("productafbeelding")
+    if not item.get("delivery_verified"):
+        missing.append("verzending")
+    if not item.get("brand") and not item.get("identifier_exists_verified"):
+        missing.append("merk/productidentificatie")
+    return missing
+
+
+@app.route("/admin/merchant-preview")
+def admin_merchant_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    items = list(catalog_items())
+    checked = [{"id": str(p.get("id", "")), "name": p["name"],
+                "missing": merchant_product_checks(p)} for p in items]
+    response = jsonify({
+        "status": "internal_preview_only", "published": False,
+        "total": len(checked),
+        "ready": sum(not p["missing"] for p in checked),
+        "products": checked,
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/research-preview")
+def admin_research_preview():
+    """Show verified catalogue completeness, not invented market demand."""
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    findings = []
+    for item in catalog_items():
+        confirmed_cost = bool(item.get("cost_verified"))
+        confirmed_supplier = bool(item.get("supplier_verified"))
+        findings.append({
+            "id": str(item.get("id", "")),
+            "name": item["name"],
+            "category": item["category_name"],
+            "supplier_verified": confirmed_supplier,
+            "purchase_cost_verified": confirmed_cost,
+            "stock_verified": item.get("stock_status") in ("in_stock", "out_of_stock"),
+            "selling_price_verified": bool(item.get("price_verified")),
+            "market_demand": None,
+            "competition_score": None,
+            "estimated_profit": None,
+        })
+    response = jsonify({
+        "status": "internal_research_only",
+        "market_data_connected": False,
+        "products": findings,
+        "total": len(findings),
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/integrations")
+def admin_integrations():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    response = jsonify({
+        "status": "configuration_presence_only",
+        "orders_live_enabled": live_orders_enabled(),
+        "woocommerce_configured": woo_configured(),
+        "merchant_publishing_enabled": False,
+        "rankfix_configured": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment_key_present": bool(os.getenv("MOLLIE_API_KEY")),
+        "contact_configured": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+        "note": "Configuration presence does not confirm external connectivity.",
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+
+# Local administrative records are separate from the public test catalogue.
+# All mutations require both administrator login and the existing CSRF middleware.
+def admin_local_records(kind):
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        return None, "Admin database is nog niet ingesteld."
+    try:
+        from nuvemixa_admin_store import list_suppliers, list_research
+        return (list_suppliers() if kind == "suppliers" else list_research()), None
+    except (OSError, RuntimeError) as exc:
+        app.logger.error("NUVEMIXA admin storage unavailable: %s", exc)
+        return None, "Admin database is tijdelijk niet beschikbaar."
+
+
+@app.route("/admin/suppliers", methods=["POST"])
+def admin_add_supplier():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_supplier
+    try:
+        add_supplier(
+            request.form.get("name", ""), request.form.get("contact_email", ""),
+            request.form.get("website", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except (ValueError, __import__("sqlite3").IntegrityError):
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Supplier record write failed")
+        result = "fout"
+    return redirect(url_for("control", section="leveranciers", result=result), code=303)
+
+
+@app.route("/admin/research", methods=["POST"])
+def admin_add_research_note():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_research
+    try:
+        add_research(
+            request.form.get("category", ""), request.form.get("product_name", ""),
+            request.form.get("source", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except ValueError:
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Research note write failed")
+        result = "fout"
+    return redirect(url_for("control", section="onderzoek", result=result), code=303)
+
+
+def recent_woo_orders():
+    """Read WooCommerce orders only if already configured. Never fabricate orders."""
+    if not woo_configured():
+        return None, "WooCommerce niet gekoppeld."
+    result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
+    if not isinstance(result, list):
+        return None, "WooCommerce niet bereikbaar of antwoord ongeldig."
+    # Only display operational fields; no addresses, phone or customer details.
+    filtered = []
+    for item in result:
+        if not isinstance(item, dict):
+            continue
+        filtered.append({
+            "id": str(item.get("id", ""))[:40],
+            "status": str(item.get("status", "onbekend"))[:45],
+            "date": str(item.get("date_created", ""))[:25],
+            "total": str(item.get("total", ""))[:40],
+            "currency": str(item.get("currency", "EUR"))[:10],
+        })
+    return filtered, None
+
+
+
+# Optional integrations are restricted to a logged-in administrator.
+@app.route("/admin/rankfix/open")
+def admin_rankfix_open():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import rankfix_scan_url
+    address = rankfix_scan_url()
+    if not address:
+        return "RankFix-adres niet veilig geconfigureerd.", 503
+    response = redirect(address, code=302)
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.route("/admin/mollie/check")
+def admin_mollie_check():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import mollie_readonly_check
+    response = jsonify(mollie_readonly_check())
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/merchant-feed-preview.xml")
+def admin_merchant_feed_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import merchant_feed_preview
+    xml, count = merchant_feed_preview(catalog_items())
+    response = Response(xml, content_type="application/xml; charset=utf-8")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-NUVEMIXA-Preview-Only"] = "true"
+    response.headers["X-NUVEMIXA-Eligible-Count"] = str(count)
+    return response
+
+
+@app.route("/admin/supplier-feed-preview", methods=["POST"])
+def admin_supplier_feed_preview():
+    if not admin_is_authenticated():
+        abort(403)
+    uploaded = request.files.get("feed")
+    if not uploaded or not uploaded.filename.lower().endswith(".csv"):
+        return jsonify({"error": "Upload een CSV-bestand."}), 400
+    raw = uploaded.stream.read(60001)
+    from nuvemixa_integrations import supplier_csv_preview
+    try:
+        result = supplier_csv_preview(raw)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
 def control():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
     all_products = load_all_products()
     category_counts = {}
     for product in all_products:
@@ -506,6 +782,22 @@ def control():
     search = request.args.get("q", "").strip()[:120]
     filtered_products = filter_products(all_products, search=search) if search else all_products
 
+    merchant_checks = [merchant_product_checks(p) for p in all_products]
+    merchant_preview_rows = [
+        {"name": p["name"], "category": p.get("category_name") or p.get("category") or "",
+         "missing": missing}
+        for p, missing in zip(all_products, merchant_checks)
+    ] if section == "google-shopping" else []
+    integration_status = {
+        "merchant": {"ready": sum(not errors for errors in merchant_checks), "total": len(all_products)},
+        "rankfix": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment": bool(os.getenv("MOLLIE_API_KEY")),
+        "woo": woo_configured(),
+        "contact": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+    }
+    supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
+    research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
+    order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
     view_template = "control.html" if request.path == "/catalogus-overzicht" else "dashboard.html"
     return render_template(
         view_template,
@@ -525,6 +817,14 @@ def control():
         },
         category_counts=sorted(category_counts.items()),
         categories=CATEGORIES,
+        integration_status=integration_status,
+        merchant_preview_rows=merchant_preview_rows,
+        supplier_rows=supplier_rows,
+        supplier_error=supplier_error,
+        research_rows=research_rows,
+        research_error=research_error,
+        order_rows=order_rows,
+        order_error=order_error,
     )
 
 
@@ -917,8 +1217,10 @@ def trendmix_security_headers(response):
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     if os.getenv("VERCEL_ENV"):
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact") or request.path.startswith("/api/"):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
         response.headers["Cache-Control"] = "no-store"
+    if request.path in ("/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith("/admin/"):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     # Browser caching speeds up repeat page visits without caching private pages,
     # cart state, API replies or customer information.
     if request.path.startswith("/static/") and response.status_code == 200:
