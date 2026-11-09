@@ -1,0 +1,89 @@
+name: Deploy NUVEMIXA to Alwaysdata
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuvemixa-alwaysdata-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Backup, verify and deploy NUVEMIXA
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: nuvemixa-production
+    steps:
+      - name: Check required connection settings
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.NUVEMIXA_SSH_HOST }}
+          SSH_USER: ${{ secrets.NUVEMIXA_SSH_USER }}
+          SSH_KEY: ${{ secrets.NUVEMIXA_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.NUVEMIXA_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for var in SSH_HOST SSH_USER SSH_KEY SSH_KNOWN_HOSTS; do
+            if [[ -z "${!var}" ]]; then
+              echo "::error::Missing required NUVEMIXA SSH setting: $var"
+              exit 1
+            fi
+          done
+
+      - name: Configure secure SSH connection
+        shell: bash
+        env:
+          SSH_KEY: ${{ secrets.NUVEMIXA_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.NUVEMIXA_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/nuvemixa_deploy"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/nuvemixa_deploy" "$HOME/.ssh/known_hosts"
+
+      - name: Backup and deploy approved NUVEMIXA branch
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.NUVEMIXA_SSH_HOST }}
+          SSH_USER: ${{ secrets.NUVEMIXA_SSH_USER }}
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o IdentitiesOnly=yes -o ConnectTimeout=15 \
+            -i "$HOME/.ssh/nuvemixa_deploy" \
+            "$SSH_USER@$SSH_HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          APP=/home/nuvemixa/www/nuvemixa
+          BRANCH=design/pixel-polish-responsive-20261027
+          cd "$APP"
+
+          # Never deploy into the wrong project or overwrite tracked local edits.
+          test "$(git branch --show-current)" = "$BRANCH"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          test -f wsgi.py
+          test -x .venv/bin/python
+          git remote get-url origin | grep -Eq '(^|[:/])mdscoop7-max/Trendmix(\.git)?$'
+
+          mkdir -p /home/nuvemixa/backups
+          BACKUP="/home/nuvemixa/backups/nuvemixa-predeploy-$(date -u +%Y%m%d-%H%M%S).tar.gz"
+          tar -czf "$BACKUP" \
+            --exclude=nuvemixa/.venv \
+            --exclude=nuvemixa/.git \
+            -C /home/nuvemixa/www nuvemixa
+          tar -tzf "$BACKUP" >/dev/null
+          echo "Backup verified: $BACKUP"
+          echo "Note: external database backups are not included."
+
+          git fetch origin "$BRANCH"
+          git merge --ff-only "origin/$BRANCH"
+          .venv/bin/python -m compileall -q app.py trendmix_assistant.py
+          .venv/bin/python -c 'from wsgi import application; assert application is not None; print("WSGI import OK")'
+          touch wsgi.py
+          echo "NUVEMIXA deployment completed at:"
+          git rev-parse --short HEAD
+          REMOTE
