@@ -1,10 +1,46 @@
 {% extends "base.html" %}
-{% from '_tm_icons.html' import tm_icon %}
-{% block title %}Account | TrendMix{% endblock %}
-{% block description %}TrendMix accountomgeving.{% endblock %}
+{% block title %}Mijn account | NUVEMIXA{% endblock %}
+{% block description %}Log in of registreer bij NUVEMIXA.{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static',filename='nuvemixa-refresh.css',v='20261110-1') }}">{% endblock %}
 {% block content %}
-<section class="page-section account-page">
- <div class="section-heading"><span class="section-label">TRENDMIX ACCOUNT</span><h1>Mijn account</h1><p>Je persoonlijke TrendMix-omgeving.</p></div>
- <div class="account-card"><div class="account-icon">{{ tm_icon('user') }}</div><div class="account-content"><span class="account-status">IN ONTWIKKELING</span><h2>Accountfunctie volgt vóór commerciële livegang</h2><p class="account-description">Inloggen en registreren zijn nog niet geactiveerd. Zo wekken we niet de indruk dat er al een werkend klantaccount bestaat. Winkelwagen en favorieten kun je tijdens de testfase wel gebruiken.</p><div class="account-actions"><a href="/wishlist" class="btn btn-primary">Mijn favorieten →</a><a href="/shop" class="btn btn-outline">Naar de shop →</a></div></div></div>
+<section class="page-section nv-account-page">
+  <div class="nv-account-panel">
+    <div class="nv-account-avatar" aria-hidden="true">♙</div>
+    <h1 data-tm-tr data-tm-nl="Mijn NUVEMIXA-account" data-tm-en="My NUVEMIXA account">Mijn NUVEMIXA-account</h1>
+    <p class="nv-account-lead" data-tm-tr data-tm-nl="Beheer je account en je gegevens." data-tm-en="Manage your account and details.">Beheer je account en je gegevens.</p>
+    {% if account_error %}<p role="alert" class="nv-account-error">{{ account_error }}</p>{% endif %}
+    {% if customer %}
+      <h2><span data-tm-tr data-tm-nl="Welkom" data-tm-en="Welcome">Welkom</span>, {{ customer['name'] }}</h2>
+      <p>{{ customer['email'] }}</p>
+      <form method="post" action="{{ url_for('customer_logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="nv-primary" type="submit" data-tm-tr data-tm-nl="Uitloggen" data-tm-en="Log out">Uitloggen</button></form>
+      <a href="/wishlist" data-tm-tr data-tm-nl="Mijn favorieten" data-tm-en="My favorites">Mijn favorieten</a>
+    {% else %}
+      <div class="nv-account-tabs" role="tablist" aria-label="Account">
+        <button type="button" role="tab" id="nv-login-tab" aria-controls="nv-login-panel" aria-selected="true" class="is-active" data-nv-account-tab="login" data-tm-tr data-tm-nl="Inloggen" data-tm-en="Log in">Inloggen</button>
+        <button type="button" role="tab" id="nv-register-tab" aria-controls="nv-register-panel" aria-selected="false" data-nv-account-tab="register" data-tm-tr data-tm-nl="Registreren" data-tm-en="Register">Registreren</button>
+      </div>
+      <div id="nv-login-panel" role="tabpanel" aria-labelledby="nv-login-tab" data-nv-account-panel="login">
+        <h2 data-tm-tr data-tm-nl="Welkom terug" data-tm-en="Welcome back">Welkom terug</h2>
+        <p data-tm-tr data-tm-nl="Log in op je NUVEMIXA-account." data-tm-en="Sign in to your NUVEMIXA account.">Log in op je NUVEMIXA-account.</p>
+        <form method="post" action="{{ url_for('customer_login') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <label><span data-tm-tr data-tm-nl="E-mailadres" data-tm-en="Email address">E-mailadres</span><input name="email" type="email" autocomplete="username" maxlength="254" required placeholder="naam@voorbeeld.nl"></label>
+          <label><span data-tm-tr data-tm-nl="Wachtwoord" data-tm-en="Password">Wachtwoord</span><input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="nv-primary" type="submit" data-tm-tr data-tm-nl="Inloggen" data-tm-en="Log in">Inloggen</button>
+        </form>
+      </div>
+      <div id="nv-register-panel" role="tabpanel" aria-labelledby="nv-register-tab" data-nv-account-panel="register" hidden>
+        <h2 data-tm-tr data-tm-nl="Account aanmaken" data-tm-en="Create an account">Account aanmaken</h2>
+        <p data-tm-tr data-tm-nl="Maak eenvoudig je NUVEMIXA-account aan." data-tm-en="Create your NUVEMIXA account easily.">Maak eenvoudig je NUVEMIXA-account aan.</p>
+        <form method="post" action="{{ url_for('customer_register') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <label><span data-tm-tr data-tm-nl="Naam" data-tm-en="Name">Naam</span><input name="name" autocomplete="name" maxlength="100" required></label>
+          <label><span data-tm-tr data-tm-nl="E-mailadres" data-tm-en="Email address">E-mailadres</span><input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+          <label><span data-tm-tr data-tm-nl="Wachtwoord (minimaal 12 tekens)" data-tm-en="Password (at least 12 characters)">Wachtwoord (minimaal 12 tekens)</span><input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+          <label><span data-tm-tr data-tm-nl="Wachtwoord herhalen" data-tm-en="Confirm password">Wachtwoord herhalen</span><input name="password_confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+          <button class="nv-primary" type="submit" data-tm-tr data-tm-nl="Registreren" data-tm-en="Register">Registreren</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
 </section>
 {% endblock %}
+{% block extra_js %}<script defer src="{{ url_for('static',filename='nuvemixa-refresh.js',v='20261110-1') }}"></script>{% endblock %}

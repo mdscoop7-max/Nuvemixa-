@@ -1,16 +1,16 @@
 {% from '_tm_icons.html' import tm_icon %}
 <!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Afrekenen | TrendMix</title>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Afrekenen | NUVEMIXA</title>
 <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260921-1') }}">
 <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script><script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script><link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261019-2') }}">
-</head>
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"></head>
 <body>
 {% include "_header.html" %}
 <main class="shell cart-page">
 <a class="back-link" href="/winkelwagen" data-i18n="backCart">← Terug naar winkelwagen</a><div class="checkout-steps" aria-label="Bestelstappen"><span data-i18n="stepCart">1 · Winkelwagen</span><span class="active" data-i18n="stepDetails">2 · Gegevens</span><span data-i18n="stepConfirm">3 · Bevestiging</span></div>
 <section class="cart-panel checkout-page commerce-card">
-<div class="commerce-heading"><div><span class="eyebrow dark">TrendMix</span><h1 data-i18n="checkoutTitle">Afrekenen</h1><p>Vul je bezorggegevens in en controleer daarna je bestelling.</p></div><span class="commerce-badge">Stap 2 van 3</span></div>
+<div class="commerce-heading"><div><span class="eyebrow dark">NUVEMIXA</span><h1 data-i18n="checkoutTitle">Afrekenen</h1><p>Vul je bezorggegevens in en controleer daarna je bestelling.</p></div><span class="commerce-badge">Stap 2 van 3</span></div>
 {% if order %}<div class="checkout-steps" aria-label="Bestelstappen"><span data-i18n="stepCart">1 · Winkelwagen</span><span data-i18n="stepDetails">2 · Gegevens</span><span class="active" data-i18n="stepConfirm">3 · Bevestiging</span></div><div class="empty-state order-success"><h3>{% if order.id == "TEST" %}Testbestelling gecontroleerd{% else %}Bestelling aangemaakt{% endif %}</h3><p>{% if order.id == "TEST" %}De checkout werkt. Er is geen echte bestelling of betaling verstuurd omdat de webshop nog in testmodus staat.{% else %}WooCommerce order #{{ order.id }} is aangemaakt.{% endif %}</p><a class="btn btn-dark" href="/">Terug naar de webshop →</a></div>
 {% else %}
 <p class="checkout-intro">{% if test_mode %}Testmodus: WooCommerce is nog niet gekoppeld. Je gegevens worden niet naar een webshop gestuurd.{% else %}Vul je gegevens in om je bestelling te plaatsen.{% endif %}</p>

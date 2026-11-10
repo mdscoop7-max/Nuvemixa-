@@ -3,17 +3,17 @@
 
 {% block title %}
 {% if category %}
-{{ category }} - TrendMix
+{{ category }} - NUVEMIXA
 {% else %}
-Shop - TrendMix
+Shop - NUVEMIXA
 {% endif %}
 {% endblock %}
 
 {% block description %}
 {% if category %}
-Bekijk de {{ category }} collectie bij TrendMix. Vergelijk onze testproducten, ontdek praktische accessoires en vind productinformatie op één plek.
+Bekijk de {{ category }} collectie bij NUVEMIXA. Vergelijk onze testproducten, ontdek praktische accessoires en vind productinformatie op één plek.
 {% else %}
-Ontdek alle TrendMix-producten in onze vijf collecties: gadgets, smart home, beauty, wonen en sport. Bekijk prijzen, informatie en producten in de testfase.
+Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, beauty, wonen en sport. Bekijk prijzen, informatie en producten in de testfase.
 {% endif %}
 {% endblock %}
 
@@ -29,7 +29,7 @@ Ontdek alle TrendMix-producten in onze vijf collecties: gadgets, smart home, bea
 .tm-shop-grid .iteminfo .add{width:100%}
 @media(max-width:760px){.tm-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px!important}.tm-shop-grid .iteminfo{padding:12px!important}.tm-shop-grid .iteminfo h3{font-size:14px!important;min-height:55px}.tm-shop-grid .iteminfo .add{font-size:13px!important;padding:12px 4px!important}.tm-shop-grid .photo{aspect-ratio:1.15}.tm-shop-grid .photo img{object-fit:cover}}
 
-/* TrendMix Alle producten hero - desktop en mobiel */
+/* NUVEMIXA Alle producten hero - desktop en mobiel */
 .tm-shop-hero {
     display: block;
     width: 100%;
@@ -57,7 +57,7 @@ Ontdek alle TrendMix-producten in onze vijf collecties: gadgets, smart home, bea
 {% block content %}
 
 <section class="page-section shop-page">
-<a href="#producten" class="tm-shop-hero" aria-label="Bekijk alle producten"><img src="{{ url_for('static', filename='images/hero/alle-producten.png') }}" alt="Ontdek alle producten van TrendMix" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:auto;border-radius:18px;"><div class="tm-desktop-hero-copy" aria-hidden="true"><span class="tm-desktop-brand">Trend<span>Mix</span></span><span class="tm-desktop-tag">ALLE PRODUCTEN</span><h2>Ontdek de volledige collectie</h2><p>Van slimme gadgets en wonen tot verzorging en sport.</p><span class="tm-desktop-cta">Bekijk alle producten →</span></div></a>
+<a href="#producten" class="tm-shop-hero" aria-label="Bekijk alle producten"><img src="{{ url_for('static', filename='images/hero/alle-producten.png') }}" alt="Ontdek alle producten van NUVEMIXA" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:auto;border-radius:18px;"><div class="tm-desktop-hero-copy" aria-hidden="true"><span class="tm-desktop-brand">NUVEMIXA</span><span class="tm-desktop-tag">ALLE PRODUCTEN</span><h2>Ontdek de volledige collectie</h2><p>Van slimme gadgets en wonen tot verzorging en sport.</p><span class="tm-desktop-cta">Bekijk alle producten →</span></div></a>
 
 
 <!-- ========================================================
@@ -67,11 +67,13 @@ Ontdek alle TrendMix-producten in onze vijf collecties: gadgets, smart home, bea
 <div class="section-heading shop-heading">
 
     <span class="section-label">
-        TRENDMIX SHOP
+        NUVEMIXA SHOP
     </span>
 
     <h1>
-        {% if category %}
+        {% if search %}
+            Zoekresultaten voor “{{ search }}”
+        {% elif category %}
             {{ category }}
         {% else %}
             Ontdek iets nieuws
@@ -79,8 +81,7 @@ Ontdek alle TrendMix-producten in onze vijf collecties: gadgets, smart home, bea
     </h1>
 
     <p>
-        Ontdek populaire, handige en interessante producten
-        voor tech, lifestyle en dagelijks gebruik.
+        {% if search %}Bekijk de producten die overeenkomen met je zoekopdracht.{% else %}Ontdek populaire, handige en interessante producten voor tech, lifestyle en dagelijks gebruik.{% endif %}
     </p>
 
 </div>

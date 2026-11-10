@@ -197,3 +197,87 @@ body{padding-bottom:calc(94px + env(safe-area-inset-bottom,0px))}
     --tm-cta-ink: #18243b;
   }
 }
+
+
+/* TrendMix responsive polish — 2026-10-27.
+   Shared across storefront, category, product, cart and information pages.
+   Preserve existing hero photography, commerce flows and mobile drawer. */
+:root{--tm-polish-blue:#0866f5;--tm-polish-ink:#10243e;--tm-polish-muted:#61728c;--tm-polish-line:#dfe8f5;--tm-polish-shadow:0 12px 32px rgba(17,44,84,.08)}
+html{overflow-x:clip;text-size-adjust:100%;-webkit-text-size-adjust:100%}
+body{min-width:320px;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+img,video,iframe{max-width:100%}
+img{height:auto}
+button,a,input,select,textarea{touch-action:manipulation}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid #f3a329!important;outline-offset:3px}
+:where(.wrap,.shell,.page-section,.productgrid,.tm-shop-grid,.categorygrid,.services)>*{min-width:0}
+:where(h1,h2,h3,p){overflow-wrap:break-word}
+.header .search,.header .search-input-wrapper{box-shadow:0 3px 14px rgba(14,50,92,.04)}
+.header .search:focus-within,.legacy-main .search-input-wrapper:focus-within{border-color:#0866f5;box-shadow:0 0 0 3px rgba(8,102,245,.13)}
+:where(.search button,.search-button,.add,.legacy-main .btn,.offer){transition:background-color .18s ease,box-shadow .18s ease,transform .18s ease}
+@media(hover:hover) and (pointer:fine){
+  :where(.search button,.search-button,.add,.legacy-main .btn):hover{background:#0755cb;box-shadow:0 8px 20px rgba(8,102,245,.2)}
+  :where(.item,.legacy-main .product-card,.categorytile):hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(18,44,80,.11);border-color:#c9d9ef}
+}
+:where(.item,.legacy-main .product-card,.categorytile){transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.productgrid .item,.tm-shop-grid .item{border-radius:16px;border-color:#e3eaf4;box-shadow:0 3px 12px rgba(17,44,84,.035);overflow:hidden}
+.productgrid .item .photo,.tm-shop-grid .item .photo{background:linear-gradient(150deg,#f7faff,#edf4ff)}
+.productgrid .item .photo img,.tm-shop-grid .item .photo img{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.productgrid .iteminfo h3,.tm-shop-grid .iteminfo h3{color:var(--tm-polish-ink);overflow-wrap:anywhere}
+.productgrid .iteminfo strong,.tm-shop-grid .iteminfo strong{color:#132b49;font-variant-numeric:tabular-nums}
+.productgrid .add,.tm-shop-grid .add{min-height:42px;border-radius:10px}
+.heading{align-items:baseline}
+.heading a{min-height:36px;display:inline-flex;align-items:center}
+.heading h1,.heading h2{line-height:1.2}
+.legacy-main{max-width:100%;min-width:0}
+.legacy-main .page-section{width:100%;min-width:0}
+.legacy-main input,.legacy-main select,.legacy-main textarea{max-width:100%}
+.legacy-main .shop-toolbar{min-width:0}
+.legacy-main .shop-search{min-width:0}
+.legacy-main .category-nav a{display:inline-flex;align-items:center;gap:5px}
+.services{border-color:var(--tm-polish-line)}
+.services>div{min-width:0}
+.services strong{color:var(--tm-polish-ink)}
+.footer a:hover{text-decoration:underline;text-underline-offset:3px}
+@media(min-width:761px) and (max-width:1199px){
+  .wrap{width:calc(100% - 40px)}
+  .header{gap:20px}
+  .productgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tm-shop-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .services{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .wrap{width:calc(100% - 28px)}
+  .header{column-gap:10px}
+  .products{padding-top:22px}
+  .heading{gap:10px;align-items:start}
+  .heading a{flex-shrink:0;text-align:right}
+  .productgrid,.tm-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+  .productgrid .iteminfo,.tm-shop-grid .iteminfo{padding:11px!important}
+  .productgrid .iteminfo h3,.tm-shop-grid .iteminfo h3{font-size:13px!important;line-height:1.4;min-height:2.8em}
+  .productgrid .iteminfo strong,.tm-shop-grid .iteminfo strong{font-size:15px}
+  .productgrid .photo,.tm-shop-grid .photo{height:auto!important;aspect-ratio:1.15;min-height:0}
+  .productgrid .photo img,.tm-shop-grid .photo img{width:100%;height:100%;object-fit:contain;padding:9px}
+  .productgrid .add,.tm-shop-grid .add{min-height:44px}
+  .legacy-main .category-nav{scroll-snap-type:x proximity;padding-bottom:6px}
+  .legacy-main .category-nav a{scroll-snap-align:start}
+  .legacy-main .shop-search{width:100%;display:flex}
+  .legacy-main .shop-search .search-input-wrapper{min-width:0}
+  .services{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .services>div{gap:9px;padding:11px 6px}
+  .footerinside{gap:14px}
+}
+@media(max-width:380px){
+  .wrap{width:calc(100% - 20px)}
+  .productgrid,.tm-shop-grid{gap:8px!important}
+  .productgrid .iteminfo,.tm-shop-grid .iteminfo{padding:9px!important}
+  .heading h1,.heading h2{font-size:20px}
+  .services{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  :where(.item,.legacy-main .product-card,.categorytile,.add,.search button,.search-button){transition:none!important;transform:none!important}
+}
+
+/* Consistent bright storefront background even when using legacy templates. */
+body{background:#fafdff;color:#152e4c}
+:where(.item,.product-card,.categorytile,.cart-panel,.empty-state){border-color:#dfebf8}

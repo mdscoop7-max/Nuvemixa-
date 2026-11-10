@@ -3,19 +3,19 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Contact | TrendMix</title>
-  <meta name="description" content="Neem contact op met TrendMix over een product, bestelling of andere vraag.">
+  <title>Contact | NUVEMIXA</title>
+  <meta name="description" content="Neem contact op met NUVEMIXA over een product, bestelling of andere vraag.">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}/contact">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260930-1') }}">
   <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script><script defer src="{{ url_for('static', filename='languages.js', v='20260930-2') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261019-2') }}">
-</head>
+<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261105-contact-colors1') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='nuvemixa-refresh.css',v='20261110-1') }}"><link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"></head>
 <body>
 {% include "_header.html" %}
 <main class="shell info-page">
 {% if request.args.get('status') in ['error', 'unavailable'] %}<div class="tm-contact-alert" role="alert">Het contactformulier kon het bericht niet afleveren. Je bericht is niet verzonden. Probeer het later opnieuw.</div>{% elif request.args.get('status') == 'sent' %}<div class="tm-contact-alert tm-contact-success" role="status">Je bericht is verzonden.</div>{% endif %}
-  <a class="back-link" href="/">← Terug naar TrendMix</a>
+  <a class="back-link" href="/">← Terug naar NUVEMIXA</a>
   <article class="info-card contact-page-card">
     <div class="commerce-heading contact-heading"><div><span class="eyebrow" data-i18n="customerService">KLANTENSERVICE</span><h1>Waar kunnen we mee helpen?</h1></div><span class="commerce-badge">Digitaal bereikbaar</span></div>
     <p class="info-lead" data-i18n="contactLead">Heb je een vraag over een product, bestelling of levering? Vul het formulier in. We gebruiken je gegevens alleen om je vraag te beantwoorden.</p>
@@ -24,6 +24,7 @@
         <label><span data-i18n="contactName">Naam</span><input placeholder="Je naam" type="text" name="name" autocomplete="name" required></label>
         <label><span data-i18n="contactEmail">E-mail</span><input placeholder="naam@voorbeeld.nl" type="email" name="email" autocomplete="email" required></label>
       </div>
+      <label><span data-tm-tr data-tm-nl="Onderwerp" data-tm-en="Subject">Onderwerp</span><select name="subject" required><option value="" data-tm-tr data-tm-nl="Kies een onderwerp" data-tm-en="Choose a subject">Kies een onderwerp</option><option value="Productvraag">Productvraag</option><option value="Bestelling">Bestelling</option><option value="Levering en retour">Levering en retour</option><option value="Overig">Overig</option></select></label>
       <label><span data-i18n="contactMessage">Bericht</span><textarea placeholder="Vertel kort waarmee we je kunnen helpen..." name="message" rows="8" required></textarea></label>
       <button type="submit" class="btn btn-dark" data-i18n="contactSubmit">Verstuur bericht →</button><div class="contact-form-status" hidden role="status" aria-live="polite"></div>
     </form><aside class="contact-service-aside"><div class="support-icon">{{ tm_icon('headset') }}</div><h2 data-i18n="contactHelpTitle">Waarmee kunnen we helpen?</h2><div><strong data-i18n="contactProductQuestion">Productvraag</strong><span data-i18n="contactProductHelp">Vraag naar specificaties of de collectie.</span></div><div><strong data-i18n="contactOrder">Bestelling</strong><span data-i18n="contactOrderHelp">Vermeld je ordernummer zodra echte bestellingen actief zijn.</span></div><div><strong data-i18n="contactDelivery">Levering & retour</strong><span data-i18n="contactDeliveryHelp">Bekijk ook Bestellen & levering en de FAQ.</span></div><a href="/faq" data-i18n="viewFaq">Bekijk veelgestelde vragen →</a></aside></div>

@@ -1,4 +1,4 @@
-{# TrendMix mobiele onderbalk — één partial voor alle pagina's #}
+{# NUVEMIXA mobiele onderbalk — één partial voor alle pagina's #}
 {% set p = request.path %}
 {% set cats = ['/gadgets','/smart-home','/beauty-care','/home-living','/lifestyle-sport','/shop'] %}
 {% set is_shop = p in cats or p.startswith('/shop') or (p.count('/') == 2 and p.split('/')[1] in ['gadgets','smart-home','beauty-care','home-living','lifestyle-sport']) %}
@@ -29,16 +29,17 @@ img[src*="/img/product/"]{object-fit:cover!important;padding:0!important;backgro
 @media(max-width:360px){.tm-dock{left:6px;right:6px;padding:5px}.tm-dock a{font-size:9.5px}}
 @media(prefers-color-scheme:dark){@media(max-width:760px){.tm-dock{background:rgba(18,24,38,.88);border-color:rgba(60,72,98,.8)}.tm-dock a{color:#a9b5ca}.tm-dock a:not(.is-active):hover{background:rgba(47,131,255,.14);color:#7fb2ff}.tm-dock-badge{border-color:#121826}}}
 </style>
-<nav class="tm-dock" aria-label="Mobiele navigatie">
-  <a href="/" class="{% if p == '/' %}is-active{% endif %}" {% if p == '/' %}aria-current="page"{% endif %} aria-label="Home"><span class="tm-dock-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v9.5A1.5 1.5 0 0 1 19.5 21H15v-7H9v7H4.5A1.5 1.5 0 0 1 3 19.5z"/></svg></span><span class="tm-dock-label" data-tm-tr data-tm-nl="Home" data-tm-en="Home">Home</span></a>
-  <a href="/shop" class="{% if is_shop %}is-active{% endif %}" {% if is_shop %}aria-current="page"{% endif %} aria-label="Shop"><span class="tm-dock-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="14" rx="3"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg></span><span class="tm-dock-label" data-tm-tr data-tm-nl="Shop" data-tm-en="Shop">Shop</span></a>
-  <a href="/wishlist" class="{% if p == '/wishlist' %}is-active{% endif %}" {% if p == '/wishlist' %}aria-current="page"{% endif %} aria-label="Favorieten"><span class="tm-dock-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 5.6a5.4 5.4 0 0 0-7.6 0l-.8.8-.8-.8a5.4 5.4 0 0 0-7.6 7.6L12 21l8.4-7.8a5.4 5.4 0 0 0 0-7.6z"/></svg>{% if wishlist_ids %}<span class="tm-dock-badge">{{ wishlist_ids|length }}</span>{% endif %}</span><span class="tm-dock-label" data-tm-tr data-tm-nl="Favorieten" data-tm-en="Favorites">Favorieten</span></a>
-  <a href="/aanbiedingen" class="{% if p == '/aanbiedingen' %}is-active{% endif %}" {% if p == '/aanbiedingen' %}aria-current="page"{% endif %} aria-label="Aanbiedingen"><span class="tm-dock-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 4.5h8.3L21 13.7a2.3 2.3 0 0 1 0 3.3L17 21a2.3 2.3 0 0 1-3.3 0L4.5 11.8a3.4 3.4 0 0 1-1-2.4z"/><circle cx="8.5" cy="8.5" r="1.3"/></svg></span><span class="tm-dock-label" data-tm-tr data-tm-nl="Aanbiedingen" data-tm-en="Deals">Aanbiedingen</span></a>
-  <a href="/shop#producten" class="tm-dock-menu-trigger" aria-label="Bekijk alle producten"><span class="tm-dock-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.3" height="7.3" rx="2"/><rect x="13.7" y="3" width="7.3" height="7.3" rx="2"/><rect x="3" y="13.7" width="7.3" height="7.3" rx="2"/><rect x="13.7" y="13.7" width="7.3" height="7.3" rx="2"/></svg></span><span class="tm-dock-label" data-tm-tr data-tm-nl="Producten" data-tm-en="Products">Producten</span></a>
+<nav class="tm-dock nv-dock" aria-label="Mobiele navigatie">
+{% set nav_items = [('/', 'Home', 'Home', 'home'),('/shop','Shop','Shop','shop'),('/aanbiedingen','Aanbiedingen','Deals','deals'),('/account','Account','Account','account'),('/meer','Meer','More','more')] %}
+{% for href,nl,en,ico in nav_items %}
+<a href="{{ href }}" class="nv-dock-{{ ico }} {% if p == href or (ico == 'shop' and is_shop) %}is-active{% endif %}" {% if p == href %}aria-current="page"{% endif %}>
+<span class="tm-dock-ico" aria-hidden="true">{% if ico == 'home' %}⌂{% elif ico == 'shop' %}▣{% elif ico == 'deals' %}%{% elif ico == 'account' %}♙{% else %}☷{% endif %}</span>
+<span class="tm-dock-label" data-tm-tr data-tm-nl="{{ nl }}" data-tm-en="{{ en }}">{{ nl }}</span></a>
+{% endfor %}
 </nav>
 
 <style>
-/* Shared TrendMix storefront enhancements */
+/* Shared NUVEMIXA storefront enhancements */
 .tm-header-actions{display:flex;align-items:center;gap:9px;margin-left:auto}
 .tm-header-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:9px 12px;border:1px solid #dce7f5;border-radius:13px;background:#f7faff;color:#152a48!important;text-decoration:none!important;font:700 12px Arial,sans-serif;white-space:nowrap}
 .tm-header-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -66,7 +67,7 @@ img[src*="/img/product/"]{object-fit:cover!important;padding:0!important;backgro
 </style>
 <script>
 (function(){
-function applyTrendMix(){
+function applyNUVEMIXA(){
   document.querySelectorAll('.categoryshowcase').forEach(function(el){el.id='collecties';});
   document.querySelectorAll('header.header').forEach(function(header){
     if(header.querySelector('.tm-header-actions'))return;
@@ -91,7 +92,7 @@ function applyTrendMix(){
     tile.classList.add('has-catalog-image');
   });
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyTrendMix);else applyTrendMix();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyNUVEMIXA);else applyNUVEMIXA();
 })();
 </script>
 
@@ -163,7 +164,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 
 <style>
-/* TrendMix 2026 category-specific responsive campaign hero */
+/* NUVEMIXA 2026 category-specific responsive campaign hero */
 .tm-campaign{--tm-accent:#0866f5;--tm-dark:#061a3b;position:relative!important;isolation:isolate;display:flex!important;align-items:center;min-height:400px!important;overflow:hidden!important;background:var(--tm-dark)!important;border-radius:23px!important;color:#fff!important;box-shadow:0 18px 45px #0d264523}
 .tm-campaign::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 83% 34%,color-mix(in srgb,var(--tm-accent),transparent 25%),transparent 53%),linear-gradient(100deg,var(--tm-dark) 3%,color-mix(in srgb,var(--tm-dark),#233456 25%) 65%,#0b1d34)}
 .tm-campaign .herotext{width:min(55%,680px);padding:44px 5%;z-index:2;text-shadow:0 2px 14px #07152970}
@@ -287,7 +288,7 @@ main .tm-campaign::before{background:linear-gradient(180deg,rgba(4,13,30,.92) 0%
 </style>
 
 <style>
-/* TrendMix refined mobile dock 2026; desktop styles untouched */
+/* NUVEMIXA refined mobile dock 2026; desktop styles untouched */
 @media (max-width:760px) {
   .tm-dock { left:12px!important; right:12px!important; bottom:calc(11px + env(safe-area-inset-bottom,0px))!important; display:grid!important; grid-template-columns:repeat(5,minmax(0,1fr))!important; gap:2px!important; padding:7px 6px!important; border-radius:26px!important; background:rgba(255,255,255,.96)!important; border:1px solid #dfe8f5!important; box-shadow:0 10px 36px rgba(16,39,75,.15),0 3px 8px rgba(16,39,75,.05)!important; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); }
   .tm-dock a { min-height:64px!important; min-width:0!important; gap:3px!important; border-radius:19px!important; background:transparent!important; box-shadow:none!important; color:#63748d!important; font-size:10px!important; font-weight:750!important; }
@@ -311,7 +312,24 @@ main .tm-campaign::before{background:linear-gradient(180deg,rgba(4,13,30,.92) 0%
 }
 </style>
 
+<style>
+/* NUVEMIXA mobile app-like dock — visually matched to existing navy/orange brand. */
+@media(max-width:760px){
+.tm-dock{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;background:rgba(255,255,255,.97)!important;border:1px solid #cedced!important}
+.tm-dock a,.tm-dock button{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;min-width:0!important;min-height:64px!important;padding:3px!important;border:0!important;background:transparent!important;font-family:inherit!important;font-weight:750!important;font-size:10px!important;line-height:1.2!important;color:#526782!important;text-decoration:none!important;border-radius:17px!important;cursor:pointer!important;touch-action:manipulation}
+.tm-dock a .tm-dock-ico,.tm-dock button .tm-dock-ico{display:grid!important;place-items:center!important;width:37px!important;height:37px!important;border-radius:13px!important;background:#edf3fb!important;color:#0b315c!important}
+.tm-dock .tm-dock-categories .tm-dock-ico{background:#0b305b!important;color:#fff!important}
+.tm-dock .tm-dock-categories[aria-expanded="true"] .tm-dock-ico{background:#ed991e!important;color:#0b2b51!important}
+.tm-dock a.is-active,.tm-dock button[aria-expanded="true"]{color:#0b315c!important}
+.tm-dock a.is-active .tm-dock-ico{background:#0b305b!important;color:#fff!important}
+.tm-dock a:focus-visible,.tm-dock button:focus-visible{outline:3px solid #ffa426!important;outline-offset:-2px!important}
+.tm-dock :is(a,button) .tm-dock-label{font-family:inherit!important;font-size:10px!important;line-height:1.2!important;white-space:nowrap!important;text-overflow:ellipsis!important;max-width:100%!important;overflow:hidden!important}
+.tm-dock svg{width:23px!important;height:23px!important;stroke:currentColor!important;fill:none!important}
+}
+@media(max-width:365px){.tm-dock :is(a,button) .tm-dock-label{font-size:9px!important}.tm-dock a,.tm-dock button{padding-inline:0!important}}
+@media(prefers-reduced-motion:reduce){.tm-dock *{transition:none!important}}
+</style>
 {% include '_tm_mobile_extras.html' %}
-<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261021-collapsible-menu1') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261105-nuvemixa-merged1') }}">
 <script defer src="{{ url_for('static',filename='trendmix-english-labels.js',v='20261019-3') }}"></script>
-<script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261020-help-collections-fix') }}"></script>
+<script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261105-nuvemixa-assistant-1') }}"></script>

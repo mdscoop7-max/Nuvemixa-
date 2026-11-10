@@ -1,10 +1,10 @@
-/* TrendMix bilingual navigation and FAQ assistant.
+/* NUVEMIXA bilingual navigation and FAQ assistant.
    Only Dutch/English UI copy is translated; this is not a live AI API. */
 (function(){
   'use strict';
   const storageKey='trendmix-language';
-  const labels={nl:{menu:'Menu openen',close:'Sluiten',ask:'Stel je vraag…',help:'TrendMix Hulp',intro:'Hoi! Ik kan helpen met vragen over TrendMix. De webshop en assistent zijn nog in testfase.',none:'Ik kan je helpen met producten, bestellen, levering, retouren en privacy. Kijk ook bij de veelgestelde vragen of stuur een bericht via Contact.',returns:'De retourvoorwaarden zijn te lezen op de pagina Retour & herroeping. Het uiteindelijke retouradres en de verzendinstructies worden bevestigd zodra de leverancier gekoppeld is. Stuur niets zonder instructies terug.',shipping:'De leverancier en de verzendtarieven zijn nog niet bevestigd. Daarom doet TrendMix momenteel geen definitieve belofte over bezorging of levertijd.',orders:'TrendMix bevindt zich in de testfase. De winkelwagen en checkout zijn voor demonstratie. Er worden nog geen echte betalingen verwerkt.',contact:'Gebruik de pagina Contact voor vragen. Zolang onze maildienst niet is gekoppeld, kan het contactformulier nog geen echte berichten afleveren.',privacy:'Privacyinformatie en cookievoorkeuren vind je onderaan de website op de pagina’s Privacybeleid en Cookies.',products:'De productcollectie is voorlopig. Foto’s, prijzen, voorraad en details worden bevestigd wanneer de leverancier is aangesloten.',caution:'Deel in deze chat geen persoonsgegevens of bestelgegevens.'},
-  en:{menu:'Open menu',close:'Close',ask:'Ask a question…',help:'TrendMix Help',intro:'Hello! I can help with general TrendMix questions. The shop and assistant are still in test mode.',none:'I can help with questions about products, ordering, shipping, returns and privacy. You can also check the FAQ or contact page.',returns:'Read the Returns & withdrawal page for our current policy. The final return address and shipping instructions will be confirmed once a supplier is connected. Do not return items without instructions.',shipping:'Our supplier and shipping costs are not yet confirmed. TrendMix cannot promise delivery dates or shipping fees during this test period.',orders:'TrendMix is still in test mode. The cart and checkout are for demonstration, and no real payments are processed.',contact:'Please use our Contact page for questions. Until the email service is configured, messages sent through the contact form cannot yet be delivered.',privacy:'You can read the Privacy Policy and Cookies pages linked in the footer.',products:'This is a provisional product collection. Photos, prices, stock levels and details will be confirmed after the supplier is connected.',caution:'Do not share personal information or order details here.'}};
+  const labels={nl:{menu:'Menu openen',close:'Sluiten',ask:'Stel je vraag…',help:'NUVEMIXA Hulp',intro:'Hoi! Ik kan helpen met vragen over NUVEMIXA. De webshop en assistent zijn nog in testfase.',none:'Ik kan je helpen met producten, bestellen, levering, retouren en privacy. Kijk ook bij de veelgestelde vragen of stuur een bericht via Contact.',returns:'De retourvoorwaarden zijn te lezen op de pagina Retour & herroeping. Het uiteindelijke retouradres en de verzendinstructies worden bevestigd zodra de leverancier gekoppeld is. Stuur niets zonder instructies terug.',shipping:'De leverancier en de verzendtarieven zijn nog niet bevestigd. Daarom doet NUVEMIXA momenteel geen definitieve belofte over bezorging of levertijd.',orders:'NUVEMIXA bevindt zich in de testfase. De winkelwagen en checkout zijn voor demonstratie. Er worden nog geen echte betalingen verwerkt.',contact:'Gebruik de pagina Contact voor vragen. Zolang onze maildienst niet is gekoppeld, kan het contactformulier nog geen echte berichten afleveren.',privacy:'Privacyinformatie en cookievoorkeuren vind je onderaan de website op de pagina’s Privacybeleid en Cookies.',products:'De productcollectie is voorlopig. Foto’s, prijzen, voorraad en details worden bevestigd wanneer de leverancier is aangesloten.',caution:'Deel in deze chat geen persoonsgegevens of bestelgegevens.'},
+  en:{menu:'Open menu',close:'Close',ask:'Ask a question…',help:'NUVEMIXA Help',intro:'Hello! I can help with general NUVEMIXA questions. The shop and assistant are still in test mode.',none:'I can help with questions about products, ordering, shipping, returns and privacy. You can also check the FAQ or contact page.',returns:'Read the Returns & withdrawal page for our current policy. The final return address and shipping instructions will be confirmed once a supplier is connected. Do not return items without instructions.',shipping:'Our supplier and shipping costs are not yet confirmed. NUVEMIXA cannot promise delivery dates or shipping fees during this test period.',orders:'NUVEMIXA is still in test mode. The cart and checkout are for demonstration, and no real payments are processed.',contact:'Please use our Contact page for questions. Until the email service is configured, messages sent through the contact form cannot yet be delivered.',privacy:'You can read the Privacy Policy and Cookies pages linked in the footer.',products:'This is a provisional product collection. Photos, prices, stock levels and details will be confirmed after the supplier is connected.',caution:'Do not share personal information or order details here.'}};
   const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
   let lang='nl', returnFocus=null, opened=null;
   function stored(){try{return localStorage.getItem(storageKey)}catch(e){return null}}
@@ -19,7 +19,7 @@
     'Aanbiedingen':'Deals',
     'Alle producten':'All products',
     'Winkelen':'Shop',
-    'Over TrendMix':'About TrendMix',
+    'Over NUVEMIXA':'About NUVEMIXA',
     'Over ons':'About us',
     'Algemene voorwaarden':'Terms and conditions',
     'Privacybeleid':'Privacy policy',
@@ -57,7 +57,7 @@
     });
     const title=lang==='en'?root.dataset.tmPageTitleEn:root.dataset.tmPageTitleNl;
     const description=lang==='en'?root.dataset.tmPageDescriptionEn:root.dataset.tmPageDescriptionNl;
-    if(title)document.title=title+' | TrendMix';
+    if(title)document.title=title+' | NUVEMIXA';
     const meta=$('meta[name="description"]');
     if(meta&&description)meta.setAttribute('content',description);
   }
@@ -75,14 +75,14 @@
     });
     const detail=$('.tm-product-page .detail-copy h1[data-tm-product-nl]');
     if(detail){
-      document.title=(lang==='en'?detail.dataset.tmProductEn:detail.dataset.tmProductNl)+' | TrendMix';
+      document.title=(lang==='en'?detail.dataset.tmProductEn:detail.dataset.tmProductNl)+' | NUVEMIXA';
       const description=$('.tm-product-page .detail-description');
       const meta=$('meta[name="description"]');
       if(description&&meta)meta.setAttribute('content',lang==='en'?description.dataset.tmProductEn:description.dataset.tmProductNl);
     }
   }
   function translateRemainingText(){
-    const dictionary=window.TrendMixEnglishLabels||{};
+    const dictionary=window.NUVEMIXAEnglishLabels||{};
     const extra={
       'Zoek naar producten, merken of specificaties…':'Search products, brands or specifications…',
       'Zoek producten…':'Search products…',
@@ -288,8 +288,8 @@
     $$('[data-tm-ai-close]').forEach(btn=>btn.addEventListener('click',()=>closeDialog()));
     $$('[data-tm-quick]').forEach(btn=>btn.addEventListener('click',()=>{
       const type=btn.dataset.tmQuick;
-      const nl={shipping:'Levering',returns:'Retouren',orders:'Bestellen',contact:'Contact',products:'Welke producten verkoopt TrendMix?',after:'Hulp na een bestelling'};
-      const en={shipping:'Delivery',returns:'Returns',orders:'Ordering',contact:'Contact',products:'Which products do you sell?',after:'Help after ordering'};
+      const nl={shipping:'Levering',returns:'Retouren',orders:'Bestellen',contact:'Contact',products:'Welke producten verkoopt NUVEMIXA?',after:'Hulp na een bestelling'};
+      const en={shipping:'Delivery',returns:'Returns',orders:'Ordering',contact:'Contact',products:'Which products does NUVEMIXA sell?',after:'Help after ordering'};
       answer((lang==='en'?en:nl)[type]||type,type);
     }));
     const form=$('[data-tm-ai-form]');

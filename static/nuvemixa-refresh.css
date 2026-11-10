@@ -1,0 +1,25 @@
+/* NUVEMIXA 2026 targeted visual update — never style SVGs globally */
+.nv-account-page{max-width:680px!important;margin:24px auto 70px!important}
+.nv-account-panel{padding:clamp(22px,4vw,48px);border:1px solid #c6dafa;border-radius:28px;background:linear-gradient(160deg,#fff 0%,#edf6ff 100%);box-shadow:0 16px 40px #0b39801c;text-align:center}
+.nv-account-avatar{display:grid;place-items:center;width:66px;height:66px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(140deg,#13bbff,#083ce0);color:#fff;font-size:39px}
+.nv-account-panel h1{font-size:clamp(25px,4vw,34px)!important;color:#0b2657!important;margin:8px 0!important}
+.nv-account-panel h2{font-size:24px!important;color:#10264b!important;margin:24px 0 6px!important}
+.nv-account-panel p{color:#4b6586!important}
+.nv-account-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin:22px 0;background:#eaf1ff;border-radius:30px}
+.nv-account-tabs button{border:0;border-radius:24px;padding:13px 9px;background:transparent;color:#17345d;font:800 15px system-ui;cursor:pointer}
+.nv-account-tabs button.is-active,.nv-primary{background:linear-gradient(110deg,#06b8ff,#063ce0)!important;color:#fff!important;box-shadow:0 6px 15px #0065dd40}
+.nv-account-panel form{text-align:left;margin-top:19px}
+.nv-account-panel form label{display:block;font-size:14px;font-weight:750;color:#1a3354;margin-bottom:16px}
+.nv-account-panel form input:not([type=hidden]){display:block;width:100%;box-sizing:border-box;padding:14px 16px;margin-top:7px;background:#fff;border:1px solid #b8cbea;border-radius:13px;font:inherit;color:#142d51}
+.nv-account-panel .nv-primary{width:100%;border:0;border-radius:14px;padding:15px;font-weight:800;font-size:16px;cursor:pointer}
+.nv-account-panel [hidden]{display:none!important}.nv-account-error{color:#ad2539!important;font-weight:750}
+.contact-page-card .contact-form{border:1px solid #c7dbf5!important;border-radius:24px!important;background:linear-gradient(160deg,#fff,#f0f7ff)!important;box-shadow:0 15px 35px #102e5b14!important;padding:clamp(18px,3vw,32px)!important}
+.contact-page-card .contact-form :is(input,textarea,select){box-sizing:border-box;max-width:100%;width:100%;padding:13px;border:1px solid #b9cee8;border-radius:12px;background:#fff;color:#17355a;font:inherit}
+.contact-page-card .contact-form button[type=submit]{background:linear-gradient(110deg,#09b8ff,#063de4)!important;color:white!important;border-radius:13px!important}
+@media(max-width:760px){.nv-dock{grid-template-columns:repeat(5,minmax(0,1fr))!important}.nv-dock .tm-dock-ico{font-family:system-ui!important;font-size:26px!important;font-weight:900!important;line-height:1!important}.nv-dock .nv-dock-home .tm-dock-ico{color:#0769ef!important}.nv-dock .nv-dock-shop .tm-dock-ico{color:#8b18e8!important}.nv-dock .nv-dock-deals .tm-dock-ico{color:#f08b00!important}.nv-dock .nv-dock-account .tm-dock-ico{color:#028ee9!important}.nv-dock .nv-dock-more .tm-dock-ico{color:#9a20df!important}.nv-dock a.is-active .tm-dock-ico{background:linear-gradient(145deg,#07b5ff,#073be1)!important;color:white!important}.nv-account-page{margin:10px auto 40px!important}.tm-assist-fab{max-width:180px!important}}
+.tm-assist-fab{background:linear-gradient(135deg,#07baff,#0739c8)!important;color:#fff!important;border:2px solid #b9e7ff!important;box-shadow:0 9px 25px #003da84a!important;border-radius:22px!important}
+.tm-assist-fab .tm-ai-brand small{display:block;font-size:10px;line-height:1.1;color:#fff!important}
+.tm-assist-fab svg{width:30px!important;height:30px!important;flex:none}
+.tm-global-language{z-index:1500!important}
+
+.nv-more{max-width:780px!important;margin:auto}.nv-more-grid{display:grid;gap:10px}.nv-more-grid a{display:flex;align-items:center;gap:15px;padding:16px 20px;border:1px solid #c9dbf6;border-radius:16px;background:#fff;color:#173965;text-decoration:none;font-weight:750;box-shadow:0 5px 15px #153c6a0d}.nv-more-grid a span:first-child{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#e8f1ff;color:#0962e9;font-size:25px}.nv-more-grid a b{margin-left:auto;font-size:24px;color:#0562e6}

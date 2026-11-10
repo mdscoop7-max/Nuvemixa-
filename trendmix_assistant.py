@@ -1,4 +1,4 @@
-"""Read-only TrendMix catalog assistant; optionally enhanced by server-side AI."""
+"""Read-only NUVEMIXA catalog assistant; optionally enhanced by server-side AI."""
 import json
 import os
 import re
@@ -44,10 +44,10 @@ def general_answer(q,lang,products,categories,live):
         return (tr(
             "Na een bestelling kun je normaal de bevestiging, levering en retourregels controleren. "
             "Deze chat heeft geen toegang tot persoonlijke bestellingen, betalingen of tracking. "
-            "Deel hier geen bestelnummer of adres. "+("Individuele statusvragen vereisen een beveiligde klantenservicekoppeling." if live else "TrendMix zit nog in de testfase; echte bestellingen zijn momenteel niet mogelijk."),
+            "Deel hier geen bestelnummer of adres. "+("Individuele statusvragen vereisen een beveiligde klantenservicekoppeling." if live else "NUVEMIXA zit nog in de testfase; echte bestellingen zijn momenteel niet mogelijk."),
             "After ordering, check your confirmation, delivery details and return policy. "
             "This chat cannot look up personal orders, payments or tracking. Do not share order numbers or addresses. "
-            +("A secure customer service connection is needed for order status." if live else "TrendMix is currently a test shop with no live orders.")
+            +("A secure customer service connection is needed for order status." if live else "NUVEMIXA is currently a test shop with no live orders.")
         ),links((tr("Bestellen en levering","Orders and delivery"),"/bestellen"),(tr("Retouren","Returns"),"/retouren"),(tr("Contact","Contact"),"/contact")))
     if re.search(r"retour|herroep|ruil|refund|return|terugstuur|terugbetal",t):
         return (tr("Bij veel online aankopen geldt een bedenktijd van 14 dagen na ontvangst, met wettelijke uitzonderingen. De definitieve retourinstructies en het adres zijn nog niet bevestigd. Stuur niets zonder instructies terug.",
@@ -82,14 +82,14 @@ def general_answer(q,lang,products,categories,live):
                 props=p["specs"]
                 line+=(": "+", ".join(str(k)+" "+str(v) for k,v in list(props.items())[:4])) if props else tr("; specificaties nog niet bevestigd","; specifications not yet confirmed")
             items.append("• "+line)
-        intro=tr("Deze producten staan in de TrendMix-testcatalogus:\n","These items appear in the TrendMix test catalog:\n")
+        intro=tr("Deze producten staan in de NUVEMIXA-testcatalogus:\n","These items appear in the NUVEMIXA test catalog:\n")
         note=tr("\nLet op: prijzen, foto's, voorraad en specificaties zijn voorlopig en worden vóór verkoop gecontroleerd.",
                 "\nPrices, photos, stock and specifications are provisional until verified before sales.")
         return (intro+"\n".join(items)+note,[{"label":p["name"],"url":p["url"]} for p in products[:3]])
     if re.search(r"product|assortiment|winkel|shop|verkopen|categorie|collectie|catalog|gadgets|beauty|sport|wonen|living",t):
         names=", ".join(x["name"] for x in categories.values())
-        return (tr("TrendMix heeft deze collecties: "+names+". Noem een product of type artikel, dan zoek ik in de testcatalogus.",
-                   "TrendMix has these categories: "+names+". Tell me a product name or type and I can search the test catalog."),
+        return (tr("NUVEMIXA heeft deze collecties: "+names+". Noem een product of type artikel, dan zoek ik in de testcatalogus.",
+                   "NUVEMIXA has these categories: "+names+". Tell me a product name or type and I can search the test catalog."),
                 links((tr("Alle producten","All products"),"/shop"),("FAQ","/faq")))
     return (tr("Vraag me naar producten, voorlopige prijzen, levering, retouren, betalen of hulp na een bestelling. Bijvoorbeeld: 'Hebben jullie Bluetooth-oordopjes?'",
                "Ask about products, provisional prices, delivery, returns or after-sales help. For example: 'Do you sell Bluetooth earbuds?'"),
@@ -99,8 +99,8 @@ def ai_answer(question,lang,products):
     key=os.getenv("OPENAI_API_KEY","").strip()
     if not key:return None
     catalog=[{"name":p["name"],"category":p["category"],"test_price":p["price"],"description":p["description"],"specifications":p["specs"]} for p in products]
-    system=("You are TrendMix product and customer support. Answer in Dutch unless user asks in English. "
-            "Use only these verified site facts: TrendMix is in test mode, has no live checkout, payments or personal order access; "
+    system=("You are NUVEMIXA product and customer support. Answer in Dutch unless user asks in English. "
+            "Use only these verified site facts: NUVEMIXA is in test mode, has no live checkout, payments or personal order access; "
             "prices, stock, photos, specifications and delivery times are provisional. No shipping costs or supplier commitments are confirmed. "
             "Returns info /retouren, shipping /bestellen, privacy /privacy, support /contact, all products /shop. "
             "Do not promise personal order tracking or pretend support is online. Never invent information or claim certainty. "
@@ -124,7 +124,7 @@ def register_trendmix_assistant(app,catalog,categories,live_orders_enabled):
     @app.route("/api/trendmix-assistant",methods=["GET","POST"])
     def trendmix_assistant():
         if request.method=="GET":
-            return jsonify({"ok":True,"service":"TrendMix Help","mode":"ai" if os.getenv("OPENAI_API_KEY") else "catalog",
+            return jsonify({"ok":True,"service":"NUVEMIXA Help","mode":"ai" if os.getenv("OPENAI_API_KEY") else "catalog",
                             "live_orders":bool(live_orders_enabled())})
         if request.content_length and request.content_length>4096:
             return jsonify({"error":"too_large"}),413

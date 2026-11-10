@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard | NUVEMIXA</title>
+<link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}">
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;color:#101b35;background:#f7fbff;--blue:#0866f5;--border:#e2edf9;--muted:#61738d}
+*{box-sizing:border-box}body{margin:0;min-width:320px}a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
+.layout{display:grid;grid-template-columns:264px minmax(0,1fr);min-height:100dvh}
+.sidebar{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;gap:16px;background:#fff;border-right:1px solid var(--border);padding:23px 16px;overflow-y:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:2px 9px 22px;border-bottom:1px solid var(--border)}.brand-mark{display:grid;place-items:center;background:linear-gradient(145deg,#02baf0,#0667e8);color:#fff;width:41px;height:44px;border-radius:12px;font-size:23px}.brand strong{display:block;font-size:27px;letter-spacing:-1.1px}.brand strong span{color:var(--blue)}.brand small{font-size:11px;color:var(--muted)}
+.side-links{display:grid;gap:6px}.side-links a{display:flex;align-items:center;gap:14px;border-radius:12px;padding:13px 15px;font-weight:650;font-size:14px;color:#253e5b}.side-links a:hover,.side-links a.active{background:#e4f0ff;color:#0755c4}.side-links a.active{border-left:4px solid var(--blue)}.side-icon{font-size:20px;min-width:23px;text-align:center}
+.side-bottom{margin-top:auto;background:linear-gradient(120deg,#e8f3ff,#f1f5ff);padding:17px;border-radius:16px}.side-bottom b{display:block;margin-bottom:5px}.side-bottom small{color:var(--muted);line-height:1.55;display:block}.side-bottom a{display:block;text-align:center;margin-top:13px;background:var(--blue);color:white;padding:11px;border-radius:10px;font-size:12px;font-weight:800}
+.workspace{min-width:0;background:radial-gradient(ellipse 750px 260px at 60% 0%,#cbe4ff 0%,transparent 80%),#f7fbff}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:92px;padding:15px clamp(18px,3vw,35px);border-bottom:1px solid #dfebf7;background:#f5faffa8}.top-search{max-width:565px;flex:1}.top-search input{height:48px;width:100%;border:1px solid #d4e5f8;border-radius:13px;padding:0 18px;background:#fff;color:#152e4c}.top-profile{display:flex;align-items:center;gap:11px;font-size:13px;font-weight:750}.avatar{display:grid;place-items:center;height:42px;width:42px;color:#fff;border-radius:50%;background:var(--blue)}.top-profile small{display:block;color:var(--muted);font-weight:500}.admin{max-width:1510px;margin:auto;padding:27px clamp(18px,3vw,36px) 56px}
+.heading{display:flex;align-items:start;justify-content:space-between;gap:18px;margin:0 0 26px}.heading h1{margin:0 0 6px;font-size:clamp(29px,3vw,39px);letter-spacing:-1.2px}.heading p{margin:0;color:var(--muted)}.status{align-self:start;background:#fff;border:1px solid #d5e6fa;color:#14559a;padding:12px 15px;border-radius:12px;font-size:12px;font-weight:800}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.metric,.panel,.quick a{background:#fff;border:1px solid #e4edf7;border-radius:16px;box-shadow:0 8px 28px #2364aa09}.metric{position:relative;min-height:159px;padding:18px;overflow:hidden}.metric-label{display:flex;gap:13px;align-items:center;font-size:13px;font-weight:750;color:#263b58}.metric-icon{display:grid;place-items:center;width:47px;height:47px;background:#e7f3ff;border-radius:13px;color:#0866f5;font-size:24px}.metric:nth-child(2) .metric-icon{background:#eaf2ff;color:#364be3}.metric:nth-child(3) .metric-icon{background:#defbf5;color:#02ad92}.metric:nth-child(4) .metric-icon{background:#fff3e5;color:#e5831f}.metric-value{display:block;font-weight:850;font-size:clamp(26px,2.5vw,34px);letter-spacing:-.7px;margin:8px 0 2px}.metric-note{font-size:11px;color:var(--muted)}.metric-value.missing{font-size:19px;margin-top:18px;color:#536a88}
+.details{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:16px;margin-top:18px}.panel{padding:22px;min-width:0}.panel h2{font-size:21px;margin:0 0 5px;letter-spacing:-.4px}.panel p{font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 18px}.chart{display:grid;grid-template-columns:repeat({{ category_counts|length }},minmax(0,1fr));align-items:end;gap:18px;height:275px;padding:22px 15px 35px;border-bottom:1px solid var(--border);background:repeating-linear-gradient(to top,#e8eef8 0,#e8eef8 1px,transparent 1px,transparent 56px);border-radius:10px}.bar-wrap{height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:7px;position:relative}.bar{width:min(55%,67px);height:var(--height);min-height:3px;border-radius:6px 6px 0 0;background:linear-gradient(#92d6ff,#0879ed)}.bar-wrap strong{font-size:13px}.bar-wrap span{position:absolute;bottom:-31px;white-space:nowrap;font-size:10px;color:#536b88;text-align:center}
+.category-list{display:grid;gap:0}.category-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 2px;border-bottom:1px solid var(--border);font-size:13px}.category-row:last-child{border:0}.category-row b{color:#1365bc}.notice{border:1px solid #cbdff5;border-radius:12px;background:#f2f8ff;padding:13px;font-size:12px;color:#385475;line-height:1.55}
+.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}.quick a{display:flex;align-items:center;gap:12px;min-height:102px;padding:17px;color:#164776;background:linear-gradient(135deg,#e8f5ff,#fff)}.quick a:nth-child(2){background:linear-gradient(135deg,#efeaff,#fff)}.quick a:nth-child(3){background:linear-gradient(135deg,#e3fbf6,#fff)}.quick a:nth-child(4){background:linear-gradient(135deg,#fff1e6,#fff)}.quick .bubble{font-size:25px}.quick b{display:block;font-size:13px}.quick small{display:block;margin-top:5px;color:var(--muted);font-size:11px}
+:focus-visible{outline:3px solid #e89a18;outline-offset:2px}
+@media(max-width:1100px){.layout{grid-template-columns:215px minmax(0,1fr)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.quick{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.layout{display:block}.sidebar{position:static;height:auto;padding:12px;gap:8px}.brand{padding:3px 8px 10px}.side-links{display:flex;overflow-x:auto;padding:4px 0;scrollbar-width:thin}.side-links a{flex:none;padding:10px;white-space:nowrap;font-size:12px}.side-bottom{display:none}.topbar{min-height:68px;padding:12px 15px}.top-search input{height:42px;font-size:12px}.top-profile>div:last-child{display:none}.admin{padding:22px 14px}.heading{display:block}.heading .status{display:inline-block;margin-top:12px}.metrics{gap:10px}.metric{padding:14px;min-height:148px}.metric-label{gap:8px;flex-wrap:wrap}.metric-icon{height:39px;width:39px}.details{grid-template-columns:1fr}.panel{padding:16px}.chart{gap:4px;padding-inline:0}.bar-wrap span{font-size:9px;white-space:normal}.quick{gap:9px}.quick a{padding:12px;min-height:88px}}
+
+.shop-exit{border:1px solid #a8d1ff!important;background:#edf6ff!important;color:#075bbd!important;margin-top:12px}
+.section-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:26px}.section-header h1{font-size:clamp(28px,3vw,40px);margin:6px 0 8px}.section-header p{color:var(--muted);margin:0;line-height:1.5}.section-kicker{font-size:11px;letter-spacing:1px;color:#1468bd;font-weight:800}.panel-after{margin-top:18px}
+.admin-table-wrap{overflow-x:auto}.admin-table{width:100%;border-collapse:collapse;text-align:left;min-width:590px}.admin-table th,.admin-table td{padding:13px 12px;border-bottom:1px solid var(--border);font-size:13px}.admin-table th{font-size:11px;text-transform:uppercase;color:var(--muted);background:#f3f8ff}.state-pill,.integration-status{display:inline-block;background:#e8f3ff;color:#0857ab;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:800}
+.integration{min-height:300px;padding:32px}.integration-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:17px;background:#e4f1ff;color:#0866f5;font-size:30px;margin-bottom:20px}.integration p{max-width:680px;font-size:15px;line-height:1.8}
+@media(max-width:760px){.section-header{display:block}.section-header .status{display:inline-block;margin-top:14px}.integration{padding:22px;min-height:260px}}
+
+.calc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.calc-grid label{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:750;color:#39516e}.calc-grid input{width:100%;min-height:45px;border:1px solid #cbdff6;border-radius:10px;padding:10px 12px;color:#132d4e;background:#f9fcff;font-size:15px}.calc-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px}.calc-results>div{padding:15px;border-radius:13px;background:#eaf4ff;border:1px solid #d4e7ff}.calc-results small{display:block;color:#426488;font-size:11px;line-height:1.5}.calc-results strong{display:block;font-size:clamp(17px,2vw,25px);margin-top:8px;color:#0753b3}.calc-footnote{margin-top:18px!important;font-size:12px!important}
+@media(max-width:1000px){.calc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.calc-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.calc-grid{grid-template-columns:1fr}.calc-results{grid-template-columns:1fr 1fr}}
+
+/* Keyboard focus is deliberately distinct from the current navigation section. */
+.side-links a:focus-visible{outline:3px solid #ed9b2e!important;outline-offset:-2px;background:#eaf4ff;color:#064eaa;box-shadow:inset 0 0 0 1px #8ac1ff}
+.side-links a.active:focus-visible{background:#d6e9ff}
+@media(max-width:760px){.side-links a:focus-visible{outline-offset:1px}}
+/* Approved NUVEMIXA brand on dashboard, including mobile sidebar */
+.sidebar .brand{padding:6px 9px 19px;min-height:70px}.sidebar .nv-dashboard-logo{width:100%;max-width:224px;height:auto;max-height:84px;object-fit:contain;display:block}.sidebar .brand:focus-visible{outline:3px solid #ffa928;outline-offset:2px}
+.admin-access{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.admin-access button{border:1px solid #bbd2eb;background:#fff;color:#15385f;font-weight:800;border-radius:10px;padding:9px 14px;cursor:pointer}
+@media(max-width:760px){.sidebar .nv-dashboard-logo{width:185px;max-height:63px}.sidebar .brand{padding:3px 8px 10px}}
+/* Compact NUVEMIXA dashboard logo 20261105 */
+.sidebar .nv-dashboard-logo{display:block!important;width:170px!important;max-width:100%!important;height:auto!important;max-height:62px!important;object-fit:contain!important;object-position:left center!important}
+@media(max-width:760px){.sidebar .nv-dashboard-logo{width:148px!important;max-height:54px!important}}
+/* NUVEMIXA functional admin workspace */
+.nv-admin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0 25px;padding:20px;border:1px solid #d9e7f4;background:#f8fbff;border-radius:14px}
+.nv-admin-form label{display:grid;gap:6px;min-width:0;color:#183b61;font-size:13px;font-weight:750}
+.nv-admin-form input,.nv-admin-form textarea{width:100%;min-width:0;border:1px solid #bfd2e7;border-radius:10px;padding:12px;background:white;color:#102b4b;font:inherit;font-size:15px}
+.nv-admin-form label:has(textarea){grid-column:1/-1}
+.nv-admin-form button{min-height:46px;border:0;border-radius:11px;background:#0c305a;color:#fff;font-weight:800;padding:10px 18px;cursor:pointer;justify-self:start}
+.nv-admin-form :is(input,textarea,button):focus-visible{outline:3px solid #ffb548;outline-offset:2px}
+@media(max-width:760px){.nv-admin-form{grid-template-columns:1fr;padding:14px}.nv-admin-form label:has(textarea){grid-column:auto}.nv-admin-form button{width:100%}}
+/* Merchant readiness rows */
+.nv-merchant-audit{margin-top:20px;border:1px solid #dde8f5;border-radius:14px;overflow-x:auto}
+.nv-merchant-audit .admin-table td:last-child{color:#4d6480;font-size:12px}
+
+/* NUVEMIXA premium dashboard buttons 20261105 */
+:root{--nv-action:#0b315c;--nv-action-hover:#154b82;--nv-orange:#f59d1b}
+.integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a,.admin-access button{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;padding:12px 18px;border-radius:12px;
+  font-size:13px;line-height:1.35;font-weight:800;letter-spacing:.01em;
+  text-decoration:none;white-space:normal;text-align:center;
+  transition:transform .16s ease,box-shadow .2s ease,background-color .2s ease,border-color .2s ease;
+  touch-action:manipulation
+}
+.integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a{
+  color:#fff!important;background:var(--nv-action)!important;
+  border:1px solid #0b315c!important;
+  box-shadow:0 5px 14px rgba(11,49,92,.16)!important;
+}
+.integration a.integration-status:hover,.panel a.integration-status:hover,
+.nv-admin-form button:hover,.side-bottom a:hover{
+  background:var(--nv-action-hover)!important;transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(11,49,92,.22)!important
+}
+.integration a.integration-status:first-of-type{border-color:var(--nv-orange)!important}
+.admin-access button{color:#0b315c;background:#fff;border:1px solid #bcd0e7}
+.admin-access button:hover{background:#fff4e2;border-color:var(--nv-orange)}
+.side-links a:hover,.quick a:hover{transform:translateY(-1px);box-shadow:0 9px 22px #0c31541a}
+:where(.integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.admin-access button,.quick a,.side-links a):focus-visible{
+  outline:3px solid #f5a623!important;outline-offset:3px!important
+}
+@media(max-width:760px){
+ .integration a.integration-status,.panel a.integration-status{width:100%;min-height:50px}
+ .nv-admin-form button{width:100%;min-height:50px}
+ .admin-access button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ .integration a.integration-status,.panel a.integration-status,.nv-admin-form button,.side-bottom a,.admin-access button{transition:none!important;transform:none!important}
+}
+
+/* Modern feed upload controls */
+.nv-admin-feed-form{display:flex;align-items:center;flex-wrap:wrap;gap:12px;border:1px solid #d8e7f6;background:#f7fbff;border-radius:16px;padding:18px;margin:16px 0 25px}
+.nv-admin-feed-form label{font-weight:800;font-size:13px}
+.nv-admin-feed-form input[type=file]{max-width:100%;font-size:13px;color:#244465}
+.nv-admin-feed-form button{min-height:46px;border-radius:12px;border:1px solid #0b315c;background:#0b315c;color:#fff;font-size:13px;font-weight:800;padding:12px 20px;cursor:pointer}
+.nv-admin-feed-form button:hover{background:#154b82}
+.nv-admin-feed-form :is(input,button):focus-visible{outline:3px solid #f5a623;outline-offset:3px}
+@media(max-width:760px){.nv-admin-feed-form{display:grid;grid-template-columns:minmax(0,1fr)}.nv-admin-feed-form button{width:100%}}
+</style>
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"></head>
+<body><div class="layout">
+<aside class="sidebar" aria-label="Dashboardnavigatie">
+<a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
+<nav class="side-links" aria-label="Beheermenu" id="tmAdminNavigation">
+{% for key,label,ico in [('dashboard','Dashboard','⌂'),('producten','Producten','▣'),('categorieen','Categorieën','▦'),('bestellingen','Bestellingen','🛒'),('klanten','Klanten','♙'),('kortingen','Kortingen','◇'),('onderzoek','Productonderzoek & niches','⌕'),('calculator','Prijs & marge calculator','€'),('afbeeldingen','Afbeeldingen','▧'),('seo','SEO & GEO','◎'),('rankfix','RankFix AI','◈'),('google-ads','Google Ads','◉'),('google-shopping','Google Shopping & Merchant','▤'),('marketing','Marketing','☷'),('statistieken','Rapportages & statistieken','▥'),('leveranciers','Leveranciers & dropshipping','◫'),('talen','Talen','文'),('klantenservice','Klantenservice & berichten','✉'),('monitoring','Monitoring','◴'),('instellingen','Instellingen','⚙')] %}
+<a href="/dashboard?section={{ key }}" class="{% if section==key %}active{% endif %}" {% if section==key %}aria-current="page"{% endif %}><span class="side-icon" aria-hidden="true">{{ ico }}</span>{{ label }}</a>
+{% endfor %}
+<a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener"><span class="side-icon" aria-hidden="true">↗</span>Winkel bekijken</a>
+</nav>
+<div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<main class="admin">
+{% if section == "dashboard" %}
+<div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
+<section class="metrics" aria-label="Kerncijfers">
+<div class="metric"><div class="metric-label"><span class="metric-icon">▣</span>Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong><span class="metric-note">Producten in huidige testcatalogus</span></div>
+<div class="metric"><div class="metric-label"><span class="metric-icon">▦</span>Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong><span class="metric-note">Actieve hoofdcollecties</span></div>
+<div class="metric" id="bestellingen"><div class="metric-label"><span class="metric-icon">🛒</span>Bestellingen</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde ordergegevens</span></div>
+<div class="metric" id="klanten"><div class="metric-label"><span class="metric-icon">♙</span>Klanten</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde klantgegevens</span></div>
+</section>
+<div class="details">
+<section class="panel" id="statistieken"><h2>Catalogusoverzicht</h2><p>Aantal producten per categorie · dit zijn geen verkoopcijfers.</p>
+<div class="chart" role="img" aria-label="Staafdiagram met aantallen producten per categorie">
+{% for name,count in category_counts %}<div class="bar-wrap"><strong>{{ count }}</strong><div class="bar" style="--height:{{ ((count / stats.max_category_count) * 100)|round|int if stats.max_category_count else 0 }}%"></div><span>{{ name|replace(' & ',' & ') }}</span></div>{% endfor %}
+</div></section>
+<section class="panel"><h2>Webshopstatus</h2><p>Wat er op dit moment echt beschikbaar is.</p>
+<div class="category-list"><div class="category-row"><span>Catalogusproducten</span><b>{{ stats.total_products }}</b></div><div class="category-row"><span>Categorieën</span><b>{{ stats.total_categories }}</b></div><div class="category-row"><span>Gemarkeerde aanbiedingen</span><b>{{ stats.offers }}</b></div><div class="category-row"><span>Gemiddelde testprijs</span><b>{{ format_eur(stats.avg_price) }}</b></div></div>
+<div class="notice">Omzet, bestellingen, klantgegevens en voorraadstatus zijn nog niet aangesloten. Daarom worden er geen fictieve bedragen, trends of klantnamen getoond.</div></section>
+</div>
+<nav class="quick" aria-label="Snelle acties"><a href="/dashboard?section=producten"><span class="bubble">＋</span><span><b>Producten beheren</b><small>Controleer de catalogus</small></span></a><a href="/dashboard?section=categorieen"><span class="bubble">▦</span><span><b>Beheer categorieën</b><small>Productgroepen</small></span></a><a href="/dashboard?section=kortingen"><span class="bubble">◇</span><span><b>Kortingsacties</b><small>Bekijk actiegegevens</small></span></a><a href="/dashboard?section=statistieken"><span class="bubble">▥</span><span><b>Bekijk rapporten</b><small>Catalogusstatistieken</small></span></a></nav>
+
+{% else %}
+<header class="section-header"><div><span class="section-kicker">NUVEMIXA · BEHEEROMGEVING</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
+{% if section == "producten" %}
+<section class="panel"><h2>Productcatalogus</h2><p>{{ filtered_products|length }} producten{% if search %} voor “{{ search }}”{% endif %} · productgegevens uit de huidige testcatalogus.</p>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Categorie</th><th>Testprijs</th><th>Status</th></tr></thead><tbody>
+{% for product in filtered_products %}<tr><td><strong>{{ product.name }}</strong></td><td>{{ product.category }}</td><td>{{ format_eur(product.price) }}</td><td><span class="state-pill">Testcatalogus</span></td></tr>{% else %}<tr><td colspan="4">Geen producten gevonden.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% elif section == "categorieen" %}
+<section class="panel"><h2>Categorieën beheren</h2><p>Alle huidige categorieën en het aantal artikelen. Aanpassen wordt pas beschikbaar na het aansluiten van veilig productbeheer.</p><div class="category-list">{% for name,count in category_counts %}<div class="category-row"><span>{{ name }}</span><b>{{ count }} producten</b></div>{% endfor %}</div></section>
+{% elif section == "calculator" %}
+<section class="panel" id="tm-calc"><h2>Productprijs & winst berekenen</h2><p>Bereken de verkoopprijs, btw, marge en verwachte winst van een dropshippingproduct. Vul je werkelijke leverancierskosten in; bedragen zijn standaard exclusief btw.</p>
+<div class="calc-grid">
+<label>Inkoopprijs excl. btw (€)<input id="calc-buy" type="number" min="0" step=".01" value="20"></label>
+<label>Verzend- en fulfilmentkosten excl. btw (€)<input id="calc-shipping" type="number" min="0" step=".01" value="5"></label>
+<label>Overige vaste kosten per order excl. btw (€)<input id="calc-other" type="number" min="0" step=".01" value="2"></label>
+<label>Betaalproviderkosten (% verkoopprijs incl. btw)<input id="calc-fee" type="number" min="0" max="100" step=".1" value="2"></label>
+<label>Btw op verkoop (%)<input id="calc-vat" type="number" min="0" max="100" step=".1" value="21"></label>
+<label>Gewenste brutomarge vóór betaalprovider (%)<input id="calc-margin" type="number" min="0" max="99" step=".1" value="35"></label>
+</div>
+<div class="calc-results" aria-live="polite"><div><small>Benodigde verkoopprijs incl. btw</small><strong id="calc-price">—</strong></div><div><small>Verkoopprijs excl. btw</small><strong id="calc-net">—</strong></div><div><small>Geschatte winst na ingevoerde kosten</small><strong id="calc-profit">—</strong></div><div><small>Geschatte winstmarge na kosten</small><strong id="calc-actual-margin">—</strong></div></div>
+<p class="calc-footnote" id="calc-note">Indicatieve berekening. Geen fiscale of boekhoudkundige beoordeling. Controleer btw-regels per verkoopland en of leverancierskosten inclusief of exclusief btw zijn.</p>
+</section>
+<script>
+(function(){
+const root=document.getElementById('tm-calc');if(!root)return;
+const num=id=>Math.max(0,Number(document.getElementById(id).value)||0);
+const fmt=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n);
+function calc(){
+ const cost=num('calc-buy')+num('calc-shipping')+num('calc-other');
+ const vat=num('calc-vat')/100, desired=num('calc-margin')/100, fee=num('calc-fee')/100;
+ const denom=1-desired-fee*(1+vat);
+ if(denom<=0){for(const id of ['calc-price','calc-net','calc-profit','calc-actual-margin'])document.getElementById(id).textContent='Niet mogelijk';return}
+ const net=cost/denom,price=net*(1+vat),provider=price*fee,profit=net-cost-provider,margin=net>0?100*profit/net:0;
+ document.getElementById('calc-price').textContent=fmt(price);
+ document.getElementById('calc-net').textContent=fmt(net);
+ document.getElementById('calc-profit').textContent=fmt(profit);
+ document.getElementById('calc-actual-margin').textContent=margin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%';
+}
+root.querySelectorAll('input').forEach(input=>input.addEventListener('input',calc));calc();
+})();
+</script>
+{% elif section == "onderzoek" %}
+<section class="panel"><h2>Productonderzoek — eigen onderzoeksnotities</h2>
+<p>Leg niches en producten vast met de bron. Geen verzonnen zoekvolumes of prijzen. Gegevens blijven intern en worden niet automatisch gepubliceerd.</p>
+{% if research_error %}<div class="notice" role="status">{{ research_error }}</div>{% endif %}
+{% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Onderzoeksnotitie opgeslagen.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de verplichte velden.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
+{% if research_rows is not none %}
+<form action="{{ url_for('admin_add_research_note') }}" method="post" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Categorie<input name="category" maxlength="80" required placeholder="Bijvoorbeeld Smart Home"></label>
+<label>Product / niche<input name="product_name" maxlength="160" required placeholder="Naam of niche"></label>
+<label>Bron<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
+<label>Onderzoeksnotitie<textarea name="notes" maxlength="1500" rows="3" placeholder="Waarom interessant? Welke gegevens moeten worden bevestigd?"></textarea></label>
+<button type="submit">Onderzoek opslaan</button>
+</form>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product / niche</th><th>Categorie</th><th>Bron</th><th>Datum</th></tr></thead><tbody>
+{% for row in research_rows %}<tr><td><strong>{{ row.product_name }}</strong></td><td>{{ row.category }}</td><td>{{ row.source or 'Niet opgegeven' }}</td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="4">Nog geen opgeslagen onderzoeksnotities.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>De bestaande testcatalogus is beschikbaar voor beoordeling. Echte marktgegevens, leveranciersprijzen en concurrentiecijfers zijn nog niet aangesloten. Bekijk ook het <a href="{{ url_for('admin_research_preview') }}">interne onderzoeksrapport (JSON)</a>. Start met <a href="/dashboard?section=producten">de productcatalogus</a> en gebruik de <a href="/dashboard?section=calculator">prijscalculator</a> om gecontroleerde productkosten door te rekenen.</p><span class="integration-status">Geen ongeverifieerde trends of winsten getoond</span></section>
+{% elif section == "rankfix" %}
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>RankFix blijft een aparte applicatie. NUVEMIXA toont pas gecontroleerde SEO/GEO-scanresultaten wanneer een beveiligde koppeling is geïnstalleerd en de scanbewijzen gevalideerd zijn. Automatische wijzigingen blijven uitgeschakeld.</p><a href="{{ url_for('admin_rankfix_open') }}" class="integration-status" target="_blank" rel="noopener noreferrer">Open RankFix-scanner voor NUVEMIXA →</a><p style="margin-top:14px">De scan opent in de afzonderlijke RankFix-omgeving. Log daar in met je RankFix-account. Automatisch scans starten of resultaten in NUVEMIXA opslaan is nog niet geactiveerd.</p></section>
+{% elif section == "google-shopping" %}
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Gecontroleerde catalogus: <strong>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }}</strong> producten doorstaan de interne basiscontrole. Alleen bevestigde leverancier-, prijs-, voorraad-, verzend- en productgegevens komen in aanmerking. Er wordt niets naar Google gepubliceerd.</p><a href="{{ url_for('admin_merchant_preview') }}" class="integration-status">Download interne productcontrole (JSON) →</a><p><a href="{{ url_for('admin_merchant_feed_preview') }}" class="integration-status">Bekijk afgeschermde XML-feedpreview →</a></p>
+<div class="admin-table-wrap nv-merchant-audit"><table class="admin-table">
+<thead><tr><th>Product</th><th>Categorie</th><th>Controle</th></tr></thead>
+<tbody>{% for row in merchant_preview_rows[:50] %}
+<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.category }}</td><td>{% if row.missing %}Nog nodig: {{ row.missing|join(', ') }}{% else %}Intern gecontroleerd — Google-publicatie niet actief{% endif %}</td></tr>
+{% else %}<tr><td colspan="3">Geen producten in de huidige catalogus.</td></tr>{% endfor %}</tbody>
+</table></div>
+<p>Getoond: maximaal 50 producten. De volledige lijst staat in de JSON-controle.</p><p style="margin-top:14px">Voor echte publicatie zijn daarnaast een geverifieerd Merchant-account, betaal- en retourinformatie en de Google-koppeling noodzakelijk.</p></section>
+{% elif section == "leveranciers" %}
+<section class="panel"><h2>Leveranciersfeed controleren</h2>
+<p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
+<form method="post" action="{{ url_for('admin_supplier_feed_preview') }}" enctype="multipart/form-data" class="nv-admin-feed-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label for="supplier-feed">Kies een CSV-bestand (maximaal 60 KB)</label>
+<input id="supplier-feed" name="feed" type="file" accept=".csv,text/csv" required>
+<button type="submit">Controleer leveranciersfeed</button>
+</form></section>
+<section class="panel"><h2>Leveranciersregister</h2>
+<p>Bewaar gecontroleerde leverancierscontacten. Het toevoegen van een leverancier activeert geen productfeed, voorraadkoppeling of automatische orderverwerking.</p>
+{% if supplier_error %}<div class="notice" role="status">{{ supplier_error }}</div>{% endif %}
+{% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Leverancier toegevoegd.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de gegevens of controleer of de leverancier al bestaat.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
+{% if supplier_rows is not none %}
+<form action="{{ url_for('admin_add_supplier') }}" method="post" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Leverancier<input name="name" maxlength="120" minlength="2" required placeholder="Bedrijfsnaam"></label>
+<label>Contact-e-mail<input name="contact_email" maxlength="254" type="email" placeholder="naam@bedrijf.nl"></label>
+<label>Website<input name="website" maxlength="500" type="url" placeholder="https://"></label>
+<label>Notities<textarea name="notes" rows="3" maxlength="1500" placeholder="Voorwaarden, retouradres, API-beschikbaarheid..."></textarea></label>
+<button type="submit">Leverancier opslaan</button>
+</form>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Leverancier</th><th>Contact</th><th>Status</th><th>Bijgewerkt</th></tr></thead><tbody>
+{% for row in supplier_rows %}<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.contact_email or 'Niet opgegeven' }}</td><td><span class="state-pill">{{ row.status }}</span></td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="4">Nog geen leveranciers opgeslagen.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+{% elif section == "bestellingen" %}
+<section class="panel"><h2>Bestellingen — gecontroleerde bron</h2>
+<p>Alleen-lezen overzicht van de recentste WooCommerce-orders als deze bestaande orderbron veilig is ingesteld. Geen fictieve omzet, klantadressen of betaalbevestigingen.</p>
+{% if order_error %}<div class="notice" role="status">{{ order_error }}</div>{% else %}
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Ordernummer</th><th>Datum</th><th>Status volgens WooCommerce</th><th>Bedrag volgens WooCommerce</th></tr></thead><tbody>
+{% for row in order_rows %}<tr><td><strong>#{{ row.id }}</strong></td><td>{{ row.date }}</td><td>{{ row.status }}</td><td>{{ row.currency }} {{ row.total }}</td></tr>{% else %}<tr><td colspan="4">De gekoppelde bron bevat geen bestellingen in de recentste resultaten.</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<a href="{{ url_for('admin_integrations') }}" class="integration-status">Controleer integratie-instellingen</a><p><a href="{{ url_for('admin_mollie_check') }}" class="integration-status" target="_blank" rel="noopener">Controleer Mollie-verbinding (alleen lezen) →</a></p>
+</section>
+{% elif section == "instellingen" %}
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">⚙</div><h2>Integratiebeheer</h2>
+<p>Bekijk welke API-instellingen aanwezig zijn. Een ingestelde sleutel betekent niet dat betalingen, verzending, productpublicatie of scans werken.</p>
+<p><a class="integration-status" href="{{ url_for('admin_integrations') }}">Instellingen en veiligheidsstatus (JSON) →</a></p>
+<p><a class="integration-status" href="{{ url_for('admin_mollie_check') }}">Mollie-API controleren zonder betaling →</a></p>
+<p><a class="integration-status" href="{{ url_for('admin_rankfix_open') }}" target="_blank" rel="noopener noreferrer">RankFix openen met NUVEMIXA-adres →</a></p>
+<p><a class="integration-status" href="{{ url_for('admin_merchant_feed_preview') }}">Interne Merchant-feed bekijken →</a></p>
+<p>Leveranciers: <a href="/dashboard?section=leveranciers">open het leveranciersregister</a>. Productonderzoek: <a href="/dashboard?section=onderzoek">open onderzoeksnotities</a>.</p>
+</section>
+{% elif section == "statistieken" %}
+<section class="metrics"><div class="metric"><div class="metric-label">Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong></div><div class="metric"><div class="metric-label">Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong></div><div class="metric"><div class="metric-label">Gemarkeerde aanbiedingen</div><strong class="metric-value">{{ stats.offers }}</strong></div><div class="metric"><div class="metric-label">Gemiddelde testprijs</div><strong class="metric-value">{{ format_eur(stats.avg_price) }}</strong></div></section>
+<section class="panel panel-after"><h2>Omzet en conversie</h2><p>Nog niet meetbaar: er zijn geen geverifieerde verkoop- of analyticsgegevens aangesloten.</p></section>
+{% else %}
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">{% if section=="marketing" %}◉{% elif section=="seo" %}◎{% elif section=="leveranciers" %}◫{% else %}▦{% endif %}</div><h2>{{ section_names.get(section,"Beheer") }}</h2>
+<p>{% if section=="marketing" %}Google Ads, Merchant Center en marketingcampagnes worden hier zichtbaar zodra de accounts veilig zijn gekoppeld.{% elif section=="seo" %}SEO-rapporten en RankFix AI-scanresultaten worden hier weergegeven zodra de integratie is ingericht. Er wordt nu geen scan verzonnen of gestart.{% elif section=="bestellingen" %}Orderbron: {% if integration_status.woo %}WooCommerce-gegevens ingesteld, verbinding niet gecontroleerd{% else %}nog geen WooCommerce-koppeling{% endif %}. Echte orders: {% if integration_status.woo and integration_status.payment %}nog steeds uitgeschakeld totdat betaling en leveranciers zijn gevalideerd{% else %}niet geactiveerd{% endif %}. Er worden geen fictieve orders getoond. Bekijk de <a href="{{ url_for('admin_integrations') }}">integratiecontrole</a>.{% elif section=="klanten" %}Klantbeheer komt beschikbaar zodra de beveiligde klantgegevensbron is gekoppeld.{% elif section=="kortingen" %}Bevestigde kortingsacties en de bijbehorende voorwaarden komen hier zodra het beheer is gekoppeld.{% elif section=="leveranciers" %}Leveranciersfeeds, prijs-/voorraadsynchronisatie en automatische dropshippingverwerking vereisen eerst een echte leverancierskoppeling.{% else %}Instellingen voor account, betalingen, verzending, privacy en koppelingen worden hier ingericht vóór livegang.{% endif %}</p><span class="integration-status">Nog niet gekoppeld</span></section>
+{% endif %}
+{% endif %}
+</main></div></div>
+<script>
+(function(){
+const menu=document.getElementById('tmAdminNavigation');if(!menu)return;
+const entries=Array.from(menu.querySelectorAll('a[href]'));
+const storageKey='tm-admin-nav-position';
+const active=menu.querySelector('a.active');
+try{
+ const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');
+ const selected=new URLSearchParams(location.search).get('section')||'dashboard';
+ if(saved&&saved.section===selected){
+  if(Number.isFinite(saved.scroll))menu.parentElement.scrollTop=saved.scroll;
+  if(active){active.focus({preventScroll:true});active.scrollIntoView({block:'nearest'});}
+ }
+ sessionStorage.removeItem(storageKey);
+}catch(_){}
+menu.addEventListener('click',event=>{
+ const link=event.target.closest('a[href]');
+ if(!link||!menu.contains(link)||link.classList.contains('shop-exit'))return;
+ try{
+  const url=new URL(link.href);
+  sessionStorage.setItem(storageKey,JSON.stringify({section:url.searchParams.get('section')||'dashboard',scroll:menu.parentElement.scrollTop}));
+ }catch(_){}
+});
+menu.addEventListener('keydown',event=>{
+ const current=entries.indexOf(document.activeElement);
+ if(current<0)return;
+ let next=-1;
+ if(event.key==='ArrowDown')next=(current+1)%entries.length;
+ else if(event.key==='ArrowUp')next=(current-1+entries.length)%entries.length;
+ else if(event.key==='Home')next=0;
+ else if(event.key==='End')next=entries.length-1;
+ if(next<0)return;
+ event.preventDefault();
+ entries[next].focus({preventScroll:true});
+ entries[next].scrollIntoView({block:'nearest'});
+});
+})();
+</script>
+</body></html>

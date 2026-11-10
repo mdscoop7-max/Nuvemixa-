@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Favorieten | TrendMix{% endblock %}
-{% block description %}Bekijk je opgeslagen TrendMix-producten.{% endblock %}
+{% block title %}Favorieten | NUVEMIXA{% endblock %}
+{% block description %}Bekijk je opgeslagen NUVEMIXA-producten.{% endblock %}
 {% block content %}
 <section class="page-section wishlist-page">
-  <div class="section-heading"><span class="section-label">TRENDMIX</span><h1>Mijn favorieten</h1><p>Bewaar producten die je later opnieuw wilt bekijken.</p></div>
+  <div class="section-heading"><span class="section-label">NUVEMIXA</span><h1>Mijn favorieten</h1><p>Bewaar producten die je later opnieuw wilt bekijken.</p></div>
   {% if products %}
   <div class="product-grid">{% for product in products %}{% include "_product_card.html" %}{% endfor %}</div>
   <div class="section-actions"><form action="/wishlist" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="clear"><button class="btn btn-outline" type="submit">Favorieten leegmaken</button></form><a href="/shop" class="btn btn-primary">Verder winkelen →</a></div>

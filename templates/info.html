@@ -2,18 +2,18 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f6f7fb">
-  <title>{{ title }} | TrendMix</title>
+  <title>{{ title }} | NUVEMIXA</title>
   <meta name="description" content="{{ description }}" data-meta-description>
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ path }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css') }}">
   <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
   <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static',filename='trendmix-info.css',v='20261019-1') }}">
-</head>
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"></head>
 <body>
 {% include "_header.html" %}
 <main class="shell info-page">
-  <a class="back-link" href="/" data-i18n="backToTrendmix">← Terug naar TrendMix</a>
+  <a class="back-link" href="/" data-i18n="backToTrendmix">← Terug naar NUVEMIXA</a>
   {% if info_doc %}
   <article class="info-card tm-info-article"
            data-tm-info-root
@@ -22,7 +22,7 @@
            data-tm-page-description-nl="{{ info_doc.nl.description }}"
            data-tm-page-description-en="{{ info_doc.en.description }}">
     <header class="tm-info-heading">
-      <span class="tm-info-kicker" data-tm-info-nl="TrendMix · Informatie" data-tm-info-en="TrendMix · Information">TrendMix · Informatie</span>
+      <span class="tm-info-kicker" data-tm-info-nl="NUVEMIXA · Informatie" data-tm-info-en="NUVEMIXA · Information">NUVEMIXA · Informatie</span>
       <h1 data-info-title="{{ info_slug }}" data-tm-info-nl="{{ info_doc.nl.title }}" data-tm-info-en="{{ info_doc.en.title }}">{{ info_doc.nl.title }}</h1>
       <p class="tm-info-lead" data-tm-info-nl="{{ info_doc.nl.lead }}" data-tm-info-en="{{ info_doc.en.lead }}">{{ info_doc.nl.lead }}</p>
       <p class="tm-info-status" data-tm-info-nl="Webshop in ontwikkeling · Gegevens van leveranciers en betaalpartners volgen vóór livegang." data-tm-info-en="Online store in development · Supplier and payment provider details will be added before launch.">Webshop in ontwikkeling · Gegevens van leveranciers en betaalpartners volgen vóór livegang.</p>
@@ -49,10 +49,10 @@
       </div>
     </div>
     <footer class="tm-info-related">
-      <h2 data-tm-info-nl="Meer informatie over TrendMix" data-tm-info-en="More information about TrendMix">Meer informatie over TrendMix</h2>
+      <h2 data-tm-info-nl="Meer informatie over NUVEMIXA" data-tm-info-en="More information about NUVEMIXA">Meer informatie over NUVEMIXA</h2>
       <div class="tm-info-related-links">
         {% set info_links = [
-          ('over-trendmix', 'Over TrendMix', 'About TrendMix'),
+          ('over-nuvemixa', 'Over NUVEMIXA', 'About NUVEMIXA'),
           ('voorwaarden', 'Algemene voorwaarden', 'Terms and Conditions'),
           ('privacy', 'Privacy', 'Privacy'),
           ('cookies', 'Cookies', 'Cookies'),
@@ -69,7 +69,7 @@
   </article>
   {% else %}
   <article class="info-card">
-    <span class="eyebrow dark">TrendMix</span>
+    <span class="eyebrow dark">NUVEMIXA</span>
     <h1 data-info-title="{{ info_slug }}">{{ title }}</h1>
     <div data-info-content="{{ info_slug }}">{{ content|safe }}</div>
   </article>

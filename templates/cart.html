@@ -1,12 +1,12 @@
 {% from '_tm_icons.html' import tm_icon %}
 <!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Winkelwagen | TrendMix</title><link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260920-3') }}"><script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
-  <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script><link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261019-2') }}">
-</head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Winkelwagen | NUVEMIXA</title><link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260920-3') }}"><script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
+  <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script><link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261105-cart-professional1') }}">
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"></head>
 <body>
 {% include "_header.html" %}
-<main class="shell cart-page"><a class="back-link" href="/" data-i18n="continueShopping">← Verder winkelen</a><div class="checkout-steps" aria-label="Bestelstappen"><span class="active" data-i18n="stepCart">1 · Winkelwagen</span><span data-i18n="stepDetails">2 · Gegevens</span><span data-i18n="stepConfirm">3 · Bevestiging</span></div><section class="cart-panel commerce-card"><div class="commerce-heading"><div><span class="eyebrow dark">TrendMix</span><h1 data-i18n="cartTitle">Je winkelwagen</h1><p>Controleer je producten en aantallen voordat je doorgaat.</p></div><span class="commerce-badge">{{ cart_count }} item{% if cart_count != 1 %}s{% endif %}</span></div>
+<main class="shell cart-page"><a class="back-link" href="/" data-i18n="continueShopping">← Verder winkelen</a><div class="checkout-steps" aria-label="Bestelstappen"><span class="active" data-i18n="stepCart">1 · Winkelwagen</span><span data-i18n="stepDetails">2 · Gegevens</span><span data-i18n="stepConfirm">3 · Bevestiging</span></div><section class="cart-panel commerce-card"><div class="commerce-heading"><div><span class="eyebrow dark">NUVEMIXA</span><h1 data-i18n="cartTitle">Je winkelwagen</h1><p>Controleer je producten en aantallen voordat je doorgaat.</p></div><span class="commerce-badge">{{ cart_count }} item{% if cart_count != 1 %}s{% endif %}</span></div>
 {% if cart %}
 <div id="cartItems">
 {% for item in cart %}

@@ -6,14 +6,17 @@ import secrets
 import urllib.request
 import urllib.error
 from pathlib import Path
-from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort
+from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, jsonify
+from werkzeug.security import check_password_hash
+from datetime import datetime, timezone
+import time
 from product_art import render_product_svg
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=bool(os.getenv("VERCEL_ENV")),
+    SESSION_COOKIE_SECURE=os.getenv("NUVEMIXA_COOKIE_SECURE", "true").lower() == "true",
     SESSION_COOKIE_SAMESITE="Lax",
     MAX_CONTENT_LENGTH=65536,
     MAX_FORM_MEMORY_SIZE=32768,
@@ -73,7 +76,7 @@ def load_catalog():
                     continue
                 global_seen.add(key)
                 unique_items.append(item)
-            # TrendMix testcatalogus: maximaal 20 artikelen per actieve hoofdcollectie.
+            # NUVEMIXA testcatalogus: maximaal 20 artikelen per actieve hoofdcollectie.
             # Bij een leverancierskoppeling vervangen we deze selectie door de echte feed.
             catalog[slug] = unique_items[:20]
         except (FileNotFoundError, json.JSONDecodeError, OSError):
@@ -122,7 +125,7 @@ BROKEN_IMAGE_HOSTS = ("loremflickr.com", "placeimg.com", "source.unsplash.com")
 
 
 def needs_generated_image(url):
-    """Lege of onbetrouwbare placeholder-afbeeldingen vervangen we door eigen TrendMix-art."""
+    """Lege of onbetrouwbare placeholder-afbeeldingen vervangen we door eigen NUVEMIXA-art."""
     url = str(url or "").strip()
     return not url or any(host in url for host in BROKEN_IMAGE_HOSTS)
 
@@ -142,9 +145,9 @@ def enrich_product(product, category_slug, index):
     item.setdefault("id", f"tm-{category_slug}-{slugify(item.get('name'))}-{index}")
     item.setdefault("slug", slugify(item.get("name")) or f"product-{index + 1}")
     item["en_name"] = PRODUCT_NAMES_EN.get(category_slug, {}).get(item["slug"], item["name"])
-    item["en_short_description"] = f"{item['en_name']} — a provisional selection from the TrendMix test catalogue."
+    item["en_short_description"] = f"{item['en_name']} — a provisional selection from the NUVEMIXA test catalogue."
     item["en_description"] = (
-        f"{item['en_name']} is a provisional product in the TrendMix catalogue. "
+        f"{item['en_name']} is a provisional product in the NUVEMIXA catalogue. "
         "The image is temporary and may differ from the final item. "
         "Specifications, pricing, supplier, availability and delivery times "
         "will be verified before commercial sales."
@@ -159,11 +162,11 @@ def enrich_product(product, category_slug, index):
         item["image"] = product_art_url(category_slug, item["slug"])
     item["images"] = [img for img in (item.get("images") or []) if not needs_generated_image(img)] or [item["image"]]
     item.setdefault("short_description", f"Bekijk {item['name']} binnen de {item['category_name']}-testcollectie.")
-    item.setdefault("description", item.get("short_description") or f"{item['name']} is onderdeel van de TrendMix-collectie.")
+    item.setdefault("description", item.get("short_description") or f"{item['name']} is onderdeel van de NUVEMIXA-collectie.")
     item.setdefault("specifications", {})
     item.setdefault("usps", [])
-    item.setdefault("seo_title", f"{item['name']} | TrendMix")
-    item.setdefault("seo_description", f"{item['name']} binnen {item['category_name']}. Bekijk prijs, productinformatie en alternatieven bij TrendMix.")
+    item.setdefault("seo_title", f"{item['name']} | NUVEMIXA")
+    item.setdefault("seo_description", f"{item['name']} binnen {item['category_name']}. Bekijk prijs, productinformatie en alternatieven bij NUVEMIXA.")
     item.setdefault("faq", [])
     item.setdefault("related_product_ids", [])
     item["product_url"] = product_url(item)
@@ -263,6 +266,9 @@ def filter_products(product_list, category=None, search=None):
                 or needle in str(p.get("en_name", "")).lower()
                 or needle in str(p.get("brand", "")).lower()
                 or needle in str(p.get("description", "")).lower()
+                or needle in str(p.get("category_name", "")).lower()
+                or needle in str(p.get("short_description", "")).lower()
+                or needle in " ".join(f"{key} {value}" for key, value in (p.get("specifications") or {}).items()).lower()
             ]
     return result
 
@@ -406,9 +412,80 @@ def products_page():
     return redirect(url_for("shop"), code=302)
 
 
+# NUVEMIXA customer accounts: separate from admin login and checkout.
+import sqlite3
+from werkzeug.security import generate_password_hash
+
+_CUSTOMER_DB = BASE_DIR / "nuvemixa_customers.sqlite3"
+_CUSTOMER_ATTEMPTS = {}
+
+def _customer_conn():
+    conn = sqlite3.connect(str(_CUSTOMER_DB), timeout=10)
+    conn.row_factory = sqlite3.Row
+    conn.execute("CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    return conn
+
+def _current_customer():
+    customer_id = session.get("nv_customer_id")
+    if not isinstance(customer_id, int):
+        return None
+    with _customer_conn() as conn:
+        row = conn.execute("SELECT id, name, email FROM customers WHERE id=?", (customer_id,)).fetchone()
+        return dict(row) if row else None
+
+def _customer_error(message, status=400):
+    return render_template("account.html", categories=CATEGORIES, customer=None, account_error=message), status
+
 @app.route("/account")
 def account():
-    return render_template("account.html", categories=CATEGORIES)
+    return render_template("account.html", categories=CATEGORIES, customer=_current_customer(), account_error=None)
+
+@app.route("/account/register", methods=["POST"])
+def customer_register():
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().casefold()
+    password = request.form.get("password", "")
+    password_confirm = request.form.get("password_confirm", "")
+    if password != password_confirm:
+        return _customer_error("De wachtwoorden komen niet overeen.")
+    if not (1 <= len(name) <= 100) or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) or len(email) > 254 or not (12 <= len(password) <= 128):
+        return _customer_error("Controleer naam, e-mailadres en wachtwoord (minimaal 12 tekens).")
+    try:
+        with _customer_conn() as conn:
+            cursor = conn.execute("INSERT INTO customers (name,email,password_hash) VALUES (?,?,?)", (name,email,generate_password_hash(password,method="scrypt")))
+            customer_id = cursor.lastrowid
+    except sqlite3.IntegrityError:
+        return _customer_error("Dit e-mailadres is al geregistreerd.")
+    session.clear()
+    session["nv_customer_id"] = customer_id
+    return redirect(url_for("account"), code=303)
+
+@app.route("/account/login", methods=["POST"])
+def customer_login():
+    email = request.form.get("email", "").strip().casefold()
+    password = request.form.get("password", "")
+    ip = request.remote_addr or "unknown"
+    now = time.monotonic()
+    recent = [t for t in _CUSTOMER_ATTEMPTS.get(ip,[]) if now-t < 900]
+    if len(recent) >= 8:
+        return _customer_error("Te veel pogingen. Probeer het later opnieuw.",429)
+    if len(email)>254 or len(password)>128 or not email or not password:
+        return _customer_error("Ongeldige inloggegevens.",401)
+    with _customer_conn() as conn:
+        row=conn.execute("SELECT id,password_hash FROM customers WHERE email=?",(email,)).fetchone()
+    if not row or not check_password_hash(row["password_hash"],password):
+        recent.append(now)
+        _CUSTOMER_ATTEMPTS[ip]=recent
+        return _customer_error("Ongeldige inloggegevens.",401)
+    _CUSTOMER_ATTEMPTS.pop(ip,None)
+    session.clear()
+    session["nv_customer_id"]=row["id"]
+    return redirect(url_for("account"),code=303)
+
+@app.route("/account/logout", methods=["POST"])
+def customer_logout():
+    session.clear()
+    return redirect(url_for("account"),code=303)
 
 
 @app.route("/wishlist", methods=["GET", "POST"])
@@ -446,8 +523,283 @@ def product(product_id):
     return redirect(product_item["product_url"], code=302)
 
 
+
+# NUVEMIXA admin controls: deny access unless an administrator password hash is configured.
+# Use a persistent SECRET_KEY; never store credentials in the repository.
+_ADMIN_LOGIN_ATTEMPTS = {}
+_ADMIN_MAX_ATTEMPTS = 6
+_ADMIN_ATTEMPT_WINDOW = 900
+
+
+def admin_is_authenticated():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and session.get("nv_admin") is True
+
+
+def admin_configured():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and bool(os.getenv("SECRET_KEY"))
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if not admin_configured():
+        return render_template("admin_login.html", config_missing=True, error=None), 503
+    if admin_is_authenticated():
+        return redirect(url_for("control"))
+    error = None
+    if request.method == "POST":
+        ip = request.remote_addr or "unknown"
+        now = time.monotonic()
+        attempts = [t for t in _ADMIN_LOGIN_ATTEMPTS.get(ip, []) if now - t < _ADMIN_ATTEMPT_WINDOW]
+        if len(attempts) >= _ADMIN_MAX_ATTEMPTS:
+            return render_template("admin_login.html", config_missing=False, error="Te veel pogingen. Probeer het later opnieuw."), 429
+        password = request.form.get("password", "")
+        try:
+            valid = bool(password) and check_password_hash(os.environ["NUVEMIXA_ADMIN_PASSWORD_HASH"], password)
+        except (ValueError, TypeError):
+            valid = False
+        if valid:
+            _ADMIN_LOGIN_ATTEMPTS.pop(ip, None)
+            session.clear()
+            session["nv_admin"] = True
+            return redirect(url_for("control"))
+        attempts.append(now)
+        _ADMIN_LOGIN_ATTEMPTS[ip] = attempts
+        error = "Het wachtwoord klopt niet."
+    return render_template("admin_login.html", config_missing=False, error=error)
+
+
+@app.route("/admin/logout", methods=["POST"])
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
+def merchant_product_checks(item):
+    """Fail closed until the supplier confirms all mandatory selling details."""
+    missing = []
+    if not item.get("supplier_verified"):
+        missing.append("leverancier")
+    if not item.get("product_data_verified"):
+        missing.append("productgegevens")
+    if item.get("stock_status") not in ("in_stock", "out_of_stock"):
+        missing.append("voorraad")
+    if not item.get("price_verified") or not (float(item.get("price") or 0) > 0):
+        missing.append("prijs")
+    if not item.get("image_verified"):
+        missing.append("productafbeelding")
+    if not item.get("delivery_verified"):
+        missing.append("verzending")
+    if not item.get("brand") and not item.get("identifier_exists_verified"):
+        missing.append("merk/productidentificatie")
+    return missing
+
+
+@app.route("/admin/merchant-preview")
+def admin_merchant_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    items = list(catalog_items())
+    checked = [{"id": str(p.get("id", "")), "name": p["name"],
+                "missing": merchant_product_checks(p)} for p in items]
+    response = jsonify({
+        "status": "internal_preview_only", "published": False,
+        "total": len(checked),
+        "ready": sum(not p["missing"] for p in checked),
+        "products": checked,
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/research-preview")
+def admin_research_preview():
+    """Show verified catalogue completeness, not invented market demand."""
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    findings = []
+    for item in catalog_items():
+        confirmed_cost = bool(item.get("cost_verified"))
+        confirmed_supplier = bool(item.get("supplier_verified"))
+        findings.append({
+            "id": str(item.get("id", "")),
+            "name": item["name"],
+            "category": item["category_name"],
+            "supplier_verified": confirmed_supplier,
+            "purchase_cost_verified": confirmed_cost,
+            "stock_verified": item.get("stock_status") in ("in_stock", "out_of_stock"),
+            "selling_price_verified": bool(item.get("price_verified")),
+            "market_demand": None,
+            "competition_score": None,
+            "estimated_profit": None,
+        })
+    response = jsonify({
+        "status": "internal_research_only",
+        "market_data_connected": False,
+        "products": findings,
+        "total": len(findings),
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/integrations")
+def admin_integrations():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    response = jsonify({
+        "status": "configuration_presence_only",
+        "orders_live_enabled": live_orders_enabled(),
+        "woocommerce_configured": woo_configured(),
+        "merchant_publishing_enabled": False,
+        "rankfix_configured": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment_key_present": bool(os.getenv("MOLLIE_API_KEY")),
+        "contact_configured": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+        "note": "Configuration presence does not confirm external connectivity.",
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+
+# Local administrative records are separate from the public test catalogue.
+# All mutations require both administrator login and the existing CSRF middleware.
+def admin_local_records(kind):
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        return None, "Admin database is nog niet ingesteld."
+    try:
+        from nuvemixa_admin_store import list_suppliers, list_research
+        return (list_suppliers() if kind == "suppliers" else list_research()), None
+    except (OSError, RuntimeError) as exc:
+        app.logger.error("NUVEMIXA admin storage unavailable: %s", exc)
+        return None, "Admin database is tijdelijk niet beschikbaar."
+
+
+@app.route("/admin/suppliers", methods=["POST"])
+def admin_add_supplier():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_supplier
+    try:
+        add_supplier(
+            request.form.get("name", ""), request.form.get("contact_email", ""),
+            request.form.get("website", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except (ValueError, __import__("sqlite3").IntegrityError):
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Supplier record write failed")
+        result = "fout"
+    return redirect(url_for("control", section="leveranciers", result=result), code=303)
+
+
+@app.route("/admin/research", methods=["POST"])
+def admin_add_research_note():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_research
+    try:
+        add_research(
+            request.form.get("category", ""), request.form.get("product_name", ""),
+            request.form.get("source", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except ValueError:
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Research note write failed")
+        result = "fout"
+    return redirect(url_for("control", section="onderzoek", result=result), code=303)
+
+
+def recent_woo_orders():
+    """Read WooCommerce orders only if already configured. Never fabricate orders."""
+    if not woo_configured():
+        return None, "WooCommerce niet gekoppeld."
+    result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
+    if not isinstance(result, list):
+        return None, "WooCommerce niet bereikbaar of antwoord ongeldig."
+    # Only display operational fields; no addresses, phone or customer details.
+    filtered = []
+    for item in result:
+        if not isinstance(item, dict):
+            continue
+        filtered.append({
+            "id": str(item.get("id", ""))[:40],
+            "status": str(item.get("status", "onbekend"))[:45],
+            "date": str(item.get("date_created", ""))[:25],
+            "total": str(item.get("total", ""))[:40],
+            "currency": str(item.get("currency", "EUR"))[:10],
+        })
+    return filtered, None
+
+
+
+# Optional integrations are restricted to a logged-in administrator.
+@app.route("/admin/rankfix/open")
+def admin_rankfix_open():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import rankfix_scan_url
+    address = rankfix_scan_url()
+    if not address:
+        return "RankFix-adres niet veilig geconfigureerd.", 503
+    response = redirect(address, code=302)
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.route("/admin/mollie/check")
+def admin_mollie_check():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import mollie_readonly_check
+    response = jsonify(mollie_readonly_check())
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/merchant-feed-preview.xml")
+def admin_merchant_feed_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import merchant_feed_preview
+    xml, count = merchant_feed_preview(catalog_items())
+    response = Response(xml, content_type="application/xml; charset=utf-8")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-NUVEMIXA-Preview-Only"] = "true"
+    response.headers["X-NUVEMIXA-Eligible-Count"] = str(count)
+    return response
+
+
+@app.route("/admin/supplier-feed-preview", methods=["POST"])
+def admin_supplier_feed_preview():
+    if not admin_is_authenticated():
+        abort(403)
+    uploaded = request.files.get("feed")
+    if not uploaded or not uploaded.filename.lower().endswith(".csv"):
+        return jsonify({"error": "Upload een CSV-bestand."}), 400
+    raw = uploaded.stream.read(60001)
+    from nuvemixa_integrations import supplier_csv_preview
+    try:
+        result = supplier_csv_preview(raw)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/control")
+@app.route("/dashboard")
+@app.route("/catalogus-overzicht")
 def control():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
     all_products = load_all_products()
     category_counts = {}
     for product in all_products:
@@ -459,49 +811,122 @@ def control():
     top_category = max(category_counts.items(), key=lambda item: item[1])[0] if category_counts else "N/A"
     featured_products = sorted(all_products, key=lambda p: (float(p.get("price", 0) or 0), p.get("name", "")), reverse=True)[:8]
 
+    section_names = {
+        "dashboard": "Dashboard", "producten": "Producten", "categorieen": "Categorieën",
+        "bestellingen": "Bestellingen", "klanten": "Klanten", "kortingen": "Kortingen & acties",
+        "marketing": "Marketing", "seo": "SEO & GEO", "rankfix": "RankFix AI",
+        "statistieken": "Statistieken", "leveranciers": "Leveranciers & dropshipping",
+        "instellingen": "Instellingen",
+        "onderzoek": "Productonderzoek & niches",
+        "calculator": "Prijs & marge calculator",
+        "afbeeldingen": "Productafbeeldingen",
+        "google-ads": "Google Ads",
+        "google-shopping": "Google Shopping & Merchant Center",
+        "talen": "Talen",
+        "klantenservice": "Klantenservice & berichten",
+        "monitoring": "Monitoring",
+    }
+    section_descriptions = {
+        "producten": "Bekijk en doorzoek de bestaande testcatalogus.",
+        "categorieen": "Overzicht van de vijf hoofdcollecties.",
+        "bestellingen": "Bestellingen zodra een echte orderbron is gekoppeld.",
+        "klanten": "Beveiligd klantenoverzicht zodra klantbeheer beschikbaar is.",
+        "kortingen": "Kortingen en gecontroleerde acties zodra beschikbaar.",
+        "marketing": "Google Ads, Merchant Center en marketing op één plek.",
+        "seo": "Beheer SEO, GEO en productvindbaarheid.",
+        "rankfix": "RankFix scans, auditrapporten en verbeterpunten na koppeling.",
+        "statistieken": "Cataloguscijfers zonder fictieve omzet.",
+        "leveranciers": "Europese dropshipleveranciers en productfeeds.",
+        "instellingen": "Shopinstellingen, betalingen en integraties.",
+        "onderzoek": "Vind kansen voor producten en niches met gecontroleerde bronnen.",
+        "calculator": "Bereken verkoopprijzen, marge, btw en kosten.",
+        "afbeeldingen": "Productafbeeldingen en contentbeheer.",
+        "google-ads": "Google Ads-account en campagnegegevens.",
+        "google-shopping": "Google Merchant Center en Shopping-productfeeds.",
+        "talen": "Beheer Nederlandse en Engelse winkelteksten.",
+        "klantenservice": "Klantvragen, contact en berichten.",
+        "monitoring": "Koppelingen, beschikbaarheid en controles.",
+    }
+    section = request.args.get("section", "dashboard").strip().lower()
+    if section not in section_names:
+        section = "dashboard"
+    search = request.args.get("q", "").strip()[:120]
+    filtered_products = filter_products(all_products, search=search) if search else all_products
+
+    merchant_checks = [merchant_product_checks(p) for p in all_products]
+    merchant_preview_rows = [
+        {"name": p["name"], "category": p.get("category_name") or p.get("category") or "",
+         "missing": missing}
+        for p, missing in zip(all_products, merchant_checks)
+    ] if section == "google-shopping" else []
+    integration_status = {
+        "merchant": {"ready": sum(not errors for errors in merchant_checks), "total": len(all_products)},
+        "rankfix": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment": bool(os.getenv("MOLLIE_API_KEY")),
+        "woo": woo_configured(),
+        "contact": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+    }
+    supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
+    research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
+    order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
+    view_template = "control.html" if request.path == "/catalogus-overzicht" else "dashboard.html"
     return render_template(
-        "control.html",
+        view_template,
         products=featured_products,
+        filtered_products=filtered_products,
+        section=section,
+        search=search,
+        section_names=section_names,
+        section_descriptions=section_descriptions,
         stats={
             "total_products": len(all_products),
             "total_categories": len(category_counts),
             "offers": offer_count,
             "avg_price": avg_price,
             "top_category": top_category,
+            "max_category_count": max(category_counts.values(), default=0),
         },
         category_counts=sorted(category_counts.items()),
         categories=CATEGORIES,
+        integration_status=integration_status,
+        merchant_preview_rows=merchant_preview_rows,
+        supplier_rows=supplier_rows,
+        supplier_error=supplier_error,
+        research_rows=research_rows,
+        research_error=research_error,
+        order_rows=order_rows,
+        order_error=order_error,
     )
 
 
 INFO_PAGES = {
-    "over-trendmix": {"title": "Over TrendMix", "description": "Ontdek het verhaal achter TrendMix, onze vijf productcollecties en hoe we bouwen aan een overzichtelijke webshop met betrouwbare informatie vóór de commerciële opening.", "content": """
-        <p>TrendMix wordt ontwikkeld als een moderne webshop waarin overzicht, duidelijke informatie en een prettige winkelervaring centraal staan. Het assortiment is verdeeld over vijf vaste categorieën: Gadgets, Smart Home, Beauty & Care, Home & Living en Lifestyle & Sport.</p>
-        <h2>Waar we voor staan</h2><p>We willen klanten niet door een eindeloze catalogus laten zoeken. TrendMix kiest voor een overzichtelijk assortiment en productpagina’s waarop prijs, belangrijkste kenmerken, voorraad- en leverinformatie zo duidelijk mogelijk worden weergegeven.</p>
-        <h2>Van testfase naar echte webshop</h2><p>TrendMix bevindt zich momenteel in ontwikkeling. Producten en prijzen in de testcatalogus kunnen nog wijzigen. Echte bestellingen worden pas geactiveerd nadat leverancier, betaling, verzending, retourproces en bedrijfsgegevens definitief zijn ingericht en gecontroleerd.</p>
+    "over-trendmix": {"title": "Over NUVEMIXA", "description": "Ontdek het verhaal achter NUVEMIXA, onze vijf productcollecties en hoe we bouwen aan een overzichtelijke webshop met betrouwbare informatie vóór de commerciële opening.", "content": """
+        <p>NUVEMIXA wordt ontwikkeld als een moderne webshop waarin overzicht, duidelijke informatie en een prettige winkelervaring centraal staan. Het assortiment is verdeeld over vijf vaste categorieën: Gadgets, Smart Home, Beauty & Care, Home & Living en Lifestyle & Sport.</p>
+        <h2>Waar we voor staan</h2><p>We willen klanten niet door een eindeloze catalogus laten zoeken. NUVEMIXA kiest voor een overzichtelijk assortiment en productpagina’s waarop prijs, belangrijkste kenmerken, voorraad- en leverinformatie zo duidelijk mogelijk worden weergegeven.</p>
+        <h2>Van testfase naar echte webshop</h2><p>NUVEMIXA bevindt zich momenteel in ontwikkeling. Producten en prijzen in de testcatalogus kunnen nog wijzigen. Echte bestellingen worden pas geactiveerd nadat leverancier, betaling, verzending, retourproces en bedrijfsgegevens definitief zijn ingericht en gecontroleerd.</p>
         <h2>Transparantie</h2><p>Voor de commerciële livegang publiceren we de volledige identiteit en contactgegevens van de verkopende onderneming, de definitieve verkoopvoorwaarden en alle informatie die klanten nodig hebben vóór het sluiten van een overeenkomst.</p>
-        <h2>Vragen of feedback</h2><p>Zie je onduidelijke productinformatie of heb je een vraag over TrendMix? Gebruik dan de contactpagina. Feedback uit de testfase gebruiken we om de webshop verder te verbeteren.</p>
+        <h2>Vragen of feedback</h2><p>Zie je onduidelijke productinformatie of heb je een vraag over NUVEMIXA? Gebruik dan de contactpagina. Feedback uit de testfase gebruiken we om de webshop verder te verbeteren.</p>
     """},
-    "bestellen": {"title": "Bestellen & levering", "description": "Informatie over bestellen, prijzen, betalen, levering en orderbevestiging bij TrendMix.", "content": """
-        <p>Deze pagina beschrijft hoe het bestelproces van TrendMix wordt ingericht. Zolang de webshop in testfase is, worden geen definitieve betaal- of leverbeloften gedaan.</p>
+    "bestellen": {"title": "Bestellen & levering", "description": "Informatie over bestellen, prijzen, betalen, levering en orderbevestiging bij NUVEMIXA.", "content": """
+        <p>Deze pagina beschrijft hoe het bestelproces van NUVEMIXA wordt ingericht. Zolang de webshop in testfase is, worden geen definitieve betaal- of leverbeloften gedaan.</p>
         <h2>Product en prijs</h2><p>Vóór een commerciële bestelling tonen we de belangrijkste productkenmerken, de totale verkoopprijs inclusief toepasselijke belastingen en eventuele bijkomende kosten. Verzendkosten en andere kosten worden uiterlijk vóór het definitief plaatsen van de bestelling duidelijk gemaakt.</p>
         <h2>Bestellen</h2><p>Je voegt producten toe aan de winkelwagen, controleert aantallen en gegevens en krijgt vóór de definitieve bestelhandeling een overzicht van de bestelling. De bestelknop zal bij livegang ondubbelzinnig duidelijk maken dat de bestelling een betalingsverplichting inhoudt.</p>
-        <h2>Betalen</h2><p>De definitieve betaalmethoden worden vóór livegang gepubliceerd. TrendMix brengt geen betaalmethode of toeslag in rekening die niet vooraf duidelijk is vermeld.</p>
+        <h2>Betalen</h2><p>De definitieve betaalmethoden worden vóór livegang gepubliceerd. NUVEMIXA brengt geen betaalmethode of toeslag in rekening die niet vooraf duidelijk is vermeld.</p>
         <h2>Levering</h2><p>De beschikbare bezorglanden, verzendkosten, verwachte levertijd en eventuele beperkingen worden vóór de bestelling getoond zodra de leverancier en logistieke inrichting definitief zijn. Na een echte bestelling ontvangt de klant een bevestiging met de relevante bestelgegevens.</p>
-        <h2>Probleem met levering</h2><p>Is een bestelling na livegang niet of niet correct geleverd, dan kan de klant contact opnemen met TrendMix. De definitieve contactgegevens en procedure worden vóór livegang op deze website gepubliceerd.</p>
+        <h2>Probleem met levering</h2><p>Is een bestelling na livegang niet of niet correct geleverd, dan kan de klant contact opnemen met NUVEMIXA. De definitieve contactgegevens en procedure worden vóór livegang op deze website gepubliceerd.</p>
     """},
     "retouren": {"title": "Retour & herroeping", "description": "Informatie over wettelijke bedenktijd, herroeping, retourneren en terugbetaling.", "content": """
         <p>Bij online consumentenkoop geldt in de EU in veel gevallen een wettelijk herroepingsrecht. Voor goederen is de gebruikelijke bedenktijd 14 dagen vanaf ontvangst. Er bestaan wettelijke uitzonderingen; daarom wordt per relevant product duidelijk gemaakt wanneer het herroepingsrecht niet geldt.</p>
-        <h2>Een aankoop herroepen</h2><p>Wanneer TrendMix commercieel live gaat, leggen we vóór de koop duidelijk uit hoe je binnen de wettelijke termijn laat weten dat je de overeenkomst wilt herroepen. We publiceren ook het vereiste modelformulier en de definitieve contact- en retourgegevens.</p>
+        <h2>Een aankoop herroepen</h2><p>Wanneer NUVEMIXA commercieel live gaat, leggen we vóór de koop duidelijk uit hoe je binnen de wettelijke termijn laat weten dat je de overeenkomst wilt herroepen. We publiceren ook het vereiste modelformulier en de definitieve contact- en retourgegevens.</p>
         <h2>Product terugsturen</h2><p>Na een geldige herroeping moet het product binnen de wettelijke termijn worden teruggestuurd. Vóór de koop vermelden we wie de directe retourkosten draagt en, waar vereist, welke kosten daarbij te verwachten zijn.</p>
         <h2>Product beoordelen</h2><p>Tijdens de bedenktijd mag een consument een product beoordelen zoals dat redelijkerwijs in een winkel mogelijk is. Als verder gebruik tot waardevermindering leidt, kan daarvoor volgens de wettelijke regels een vergoeding gelden.</p>
         <h2>Terugbetaling</h2><p>Bij een geldige herroeping wordt de terugbetaling volgens de wettelijke regels uitgevoerd. Daarbij kan in bepaalde gevallen worden gewacht tot het product is ontvangen of bewijs van terugzending is geleverd.</p>
-        <h2>Online herroepingsfunctie</h2><p>De commerciële versie van TrendMix krijgt vóór livegang de vereiste online mogelijkheid om een daarvoor in aanmerking komende online aankoop eenvoudig te herroepen, inclusief ontvangstbevestiging.</p>
+        <h2>Online herroepingsfunctie</h2><p>De commerciële versie van NUVEMIXA krijgt vóór livegang de vereiste online mogelijkheid om een daarvoor in aanmerking komende online aankoop eenvoudig te herroepen, inclusief ontvangstbevestiging.</p>
     """},
-    "voorwaarden": {"title": "Algemene voorwaarden", "description": "Conceptuele opbouw van de verkoopvoorwaarden van TrendMix voor de commerciële livegang.", "content": """
+    "voorwaarden": {"title": "Algemene voorwaarden", "description": "Conceptuele opbouw van de verkoopvoorwaarden van NUVEMIXA voor de commerciële livegang.", "content": """
         <p>De definitieve algemene voorwaarden worden vóór de commerciële livegang juridisch gecontroleerd en gekoppeld aan de identiteit van de verkopende onderneming. Onderstaande onderdelen beschrijven alvast de structuur die klanten mogen verwachten; deze tekst is nog geen definitieve verkoopovereenkomst.</p>
         <h2>1. Toepasselijkheid en verkoper</h2><p>De voorwaarden zullen vermelden op welke overeenkomsten zij van toepassing zijn en wie de verkopende onderneming is, inclusief handelsnaam, vestigings- en contactgegevens en relevante registratienummers.</p>
-        <h2>2. Aanbod en productinformatie</h2><p>TrendMix beschrijft producten zo duidelijk mogelijk. Kennelijke fouten kunnen worden gecorrigeerd. Voor slimme en verbonden producten wordt waar relevant informatie toegevoegd over compatibiliteit, benodigde diensten en updates zodra die informatie door de leverancier is bevestigd.</p>
+        <h2>2. Aanbod en productinformatie</h2><p>NUVEMIXA beschrijft producten zo duidelijk mogelijk. Kennelijke fouten kunnen worden gecorrigeerd. Voor slimme en verbonden producten wordt waar relevant informatie toegevoegd over compatibiliteit, benodigde diensten en updates zodra die informatie door de leverancier is bevestigd.</p>
         <h2>3. Prijzen en kosten</h2><p>Consumentenprijzen worden duidelijk weergegeven inclusief toepasselijke belastingen. Eventuele verzend- of andere bijkomende kosten worden vóór de bestelling kenbaar gemaakt.</p>
         <h2>4. Totstandkoming van de overeenkomst</h2><p>De definitieve voorwaarden beschrijven wanneer een bestelling is geplaatst, wanneer een overeenkomst tot stand komt en hoe de klant daarvan een bevestiging ontvangt.</p>
         <h2>5. Betaling en levering</h2><p>Beschikbare betaalmethoden, levergebieden, verwachte levertijden en eventuele beperkingen worden vóór de koop duidelijk gemaakt.</p>
@@ -511,18 +936,18 @@ INFO_PAGES = {
         <h2>9. Privacy</h2><p>Persoonsgegevens worden alleen verwerkt voor duidelijk omschreven doeleinden en volgens het privacybeleid. Voor externe betaal-, verzend- of technische dienstverleners wordt uitgelegd welke rol zij hebben.</p>
         <h2>10. Wijzigingen</h2><p>Nieuwe voorwaarden gelden niet met terugwerkende kracht ten nadele van reeds gesloten overeenkomsten. De versie die bij een bestelling hoort, moet door de klant kunnen worden bewaard of geraadpleegd.</p>
     """},
-    "privacy": {"title": "Privacybeleid", "description": "Lees hoe TrendMix persoonsgegevens verwerkt tijdens de ontwikkeling van de webshop, welke gegevens nodig kunnen zijn en hoe we privacy-informatie aanvullen vóór livegang.", "content": """
-        <p>TrendMix wil alleen persoonsgegevens verwerken die nodig zijn om de webshop te laten functioneren, vragen te beantwoorden en — na commerciële livegang — bestellingen uit te voeren. Vóór livegang wordt dit privacybeleid aangevuld met de definitieve identiteit en contactgegevens van de verwerkingsverantwoordelijke.</p>
+    "privacy": {"title": "Privacybeleid", "description": "Lees hoe NUVEMIXA persoonsgegevens verwerkt tijdens de ontwikkeling van de webshop, welke gegevens nodig kunnen zijn en hoe we privacy-informatie aanvullen vóór livegang.", "content": """
+        <p>NUVEMIXA wil alleen persoonsgegevens verwerken die nodig zijn om de webshop te laten functioneren, vragen te beantwoorden en — na commerciële livegang — bestellingen uit te voeren. Vóór livegang wordt dit privacybeleid aangevuld met de definitieve identiteit en contactgegevens van de verwerkingsverantwoordelijke.</p>
         <h2>Welke gegevens</h2><p>Afhankelijk van de gebruikte functie kunnen naam, contactgegevens, aflever- en factuurgegevens, bestelgegevens en technische gegevens worden verwerkt. We vragen niet meer gegevens dan nodig is voor het betreffende doel.</p>
         <h2>Waarvoor</h2><p>Gegevens kunnen worden gebruikt voor klantenservice, uitvoering en administratie van bestellingen, fraudepreventie, wettelijke verplichtingen en het technisch functioneren van de webshop. De definitieve grondslagen en bewaartermijnen worden vóór livegang per doel beschreven.</p>
         <h2>Dienstverleners</h2><p>Voor onder meer hosting, betaling, e-mail en verzending kunnen externe dienstverleners nodig zijn. Zodra deze partijen definitief zijn gekozen, wordt relevante informatie hierover opgenomen in het privacybeleid.</p>
         <h2>Jouw privacyrechten</h2><p>De definitieve privacyverklaring legt uit hoe betrokkenen hun toepasselijke rechten kunnen uitoefenen, zoals inzage, correctie of verwijdering waar de wet dat toestaat.</p>
-        <h2>Beveiliging en contact</h2><p>TrendMix neemt passende technische en organisatorische maatregelen voor de functies die worden aangeboden. Het definitieve privacycontact wordt vóór commerciële livegang gepubliceerd.</p>
+        <h2>Beveiliging en contact</h2><p>NUVEMIXA neemt passende technische en organisatorische maatregelen voor de functies die worden aangeboden. Het definitieve privacycontact wordt vóór commerciële livegang gepubliceerd.</p>
     """},
     "cookies": {"title": "Cookies & voorkeuren", "description": "Informatie over functionele opslag, cookies en toekomstige toestemming.", "content": """
-        <p>TrendMix gebruikt tijdens de ontwikkeling functionele browseropslag voor onderdelen zoals taalvoorkeur en winkelwagenfunctionaliteit. Deze functies zijn bedoeld om de website technisch te laten werken en voorkeuren te onthouden.</p>
+        <p>NUVEMIXA gebruikt tijdens de ontwikkeling functionele browseropslag voor onderdelen zoals taalvoorkeur en winkelwagenfunctionaliteit. Deze functies zijn bedoeld om de website technisch te laten werken en voorkeuren te onthouden.</p>
         <h2>Functionele opslag</h2><p>Een taalkeuze of winkelwagen kan lokaal of via een sessie worden bewaard. Zonder deze technische functies kan een deel van de webshop minder goed werken.</p>
-        <h2>Analyse en marketing</h2><p>Voordat niet-noodzakelijke analyse- of marketingtechnologie wordt geactiveerd, wordt gecontroleerd welke toestemming en informatie daarvoor nodig is. TrendMix activeert zulke technologie niet als daarvoor eerst geldige toestemming vereist is.</p>
+        <h2>Analyse en marketing</h2><p>Voordat niet-noodzakelijke analyse- of marketingtechnologie wordt geactiveerd, wordt gecontroleerd welke toestemming en informatie daarvoor nodig is. NUVEMIXA activeert zulke technologie niet als daarvoor eerst geldige toestemming vereist is.</p>
         <h2>Voorkeuren wijzigen</h2><p>Bij livegang komt er, indien nodig voor de gebruikte technologie, een duidelijke manier om cookie- en privacyvoorkeuren te bekijken en te wijzigen. Browsergegevens kunnen daarnaast via de instellingen van de browser worden verwijderd.</p>
     """},
 }
@@ -738,6 +1163,10 @@ def afrekenen():
 def faq():
     return render_template("faq.html", categories=CATEGORIES)
 
+@app.route("/meer")
+def nuvemixa_more():
+    return render_template("meer.html", categories=CATEGORIES)
+
 @app.route("/contact", methods=["GET"])
 def contact_page():
     return render_template("contact.html", categories=CATEGORIES, search_query="")
@@ -747,6 +1176,9 @@ def contact():
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
     message = request.form.get("message", "").strip()
+    subject = request.form.get("subject", "Overig").strip()
+    if subject not in ("Productvraag", "Bestelling", "Levering en retour", "Overig"):
+        subject = "Overig"
 
     if not name or not email or not message or len(name) > 120 or len(email) > 254 or len(message) > 5000:
         return redirect(url_for("contact_page") + "?status=error")
@@ -768,8 +1200,8 @@ def contact():
         "from": from_email,
         "to": [os.getenv("CONTACT_TO_EMAIL", from_email)],
         "reply_to": email,
-        "subject": f"TrendMix contactformulier: {name}",
-        "text": f"Naam: {name}\\nE-mail: {email}\\n\\nBericht:\\n{message}",
+        "subject": f"NUVEMIXA contactformulier: {subject}",
+        "text": f"Naam: {name}\\nE-mail: {email}\\nOnderwerp: {subject}\\n\\nBericht:\\n{message}",
     }
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
@@ -794,6 +1226,7 @@ def contact():
         return Response(json.dumps({"ok": False}), status=502, mimetype="application/json")
     return redirect(url_for("contact_page") + "?status=error")
 
+@app.route("/over-nuvemixa")
 @app.route("/over-trendmix")
 def over_trendmix():
     return render_info_page("over-trendmix")
@@ -863,8 +1296,10 @@ def trendmix_security_headers(response):
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     if os.getenv("VERCEL_ENV"):
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact") or request.path.startswith("/api/"):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
         response.headers["Cache-Control"] = "no-store"
+    if request.path in ("/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith("/admin/"):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     # Browser caching speeds up repeat page visits without caching private pages,
     # cart state, API replies or customer information.
     if request.path.startswith("/static/") and response.status_code == 200:

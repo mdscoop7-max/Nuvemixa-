@@ -22,3 +22,78 @@
 @media(max-width:760px){.tm-newsletter{margin-top:38px;padding:10px 0}.tm-newsletter-inner{width:calc(100% - 20px)!important;grid-template-columns:1fr;gap:20px;padding:24px 18px;min-height:0}.tm-newsletter-copy{align-items:flex-start;gap:14px}.tm-newsletter-icon{width:48px;height:48px;font-size:22px;flex:0 0 auto}.tm-newsletter h2{font-size:20px}.tm-newsletter p{font-size:12px}.tm-newsletter-form button{padding:0 15px}.tm-footer-v2{padding:34px 0 92px!important}.tm-footer-v2>.shell{width:calc(100% - 30px)!important}.tm-footer-grid{grid-template-columns:1fr 1fr;gap:30px 18px}.tm-footer-brand,.tm-footer-help{grid-column:1/-1}.tm-footer-trust{grid-template-columns:1fr 1fr;gap:18px 10px}.tm-footer-info{grid-template-columns:1fr;gap:18px}.tm-footer-v2 .footer-bottom{align-items:flex-start;gap:14px;flex-direction:column}.tm-footer-v2 .footer-bottom nav{flex-wrap:wrap;gap:12px 18px}}
 
 
+
+/* NUVEMIXA footer: enforce accessible contrast despite global light palette. */
+.site-footer.tm-footer.tm-footer-v2{background:#10233e!important;color:#f7fbff!important;border-top:1px solid #2e4c6c!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-brand p,.site-footer.tm-footer.tm-footer-v2 .tm-footer-help p{color:#cbdcf0!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-muted{color:#b8cce3!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column h3,.site-footer.tm-footer.tm-footer-v2 .footer-logo,.site-footer.tm-footer.tm-footer-v2 .footer-logo .brand-name{color:#fff!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column a,.site-footer.tm-footer.tm-footer-v2 .footer-link-button{color:#d9e8fa!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column a:hover{color:#fff!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-trust,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info{border-color:#385574!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-trust strong,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info strong{color:#fff!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-trust small,.site-footer.tm-footer.tm-footer-v2 .tm-footer-info p,.site-footer.tm-footer.tm-footer-v2 .footer-bottom{color:#bfd0e5!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-bottom a{color:#e3eefb!important}
+
+/* Wide official logo, including the word NUVEMIXA, in the footer. */
+.tm-footer-v2 .footer-logo .nv-brand-image{display:block!important;width:255px!important;max-width:100%!important;height:auto!important;object-fit:contain!important;filter:none!important}
+@media(max-width:760px){.tm-footer-v2 .footer-logo .nv-brand-image{width:215px!important}}
+
+/* Official compact logo footer parity 20261105 */
+.tm-footer-v2 .footer-logo .nv-brand-image{width:180px!important;max-width:100%!important;height:auto!important;max-height:65px!important;object-fit:contain!important}
+@media(max-width:760px){.tm-footer-v2 .footer-logo .nv-brand-image{width:160px!important;max-height:58px!important}}
+
+
+/* NUVEMIXA professional simplified footer — compact, no duplicate link groups. */
+.site-footer.tm-footer.tm-footer-v2{padding:48px 0 22px!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-grid{
+  display:grid!important;grid-template-columns:minmax(220px,1.55fr) repeat(3,minmax(0,1fr))!important;
+  gap:clamp(20px,3vw,52px)!important;padding-bottom:29px!important;
+}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.tm-footer-brand{grid-column:auto!important}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-brand p{max-width:320px;margin:12px 0 0;font-size:13px;line-height:1.65}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-brand .tm-footer-muted{font-size:12px!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column{display:flex!important;flex-direction:column;align-items:flex-start;gap:4px!important}
+.site-footer.tm-footer.tm-footer-v2 .footer-column h3{font-size:15px;margin:0 0 15px}
+.site-footer.tm-footer.tm-footer-v2 .footer-column a{font-size:13px;line-height:1.5;padding:4px 0!important;margin:0!important;max-width:100%}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-status{
+  display:flex;gap:16px;align-items:center;border-top:1px solid #385574;
+  border-bottom:1px solid #385574;padding:16px 0;color:#d8e8f9
+}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-status span{border:1px solid #6c8baa;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;white-space:nowrap}
+.site-footer.tm-footer.tm-footer-v2 .tm-footer-status p{margin:0;color:#bdcee3;font-size:12px;line-height:1.55}
+.site-footer.tm-footer.tm-footer-v2 .footer-bottom{gap:20px;flex-wrap:wrap}
+.site-footer.tm-footer.tm-footer-v2 .footer-bottom a{font-size:12px}
+@media(max-width:980px){
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:24px!important}
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.tm-footer-brand{grid-column:1/-1!important}
+}
+@media(max-width:600px){
+  .site-footer.tm-footer.tm-footer-v2{padding:34px 0 104px!important}
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:27px 18px!important}
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.tm-footer-brand{grid-column:1/-1!important}
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-brand p{max-width:100%}
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.footer-column:last-child{grid-column:1/-1}
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-status{align-items:flex-start;flex-direction:column;gap:9px}
+  .site-footer.tm-footer.tm-footer-v2 .footer-column a{font-size:13px;min-height:32px}
+}
+
+/* NUVEMIXA footer logo: wide approved image */
+.site-footer.tm-footer.tm-footer-v2 .footer-logo {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: 240px !important;
+  max-width: 100% !important;
+  height: auto !important;
+  background: transparent !important;
+}
+
+.site-footer.tm-footer.tm-footer-v2 .footer-logo .nv-brand-image {
+  display: block !important;
+  width: 240px !important;
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
