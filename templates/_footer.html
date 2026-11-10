@@ -6,36 +6,36 @@
     <div class="tm-footer-grid">
       <div class="tm-footer-brand">
         <a class="brand footer-logo" href="/" aria-label="NUVEMIXA home"><img class="nv-brand-image" src="{{ url_for('static', filename='nuvemixa-logo-test.png', v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
-        <p>Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties.</p>
-        <p class="tm-footer-muted">NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief.</p>
+        <p data-tm-tr data-tm-nl="Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties." data-tm-en="Smart and practical products for everyday life, organized into five collections.">Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties.</p>
+        <p class="tm-footer-muted" data-tm-tr data-tm-nl="NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief." data-tm-en="NUVEMIXA is under development. Orders and payments are not yet available.">NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief.</p>
       </div>
       <nav class="footer-column" aria-label="Winkel">
-        <h3>Winkel</h3>
-        <a href="/shop">Alle producten</a>
+        <h3 data-tm-tr data-tm-nl="Winkel" data-tm-en="Shop">Winkel</h3>
+        <a href="/shop" data-tm-tr data-tm-nl="Alle producten" data-tm-en="All products">Alle producten</a>
         <a href="/gadgets">Gadgets</a>
         <a href="/smart-home">Smart Home</a>
         <a href="/beauty-care">Beauty &amp; Care</a>
         <a href="/home-living">Home &amp; Living</a>
         <a href="/lifestyle-sport">Lifestyle &amp; Sport</a>
-        <a href="/aanbiedingen">Aanbiedingen</a>
+        <a href="/aanbiedingen" data-tm-tr data-tm-nl="Aanbiedingen" data-tm-en="Deals">Aanbiedingen</a>
       </nav>
       <nav class="footer-column" aria-label="Klantenservice">
-        <h3>Klantenservice</h3>
+        <h3 data-tm-tr data-tm-nl="Klantenservice" data-tm-en="Customer service">Klantenservice</h3>
         <a href="/contact">Contact</a>
-        <a href="/faq">Veelgestelde vragen</a>
-        <a href="/bestellen">Bestellen en levering</a>
-        <a href="/retouren">Retouren en herroeping</a>
-        <a href="/account">Mijn account</a>
+        <a href="/faq" data-tm-tr data-tm-nl="Veelgestelde vragen" data-tm-en="Frequently asked questions">Veelgestelde vragen</a>
+        <a href="/bestellen" data-tm-tr data-tm-nl="Bestellen en levering" data-tm-en="Ordering and delivery">Bestellen en levering</a>
+        <a href="/retouren" data-tm-tr data-tm-nl="Retouren en herroeping" data-tm-en="Returns and withdrawal">Retouren en herroeping</a>
+        <a href="/account" data-tm-tr data-tm-nl="Mijn account" data-tm-en="My account">Mijn account</a>
       </nav>
       <nav class="footer-column" aria-label="Over NUVEMIXA en informatie">
-        <h3>Over NUVEMIXA</h3>
-        <a href="/over-nuvemixa">Over ons</a>
-        <a href="/voorwaarden">Algemene voorwaarden</a>
-        <a href="/privacy">Privacyverklaring</a>
-        <a href="/cookies">Cookies en voorkeuren</a>
+        <h3 data-tm-tr data-tm-nl="Over NUVEMIXA" data-tm-en="About NUVEMIXA">Over NUVEMIXA</h3>
+        <a href="/over-nuvemixa" data-tm-tr data-tm-nl="Over ons" data-tm-en="About us">Over ons</a>
+        <a href="/voorwaarden" data-tm-tr data-tm-nl="Algemene voorwaarden" data-tm-en="Terms and Conditions">Algemene voorwaarden</a>
+        <a href="/privacy" data-tm-tr data-tm-nl="Privacyverklaring" data-tm-en="Privacy policy">Privacyverklaring</a>
+        <a href="/cookies" data-tm-tr data-tm-nl="Cookies en voorkeuren" data-tm-en="Cookies and preferences">Cookies en voorkeuren</a>
       </nav>
     </div>
-    <div class="footer-bottom"><span>© 2026 NUVEMIXA · Alle rechten voorbehouden</span></div>
+    <div class="footer-bottom"><span data-tm-tr data-tm-nl="© 2026 NUVEMIXA · Alle rechten voorbehouden" data-tm-en="© 2026 NUVEMIXA · All rights reserved">© 2026 NUVEMIXA · Alle rechten voorbehouden</span></div>
   </div>
 </footer>
 <div class="contact-modal" id="contactModal" hidden><div class="contact-backdrop" data-contact-close></div><section class="contact-dialog" role="dialog" aria-modal="true" aria-labelledby="contactTitle"><button type="button" class="contact-close" data-contact-close aria-label="Sluiten">{{ tm_icon('close') }}</button><span class="eyebrow dark">NUVEMIXA</span><h2 id="contactTitle" data-i18n="contactTitle">Contact</h2><p data-i18n="contactText">Heb je een vraag? Stuur ons direct een bericht.</p><form class="contact-form contact-form-modal" action="/contact" method="post" novalidate><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
