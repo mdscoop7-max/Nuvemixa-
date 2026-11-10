@@ -9,6 +9,7 @@
 @media(max-width:760px){.legacy-main{padding:14px 0 45px}.legacy-main .page-section{padding:12px 0}.legacy-main .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.legacy-main .product-card{padding:10px}.legacy-main .account-card,.legacy-main .empty-state{padding:22px}.legacy-main .shop-toolbar{display:block}.legacy-main .shop-search{width:100%}.legacy-main .category-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.legacy-main .category-nav a{white-space:nowrap}.legacy-main .shop-search .search-button{padding:10px}.legacy-main h1{font-size:31px}}
 </style>{% block extra_css %}{% endblock %}<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static',filename='trendmix-footer-unified.css',v='20261105-footer-clean2') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='nuvemixa-refresh.css',v='20261110-1') }}">
+{# Zelfde stylesheet als in _bottomnav.html: hier in <head> zodat de eerste weergave direct goed is (geen flits). #}<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261105-nuvemixa-merged1') }}">
 </head>
 <body>
 <div class="topline"><div class="wrap topitems"><span>NUVEMIXA · Webshop in ontwikkeling</span><a href="/contact">Klantenservice</a>{% include '_tm_topbar_language.html' %}</div></div>
