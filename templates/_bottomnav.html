@@ -252,11 +252,6 @@ svg+='</svg>';pics.innerHTML=svg;
 <script>
 (function(){
 var path=location.pathname;
-var isCategory=/^\/(gadgets|smart-home|beauty-care|home-living|lifestyle-sport)\/?$/.test(path);
-var dock=document.querySelector('.tm-dock');
-if(dock){var links=dock.querySelectorAll('a');links.forEach(function(a){a.classList.remove('is-active');a.removeAttribute('aria-current')});
-var index=path==='/'?0:path==='/shop'?1:path==='/wishlist'?2:path==='/aanbiedingen'?3:isCategory?4:-1;
-if(index>=0&&links[index]){links[index].classList.add('is-active');links[index].setAttribute('aria-current','page')}}
 var category=path==='/'?'gadgets':path.replace(/^\//,'').replace(/\/$/,'');
 var photos={
 'gadgets':{url:'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1600&q=85',position:'center center'},
@@ -331,4 +326,4 @@ main .tm-campaign::before{background:linear-gradient(180deg,rgba(4,13,30,.92) 0%
 </style>
 {% include '_tm_mobile_extras.html' %}
 <script defer src="{{ url_for('static',filename='trendmix-english-labels.js',v='20261019-3') }}"></script>
-<script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261105-nuvemixa-assistant-1') }}"></script>
+<script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261114-storefront-controls') }}"></script>

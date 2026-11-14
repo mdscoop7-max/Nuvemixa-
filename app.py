@@ -1187,6 +1187,8 @@ from nv_permissions import RIGHTS, SECTIONS, account_rights, allowed
 from nv_visits import record_visit, visit_summary
 from nv_system_check import scan as run_system_scan
 from nv_merchant_audit import audit as merchant_audit, product_issues
+from nv_international import dashboard_market
+from nv_viral_research import viral_dashboard
 
 app.after_request(record_visit)
 
@@ -2025,6 +2027,8 @@ def control():
 
 
     section_names = {
+        "internationaal": "Internationaal marktonderzoek",
+        "viral": "Viral Product Finder",
 
         "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "categorieen": "Categorieën",
 
@@ -2055,6 +2059,8 @@ def control():
     }
 
     section_descriptions = {
+        "internationaal": "Vergelijk vraag, leveranciers en marge per verkoopmarkt.",
+        "viral": "Leg trendsignalen vast en beoordeel commerciële kansen per land.",
 
         "producten": "Zoek en bekijk producten, prijzen en voorraad in de testcatalogus.",
 
@@ -2184,6 +2190,8 @@ def control():
     return render_template(
 
         view_template,
+        market_research=dashboard_market() if section == "internationaal" else None,
+        viral=viral_dashboard() if section == "viral" else None,
 
         products=featured_products,
 
@@ -3107,7 +3115,7 @@ def trendmix_security_headers(response):
 
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
 
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/dashboard/internationaal", "/dashboard/viral", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
 
         response.headers["Cache-Control"] = "no-store"
 

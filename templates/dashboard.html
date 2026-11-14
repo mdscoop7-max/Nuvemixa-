@@ -11,7 +11,7 @@
 .sidebar{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;gap:16px;background:#fff;border-right:1px solid var(--border);padding:23px 16px;overflow-y:auto}
 .brand{display:flex;gap:10px;align-items:center;padding:2px 9px 22px;border-bottom:1px solid var(--border)}.brand-mark{display:grid;place-items:center;background:linear-gradient(145deg,#02baf0,#0667e8);color:#fff;width:41px;height:44px;border-radius:12px;font-size:23px}.brand strong{display:block;font-size:27px;letter-spacing:-1.1px}.brand strong span{color:var(--blue)}.brand small{font-size:11px;color:var(--muted)}
 .side-links{display:grid;gap:6px}.side-links a{display:flex;align-items:center;gap:14px;border-radius:12px;padding:13px 15px;font-weight:650;font-size:14px;color:#253e5b}.side-links a:hover,.side-links a.active{background:#e4f0ff;color:#0755c4}.side-links a.active{border-left:4px solid var(--blue)}.side-icon{font-size:20px;min-width:23px;text-align:center}
-.side-bottom{margin-top:auto;background:linear-gradient(120deg,#e8f3ff,#f1f5ff);padding:17px;border-radius:16px}.side-bottom b{display:block;margin-bottom:5px}.side-bottom small{color:var(--muted);line-height:1.55;display:block}.side-bottom a{display:block;text-align:center;margin-top:13px;background:var(--blue);color:white;padding:11px;border-radius:10px;font-size:12px;font-weight:800}
+.side-bottom{margin-top:auto;background:linear-gradient(120deg,#e8f3ff,#f1f5ff);padding:17px;border-radius:16px}.side-bottom b{display:block;margin-bottom:5px;color:#10233f}.side-bottom small{color:var(--muted);line-height:1.55;display:block}.side-bottom a{display:block;text-align:center;margin-top:13px;background:var(--blue);color:white;padding:11px;border-radius:10px;font-size:12px;font-weight:800}
 .workspace{min-width:0;background:radial-gradient(ellipse 750px 260px at 60% 0%,#cbe4ff 0%,transparent 80%),#f7fbff}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:92px;padding:15px clamp(18px,3vw,35px);border-bottom:1px solid #dfebf7;background:#f5faffa8}.top-search{max-width:565px;flex:1}.top-search input{height:48px;width:100%;border:1px solid #d4e5f8;border-radius:13px;padding:0 18px;background:#fff;color:#152e4c}.top-profile{display:flex;align-items:center;gap:11px;font-size:13px;font-weight:750}.avatar{display:grid;place-items:center;height:42px;width:42px;color:#fff;border-radius:50%;background:var(--blue)}.top-profile small{display:block;color:var(--muted);font-weight:500}.admin{max-width:1510px;margin:auto;padding:27px clamp(18px,3vw,36px) 56px}
 .heading{display:flex;align-items:start;justify-content:space-between;gap:18px;margin:0 0 26px}.heading h1{margin:0 0 6px;font-size:clamp(29px,3vw,39px);letter-spacing:-1.2px}.heading p{margin:0;color:var(--muted)}.status{align-self:start;background:#fff;border:1px solid #d5e6fa;color:#14559a;padding:12px 15px;border-radius:12px;font-size:12px;font-weight:800}
@@ -117,20 +117,10 @@
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}"></head>
-<body><div class="layout">
-<aside class="sidebar" aria-label="Dashboardnavigatie">
+<body class="nv-admin-ui"><div class="layout">
+<aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
-<nav class="side-links" aria-label="Beheermenu" id="tmAdminNavigation">
-{% for key,label,ico in [('dashboard','Dashboard','⌂'),('producten','Producten','▣'),('categorieen','Categorieën','▦'),('bestellingen','Bestellingen','🛒'),('klanten','Klanten','♙'),('accountbeheer','Accountbeheer','♧'),('kortingen','Kortingen','◇'),('onderzoek','Productonderzoek & niches','⌕'),('calculator','Prijs & marge calculator','€'),('afbeeldingen','Afbeeldingen','▧'),('seo','SEO & GEO','◎'),('rankfix','RankFix AI','◈'),('google-ads','Google Ads','◉'),('google-shopping','Google Shopping & Merchant','▤'),('marketing','Marketing','☷'),('statistieken','Rapportages & statistieken','▥'),('leveranciers','Leveranciers & dropshipping','◫'),('klantenservice','Klantenservice & berichten','✉'),('monitoring','Monitoring','◴'),('instellingen','Instellingen','⚙')] if is_admin or key in employee_sections %}
-<a href="/dashboard?section={{ key }}" class="{% if section==key %}active{% endif %}" {% if section==key %}aria-current="page"{% endif %}><span class="side-icon" aria-hidden="true">{{ ico }}</span>{{ label }}</a>
-{% endfor %}
-{% if is_admin %}<a href="/dashboard?section=woocommerce" class="woo-control-link">
-<span class="side-icon" aria-hidden="true">?</span>
-WooCommerce &amp; Leveranciers
-</a>{% endif %}
-
-<a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener"><span class="side-icon" aria-hidden="true">↗</span>Winkel bekijken</a>
-</nav>
+{% include "_dashboard_menu.html" %}
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
@@ -218,6 +208,10 @@ function calc(){
 root.querySelectorAll('input').forEach(input=>input.addEventListener('input',calc));calc();
 })();
 </script>
+{% elif section == "viral" %}
+{% include "_dashboard_viral.html" %}
+{% elif section == "internationaal" %}
+{% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
 <section class="panel"><h2>Productonderzoek — eigen onderzoeksnotities</h2>
 <p>Leg niches en producten vast met de bron. Geen verzonnen zoekvolumes of prijzen. Gegevens blijven intern en worden niet automatisch gepubliceerd.</p>
@@ -412,57 +406,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% endif %}
 
 </main></div></div>
-<script>
-(function(){
-const menu=document.getElementById('tmAdminNavigation');if(!menu)return;
-const entries=Array.from(menu.querySelectorAll('a[href]'));
-const storageKey='tm-admin-nav-position';
-const active=menu.querySelector('a.active');
-try{
- const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');
- const selected=new URLSearchParams(location.search).get('section')||'dashboard';
- if(saved&&saved.section===selected){
-  if(Number.isFinite(saved.scroll))menu.parentElement.scrollTop=saved.scroll;
-  if(active){active.focus({preventScroll:true});active.scrollIntoView({block:'nearest'});}
- }
- sessionStorage.removeItem(storageKey);
-}catch(_){}
-menu.addEventListener('click',event=>{
- const link=event.target.closest('a[href]');
- if(!link||!menu.contains(link)||link.classList.contains('shop-exit'))return;
- try{
-  const url=new URL(link.href);
-  sessionStorage.setItem(storageKey,JSON.stringify({section:url.searchParams.get('section')||'dashboard',scroll:menu.parentElement.scrollTop}));
- }catch(_){}
-});
-menu.addEventListener('keydown',event=>{
- const current=entries.indexOf(document.activeElement);
- if(current<0)return;
- let next=-1;
- if(event.key==='ArrowDown')next=(current+1)%entries.length;
- else if(event.key==='ArrowUp')next=(current-1+entries.length)%entries.length;
- else if(event.key==='Home')next=0;
- else if(event.key==='End')next=entries.length-1;
- if(next<0)return;
- event.preventDefault();
- entries[next].focus({preventScroll:true});
- entries[next].scrollIntoView({block:'nearest'});
-});
-})();
-</script>
 
-<script id="nv26-dashboard-ui">
-document.addEventListener('DOMContentLoaded',function(){
- const menu=document.getElementById('tmAdminNavigation');
- if(menu){
-   const aside=menu.closest('aside')||menu.closest('nav')||menu.parentElement;
-   if(aside)aside.classList.add('nv26-sidebar');
-   menu.classList.add('nv26-menu');
- }
- const panel=document.querySelector('.nv26-panel');
- if(panel){const main=panel.closest('main');if(main&&main.firstElementChild!==panel) main.prepend(panel);}
- const links=document.querySelectorAll('a[href="/dashboard?section=klanten"]');
- links.forEach(function(a){if(a.classList.contains('customer-activity-link'))a.remove();});
-});
-</script>
+
+
 <script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script></body></html>

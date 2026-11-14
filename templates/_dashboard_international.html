@@ -1,0 +1,72 @@
+{% set r = market_research %}
+{% set country, currency, locale, phase = r.markets[r.market] %}
+<section class="panel">
+  <form method="get" action="{{ url_for('control') }}" class="nv-admin-form">
+    <input type="hidden" name="section" value="internationaal">
+    <label>Verkoopmarkt<select name="market">{% for code, market in r.markets.items() %}
+      <option value="{{ code }}"{% if code == r.market %} selected{% endif %}>{{ market[0] }} · {{ market[1] }}</option>
+    {% endfor %}</select></label>
+    <label>Product<select name="product">{% for key, product in r.candidates.items() %}
+      <option value="{{ key }}"{% if key == r.candidate %} selected{% endif %}>{{ product[0] }}</option>
+    {% endfor %}</select></label>
+    <button type="submit">Onderzoek openen</button>
+  </form>
+  <h2>{{ r.candidates[r.candidate][0] }} in {{ country }}</h2>
+  <p>{{ r.candidates[r.candidate][1] }} · Testcatalogus EUR {{ r.candidates[r.candidate][2] }} · {{ locale }} · Fase {{ phase }}</p>
+  <div class="nv-market-grid">
+    <article>
+      <h3>Vraag onderzoeken</h3>
+      <p>{{ r.search_terms }}</p>
+      <p><a href="https://trends.google.com/trends/explore?geo={{ r.market }}&amp;q={{ r.search_terms|urlencode }}">Open Google Trends</a></p>
+      <p><a href="https://www.google.com/search?tbm=shop&amp;gl={{ r.market|lower }}&amp;q={{ r.search_terms.split(',')[0]|urlencode }}">Zoek lokale Shopping-aanbiedingen</a></p>
+    </article>
+    <article>
+      <h3>Concurrentie</h3>
+      {% if r.evidence %}<ul>{% for name, price, url in r.evidence %}<li><a href="{{ url }}">{{ name }}</a> · {{ price or 'Prijs te controleren' }}</li>{% endfor %}</ul>
+      <p>Bronstand {{ r.observations }}. Prijzen zijn momentopnamen en kunnen exclusief bezorging zijn.</p>
+      {% else %}<p>Vergelijkbare aanbieding nog te onderzoeken.</p>{% endif %}
+    </article>
+    <article>
+      <h3>Leverancierskandidaten</h3>
+      <ul>{% for name, url in r.suppliers %}<li><a href="{{ url }}">{{ name }}</a></li>{% endfor %}</ul>
+      <p>Offerte, voorraad, voorwaarden en levering naar {{ country }} nog te bevestigen.</p>
+    </article>
+  </div>
+</section>
+
+<section class="panel panel-after">
+  <h2>Beoordeling en marge</h2>
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+    <p class="notice" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+  {% endfor %}
+  {% if r.storage_error %}<p class="notice" role="alert">{{ r.storage_error }}</p>{% else %}
+  <p><strong>{{ r.data.get('confirmed', [])|length }}/5</strong> onderzoekscriteria bevestigd. Bevestig een criterium nadat de bron is gecontroleerd.</p>
+  {% if r.result %}
+    <p><strong>{{ currency }} {{ r.result[0] }} bijdrage per order</strong>
+    {% if r.result[1] is not none %} · {{ r.result[1] }}% van omzet excl. af te dragen belasting{% endif %}. Vóór vaste bedrijfskosten.</p>
+  {% else %}
+    <p>Vul alle bedragen in voor een berekening. Gebruik 0 wanneer een kostenpost aantoonbaar niet van toepassing is.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('nv_manage.save_market') }}" class="nv-admin-form">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="market" value="{{ r.market }}">
+    <input type="hidden" name="product" value="{{ r.candidate }}">
+    <fieldset class="nv-market-fields">
+      <legend>Onderzoeksbewijs</legend>
+      {% for key, (label, limit) in r.text_fields.items() %}
+        <div><label>{{ label }}<textarea maxlength="{{ limit }}" rows="3" name="{{ key }}">{{ r.data.get(key, '') }}</textarea></label>
+        {% if key != "potential" %}
+        <label class="nv-checkbox"><input type="checkbox" name="confirmed_{{ key }}" value="1"{% if key in r.data.get('confirmed', []) %} checked{% endif %}> Gecontroleerd</label>
+        {% endif %}</div>
+      {% endfor %}
+    </fieldset>
+    <fieldset class="nv-market-fields">
+      <legend>Bedragen per bestelling in {{ currency }}</legend>
+      {% for key, label in r.amounts.items() %}
+        <label>{{ label }}<input inputmode="decimal" maxlength="11" name="{{ key }}" value="{{ r.data.get(key, '') }}"></label>
+      {% endfor %}
+    </fieldset>
+    <button type="submit">Onderzoek en kosten opslaan</button>
+  </form>
+  {% endif %}
+</section>

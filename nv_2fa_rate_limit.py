@@ -14,18 +14,18 @@ MAX_POGINGEN = 5
 VENSTER = 300
 
 
-def _beveilig_databasebestanden():
-    DATABASE.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    if DATABASE.is_symlink():
-        raise PermissionError("2FA-rate-limitdatabase mag geen symbolische link zijn.")
+def _beveilig_databasebestanden(database):
+    database.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if database.is_symlink():
+        raise PermissionError("2FA-database mag geen symbolische link zijn.")
     try:
-        descriptor = os.open(DATABASE, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        descriptor = os.open(database, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     except FileExistsError:
         pass
     else:
         os.close(descriptor)
     if os.name != "nt":
-        paths = (DATABASE, Path(str(DATABASE) + "-wal"), Path(str(DATABASE) + "-shm"))
+        paths = (database, Path(str(database) + "-wal"), Path(str(database) + "-shm"))
         for path in paths:
             if path.is_symlink():
                 raise PermissionError(f"SQLite-sidecar mag geen symbolische link zijn: {path}")
@@ -36,7 +36,7 @@ def _beveilig_databasebestanden():
 
 
 def verbinding():
-    _beveilig_databasebestanden()
+    _beveilig_databasebestanden(DATABASE)
     db = sqlite3.connect(DATABASE, timeout=10)
     db.execute("PRAGMA busy_timeout = 10000")
     db.execute("""
@@ -83,4 +83,4 @@ def registreer_en_controleer(sleutel):
         raise
     finally:
         db.close()
-        _beveilig_databasebestanden()
+        _beveilig_databasebestanden(DATABASE)

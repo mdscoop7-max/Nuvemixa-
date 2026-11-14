@@ -3,13 +3,36 @@
   if (scan) scan.addEventListener('click', () => {
     document.querySelector('[data-scan-progress]').textContent = 'Lokale controles worden uitgevoerd…';
   });
+  const menu = document.querySelector('.nv-menu-shell');
+  const mobile = matchMedia('(max-width: 760px)');
+  if (menu) {
+    menu.open = !mobile.matches;
+    mobile.addEventListener('change', event => { menu.open = !event.matches; });
+    menu.addEventListener('keydown', event => {
+      const entries = [...menu.querySelectorAll('nav a, nav summary')].filter(item => item.getClientRects().length);
+      const index = entries.indexOf(document.activeElement);
+      if (index < 0) return;
+      const next = {ArrowDown: (index+1)%entries.length, ArrowUp: (index+entries.length-1)%entries.length,
+                    Home: 0, End: entries.length-1}[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      entries[next].focus();
+    });
+  }
   const forms = [...document.querySelectorAll('main form[method="post"]')];
   const dirty = new Set();
+  const submitting = new WeakSet();
   window.addEventListener('beforeunload', event => {
     if (dirty.size) {
       event.preventDefault();
       event.returnValue = '';
     }
+  });
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) forms.forEach(form => {
+      submitting.delete(form);
+      form.removeAttribute('aria-busy');
+    });
   });
   for (const form of forms) {
     const inputs = () => JSON.stringify([...form.elements]
@@ -20,12 +43,24 @@
     form.addEventListener('input', mark);
     form.addEventListener('change', mark);
     form.addEventListener('submit', event => {
+      if (submitting.has(form)) {
+        event.preventDefault();
+        return;
+      }
+      const action = form.elements.op;
+      if (action && ['disable', 'reset'].includes(action.value)
+          && !window.confirm('Wil je deze wijziging uitvoeren?')) {
+        event.preventDefault();
+        return;
+      }
       if ([...dirty].some(other => other !== form)
           && !window.confirm('Een ander formulier heeft niet-opgeslagen wijzigingen. Doorgaan?')) {
         event.preventDefault();
         return;
       }
       dirty.clear();
+      submitting.add(form);
+      form.setAttribute('aria-busy', 'true');
     });
     const parent = form.closest('details');
     if (!parent) continue;

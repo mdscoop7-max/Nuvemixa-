@@ -1,6 +1,10 @@
 {% from '_tm_icons.html' import tm_icon %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='trendmix-footer-unified.css', v='20261114-footer-top') }}">
 {% include '_bottomnav.html' %}
+<button class="nv-scroll-top" type="button" aria-label="Naar boven" data-nv-scroll-top hidden>
+  <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 20V4m-7 7 7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
 
 
 
@@ -72,7 +76,7 @@
 
     </div>
 
-    <div class="footer-bottom"><span>© 2026 NUVEMIXA · Alle rechten voorbehouden</span></div>
+    <div class="footer-bottom"><span data-tm-tr data-tm-nl="© 2026 NUVEMIXA · Alle rechten voorbehouden" data-tm-en="© 2026 NUVEMIXA · All rights reserved">© 2026 NUVEMIXA · Alle rechten voorbehouden</span></div>
 
   </div>
 

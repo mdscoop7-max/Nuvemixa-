@@ -1,0 +1,94 @@
+{% set v = viral %}
+{% macro options(items, active='') %}
+{% for code, label in items %}<option value="{{ code }}"{% if code == active %} selected{% endif %}>{{ label }}</option>{% endfor %}
+{% endmacro %}
+{% macro csrf() %}<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+<section class="panel">
+<h2>Kandidaten en trendsignalen</h2>
+<p>Registreer controleerbare waarnemingen uit openbare pagina’s en toegestane exports. De score is een onderbouwde beoordeling. Groei vereist twee vergelijkbare metingen van dezelfde bron, platform, maatstaf en periode.</p>
+{% for category, message in get_flashed_messages(with_categories=true) %}
+<p class="notice" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+{% endfor %}
+{% if v.error %}<p class="notice" role="alert">{{ v.error }}</p>{% else %}
+{% set platform_options = v.platforms.items()|list %}
+<form method="get" class="nv-admin-form">
+<input type="hidden" name="section" value="viral">
+<label>Platform<select name="platform"><option value="">Alle platforms</option>{% for code, p in platform_options %}<option value="{{ code }}"{% if v.filters.platform == code %} selected{% endif %}>{{ p[0] }}</option>{% endfor %}</select></label>
+<label>Land<select name="country"><option value="">Alle landen</option>{{ options(v.countries.items(),v.filters.country) }}</select></label>
+<label>Niche<select name="niche"><option value="">Alle niches</option>{% for niche in v.niches %}<option{% if v.filters.niche==niche %} selected{% endif %}>{{ niche }}</option>{% endfor %}</select></label>
+<label>Meetperiode<select name="period"><option value="">Alle perioden</option>{{ options([('7','7 dagen'),('30','30 dagen'),('90','90 dagen')],v.filters.period) }}</select></label>
+<label>Minimumscore<input type="number" min="0" max="100" name="score" value="{{ v.filters.score }}"></label>
+<button type="submit">Filter toepassen</button>
+</form>
+<details><summary>Kandidaat toevoegen</summary>
+<form method="post" action="{{ url_for('nv_manage.save_viral') }}" class="nv-admin-form">
+{{ csrf() }}
+<label>Productnaam<input name="title" maxlength="120" required></label>
+<label>Land<select name="country">{{ options(v.countries.items()) }}</select></label>
+<label>Niche<select name="niche">{% for niche in v.niches %}<option>{{ niche }}</option>{% endfor %}</select></label>
+<label>Subniche of nieuw idee<input name="new_niche" maxlength="120"></label>
+<button type="submit">Kandidaat toevoegen</button>
+</form></details>
+<h3>Eerste bronvondsten</h3>
+<ul>
+  <li><strong>VS · Kabelorganizers zonder boren</strong> — meerdere aanbieders en bundels op de Amerikaanse categoriepagina. Onderzoek montage en prijs inclusief bezorging. <a href="https://shop.tiktok.com/us/k/cable-management-desk-setup">TikTok Shop</a></li>
+  <li><strong>Bureau-organizer met lade</strong> — inspiratie voor kleine werkplekken en een mogelijke uitbreiding van de pilot. <a href="https://guide.pinterest.com/home-decor/ideal-office-set-up/">Pinterest Guide</a></li>
+  <li><strong>DIY · 3D-geprinte kabelhouder</strong> — herbruikbare clips en verschillende kabeldiameters als onderzoekshypothese. <a href="https://guide.pinterest.com/diy-and-crafts/3d-print-for-women/">Pinterest Guide</a></li>
+</ul>
+<p>Bronnen geraadpleegd op 14 november 2026. Deze vondsten hebben nog geen vergelijkbare meetreeks of productscores.</p>
+<div class="nv-market-grid panel-after">
+  <a href="https://ads.tiktok.com/business/creativecenter/">TikTok Creative Center</a>
+  <a href="https://www.instagram.com/explore/">Instagram verkennen</a>
+  <a href="https://trends.pinterest.com/">Pinterest Trends</a>
+  <a href="https://trends.google.com/trends/">Google Trends</a>
+  <a href="https://shopping.google.com/">Google Shopping</a>
+</div>
+{% endif %}
+</section>
+{% for row in v.records %}
+<section class="panel panel-after">
+<h2>{{ row.title }} · {{ v.countries[row.country] }}</h2>
+<p>{{ row.niche }}{% if row.notes %} · {{ row.notes }}{% endif %}</p>
+<p><strong>{% if row.score is not none %}{{ row.score }}/100{% else %}Score in voorbereiding{% endif %}</strong>
+{% if row.components %} · Aandacht {{ row.components.social }}/50 · Commercieel {{ row.components.commercial }}/50{% endif %}
+· {{ 'Dropshippingcontrole voltooid' if row.qualified else 'Dropshippingcontrole open' }}</p>
+{% if row.result %}<p>Bijdrage vóór vaste kosten <strong>{{ v.currencies[row.country] }} {{ row.result[0] }}</strong>{% if row.result[1] is not none %} · {{ row.result[1] }}%{% endif %}</p>{% endif %}
+{% if row.saved.get('supplier_name') %}<p>Leverancier {{ row.saved.supplier_name }}</p>{% endif %}
+{% if row.alert %}<p class="notice" role="status">Onderzoekssignaal · minstens 50% gemeten groei in 7 of 30 dagen en een positieve bijdrage na dropshippingcontrole.</p>{% endif %}
+{% for g in row.growth %}<p>{{ g.window }} dagen · {{ v.platforms[g.platform][0] }} · {{ g.metric }} · {{ '%+.1f'|format(g.percent) }}% · tot {{ g.end }}. <a href="{{ g.source }}">Bron</a></p>{% endfor %}
+<details{% if v.detail == row.id %} open{% endif %}><summary>Bronnen en beoordeling</summary>
+{% if row.evidence %}
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>Platform</th><th>Datum</th><th>Periode</th><th>Meting</th></tr></thead>
+<tbody>{% for e in row.evidence %}<tr><td><a href="{{ e.source }}">{{ v.platforms[e.platform][0] }}</a></td><td>{{ e.observed }}</td><td>{{ e.window }} dagen</td><td>{{ e.metric }} · {{ e.value }}{% if e.estimate %} · schatting{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
+<form method="post" action="{{ url_for('nv_manage.save_viral') }}" class="nv-admin-form">
+{{ csrf() }}<input type="hidden" name="candidate" value="{{ row.id }}"><input type="hidden" name="action" value="observation">
+<label>Platform<select name="platform">{% for code,p in platform_options %}<option value="{{ code }}">{{ p[0] }}</option>{% endfor %}</select></label>
+<label>Rechtstreekse bron-URL<input name="source" type="url" maxlength="450" required></label>
+<label>Meetdatum<input type="date" name="observed" value="{{ v.today }}" max="{{ v.today }}" required></label>
+<label>Vergelijkbare meetperiode<select name="window">{{ options([('7','7 dagen'),('30','30 dagen'),('90','90 dagen')]) }}</select></label>
+<label>Maatstaf<select name="metric">{{ options([('views','Weergaven'),('likes','Likes'),('comments','Reacties'),('shares','Gedeeld'),('saves','Opgeslagen'),('interest','Zoekindex 0–100'),('creators','Onafhankelijke creators'),('orders','Bronvermelde bestellingen')]) }}</select></label>
+<label>Waarde<input type="number" name="value" min="0" max="999999999" required></label>
+<label class="nv-checkbox"><input type="checkbox" name="estimate" value="1"> Geschat</label>
+<button type="submit">Meting opslaan</button>
+</form>
+<form method="post" action="{{ url_for('nv_manage.save_viral') }}" class="nv-admin-form">
+{{ csrf() }}<input type="hidden" name="candidate" value="{{ row.id }}"><input type="hidden" name="action" value="assessment">
+<label>Dropshippingleverancier<input name="supplier_name" maxlength="160" value="{{ row.saved.get('supplier_name','') }}"></label>
+<label>Onderbouwing, concurrentie, levertijd en voorwaarden<textarea name="rationale" maxlength="1600">{{ row.saved.get('rationale','') }}</textarea></label>
+<fieldset class="nv-market-fields"><legend>Beoordeling per factor (0–10)</legend>
+{% for code,(label,weight,group) in v.factors.items() %}
+<label>{{ label }} · {{ weight }} punten<input type="number" min="0" max="10" name="{{ code }}" value="{{ row.saved.get('scores',{}).get(code,'') }}"></label>
+{% endfor %}</fieldset>
+<fieldset class="nv-market-fields"><legend>Bedragen per order · {{ v.currencies[row.country] }}</legend>
+{% for code,label in v.amounts.items() %}<label>{{ label }}<input inputmode="decimal" maxlength="11" name="{{ code }}" value="{{ row.saved.get('costs',{}).get(code,'') }}"></label>{% endfor %}
+</fieldset>
+<fieldset class="nv-market-fields"><legend>Dropshippingcontrole</legend>
+{% for code,label in v.checks.items() %}<label class="nv-checkbox"><input type="checkbox" name="check_{{ code }}" value="1"{% if code in row.saved.get('checks',[]) %} checked{% endif %}> {{ label }}</label>{% endfor %}
+</fieldset>
+<button type="submit">Beoordeling opslaan</button>
+</form>
+</details>
+</section>
+{% else %}{% if not v.error %}<p class="panel panel-after">Geen kandidaten gevonden. Voeg een kandidaat toe of pas de filters aan.</p>{% endif %}{% endfor %}

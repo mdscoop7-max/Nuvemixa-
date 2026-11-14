@@ -57,6 +57,7 @@ class TwoFaStoragePermissionTests(unittest.TestCase):
             database = Path(temp) / "replay.sqlite3"
             with patch.object(nv_2fa_replay, "DATABASE", database):
                 self.assertTrue(nv_2fa_replay.registreer_eenmalig(12345))
+                self.assertFalse(nv_2fa_replay.registreer_eenmalig(12345))
             self.assert_private_file(database)
 
 

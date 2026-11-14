@@ -8,8 +8,8 @@
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}/contact">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260930-1') }}">
-  <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script><script defer src="{{ url_for('static', filename='languages.js', v='20260930-2') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static',filename='nuvemixa-refresh.css',v='20261110-1') }}"><link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-ui-2026.css', v='20261110-flitsfix') }}">
+  <script defer src="{{ url_for('static', filename='app.js', v='20261114-footer-locale') }}"></script><script defer src="{{ url_for('static', filename='languages.js', v='20261114-shared') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='nuvemixa-refresh.css',v='20261110-1') }}"><link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-ui-2026.css', v='20261114-visual') }}">
 </head>
 <body>
 {% include "_header.html" %}
@@ -17,7 +17,7 @@
 {% if request.args.get('status') in ['error', 'unavailable'] %}<div class="tm-contact-alert" role="alert">Het contactformulier kon het bericht niet afleveren. Je bericht is niet verzonden. Probeer het later opnieuw.</div>{% elif request.args.get('status') == 'sent' %}<div class="tm-contact-alert tm-contact-success" role="status">Je bericht is verzonden.</div>{% endif %}
   <a class="back-link" href="/">← Terug naar NUVEMIXA</a>
   <article class="info-card contact-page-card">
-    <div class="commerce-heading contact-heading"><div><span class="eyebrow" data-i18n="customerService">KLANTENSERVICE</span><h1>Waar kunnen we mee helpen?</h1></div><span class="commerce-badge">Digitaal bereikbaar</span></div>
+    <div class="commerce-heading contact-heading"><div><span class="eyebrow" data-i18n="customerService">KLANTENSERVICE</span><h1 data-tm-tr data-tm-nl="Waar kunnen we mee helpen?" data-tm-en="How can we help?">Waar kunnen we mee helpen?</h1></div><span class="commerce-badge" data-tm-tr data-tm-nl="Digitaal bereikbaar" data-tm-en="Available online">Digitaal bereikbaar</span></div>
     <p class="info-lead" data-i18n="contactLead">Heb je een vraag over een product, bestelling of levering? Vul het formulier in. We gebruiken je gegevens alleen om je vraag te beantwoorden.</p>
     <div class="contact-service-grid"><form class="contact-form contact-form-modal contact-page-form modern-form" action="/contact" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><div class="form-heading"><span>{{ tm_icon('mail') }}</span><div><h2>Stuur ons een bericht</h2><p>We gebruiken je gegevens alleen om je vraag te behandelen.</p></div></div>
       <div class="contact-form-row">

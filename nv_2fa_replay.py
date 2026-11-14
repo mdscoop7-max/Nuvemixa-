@@ -2,12 +2,14 @@
 """Voorkom hergebruik van een Google Authenticator-tijdstap."""
 
 import sqlite3
-from pathlib import Path
+from nv_2fa_rate_limit import _beveilig_databasebestanden
+from nv_storage_paths import TWO_FA_DIR
 
-DATABASE = Path(__file__).resolve().parent / "nv_2fa_replay.sqlite3"
+DATABASE = TWO_FA_DIR / "nv_2fa_replay.sqlite3"
 
 
 def registreer_eenmalig(stap):
+    _beveilig_databasebestanden(DATABASE)
     db = sqlite3.connect(DATABASE, timeout=10)
     try:
         db.execute("BEGIN IMMEDIATE")
