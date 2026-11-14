@@ -59,52 +59,87 @@ def mollie_readonly_check():
         return {"state": "unavailable", "message": "Mollie-verbinding is niet bevestigd."}
 
 
-def merchant_feed_preview(items, base_url="https://nuvemixa.alwaysdata.net"):
-    """Generate XML of eligible products for private inspection only.
+def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
+    missing = []
+    verification = {
+        "merchant_verified": "interne goedkeuring",
+        "supplier_verified": "leverancier",
+        "product_data_verified": "productgegevens",
+        "price_verified": "prijsverificatie",
+        "image_verified": "beeldverificatie",
+        "delivery_verified": "verzending",
+    }
+    missing.extend(label for key, label in verification.items() if item.get(key) is not True)
+    for key, limit, label in (("id", 50, "product-ID"), ("name", 150, "titel"),
+                              ("description", 5000, "beschrijving")):
+        if not 1 <= len(str(item.get(key) or "").strip()) <= limit:
+            missing.append(label)
+    try:
+        price = Decimal(str(item.get("price")))
+        if not price.is_finite() or price <= 0:
+            missing.append("prijs")
+    except (InvalidOperation, ValueError):
+        missing.append("prijs")
+    if item.get("currency", "EUR") != "EUR":
+        missing.append("valuta")
+    if item.get("stock_status") not in {"in_stock", "out_of_stock"}:
+        missing.append("voorraad")
+    gtin = str(item.get("gtin") or "")
+    if gtin:
+        valid_gtin = (bool(re.fullmatch(r"[0-9]+", gtin)) and len(gtin) in {8, 12, 13, 14}
+                      and sum(int(digit) * (1 if index % 2 == 0 else 3)
+                              for index, digit in enumerate(reversed(gtin))) % 10 == 0)
+        if not valid_gtin:
+            missing.append("GTIN")
+    no_identifiers = item.get("identifier_exists_verified") is True
+    if not no_identifiers and (not item.get("brand") or not (gtin or item.get("mpn"))):
+        missing.append("merk en GTIN of MPN")
+    if no_identifiers and (gtin or item.get("mpn")):
+        missing.append("tegenstrijdige productidentificatie")
+    for key, label in (("product_url", "productlink"), ("image", "afbeeldingslink")):
+        value = str(item.get(key) or "")
+        try:
+            url = urllib.parse.urlsplit(urllib.parse.urljoin(base_url.rstrip("/") + "/", value))
+            if (not value or any(char.isspace() for char in value) or url.scheme != "https"
+                    or not url.hostname or url.username or url.password
+                    or (key == "product_url" and url.hostname != urllib.parse.urlsplit(base_url).hostname)
+                    or (key == "image" and url.path.startswith("/img/product/"))):
+                missing.append(label)
+        except ValueError:
+            missing.append(label)
+    return missing
 
-    No feed URL is publicly published, submitted to Google or listed in robots.txt.
-    """
-    ET.register_namespace("g", "http://base.google.com/ns/1.0")
+
+def merchant_feed_preview(items, base_url="https://nuvemixa.alwaysdata.net"):
+    """Generate the private XML preview from the same checks as the JSON report."""
+    namespace = "http://base.google.com/ns/1.0"
+    ET.register_namespace("g", namespace)
     root = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(root, "channel")
-    ET.SubElement(channel, "title").text = "NUVEMIXA interne Merchant-preview (niet gepubliceerd)"
+    ET.SubElement(channel, "title").text = "NUVEMIXA interne Merchant-preview"
     ET.SubElement(channel, "link").text = base_url
-    ET.SubElement(channel, "description").text = "Uitsluitend intern gecontroleerde producten."
+    ET.SubElement(channel, "description").text = "Intern gecontroleerde producten."
     count = 0
-    for p in items:
-        if not isinstance(p, dict) or not p.get("merchant_verified"):
+    for product in items:
+        if merchant_product_checks(product, base_url):
             continue
-        # Explicit opt-in plus verified details: never infer compliance from a test catalogue.
-        required = ["id", "name", "image", "product_url", "brand"]
-        if any(not p.get(k) for k in required):
-            continue
-        if p.get("stock_status") not in ("in_stock", "out_of_stock"):
-            continue
-        if not all(p.get(flag) is True for flag in (
-            "supplier_verified", "product_data_verified", "price_verified",
-            "image_verified", "delivery_verified"
-        )):
-            continue
-        try:
-            price = Decimal(str(p.get("price", "")))
-            if not price.is_finite() or price <= 0:
-                continue
-        except (InvalidOperation, ValueError, TypeError):
-            continue
-        product_url = urllib.parse.urljoin(base_url + "/", str(p["product_url"]).lstrip("/"))
-        image_url = urllib.parse.urljoin(base_url + "/", str(p["image"]).lstrip("/"))
-        if not all(urllib.parse.urlsplit(url).hostname == urllib.parse.urlsplit(base_url).hostname
-                   and urllib.parse.urlsplit(url).scheme == "https"
-                   for url in [product_url, image_url]):
-            continue
+        attributes = {
+            "id": product["id"],
+            "title": product["name"],
+            "description": product["description"],
+            "link": urllib.parse.urljoin(base_url.rstrip("/") + "/", product["product_url"]),
+            "image_link": urllib.parse.urljoin(base_url.rstrip("/") + "/", product["image"]),
+            "price": f"{Decimal(str(product['price'])):.2f} EUR",
+            "availability": product["stock_status"],
+        }
+        for key in ("brand", "gtin", "mpn"):
+            if product.get(key):
+                attributes[key] = product[key]
+        if product.get("identifier_exists_verified") is True:
+            attributes["identifier_exists"] = "no"
         row = ET.SubElement(channel, "item")
-        ET.SubElement(row, "{http://base.google.com/ns/1.0}id").text = str(p["id"])
-        ET.SubElement(row, "title").text = str(p["name"])
-        ET.SubElement(row, "link").text = product_url
-        ET.SubElement(row, "{http://base.google.com/ns/1.0}image_link").text = image_url
-        ET.SubElement(row, "{http://base.google.com/ns/1.0}brand").text = str(p["brand"])
-        ET.SubElement(row, "{http://base.google.com/ns/1.0}price").text = f"{price:.2f} EUR"
-        ET.SubElement(row, "{http://base.google.com/ns/1.0}availability").text = p["stock_status"]
+        for key, value in attributes.items():
+            ET.SubElement(row, f"{{{namespace}}}{key}").text = str(value)
         count += 1
     return ET.tostring(root, encoding="utf-8", xml_declaration=True), count
 

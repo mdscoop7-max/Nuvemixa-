@@ -1,0 +1,47 @@
+/* NUVEMIXA - gerichte dashboard-foto-correcties, alleen /dashboard en /control.
+   Na nv-control-modern geladen om oudere, tegenstrijdige regels te overschrijven. */
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit,
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:visited,
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:hover,
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:focus-visible,
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:active {
+  background:#0757bd!important;color:#fff!important;border:1px solid #0757bd!important;
+  box-shadow:0 5px 14px #073d8530!important;
+}
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit .side-icon{color:#fff!important}
+/* Blauwe snelle acties met overal witte iconen en tekst. */
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a,
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a:nth-child(n){
+  display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;
+  min-width:0!important;min-height:105px!important;gap:9px!important;
+  padding:14px 10px!important;border:1px solid #164b9a!important;border-radius:14px!important;
+  background:linear-gradient(145deg,#1266d1,#073b89)!important;color:#fff!important;
+  font-weight:800!important;font-size:1.45rem!important;text-align:center!important;
+  box-shadow:0 5px 13px #0a3d8328!important;
+}
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a span,
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a:nth-child(n) span{color:#fff!important;font-size:.9rem!important;line-height:1.35!important;font-weight:800!important}
+/* Overige actielinks: donkerblauw, afgerond, witte tekst, zichtbaar zonder hover. */
+body:has(#tmAdminNavigation) .nv26-panel a.nv26-primary,
+body:has(#tmAdminNavigation) .nv26-panel a.nv26-link,
+body:has(#tmAdminNavigation) .panel.integration a.integration-status,
+body:has(#tmAdminNavigation) .panel a.integration-status {
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ background:#0757bd!important;color:#fff!important;border:1px solid #0757bd!important;
+ border-radius:12px!important;padding:12px 17px!important;min-height:45px!important;
+ font-weight:800!important;text-decoration:none!important;max-width:100%!important;
+ white-space:normal!important;text-align:center!important;box-shadow:0 3px 10px #123e6b1a!important;
+}
+body:has(#tmAdminNavigation) .nv26-panel a.nv26-primary:hover,
+body:has(#tmAdminNavigation) .nv26-panel a.nv26-link:hover,
+body:has(#tmAdminNavigation) .panel a.integration-status:hover,
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a:hover {background:#043c87!important;color:#fff!important;border-color:#043c87!important}
+body:has(#tmAdminNavigation) .nv26-panel a:focus-visible,
+body:has(#tmAdminNavigation) .panel a.integration-status:focus-visible{outline:3px solid #ffb02e!important;outline-offset:3px!important}
+/* Desktop knoppen in rijen; mobiel zonder afgekapt label. */
+body:has(#tmAdminNavigation) .panel.integration{min-width:0}
+body:has(#tmAdminNavigation) .panel.integration p:has(>a.integration-status){display:inline-flex!important;margin:4px 10px 10px 0!important;vertical-align:top!important;max-width:100%!important}
+body:has(#tmAdminNavigation) .panel.integration>a.integration-status{margin:4px 10px 10px 0!important}
+@media(max-width:800px){body:has(#tmAdminNavigation) .nv26-panel .nv26-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:500px){body:has(#tmAdminNavigation) .nv26-panel .nv26-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a{min-height:88px!important}body:has(#tmAdminNavigation) .panel.integration p:has(>a.integration-status){display:flex!important;width:100%!important;margin:6px 0!important}body:has(#tmAdminNavigation) .panel.integration a.integration-status{width:100%!important}}

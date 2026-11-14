@@ -1,0 +1,56 @@
+<section class="panel">
+<h2>Dashboardgebruikers</h2>
+{% for category, message in get_flashed_messages(with_categories=true) %}
+<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
+{% endfor %}
+<p>De vaste beheerder behoudt toegang via de bestaande inloginstellingen. Vink per medewerker aan welke onderdelen toegankelijk zijn. Beheerders hebben alle rechten.</p>
+{% if staff_error %}
+<p class="notice" role="alert">{{ staff_error }}</p>
+{% else %}
+{% macro details_fields(account=none) %}
+<label>Naam<input name="name" required maxlength="80" value="{{ account.name if account else '' }}"></label>
+<label>Gebruikersnaam<input name="username" required minlength="3" maxlength="64" pattern="[A-Za-z0-9._\-]{3,64}" value="{{ account.username or '' if account else '' }}"></label>
+<label>E-mailadres<input name="email" type="email" required maxlength="254" value="{{ account.email if account else '' }}"></label>
+<label>Rol<select name="role"><option value="employee">Medewerker</option><option value="admin"{% if account and account.role == 'admin' %} selected{% endif %}>Beheerder</option></select></label>
+<label>Accountstatus<select name="active"><option value="1">Actief</option><option value="0"{% if account and not account.active %} selected{% endif %}>Uitgeschakeld</option></select></label>
+<fieldset class="nv-rights"><legend>Rechten voor de rol Medewerker</legend>
+<input type="hidden" name="permissions_present" value="1">
+{% set selected = account_rights(account.permissions if account else none) %}
+{% for key, label in rights_labels.items() %}
+<label><input type="checkbox" name="permission" value="{{ key }}"{% if key in selected %} checked{% endif %}> {{ label }}</label>
+{% endfor %}
+</fieldset>
+{% endmacro %}
+{% macro hidden(operation, account=none) %}
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="op" value="{{ operation }}">
+{% if account %}<input type="hidden" name="id" value="{{ account.id }}">{% endif %}
+{% endmacro %}
+{% macro password_field() %}
+<label>Nieuw wachtwoord (12–128 tekens)<input type="password" name="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
+{% endmacro %}
+<form method="post" action="{{ url_for('nv_manage.team') }}" class="nv-admin-form">
+{{ hidden('create') }}{{ details_fields() }}{{ password_field() }}
+<button type="submit">Dashboardgebruiker aanmaken</button>
+</form>
+{% for account in staff_rows %}
+<details class="panel-after">
+<summary><strong>{{ account.name }}</strong> · {{ 'Beheerder' if account.role == 'admin' else 'Medewerker' }} · {{ 'Actief' if account.active else 'Inactief' }} · {{ account.email }}</summary>
+<form method="post" action="{{ url_for('nv_manage.team') }}" class="nv-admin-form">
+{{ hidden('edit', account) }}{{ details_fields(account) }}
+<button type="submit">Wijzigingen opslaan</button>
+</form>
+<form method="post" action="{{ url_for('nv_manage.team') }}" class="nv-admin-form">
+{{ hidden('reset', account) }}{{ password_field() }}
+<button type="submit">Wachtwoord resetten</button>
+</form>
+<form method="post" action="{{ url_for('nv_manage.team') }}" class="nv-admin-form">
+{{ hidden('disable' if account.active else 'enable', account) }}
+<button type="submit">{{ 'Deactiveren' if account.active else 'Activeren' }}</button>
+</form>
+</details>
+{% else %}
+<p>Er zijn nog geen extra dashboardgebruikers.</p>
+{% endfor %}
+{% endif %}
+</section>

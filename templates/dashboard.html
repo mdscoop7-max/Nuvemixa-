@@ -47,7 +47,7 @@
 /* NUVEMIXA functional admin workspace */
 .nv-admin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0 25px;padding:20px;border:1px solid #d9e7f4;background:#f8fbff;border-radius:14px}
 .nv-admin-form label{display:grid;gap:6px;min-width:0;color:#183b61;font-size:13px;font-weight:750}
-.nv-admin-form input,.nv-admin-form textarea{width:100%;min-width:0;border:1px solid #bfd2e7;border-radius:10px;padding:12px;background:white;color:#102b4b;font:inherit;font-size:15px}
+.nv-admin-form select,.nv-admin-form input,.nv-admin-form textarea{width:100%;min-width:0;border:1px solid #bfd2e7;border-radius:10px;padding:12px;background:white;color:#102b4b;font:inherit;font-size:15px}
 .nv-admin-form label:has(textarea){grid-column:1/-1}
 .nv-admin-form button{min-height:46px;border:0;border-radius:11px;background:#0c305a;color:#fff;font-weight:800;padding:10px 18px;cursor:pointer;justify-self:start}
 .nv-admin-form :is(input,textarea,button):focus-visible{outline:3px solid #ffb548;outline-offset:2px}
@@ -100,31 +100,61 @@
 .nv-admin-feed-form button:hover{background:#154b82}
 .nv-admin-feed-form :is(input,button):focus-visible{outline:3px solid #f5a623;outline-offset:3px}
 @media(max-width:760px){.nv-admin-feed-form{display:grid;grid-template-columns:minmax(0,1fr)}.nv-admin-feed-form button{width:100%}}
+
+/* NUVEMIXA test UI: keep existing navigation and sections intact */
+.nv26-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important;align-items:stretch}
+.nv26-actions>a,.nv26-primary,.nv26-link,.nv26-card a[href*="integrat"],.nv26-card a[href*="mollie"]{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;background:#0757bd!important;color:#fff!important;border:1px solid #0757bd!important;border-radius:11px!important;padding:12px 16px!important;font-weight:750!important;text-decoration:none!important;box-shadow:0 3px 10px #123e6b1a!important;max-width:100%;white-space:normal}
+.nv26-actions>a:hover,.nv26-primary:hover,.nv26-link:hover{background:#06458f!important;border-color:#06458f!important}
+.nv26-actions>a:focus-visible,.nv26-primary:focus-visible,.nv26-link:focus-visible{outline:3px solid #f4a62a!important;outline-offset:2px}
+@media(max-width:520px){.nv26-actions>a{flex:1 1 100%}}
+
+/* Gerichte lokale herstelronde: uitsluitend dashboardacties */
+.nv-action-row{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 22px}
+.nv-blue-action{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 18px;border-radius:12px;background:#0757bd!important;color:#fff!important;border:1px solid #0757bd;font-size:14px;font-weight:750;text-decoration:none;box-shadow:0 4px 12px #0757bd22}
+.nv-blue-action:hover{background:#06458f!important}.nv-blue-action:focus-visible{outline:3px solid #f5a623;outline-offset:3px}
+@media(max-width:620px){.nv-action-row{display:grid}.nv-blue-action{width:100%}}
 </style>
-<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"></head>
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}"></head>
 <body><div class="layout">
 <aside class="sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
 <nav class="side-links" aria-label="Beheermenu" id="tmAdminNavigation">
-{% for key,label,ico in [('dashboard','Dashboard','⌂'),('producten','Producten','▣'),('categorieen','Categorieën','▦'),('bestellingen','Bestellingen','🛒'),('klanten','Klanten','♙'),('kortingen','Kortingen','◇'),('onderzoek','Productonderzoek & niches','⌕'),('calculator','Prijs & marge calculator','€'),('afbeeldingen','Afbeeldingen','▧'),('seo','SEO & GEO','◎'),('rankfix','RankFix AI','◈'),('google-ads','Google Ads','◉'),('google-shopping','Google Shopping & Merchant','▤'),('marketing','Marketing','☷'),('statistieken','Rapportages & statistieken','▥'),('leveranciers','Leveranciers & dropshipping','◫'),('talen','Talen','文'),('klantenservice','Klantenservice & berichten','✉'),('monitoring','Monitoring','◴'),('instellingen','Instellingen','⚙')] %}
+{% for key,label,ico in [('dashboard','Dashboard','⌂'),('producten','Producten','▣'),('categorieen','Categorieën','▦'),('bestellingen','Bestellingen','🛒'),('klanten','Klanten','♙'),('accountbeheer','Accountbeheer','♧'),('kortingen','Kortingen','◇'),('onderzoek','Productonderzoek & niches','⌕'),('calculator','Prijs & marge calculator','€'),('afbeeldingen','Afbeeldingen','▧'),('seo','SEO & GEO','◎'),('rankfix','RankFix AI','◈'),('google-ads','Google Ads','◉'),('google-shopping','Google Shopping & Merchant','▤'),('marketing','Marketing','☷'),('statistieken','Rapportages & statistieken','▥'),('leveranciers','Leveranciers & dropshipping','◫'),('klantenservice','Klantenservice & berichten','✉'),('monitoring','Monitoring','◴'),('instellingen','Instellingen','⚙')] if is_admin or key in employee_sections %}
 <a href="/dashboard?section={{ key }}" class="{% if section==key %}active{% endif %}" {% if section==key %}aria-current="page"{% endif %}><span class="side-icon" aria-hidden="true">{{ ico }}</span>{{ label }}</a>
 {% endfor %}
+{% if is_admin %}<a href="/dashboard?section=woocommerce" class="woo-control-link">
+<span class="side-icon" aria-hidden="true">?</span>
+WooCommerce &amp; Leveranciers
+</a>{% endif %}
+
 <a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener"><span class="side-icon" aria-hidden="true">↗</span>Winkel bekijken</a>
 </nav>
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar"><form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form><div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<header class="topbar">{% if allowed("product_view", "product_edit") %}<form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin">
+{% if staff and section == "dashboard" %}
+<section class="panel">
+<details><summary>Mijn wachtwoord wijzigen</summary>
+<form method="post" action="{{ url_for('nv_manage.password') }}" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Huidig wachtwoord<input type="password" name="old" autocomplete="current-password" required maxlength="128"></label>
+<label>Nieuw wachtwoord<input type="password" name="new" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+<button type="submit">Wachtwoord wijzigen</button>
+</form></details></section>
+{% endif %}
 {% if section == "dashboard" %}
 <div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
-<section class="metrics" aria-label="Kerncijfers">
-<div class="metric"><div class="metric-label"><span class="metric-icon">▣</span>Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong><span class="metric-note">Producten in huidige testcatalogus</span></div>
-<div class="metric"><div class="metric-label"><span class="metric-icon">▦</span>Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong><span class="metric-note">Actieve hoofdcollecties</span></div>
-<div class="metric" id="bestellingen"><div class="metric-label"><span class="metric-icon">🛒</span>Bestellingen</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde ordergegevens</span></div>
-<div class="metric" id="klanten"><div class="metric-label"><span class="metric-icon">♙</span>Klanten</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde klantgegevens</span></div>
-</section>
-<div class="details">
+{% if allowed("stats", "product_view", "order_view", "customer_view") %}<section class="metrics" aria-label="Kerncijfers">
+{% if allowed("stats", "product_view") %}<div class="metric"><div class="metric-label"><span class="metric-icon">▣</span>Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong><span class="metric-note">Producten in huidige testcatalogus</span></div>
+<div class="metric"><div class="metric-label"><span class="metric-icon">▦</span>Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong><span class="metric-note">Actieve hoofdcollecties</span></div>{% endif %}
+{% if allowed("order_view") %}<div class="metric" id="bestellingen"><div class="metric-label"><span class="metric-icon">🛒</span>Bestellingen</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde ordergegevens</span></div>{% endif %}
+{% if is_admin %}<div class="metric" id="klanten"><div class="metric-label"><span class="metric-icon">♙</span>Klanten</div><strong class="metric-value">{{ nv_customer_count if nv_customer_count is not none else "—" }}</strong><span class="metric-note">Aantal in lokale klantdatabase; geen verkoopstatistiek</span></div>{% endif %}
+</section>{% endif %}
+{% if allowed("stats") %}<div class="details">
 <section class="panel" id="statistieken"><h2>Catalogusoverzicht</h2><p>Aantal producten per categorie · dit zijn geen verkoopcijfers.</p>
 <div class="chart" role="img" aria-label="Staafdiagram met aantallen producten per categorie">
 {% for name,count in category_counts %}<div class="bar-wrap"><strong>{{ count }}</strong><div class="bar" style="--height:{{ ((count / stats.max_category_count) * 100)|round|int if stats.max_category_count else 0 }}%"></div><span>{{ name|replace(' & ',' & ') }}</span></div>{% endfor %}
@@ -132,18 +162,14 @@
 <section class="panel"><h2>Webshopstatus</h2><p>Wat er op dit moment echt beschikbaar is.</p>
 <div class="category-list"><div class="category-row"><span>Catalogusproducten</span><b>{{ stats.total_products }}</b></div><div class="category-row"><span>Categorieën</span><b>{{ stats.total_categories }}</b></div><div class="category-row"><span>Gemarkeerde aanbiedingen</span><b>{{ stats.offers }}</b></div><div class="category-row"><span>Gemiddelde testprijs</span><b>{{ format_eur(stats.avg_price) }}</b></div></div>
 <div class="notice">Omzet, bestellingen, klantgegevens en voorraadstatus zijn nog niet aangesloten. Daarom worden er geen fictieve bedragen, trends of klantnamen getoond.</div></section>
-</div>
-<nav class="quick" aria-label="Snelle acties"><a href="/dashboard?section=producten"><span class="bubble">＋</span><span><b>Producten beheren</b><small>Controleer de catalogus</small></span></a><a href="/dashboard?section=categorieen"><span class="bubble">▦</span><span><b>Beheer categorieën</b><small>Productgroepen</small></span></a><a href="/dashboard?section=kortingen"><span class="bubble">◇</span><span><b>Kortingsacties</b><small>Bekijk actiegegevens</small></span></a><a href="/dashboard?section=statistieken"><span class="bubble">▥</span><span><b>Bekijk rapporten</b><small>Catalogusstatistieken</small></span></a></nav>
+</div>{% endif %}
+{% if is_admin %}<nav class="quick" aria-label="Snelle acties"><a href="/dashboard?section=producten"><span class="bubble">＋</span><span><b>Producten beheren</b><small>Controleer de catalogus</small></span></a><a href="/dashboard?section=categorieen"><span class="bubble">▦</span><span><b>Beheer categorieën</b><small>Productgroepen</small></span></a><a href="/dashboard?section=kortingen"><span class="bubble">◇</span><span><b>Kortingsacties</b><small>Bekijk actiegegevens</small></span></a><a href="/dashboard?section=statistieken"><span class="bubble">▥</span><span><b>Bekijk rapporten</b><small>Catalogusstatistieken</small></span></a></nav>{% endif %}
 
 {% else %}
+<a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
 <header class="section-header"><div><span class="section-kicker">NUVEMIXA · BEHEEROMGEVING</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
-{% if section == "producten" %}
-<section class="panel"><h2>Productcatalogus</h2><p>{{ filtered_products|length }} producten{% if search %} voor “{{ search }}”{% endif %} · productgegevens uit de huidige testcatalogus.</p>
-<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Categorie</th><th>Testprijs</th><th>Status</th></tr></thead><tbody>
-{% for product in filtered_products %}<tr><td><strong>{{ product.name }}</strong></td><td>{{ product.category }}</td><td>{{ format_eur(product.price) }}</td><td><span class="state-pill">Testcatalogus</span></td></tr>{% else %}<tr><td colspan="4">Geen producten gevonden.</td></tr>{% endfor %}
-</tbody></table></div></section>
-{% elif section == "categorieen" %}
-<section class="panel"><h2>Categorieën beheren</h2><p>Alle huidige categorieën en het aantal artikelen. Aanpassen wordt pas beschikbaar na het aansluiten van veilig productbeheer.</p><div class="category-list">{% for name,count in category_counts %}<div class="category-row"><span>{{ name }}</span><b>{{ count }} producten</b></div>{% endfor %}</div></section>
+{% if section in ("producten", "categorieen", "afbeeldingen") %}
+{% include "_dashboard_catalog.html" %}
 {% elif section == "calculator" %}
 <section class="panel" id="tm-calc"><h2>Productprijs & winst berekenen</h2><p>Bereken de verkoopprijs, btw, marge en verwachte winst van een dropshippingproduct. Vul je werkelijke leverancierskosten in; bedragen zijn standaard exclusief btw.</p>
 <div class="calc-grid">
@@ -152,26 +178,42 @@
 <label>Overige vaste kosten per order excl. btw (€)<input id="calc-other" type="number" min="0" step=".01" value="2"></label>
 <label>Betaalproviderkosten (% verkoopprijs incl. btw)<input id="calc-fee" type="number" min="0" max="100" step=".1" value="2"></label>
 <label>Btw op verkoop (%)<input id="calc-vat" type="number" min="0" max="100" step=".1" value="21"></label>
-<label>Gewenste brutomarge vóór betaalprovider (%)<input id="calc-margin" type="number" min="0" max="99" step=".1" value="35"></label>
+<label>Verkoopprijs incl. btw (€), optioneel<input id="calc-manual" type="number" min=".01" step=".01"></label>
+<label>Gewenste winstmarge na betaalprovider (%)<input id="calc-margin" type="number" min="0" max="99" step=".1" value="35"></label>
 </div>
-<div class="calc-results" aria-live="polite"><div><small>Benodigde verkoopprijs incl. btw</small><strong id="calc-price">—</strong></div><div><small>Verkoopprijs excl. btw</small><strong id="calc-net">—</strong></div><div><small>Geschatte winst na ingevoerde kosten</small><strong id="calc-profit">—</strong></div><div><small>Geschatte winstmarge na kosten</small><strong id="calc-actual-margin">—</strong></div></div>
+<div class="calc-results" aria-live="polite"><div><small>Verkoopprijs incl. btw</small><strong id="calc-price">—</strong></div><div><small>Verkoopprijs excl. btw</small><strong id="calc-net">—</strong></div><div><small>Geschatte winst na ingevoerde kosten</small><strong id="calc-profit">—</strong></div><div><small>Geschatte winstmarge na kosten</small><strong id="calc-actual-margin">—</strong></div></div>
 <p class="calc-footnote" id="calc-note">Indicatieve berekening. Geen fiscale of boekhoudkundige beoordeling. Controleer btw-regels per verkoopland en of leverancierskosten inclusief of exclusief btw zijn.</p>
 </section>
 <script>
 (function(){
 const root=document.getElementById('tm-calc');if(!root)return;
-const num=id=>Math.max(0,Number(document.getElementById(id).value)||0);
-const fmt=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n);
+const field=id=>document.getElementById(id);
+const num=id=>Number(field(id).value);
+const cents=id=>Math.round(num(id)*100);
+const fmt=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n/100);
+const outputs=['calc-price','calc-net','calc-profit','calc-actual-margin'];
 function calc(){
- const cost=num('calc-buy')+num('calc-shipping')+num('calc-other');
+ if([...root.querySelectorAll('input')].some(input=>!input.validity.valid)){
+  outputs.forEach(id=>field(id).textContent='Controleer invoer');
+  return;
+ }
+ const cost=cents('calc-buy')+cents('calc-shipping')+cents('calc-other');
  const vat=num('calc-vat')/100, desired=num('calc-margin')/100, fee=num('calc-fee')/100;
+ const manual=field('calc-manual').value!=='';
  const denom=1-desired-fee*(1+vat);
- if(denom<=0){for(const id of ['calc-price','calc-net','calc-profit','calc-actual-margin'])document.getElementById(id).textContent='Niet mogelijk';return}
- const net=cost/denom,price=net*(1+vat),provider=price*fee,profit=net-cost-provider,margin=net>0?100*profit/net:0;
- document.getElementById('calc-price').textContent=fmt(price);
- document.getElementById('calc-net').textContent=fmt(net);
- document.getElementById('calc-profit').textContent=fmt(profit);
- document.getElementById('calc-actual-margin').textContent=margin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%';
+ if(!manual&&denom<=0){outputs.forEach(id=>field(id).textContent='Niet mogelijk');return}
+ let price=manual?cents('calc-manual'):Math.ceil(cost*(1+vat)/denom-1e-9);
+ const netOf=gross=>Math.round(gross/(1+vat));
+ const profitOf=gross=>netOf(gross)-cost-Math.round(gross*fee);
+ if(!manual&&price&&profitOf(price)<netOf(price)*desired){
+  // Cover cent-rounding near the target, even for very small margins between price and costs.
+  price=Math.ceil((cost+1)*(1+vat)/denom);
+ }
+ const net=netOf(price),profit=profitOf(price),margin=net>0?100*profit/net:0;
+ field('calc-price').textContent=fmt(price);
+ field('calc-net').textContent=fmt(net);
+ field('calc-profit').textContent=fmt(profit);
+ field('calc-actual-margin').textContent=margin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%';
 }
 root.querySelectorAll('input').forEach(input=>input.addEventListener('input',calc));calc();
 })();
@@ -190,23 +232,26 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <label>Onderzoeksnotitie<textarea name="notes" maxlength="1500" rows="3" placeholder="Waarom interessant? Welke gegevens moeten worden bevestigd?"></textarea></label>
 <button type="submit">Onderzoek opslaan</button>
 </form>
-<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product / niche</th><th>Categorie</th><th>Bron</th><th>Datum</th></tr></thead><tbody>
-{% for row in research_rows %}<tr><td><strong>{{ row.product_name }}</strong></td><td>{{ row.category }}</td><td>{{ row.source or 'Niet opgegeven' }}</td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="4">Nog geen opgeslagen onderzoeksnotities.</td></tr>{% endfor %}
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product / niche</th><th>Categorie</th><th>Bron</th><th>Notitie</th><th>Datum</th></tr></thead><tbody>
+{% for row in research_rows %}<tr><td><strong>{{ row.product_name }}</strong></td><td>{{ row.category }}</td><td>{{ row.source or 'Niet opgegeven' }}</td><td>{{ row.notes or '—' }}</td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="5">Nog geen opgeslagen onderzoeksnotities.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
 </section>
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>De bestaande testcatalogus is beschikbaar voor beoordeling. Echte marktgegevens, leveranciersprijzen en concurrentiecijfers zijn nog niet aangesloten. Bekijk ook het <a href="{{ url_for('admin_research_preview') }}">interne onderzoeksrapport (JSON)</a>. Start met <a href="/dashboard?section=producten">de productcatalogus</a> en gebruik de <a href="/dashboard?section=calculator">prijscalculator</a> om gecontroleerde productkosten door te rekenen.</p><span class="integration-status">Geen ongeverifieerde trends of winsten getoond</span></section>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>De bestaande testcatalogus is beschikbaar voor beoordeling. Echte marktgegevens, leveranciersprijzen en concurrentiecijfers zijn nog niet aangesloten. Gebruik onderstaande acties voor de bestaande catalogus en interne controles.</p><div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('admin_research_preview') }}">Onderzoeksrapport (JSON) →</a><a class="nv-blue-action" href="/dashboard?section=producten">Productcatalogus →</a><a class="nv-blue-action" href="/dashboard?section=calculator">Prijscalculator →</a></div><p></p><span class="integration-status">Geen ongeverifieerde trends of winsten getoond</span></section>
 {% elif section == "rankfix" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>RankFix blijft een aparte applicatie. NUVEMIXA toont pas gecontroleerde SEO/GEO-scanresultaten wanneer een beveiligde koppeling is geïnstalleerd en de scanbewijzen gevalideerd zijn. Automatische wijzigingen blijven uitgeschakeld.</p><a href="{{ url_for('admin_rankfix_open') }}" class="integration-status" target="_blank" rel="noopener noreferrer">Open RankFix-scanner voor NUVEMIXA →</a><p style="margin-top:14px">De scan opent in de afzonderlijke RankFix-omgeving. Log daar in met je RankFix-account. Automatisch scans starten of resultaten in NUVEMIXA opslaan is nog niet geactiveerd.</p></section>
 {% elif section == "google-shopping" %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Gecontroleerde catalogus: <strong>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }}</strong> producten doorstaan de interne basiscontrole. Alleen bevestigde leverancier-, prijs-, voorraad-, verzend- en productgegevens komen in aanmerking. Er wordt niets naar Google gepubliceerd.</p><a href="{{ url_for('admin_merchant_preview') }}" class="integration-status">Download interne productcontrole (JSON) →</a><p><a href="{{ url_for('admin_merchant_feed_preview') }}" class="integration-status">Bekijk afgeschermde XML-feedpreview →</a></p>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Gecontroleerde catalogus: <strong>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }}</strong> producten doorstaan de interne basiscontrole. Alleen bevestigde leverancier-, prijs-, voorraad-, verzend- en productgegevens komen in aanmerking. Er wordt niets naar Google gepubliceerd.</p><a href="{{ url_for('admin_merchant_preview', download=1) }}" class="integration-status">Download interne productcontrole (JSON) →</a><p><a href="{{ url_for('admin_merchant_feed_preview') }}" class="integration-status">Bekijk XML-bron (technisch) →</a></p><p>De XML-bron bevat alleen intern goedgekeurde producten. Bij 0 goedgekeurde producten is de feed leeg; dit is geen browserfout.</p>
 <div class="admin-table-wrap nv-merchant-audit"><table class="admin-table">
-<thead><tr><th>Product</th><th>Categorie</th><th>Controle</th></tr></thead>
-<tbody>{% for row in merchant_preview_rows[:50] %}
-<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.category }}</td><td>{% if row.missing %}Nog nodig: {{ row.missing|join(', ') }}{% else %}Intern gecontroleerd — Google-publicatie niet actief{% endif %}</td></tr>
-{% else %}<tr><td colspan="3">Geen producten in de huidige catalogus.</td></tr>{% endfor %}</tbody>
-</table></div>
-<p>Getoond: maximaal 50 producten. De volledige lijst staat in de JSON-controle.</p><p style="margin-top:14px">Voor echte publicatie zijn daarnaast een geverifieerd Merchant-account, betaal- en retourinformatie en de Google-koppeling noodzakelijk.</p></section>
+<thead><tr><th>Product-ID en naam</th><th>Afkeurreden, veld en oplossing</th></tr></thead>
+<tbody>{% for row in merchant_preview_rows %}
+<tr><td><strong>{{ row.name }}</strong><br>{{ row.id }}</td><td>
+{% if row.issues %}<details><summary>{{ row.issues|length }} punten bekijken</summary><ul>
+{% for issue in row.issues %}<li><strong>{{ issue.reason }}</strong> · {{ issue.field }}. {{ issue.solution }}</li>{% endfor %}
+</ul></details>{% else %}Interne controle geslaagd{% endif %}
+</td></tr>{% else %}<tr><td colspan="2">Geen producten in de catalogus.</td></tr>{% endfor %}</tbody></table></div>
+<p>Google beoordeelt ook het account, de winkel, bereikbaarheid en voorwaarden per markt. Deze lokale controle heeft geen Google-beoordeling opgevraagd.</p>
+<p><a href="https://support.google.com/merchants/answer/7052112?hl=nl" rel="noopener noreferrer">Productspecificatie van Google</a></p></section>
 {% elif section == "leveranciers" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
@@ -241,25 +286,131 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Ordernummer</th><th>Datum</th><th>Status volgens WooCommerce</th><th>Bedrag volgens WooCommerce</th></tr></thead><tbody>
 {% for row in order_rows %}<tr><td><strong>#{{ row.id }}</strong></td><td>{{ row.date }}</td><td>{{ row.status }}</td><td>{{ row.currency }} {{ row.total }}</td></tr>{% else %}<tr><td colspan="4">De gekoppelde bron bevat geen bestellingen in de recentste resultaten.</td></tr>{% endfor %}
 </tbody></table></div>{% endif %}
-<a href="{{ url_for('admin_integrations') }}" class="integration-status">Controleer integratie-instellingen</a><p><a href="{{ url_for('admin_mollie_check') }}" class="integration-status" target="_blank" rel="noopener">Controleer Mollie-verbinding (alleen lezen) →</a></p>
+{% if is_admin %}<a href="{{ url_for('admin_integrations') }}" class="integration-status">Controleer integratie-instellingen</a><p><a href="{{ url_for('admin_mollie_check') }}" class="integration-status" target="_blank" rel="noopener">Controleer Mollie-verbinding (alleen lezen) →</a></p>{% endif %}
 </section>
 {% elif section == "instellingen" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">⚙</div><h2>Integratiebeheer</h2>
 <p>Bekijk welke API-instellingen aanwezig zijn. Een ingestelde sleutel betekent niet dat betalingen, verzending, productpublicatie of scans werken.</p>
 <p><a class="integration-status" href="{{ url_for('admin_integrations') }}">Instellingen en veiligheidsstatus (JSON) →</a></p>
 <p><a class="integration-status" href="{{ url_for('admin_mollie_check') }}">Mollie-API controleren zonder betaling →</a></p>
-<p><a class="integration-status" href="{{ url_for('admin_rankfix_open') }}" target="_blank" rel="noopener noreferrer">RankFix openen met NUVEMIXA-adres →</a></p>
+
 <p><a class="integration-status" href="{{ url_for('admin_merchant_feed_preview') }}">Interne Merchant-feed bekijken →</a></p>
-<p>Leveranciers: <a href="/dashboard?section=leveranciers">open het leveranciersregister</a>. Productonderzoek: <a href="/dashboard?section=onderzoek">open onderzoeksnotities</a>.</p>
+<div class="nv-action-row"><a class="nv-blue-action" href="/dashboard?section=leveranciers">Leveranciersregister →</a><a class="nv-blue-action" href="/dashboard?section=onderzoek">Productonderzoek →</a></div>
 </section>
 {% elif section == "statistieken" %}
 <section class="metrics"><div class="metric"><div class="metric-label">Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong></div><div class="metric"><div class="metric-label">Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong></div><div class="metric"><div class="metric-label">Gemarkeerde aanbiedingen</div><strong class="metric-value">{{ stats.offers }}</strong></div><div class="metric"><div class="metric-label">Gemiddelde testprijs</div><strong class="metric-value">{{ format_eur(stats.avg_price) }}</strong></div></section>
 <section class="panel panel-after"><h2>Omzet en conversie</h2><p>Nog niet meetbaar: er zijn geen geverifieerde verkoop- of analyticsgegevens aangesloten.</p></section>
+{% include "_dashboard_visits.html" %}
+{% elif section == "seo" %}
+<section class="panel integration">
+<h2>Lokale SEO-controle</h2>
+<p>Controleer de metadata en leesbare productgegevens op een pagina van de testcatalogus. Externe GEO-zichtbaarheid en RankFix-rapporten vereisen een aparte koppeling.</p>
+{% for category, message in get_flashed_messages(with_categories=true) %}
+<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
+{% endfor %}
+{% if seo_error %}<p class="notice" role="alert">{{ seo_error }}</p>{% endif %}
+{% if is_admin %}<form method="post" action="{{ url_for('nv_manage.seo_scan') }}" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Productpagina<select name="product_url" required>
+{% for product in filtered_products %}<option value="{{ product.product_url }}">{{ product.name }}</option>{% endfor %}
+</select></label>
+<button type="submit">Controle uitvoeren</button>
+</form>{% endif %}
+{% if seo_report %}
+<h3>Laatste rapport</h3><p>{{ seo_report[0] }} UTC · <a href="{{ seo_report[1].path }}">{{ seo_report[1].path }}</a></p>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Status</th><th>Waarde</th></tr></thead><tbody>
+{% for label, passed, value in seo_report[1].checks %}<tr><td>{{ label }}</td><td>{{ 'Aanwezig' if passed else 'Controle nodig' }}</td><td>{{ value or '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+{% elif section == "google-ads" %}
+<section class="panel integration"><h2>Google Ads</h2><p>Campagnes, kosten en conversies zijn pas beschikbaar na een beveiligde accountkoppeling. Er zijn nog geen geverifieerde advertentiegegevens.</p><span class="integration-status">Geen actieve koppeling bevestigd</span><div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('admin_integrations') }}">Technische koppelstatus bekijken →</a><a class="nv-blue-action" href="/dashboard?section=marketing">Marketingoverzicht →</a></div><p>Een Google Ads-autorisatie is nog niet ingericht. Deze knoppen koppelen geen Google-account en starten geen campagnes.</p></section>
+{% elif section == "marketing" %}
+<section class="panel integration"><h2>Marketing</h2><p>Beheer de afzonderlijke marketingonderdelen zonder fictieve campagnes, omzet of klikken.</p><div class="nv-action-row"><a class="nv-blue-action" href="/dashboard?section=google-ads">Google Ads-status bekijken →</a><a class="nv-blue-action" href="/dashboard?section=google-shopping">Merchant-productcontrole bekijken →</a><a class="nv-blue-action" href="/dashboard?section=kortingen">Kortingsacties bekijken →</a></div></section>
+{% elif section == "kortingen" %}
+{% include "_dashboard_coupons.html" %}
+{% elif section == "accountbeheer" %}
+{% include "_dashboard_team.html" %}
+{% elif section == "monitoring" %}
+<section class="panel integration"><h2>Monitoring en koppelingen</h2><p>De koppelingstabel toont aanwezige instellingen. De lokale controle test ook of de catalogus en dashboarddatabase beschikbaar zijn.</p>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Configuratiestatus</th></tr></thead><tbody>
+<tr><td>RankFix</td><td>{{ 'Ingesteld · niet getest' if integration_status.rankfix else 'Niet ingesteld' }}</td></tr>
+<tr><td>WooCommerce</td><td>{{ 'Ingesteld · niet getest' if integration_status.woo else 'Niet ingesteld' }}</td></tr>
+<tr><td>Klantenservice e-mail</td><td>{{ 'Ingesteld · niet getest' if integration_status.contact else 'Niet ingesteld' }}</td></tr>
+<tr><td>Betaling</td><td>{{ 'Sleutel aanwezig · niet getest' if integration_status.payment else 'Niet ingesteld (bewust uitgesteld)' }}</td></tr>
+<tr><td>Merchant-preview</td><td>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }} intern goedgekeurd · niet gepubliceerd</td></tr>
+<tr><td>Google Ads</td><td>Geen werkende koppeling bevestigd</td></tr>
+<tr><td>Bezoekersteller</td><td>{{ "Lokale registratie actief" if visitor_stats.enabled else "Lokale registratie uitgeschakeld" }}</td></tr>
+</tbody></table></div>{% if is_admin %}<p><a class="integration-status" href="{{ url_for('admin_integrations') }}" target="_blank" rel="noopener">Technische configuratiestatus (JSON) →</a></p>{% endif %}<div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>✓ Alles controleren (veilig, alleen lezen) →</a><span role="status" data-scan-progress></span></div><p>De controle toont route-, catalogus- en databasestatus. Externe bereikbaarheid en bezoekersmetingen vereisen een actieve gegevensbron.</p></section>
+{% block monitoring_report %}{% endblock %}
+{% include "_dashboard_visits.html" %}
+{% elif section == "klantenservice" %}
+{# De bestaande klantenservice-inbox staat onderaan de pagina; geen tweede tijdelijke kaart tonen. #}
 {% else %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">{% if section=="marketing" %}◉{% elif section=="seo" %}◎{% elif section=="leveranciers" %}◫{% else %}▦{% endif %}</div><h2>{{ section_names.get(section,"Beheer") }}</h2>
-<p>{% if section=="marketing" %}Google Ads, Merchant Center en marketingcampagnes worden hier zichtbaar zodra de accounts veilig zijn gekoppeld.{% elif section=="seo" %}SEO-rapporten en RankFix AI-scanresultaten worden hier weergegeven zodra de integratie is ingericht. Er wordt nu geen scan verzonnen of gestart.{% elif section=="bestellingen" %}Orderbron: {% if integration_status.woo %}WooCommerce-gegevens ingesteld, verbinding niet gecontroleerd{% else %}nog geen WooCommerce-koppeling{% endif %}. Echte orders: {% if integration_status.woo and integration_status.payment %}nog steeds uitgeschakeld totdat betaling en leveranciers zijn gevalideerd{% else %}niet geactiveerd{% endif %}. Er worden geen fictieve orders getoond. Bekijk de <a href="{{ url_for('admin_integrations') }}">integratiecontrole</a>.{% elif section=="klanten" %}Klantbeheer komt beschikbaar zodra de beveiligde klantgegevensbron is gekoppeld.{% elif section=="kortingen" %}Bevestigde kortingsacties en de bijbehorende voorwaarden komen hier zodra het beheer is gekoppeld.{% elif section=="leveranciers" %}Leveranciersfeeds, prijs-/voorraadsynchronisatie en automatische dropshippingverwerking vereisen eerst een echte leverancierskoppeling.{% else %}Instellingen voor account, betalingen, verzending, privacy en koppelingen worden hier ingericht vóór livegang.{% endif %}</p><span class="integration-status">Nog niet gekoppeld</span></section>
+<section class="panel integration"><h2>{{ section_names.get(section,"Beheer") }}</h2><p>Voor dit onderdeel is nog geen geverifieerde gegevenskoppeling actief. Er worden geen fictieve resultaten getoond.</p><span class="integration-status">Nog niet gekoppeld</span></section>
 {% endif %}
 {% endif %}
+
+{# NV_CONTROL_MODERN_2026_V1 - bestaande klantenpagina, geen losse template #}
+{% if section == 'klanten' %}
+<section class="panel"><h2>Klantaccounts</h2>{% if is_admin %}<p>Maak een klantaccount aan in de bestaande lokale klantdatabase.</p>{% endif %}
+{% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Klantaccount aangemaakt.</div>{% elif request.args.get('result') == 'bestaat' %}<div class="notice" role="alert">Dit e-mailadres is al geregistreerd.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de velden. Wachtwoord minimaal 12 tekens.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Klantaccount kon niet worden opgeslagen.</div>{% endif %}
+{% if is_admin %}<form action="{{ url_for('admin_create_customer') }}" method="post" class="nv-admin-form" autocomplete="off"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><label>Naam<input name="name" maxlength="100" required autocomplete="off"></label><label>E-mailadres<input name="email" type="email" maxlength="254" required autocomplete="off"></label><label>Nieuw wachtwoord (minimaal 12 tekens)<input name="password" type="password" minlength="12" maxlength="128" required autocomplete="new-password"></label><button type="submit">＋ Account aanmaken</button></form>{% endif %}
+<h2>Bestaande klantaccounts</h2>{% if admin_customer_error %}<p role="alert">{{ admin_customer_error }}</p>{% else %}<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Nummer</th><th>Naam</th><th>E-mail</th><th>Aangemaakt</th></tr></thead><tbody>{% for customer in admin_customer_rows %}<tr><td>#{{ customer.id }}</td><td>{{ customer.name }}</td><td>{{ customer.email }}</td><td>{{ customer.created_at }}</td></tr>{% else %}<tr><td colspan="4">Nog geen klantaccounts in deze lokale database.</td></tr>{% endfor %}</tbody></table></div>{% endif %}</section>
+
+<section class="nv26-panel nv26-customer-panel" aria-label="Klanten en activiteit">
+  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">KLANTENBEHEER</div><h2>Klanten &amp; activiteit</h2><p>Geregistreerde klanten en recente succesvolle acties op één plek.</p></div><span class="nv26-chip">Beveiligd</span></div>
+  <div class="nv26-customer-grid">
+    <article class="nv26-card"><div class="nv26-muted">Geregistreerde klanten · lokale database</div><div class="nv26-figure">{{ nv_customer_count if nv_customer_count is not none else '—' }}</div><div class="nv26-muted">Geen historische acties verzonnen.</div></article>
+    <article class="nv26-card"><h3>Recente klantactiviteiten</h3>
+      {% if nv_customer_error %}<p role="alert">{{ nv_customer_error }}</p>
+      {% elif nv_customer_events %}<div class="nv26-table-scroll"><table><thead><tr><th>Tijd (UTC)</th><th>Klantnummer</th><th>Actie</th></tr></thead><tbody>
+      {% for ev in nv_customer_events %}<tr><td>{{ ev.occurred_at }}</td><td>#{{ ev.customer_id }}</td><td>{{ 'Registratie' if ev.event_type == 'registered' else 'Ingelogd' }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% else %}<p class="nv26-muted">Nog geen klantactiviteiten geregistreerd.</p>{% endif %}
+    </article>
+  </div>
+</section>
+{% elif section == 'woocommerce' %}
+<section class="nv26-panel" aria-label="WooCommerce binnen dashboard">
+  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">WEBSHOP &amp; LEVERANCIERS</div><h2>WooCommerce &amp; leveranciers</h2><p>Eén beheeromgeving. {{ 'WooCommerce-configuratie aanwezig.' if integration_status.woo else 'WooCommerce is nog niet ingesteld.' }}</p></div><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div>
+  <div class="nv26-card nv26-woo-box">
+    <p>WooCommerce en leveranciers binnen je bestaande dashboard, zonder een tweede dashboardmenu. De koppeling blijft alleen-lezen zolang die niet is ingericht.</p>
+    <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
+  </div>
+</section>
+{% elif section == 'dashboard' and is_admin %}
+<section class="nv26-panel nv26-home" aria-label="NUVEMIXA Control dashboard">
+  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">NUVEMIXA · BEHEEROMGEVING</div><h2>Dashboard</h2><p>Overzicht, prestaties en snelle toegang tot alle beheerfuncties.</p></div><span class="nv26-chip">Lokale testomgeving</span></div>
+  <div class="nv26-kpis">
+    <div class="nv26-kpi nv26-blue"><span>▣ &nbsp;Producten</span><strong>{{ stats.total_products }}</strong></div>
+    <div class="nv26-kpi nv26-purple"><span>▦ &nbsp;Categorieën</span><strong>{{ stats.total_categories }}</strong></div>
+    <div class="nv26-kpi nv26-green"><span>▤ &nbsp;Aanbiedingen</span><strong>{{ stats.offers }}</strong></div>
+    <div class="nv26-kpi nv26-orange"><span>◈ &nbsp;Gem. catalogusprijs</span><strong>€{{ '%.2f'|format(stats.avg_price)|replace('.', ',') }}</strong></div>
+  </div>
+  <div class="nv26-home-grid">
+    <article class="nv26-card"><h3>⚡ Snelle acties</h3><div class="nv26-actions">
+      <a href="/dashboard?section=producten">▣<span>Producten</span></a>
+      <a href="/dashboard?section=categorieen">▦<span>Categorieën</span></a>
+      <a href="/dashboard?section=bestellingen">▤<span>Bestellingen</span></a>
+      <a href="/dashboard?section=klanten">♙<span>Klanten</span></a><a href="/dashboard?section=accountbeheer">♧<span>Accountbeheer</span></a>
+      <a href="/dashboard?section=leveranciers">▧<span>Leveranciers</span></a>
+      <a href="/dashboard?section=instellingen">⚙<span>Instellingen</span></a>
+    </div></article>
+    <article class="nv26-card"><div class="nv26-between"><h3>WooCommerce</h3><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div><p class="nv26-muted">De bestelpagina en beheermodule tonen hun eigen verbindingsstatus.</p><a class="nv26-primary" href="/dashboard?section=woocommerce">WooCommerce beheren →</a></article>
+    <article class="nv26-card"><h3>Recente bestellingen</h3><p class="nv26-muted">Alleen werkelijke gegevens na koppeling met een gecontroleerde orderbron.</p><a class="nv26-link" href="/dashboard?section=bestellingen">Bestellingen bekijken →</a></article>
+    <article class="nv26-card"><h3>Producten per categorie</h3><div class="nv26-categories">{% for name, amount in category_counts %}<div><span>{{ name }}</span><strong>{{ amount }}</strong></div>{% endfor %}</div></article>
+    <article class="nv26-card"><h3>Systeemstatus</h3><p><span class="nv26-chip">Beheerderslogin actief</span> <span class="nv26-chip nv26-chip-warn">{{ 'WooCommerce ingesteld' if integration_status.woo else 'WooCommerce niet ingesteld' }}</span></p><p class="nv26-muted">Gmail, leveranciers en betaalproviders tonen pas ‘Verbonden’ na een geslaagde koppeling.</p></article>
+    <article class="nv26-card"><h3>Snelkoppelingen</h3><div class="nv26-actions"><a href="/dashboard?section=klantenservice">✉<span>Klantenservice</span></a><a href="/dashboard?section=onderzoek">⌕<span>Onderzoek</span></a><a href="/dashboard?section=statistieken">◫<span>Statistieken</span></a></div></article>
+  </div>
+</section>
+{% elif section == 'klantenservice' %}
+<section class="nv26-panel" aria-label="Klantenservice en berichten">
+  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">KLANTENSERVICE</div><h2>Klantenservice &amp; berichten</h2><p>Alle klantvragen straks op één plek.</p></div><span class="nv26-chip nv26-chip-warn">Gmail nog niet gekoppeld</span></div>
+  <div class="nv26-card"><h3>✉ Inbox</h3><p class="nv26-muted">De inbox wacht op Gmail-autorisatie voor een testmailbox. De webshopcontactinstelling heeft alleen betrekking op uitgaande e-mail.</p></div>
+</section>
+{% endif %}
+
 </main></div></div>
 <script>
 (function(){
@@ -299,4 +450,19 @@ menu.addEventListener('keydown',event=>{
 });
 })();
 </script>
-</body></html>
+
+<script id="nv26-dashboard-ui">
+document.addEventListener('DOMContentLoaded',function(){
+ const menu=document.getElementById('tmAdminNavigation');
+ if(menu){
+   const aside=menu.closest('aside')||menu.closest('nav')||menu.parentElement;
+   if(aside)aside.classList.add('nv26-sidebar');
+   menu.classList.add('nv26-menu');
+ }
+ const panel=document.querySelector('.nv26-panel');
+ if(panel){const main=panel.closest('main');if(main&&main.firstElementChild!==panel) main.prepend(panel);}
+ const links=document.querySelectorAll('a[href="/dashboard?section=klanten"]');
+ links.forEach(function(a){if(a.classList.contains('customer-activity-link'))a.remove();});
+});
+</script>
+<script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script></body></html>

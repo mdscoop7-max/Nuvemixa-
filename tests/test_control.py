@@ -44,7 +44,7 @@ def test_all_main_category_pages_render():
 def test_core_customer_pages_render():
     client = app.test_client()
     for path in ("/", "/faq", "/contact", "/over-trendmix", "/bestellen", "/retouren", "/voorwaarden", "/privacy", "/cookies", "/robots.txt", "/sitemap.xml"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, f"{path} returned {response.status_code}"
 
 
@@ -166,7 +166,7 @@ def test_base_design_tokens_match_light_storefront():
 def test_rankfix_audit_home_and_categories_have_one_h1():
     client = app.test_client()
     for path in ("/", "/gadgets", "/smart-home", "/beauty-care", "/lifestyle-sport", "/home-living"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True).lower()
         assert html.count("<h1") == 1, f"{path} heeft geen unieke h1"
@@ -175,7 +175,7 @@ def test_rankfix_audit_home_and_categories_have_one_h1():
 def test_rankfix_audit_canonicals_and_meta_descriptions():
     client = app.test_client()
     for path in ("/shop", "/contact", "/privacy", "/over-trendmix", "/aanbiedingen"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
         assert 'rel="canonical"' in html, f"{path} mist canonical"
@@ -195,7 +195,7 @@ def test_session_cookie_security_flags():
 def test_mobile_drawer_and_assistant_translations_are_available():
     client = app.test_client()
     for path in ("/", "/shop", "/winkelwagen", "/beauty-care/elektrische-gezichtsroller"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
         assert 'id="tmMobileDrawer"' in html
@@ -252,7 +252,7 @@ def test_global_language_dropdown_is_present_across_storefront():
              "/over-trendmix", "/account", "/aanbiedingen",
              "/beauty-care/elektrische-gezichtsroller")
     for path in pages:
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
         assert html.count('id="tmGlobalLanguage"') == 1, path
@@ -265,7 +265,7 @@ def test_original_category_menu_and_svg_icons_survive_redesign():
     from pathlib import Path
     client = app.test_client()
     for path in ("/", "/smart-home", "/beauty-care", "/aanbiedingen", "/shop"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
         assert 'tm-digital-nav' in html, path
@@ -311,7 +311,7 @@ def test_information_pages_have_professional_bilingual_content():
             assert len(document["lead"]) > 90
             assert document["title"] and document["description"]
         assert len(content["nl"]["sections"]) == len(content["en"]["sections"])
-        response = client.get("/" + slug)
+        response = client.get("/" + slug, follow_redirects=True)
         assert response.status_code == 200, slug
         html = response.get_data(as_text=True)
         assert 'data-tm-info-root' in html, slug
@@ -355,7 +355,7 @@ def test_all_test_products_have_curated_english_names():
 def test_catalog_product_cards_and_detail_are_bilingual():
     client = app.test_client()
     for path in ("/", "/shop", "/gadgets", "/beauty-care/elektrische-gezichtsroller", "/winkelwagen"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
         if path != "/winkelwagen":
@@ -379,6 +379,6 @@ def test_extended_english_labels_across_website():
     client = app.test_client()
     for path in ("/", "/shop", "/wishlist", "/winkelwagen", "/contact",
                  "/privacy", "/retouren", "/beauty-care/elektrische-gezichtsroller"):
-        response = client.get(path)
+        response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         assert "trendmix-english-labels.js" in response.get_data(as_text=True)

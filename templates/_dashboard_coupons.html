@@ -1,0 +1,36 @@
+<section class="panel">
+<h2>Kortingsacties</h2>
+<p>{{ stats.offers }} catalogusaanbiedingen. Kortingscodes hieronder zijn beschikbaar voor de interne berekening.</p>
+{% for category, message in get_flashed_messages(with_categories=true) %}
+<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
+{% endfor %}
+{% if coupon_error %}<p class="notice" role="alert">{{ coupon_error }}</p>
+{% else %}
+{% macro fields(op) %}
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="op" value="{{ op }}">
+{% endmacro %}
+{% if allowed("discount_manage") %}<form method="post" action="{{ url_for('nv_manage.coupons') }}" class="nv-admin-form">
+{{ fields("create") }}
+<label>Code<input name="code" required minlength="3" maxlength="32"></label>
+<label>Type<select name="kind"><option value="percent">Percentage</option><option value="fixed">Vast bedrag (€)</option></select></label>
+<label>Waarde<input name="amount" type="number" min=".01" step=".01" required></label>
+<label>Begindatum<input name="starts" type="date"></label><label>Einddatum<input name="ends" type="date"></label>
+<button type="submit">Kortingsactie aanmaken</button>
+</form>{% endif %}
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>Code</th><th>Waarde</th><th>Begin</th><th>Einde</th><th>Status</th><th>Actie</th></tr></thead>
+<tbody>{% for coupon in coupons %}
+<tr><td>{{ coupon.code }}</td><td>{{ (coupon.amount|string + '%') if coupon.kind == 'percent' else format_eur(coupon.amount) }}</td><td>{{ coupon.starts or '—' }}</td><td>{{ coupon.ends or '—' }}</td><td>{{ 'Ingeschakeld' if coupon.active else 'Uitgeschakeld' }}</td>
+<td>{% if allowed("discount_manage") %}<form method="post" action="{{ url_for('nv_manage.coupons') }}">{{ fields('disable' if coupon.active else 'enable') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit">{{ 'Deactiveren' if coupon.active else 'Activeren' }}</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="6">Er zijn nog geen kortingsacties.</td></tr>{% endfor %}</tbody>
+</table></div>
+<h3>Bereken een testkorting</h3>
+<form method="post" action="{{ url_for('nv_manage.coupons') }}" class="nv-admin-form">
+{{ fields("preview") }}
+<label>Code<input name="code" required maxlength="32"></label>
+<label>Subtotaal (€)<input name="subtotal" type="number" min="0" step=".01" required></label>
+<button type="submit">Berekenen</button>
+</form>
+{% endif %}
+</section>

@@ -1,1 +1,125 @@
-{"slug":"cookies","nl":{"title":"Cookies en privacyvoorkeuren","description":"Lees welke cookies en functionele opslag TrendMix gebruikt, hoe je voorkeuren kunt wijzigen en welke toestemmingsregels gelden.","lead":"Cookies en vergelijkbare opslag helpen een webshop gebruiksvriendelijk en veilig te laten werken. Hier lees je wat TrendMix nu gebruikt en wat pas wordt toegevoegd nadat leveranciers en diensten zijn aangesloten.","sections":[["Wat zijn cookies en lokale opslag?",["Cookies zijn kleine gegevensbestanden die een website op je apparaat kan bewaren of uitlezen. Ook lokale browseropslag kan instellingen, zoals een taalkeuze, onthouden. Functionele technieken zorgen dat een website goed werkt; andere technieken kunnen worden gebruikt voor statistieken of reclame. Voor verschillende toepassingen gelden verschillende regels over transparantie en toestemming."]],["Functionele opslag bij TrendMix",["TrendMix gebruikt tijdens de testfase functionele opslag om de gekozen taal en onderdelen van de winkelwagen en favorieten te onthouden. De taalvoorkeur kan lokaal in je browser worden opgeslagen; een sessiecookie kan helpen om de winkelwagen te beveiligen. Dit soort opslag ondersteunt gevraagde functies en betekent niet dat je ook akkoord gaat met reclame of profilering."]],["Welke technieken zijn noodzakelijk?",["Voor een techniek die strikt noodzakelijk is om een door jou gevraagde dienst uit te voeren, is doorgaans geen voorafgaande cookie-toestemming vereist. Zo kan de winkelwagen anders bij het navigeren verdwijnen. We blijven bezoekers informeren over zulke technieken en toetsen verwerking van persoonsgegevens daarnaast aan de AVG."]],["Analyses van de website",["Statistieken kunnen helpen om trage pagina's, technische fouten en onduidelijke navigatie te herkennen. De gekozen analysetool en de instellingen bepalen of voorafgaande toestemming vereist is. Voorlopig is er geen definitief besluit genomen over een analysetool. Als we deze functie toevoegen, controleren we eerst welke informatie wordt verzameld en hoe de privacy wordt beschermd."]],["Marketing en derden",["Cookies voor gerichte advertenties, het volgen van bezoekers over meerdere websites of uitgebreide profilering vereisen in het algemeen voorafgaande toestemming. Ook ingesloten diensten kunnen opslagtechnieken gebruiken. We beoordelen de gebruikte externe aanbieders, de doeleinden en eventuele internationale doorgifte voordat we niet-noodzakelijke technieken activeren."]],["Toestemming en keuzes",["Wanneer toestemming nodig is, moeten bezoekers een duidelijke en begrijpelijke keuze krijgen. Toestemming moet vrij, specifiek, geïnformeerd en ondubbelzinnig zijn. Een al aangevinkt vakje of de tekst dat verder browsen automatisch toestemming geeft, is daarvoor niet voldoende. Bezoekers moeten hun keuze ook later kunnen wijzigen of intrekken."]],["Zelf voorkeuren aanpassen",["Bovenaan de website kun je Nederlands of Engels kiezen. De voorkeur kan in de browser worden opgeslagen zodat deze tussen pagina's behouden blijft. Via browserinstellingen kun je cookies en lokale gegevens bekijken of wissen. Daardoor kunnen opgeslagen taalinstellingen, favorieten en de inhoud van je winkelwagen verdwijnen."]],["Bewaartermijnen en de huidige status",["Hoe lang gegevens bewaard blijven verschilt per techniek en per browser of dienstverlener. Een sessiecookie werkt anders dan een blijvende lokale taalvoorkeur. Vóór commerciële opening controleren we de daadwerkelijke cookies en opslagobjecten, hun doelen, de aanbieders en de bewaartermijnen. Het definitieve overzicht publiceren we zodra de externe diensten zijn gekoppeld."]],["Privacyrechten en wijzigingen",["Technische gegevens kunnen persoonsgegevens zijn als ze direct of indirect naar een persoon te herleiden zijn. In die gevallen gelden aanvullende eisen rond rechtsgrond, beveiliging en privacyrechten. Lees hiervoor de Privacyverklaring. Deze cookiespagina wordt bijgewerkt wanneer nieuwe betaal-, leveranciers-, e-mail- of analysediensten worden toegevoegd. De definitieve bedrijfs- en contactgegevens volgen vóór de commerciële opening."]]]},"en":{"title":"Cookies and Privacy Preferences","description":"Find out how TrendMix uses cookies and functional storage, how to change preferences and when consent is needed.","lead":"Cookies and similar storage technologies help an online store work safely and smoothly. This page explains what TrendMix uses today and what may be added once suppliers and services are connected.","sections":[["What are cookies and local storage?",["Cookies are small data files that a website can store on, or read from, your device. Local browser storage can also remember preferences such as your language selection. Functional technology enables a website to work properly; other technologies can be used for analytics or advertising. Different purposes are subject to different transparency and consent rules."]],["Functional storage at TrendMix",["During testing, TrendMix uses functional storage to remember your chosen language and parts of your shopping cart and favourites. Your language preference may be stored locally in your browser; a session cookie may help secure the cart. This storage supports requested features and does not constitute agreement to advertising or profiling."]],["Which technologies are necessary?",["Technology that is strictly necessary to provide a service you have requested generally does not require prior cookie consent. Without it, a shopping cart might disappear when you navigate between pages. We will still inform visitors about these technologies and assess any associated personal data processing under the GDPR."]],["Website analytics",["Statistics can help identify slow pages, technical errors and confusing navigation. Whether prior consent is required depends on the chosen analytics tool and its configuration. No final decision has yet been made about an analytics service. If we add one, we will first review which information it collects and how visitors' privacy is protected."]],["Marketing and third parties",["Cookies used for targeted advertising, tracking visitors across multiple websites or extensive profiling generally require prior consent. Embedded services may also use storage technologies. We will assess external providers, their purposes and any international data transfers before activating non-essential technologies."]],["Consent and your choices",["Where consent is needed, visitors must have a clear and understandable choice. Consent must be freely given, specific, informed and unambiguous. A pre-ticked box or a statement that continuing to browse automatically indicates consent is not sufficient. Visitors must also be able to change or withdraw their choice later."]],["Managing your preferences",["You can select Dutch or English at the top of the website. Your preference may be stored in the browser so it persists between pages. Browser settings allow you to view or delete cookies and local data. Doing so may remove saved language settings, favourites and the contents of your shopping cart."]],["Retention periods and current status",["The length of time information is kept depends on the technology, browser and service provider. A session cookie works differently from a persistent local language preference. Before commercial launch, we will review the actual cookies and storage items used, their purposes, providers and retention periods. We will publish a final inventory once external services are connected."]],["Privacy rights and updates",["Technical information may be personal data if it can identify someone directly or indirectly. Additional requirements regarding lawful bases, security and privacy rights may then apply. Please consult our Privacy Policy. This cookies page will be updated when new payment, supplier, email or analytics services are connected. Full business and contact details will be published before commercial launch."]]]}}
+{
+  "slug": "cookies",
+  "nl": {
+    "title": "Cookies en privacyvoorkeuren",
+    "description": "Lees welke cookies en functionele opslag NUVEMIXA gebruikt, hoe je voorkeuren kunt wijzigen en welke toestemmingsregels gelden.",
+    "lead": "Cookies en vergelijkbare opslag helpen een webshop gebruiksvriendelijk en veilig te laten werken. Hier lees je wat NUVEMIXA nu gebruikt en wat pas wordt toegevoegd nadat leveranciers en diensten zijn aangesloten.",
+    "sections": [
+      [
+        "Wat zijn cookies en lokale opslag?",
+        [
+          "Cookies zijn kleine gegevensbestanden die een website op je apparaat kan bewaren of uitlezen. Ook lokale browseropslag kan instellingen, zoals een taalkeuze, onthouden. Functionele technieken zorgen dat een website goed werkt; andere technieken kunnen worden gebruikt voor statistieken of reclame. Voor verschillende toepassingen gelden verschillende regels over transparantie en toestemming."
+        ]
+      ],
+      [
+        "Functionele opslag bij NUVEMIXA",
+        [
+          "NUVEMIXA gebruikt tijdens de testfase functionele opslag om de gekozen taal en onderdelen van de winkelwagen en favorieten te onthouden. De taalvoorkeur kan lokaal in je browser worden opgeslagen; een sessiecookie kan helpen om de winkelwagen te beveiligen. Dit soort opslag ondersteunt gevraagde functies en betekent niet dat je ook akkoord gaat met reclame of profilering."
+        ]
+      ],
+      [
+        "Welke technieken zijn noodzakelijk?",
+        [
+          "Voor een techniek die strikt noodzakelijk is om een door jou gevraagde dienst uit te voeren, is doorgaans geen voorafgaande cookie-toestemming vereist. Zo kan de winkelwagen anders bij het navigeren verdwijnen. We blijven bezoekers informeren over zulke technieken en toetsen verwerking van persoonsgegevens daarnaast aan de AVG."
+        ]
+      ],
+      [
+        "Analyses van de website",
+        [
+          "Statistieken kunnen helpen om trage pagina's, technische fouten en onduidelijke navigatie te herkennen. De gekozen analysetool en de instellingen bepalen of voorafgaande toestemming vereist is. Voorlopig is er geen definitief besluit genomen over een analysetool. Als we deze functie toevoegen, controleren we eerst welke informatie wordt verzameld en hoe de privacy wordt beschermd."
+        ]
+      ],
+      [
+        "Marketing en derden",
+        [
+          "Cookies voor gerichte advertenties, het volgen van bezoekers over meerdere websites of uitgebreide profilering vereisen in het algemeen voorafgaande toestemming. Ook ingesloten diensten kunnen opslagtechnieken gebruiken. We beoordelen de gebruikte externe aanbieders, de doeleinden en eventuele internationale doorgifte voordat we niet-noodzakelijke technieken activeren."
+        ]
+      ],
+      [
+        "Toestemming en keuzes",
+        [
+          "Wanneer toestemming nodig is, moeten bezoekers een duidelijke en begrijpelijke keuze krijgen. Toestemming moet vrij, specifiek, geïnformeerd en ondubbelzinnig zijn. Een al aangevinkt vakje of de tekst dat verder browsen automatisch toestemming geeft, is daarvoor niet voldoende. Bezoekers moeten hun keuze ook later kunnen wijzigen of intrekken."
+        ]
+      ],
+      [
+        "Zelf voorkeuren aanpassen",
+        [
+          "Bovenaan de website kun je Nederlands of Engels kiezen. De voorkeur kan in de browser worden opgeslagen zodat deze tussen pagina's behouden blijft. Via browserinstellingen kun je cookies en lokale gegevens bekijken of wissen. Daardoor kunnen opgeslagen taalinstellingen, favorieten en de inhoud van je winkelwagen verdwijnen."
+        ]
+      ],
+      [
+        "Bewaartermijnen en de huidige status",
+        [
+          "Hoe lang gegevens bewaard blijven verschilt per techniek en per browser of dienstverlener. Een sessiecookie werkt anders dan een blijvende lokale taalvoorkeur. Vóór commerciële opening controleren we de daadwerkelijke cookies en opslagobjecten, hun doelen, de aanbieders en de bewaartermijnen. Het definitieve overzicht publiceren we zodra de externe diensten zijn gekoppeld."
+        ]
+      ],
+      [
+        "Privacyrechten en wijzigingen",
+        [
+          "Technische gegevens kunnen persoonsgegevens zijn als ze direct of indirect naar een persoon te herleiden zijn. In die gevallen gelden aanvullende eisen rond rechtsgrond, beveiliging en privacyrechten. Lees hiervoor de Privacyverklaring. Deze cookiespagina wordt bijgewerkt wanneer nieuwe betaal-, leveranciers-, e-mail- of analysediensten worden toegevoegd. De definitieve bedrijfs- en contactgegevens volgen vóór de commerciële opening."
+        ]
+      ]
+    ]
+  },
+  "en": {
+    "title": "Cookies and Privacy Preferences",
+    "description": "Find out how NUVEMIXA uses cookies and functional storage, how to change preferences and when consent is needed.",
+    "lead": "Cookies and similar storage technologies help an online store work safely and smoothly. This page explains what NUVEMIXA uses today and what may be added once suppliers and services are connected.",
+    "sections": [
+      [
+        "What are cookies and local storage?",
+        [
+          "Cookies are small data files that a website can store on, or read from, your device. Local browser storage can also remember preferences such as your language selection. Functional technology enables a website to work properly; other technologies can be used for analytics or advertising. Different purposes are subject to different transparency and consent rules."
+        ]
+      ],
+      [
+        "Functional storage at NUVEMIXA",
+        [
+          "During testing, NUVEMIXA uses functional storage to remember your chosen language and parts of your shopping cart and favourites. Your language preference may be stored locally in your browser; a session cookie may help secure the cart. This storage supports requested features and does not constitute agreement to advertising or profiling."
+        ]
+      ],
+      [
+        "Which technologies are necessary?",
+        [
+          "Technology that is strictly necessary to provide a service you have requested generally does not require prior cookie consent. Without it, a shopping cart might disappear when you navigate between pages. We will still inform visitors about these technologies and assess any associated personal data processing under the GDPR."
+        ]
+      ],
+      [
+        "Website analytics",
+        [
+          "Statistics can help identify slow pages, technical errors and confusing navigation. Whether prior consent is required depends on the chosen analytics tool and its configuration. No final decision has yet been made about an analytics service. If we add one, we will first review which information it collects and how visitors' privacy is protected."
+        ]
+      ],
+      [
+        "Marketing and third parties",
+        [
+          "Cookies used for targeted advertising, tracking visitors across multiple websites or extensive profiling generally require prior consent. Embedded services may also use storage technologies. We will assess external providers, their purposes and any international data transfers before activating non-essential technologies."
+        ]
+      ],
+      [
+        "Consent and your choices",
+        [
+          "Where consent is needed, visitors must have a clear and understandable choice. Consent must be freely given, specific, informed and unambiguous. A pre-ticked box or a statement that continuing to browse automatically indicates consent is not sufficient. Visitors must also be able to change or withdraw their choice later."
+        ]
+      ],
+      [
+        "Managing your preferences",
+        [
+          "You can select Dutch or English at the top of the website. Your preference may be stored in the browser so it persists between pages. Browser settings allow you to view or delete cookies and local data. Doing so may remove saved language settings, favourites and the contents of your shopping cart."
+        ]
+      ],
+      [
+        "Retention periods and current status",
+        [
+          "The length of time information is kept depends on the technology, browser and service provider. A session cookie works differently from a persistent local language preference. Before commercial launch, we will review the actual cookies and storage items used, their purposes, providers and retention periods. We will publish a final inventory once external services are connected."
+        ]
+      ],
+      [
+        "Privacy rights and updates",
+        [
+          "Technical information may be personal data if it can identify someone directly or indirectly. Additional requirements regarding lawful bases, security and privacy rights may then apply. Please consult our Privacy Policy. This cookies page will be updated when new payment, supplier, email or analytics services are connected. Full business and contact details will be published before commercial launch."
+        ]
+      ]
+    ]
+  }
+}

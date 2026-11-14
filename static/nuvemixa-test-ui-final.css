@@ -1,0 +1,13 @@
+/* NUVEMIXA local test visual refinements */
+.categoryshowcase .categorygrid{gap:12px!important}
+.categoryshowcase .categorytile{min-height:205px!important;padding:15px!important;gap:7px!important;border-radius:15px!important}
+.categoryshowcase .categoryart{height:66px!important;border-radius:11px!important}
+.categoryshowcase .categoryart svg{width:47px!important;height:47px!important}
+.categoryshowcase .categorydesc{min-height:0!important}
+.categoryshowcase .categorycta{background:#0757bd!important;color:white!important;border-radius:11px!important;padding:10px 12px!important;box-shadow:none!important}
+.categoryshowcase .categorycta span{background:#ffffff25!important;color:#fff!important}
+.categoryshowcase .categorytile:hover .categorycta{background:#06458f!important}
+/* Consent actions remain side by side when room permits */
+:where(.cookie-actions,.cookie-buttons,.privacy-actions,.consent-actions,.tm-cookie-actions){display:flex!important;flex-wrap:wrap!important;gap:10px!important}
+:where(.cookie-actions,.cookie-buttons,.privacy-actions,.consent-actions,.tm-cookie-actions) :where(button,a){background:#0757bd!important;color:#fff!important;border:1px solid #0757bd!important;border-radius:10px!important;padding:10px 14px!important}
+@media(max-width:760px){.categoryshowcase .categorygrid{gap:9px!important}.categoryshowcase .categorytile{min-height:190px!important;padding:11px!important}.categoryshowcase .categoryart{height:55px!important}.categoryshowcase .categoryart svg{width:39px!important;height:39px!important}}

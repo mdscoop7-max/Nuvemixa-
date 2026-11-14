@@ -7,3 +7,30 @@ __pycache__/
 instance/
 templates/index-backup.html
 templates/index-stap3-backup.html
+
+# Lokale reservekopieën
+*.backup
+*.backup-*
+*.bak
+
+# NUVEMIXA 2FA beveiliging
+nv_2fa.key
+nv_2fa_secrets.json
+nv_2fa_recovery.json
+nv_2fa_pending.json
+nv_2fa_verplicht.flag
+nv_2fa.lock
+nv_2fa_test.json
+nv_2fa_secrets.json.*
+nv_2fa_storage.lock
+
+# Lokale databases
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+
+# Lokale reservekopieën en tijdelijke bestanden
+*.backup*
+*.bak*
+*.lock

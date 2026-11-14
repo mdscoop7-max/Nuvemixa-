@@ -1,0 +1,91 @@
+{% for category, message in get_flashed_messages(with_categories=true) %}
+<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
+{% endfor %}
+{% macro hidden(section, product=none) %}
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="section" value="{{ section }}">
+{% if product %}
+<input type="hidden" name="category" value="{{ product.category_slug }}">
+<input type="hidden" name="slug" value="{{ product.slug }}">
+{% endif %}
+{% endmacro %}
+{% macro product_fields(product=none) %}
+{% if not product %}
+<label>Categorie<select name="category" required>{% for key, value in categories.items() %}<option value="{{ key }}">{{ value.name }}</option>{% endfor %}</select></label>
+{% endif %}
+<label>Productnaam<input name="name" required maxlength="160" value="{{ product.name if product else '' }}"></label>
+<label>Testprijs (€)<input name="price" type="number" min="0" max="9999999.99" step="0.01" required value="{{ product.price if product else '' }}"></label>
+<label>Voorraadstatus<select name="stock_status">
+{% for key, label in stock_labels.items() %}<option value="{{ key }}"{% if product and product.stock_status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+</select></label>
+<label>Aantal op voorraad<input name="stock_quantity" type="number" min="0" max="99999999" step="1" value="{{ product.stock_quantity if product and product.stock_quantity is not none else '' }}"></label>
+<label>Productbeschrijving<textarea name="description" rows="3" maxlength="4000">{{ product.description if product else '' }}</textarea></label>
+{% endmacro %}
+{% if section == "categorieen" %}
+<section class="panel">
+<h2>Categorieën</h2>
+{% if allowed("category_manage") %}
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
+{{ hidden(section) }}
+<label>Nieuwe categorienaam<input name="name" minlength="2" maxlength="80" required></label>
+<button type="submit">Categorie toevoegen</button>
+</form>
+{% endif %}
+{% for key, category in categories.items() %}
+<details class="panel-after"><summary><a href="{{ url_for('category_page', category_slug=key, dashboard_from='categorieen') }}">{{ category.name }}</a> · {{ category_counts|selectattr('0', 'equalto', category.name)|map(attribute='1')|first|default(0) }} producten</summary>
+{% if allowed("category_manage") %}
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
+{{ hidden(section) }}<input type="hidden" name="category" value="{{ key }}">
+<label>Categorienaam<input name="name" value="{{ category.name }}" minlength="2" maxlength="80" required></label>
+<button type="submit">Naam opslaan</button>
+</form>
+{% endif %}
+</details>
+{% endfor %}
+</section>
+{% else %}
+<section class="panel">
+<h2>{{ "Productafbeeldingen" if section == "afbeeldingen" else "Productcatalogus" }}</h2>
+<p>{{ filtered_products|length }} producten{% if search %} voor “{{ search }}”{% endif %}</p>
+<form method="get" action="/dashboard" class="nv-admin-form">
+<input type="hidden" name="section" value="{{ section }}">
+<label>Zoek product<input type="search" name="q" value="{{ search }}" maxlength="120"></label>
+<button type="submit">Zoeken</button>
+</form>
+{% if section == "producten" and allowed("product_add") %}
+<details class="panel-after"><summary>Product toevoegen</summary>
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
+{{ hidden(section) }}{{ product_fields() }}
+<button type="submit">Product opslaan</button>
+</form></details>
+{% endif %}
+{% if section == "afbeeldingen" or allowed("product_view", "product_edit") %}
+{% for product in filtered_products %}
+<details class="panel-after"><summary><strong>{{ product.name }}</strong> · {{ product.category }} · {{ format_eur(product.price) }}</summary>
+<p><a href="{{ product.product_url }}?dashboard_from={{ section }}">Bekijk productpagina</a> · Voorraadstatus {{ stock_labels.get(product.stock_status, 'Onbekend') }}{% if product.stock_quantity is not none %} · {{ product.stock_quantity }} stuks{% endif %}</p>
+{% if section == "afbeeldingen" %}
+{% for image in product.images %}
+<a href="{{ image }}" target="_blank" rel="noopener noreferrer"><img src="{{ image }}" alt="{{ product.name }} · afbeelding {{ loop.index }}" width="88" height="88" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="object-fit:contain"></a>
+{% endfor %}
+{% if allowed("image_manage") %}
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
+{{ hidden(section, product) }}
+<label>Afbeeldingslink<input name="image" maxlength="1500" required placeholder="https://… of /static/…"></label>
+<label><select name="primary"><option value="0">Toevoegen aan galerij</option><option value="1">Als hoofdafbeelding tonen</option></select></label>
+<button type="submit">Afbeelding koppelen</button>
+</form>
+{% endif %}
+{% elif allowed("product_edit") %}
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
+{{ hidden(section, product) }}{{ product_fields(product) }}
+<button type="submit">Wijzigingen opslaan</button>
+</form>
+{% else %}
+<p>{{ product.description }}</p>
+{% endif %}
+</details>
+{% else %}<p>Geen producten gevonden.</p>
+{% endfor %}
+{% endif %}
+</section>
+{% endif %}

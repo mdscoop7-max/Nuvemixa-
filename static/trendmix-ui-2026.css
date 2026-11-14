@@ -863,3 +863,57 @@ main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!import
  .cart-page .checkout-steps{gap:2px!important;padding:7px!important}
  .cart-page .checkout-steps span{font-size:10px!important;padding:8px 6px!important}
 }
+
+
+/* NUVEMIXA_MOBILE_FOOTER_THREE_COLUMNS_2026 */
+@media (max-width: 760px) {
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px 9px !important;
+    align-items: start !important;
+  }
+
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid
+  > .tm-footer-brand {
+    grid-column: 1 / -1 !important;
+  }
+
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid
+  > .footer-column {
+    grid-column: auto !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid
+  > .footer-column:last-child {
+    grid-column: auto !important;
+  }
+
+  .site-footer.tm-footer.tm-footer-v2 .footer-column h3 {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0 !important;
+    margin-bottom: 10px !important;
+    overflow-wrap: anywhere;
+  }
+
+  .site-footer.tm-footer.tm-footer-v2 .footer-column a {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    padding: 5px 0 !important;
+    min-height: 32px;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* NV_FOOTER_STABLE_THREE_COLUMNS_2026: compact columns on mobile; brand above */
+@media (max-width:760px){
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px 7px!important}
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.tm-footer-brand{grid-column:1/-1!important}
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.footer-column,
+ .site-footer.tm-footer.tm-footer-v2 .tm-footer-grid>.footer-column:last-child{grid-column:auto!important;min-width:0!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-column h3{font-size:clamp(11px,3.1vw,14px)!important;line-height:1.3!important;letter-spacing:0!important;overflow-wrap:anywhere;margin-bottom:7px!important}
+ .site-footer.tm-footer.tm-footer-v2 .footer-column a{font-size:clamp(11px,3vw,13px)!important;line-height:1.4!important;min-height:34px!important;overflow-wrap:anywhere}
+}

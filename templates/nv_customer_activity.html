@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Klanten & activiteit — NUVEMIXA</title>
+<style>
+:root{font-family:system-ui,Segoe UI,Arial,sans-serif;color:#17243d;background:#f3f7fc}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1100px;margin:auto;padding:28px 18px}
+a{color:#225fc6}header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:clamp(1.5rem,3vw,2rem)}.card{background:white;border:1px solid #dbe5f2;border-radius:16px;padding:22px;margin:16px 0;box-shadow:0 8px 25px #10254e09}
+.metric{font-size:2rem;font-weight:750;color:#225fc6}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #e5eaf2}th{background:#ecf3ff}
+small{color:#56647a}.tablewrap{overflow:auto}.label{border-radius:100px;background:#e8f5ed;padding:4px 10px;font-size:.8rem}
+</style></head><body><main class="wrap">
+<header><div><small>NUVEMIXA CONTROL</small><h1>Klanten & activiteit</h1></div><a href="{{ url_for('control', section='klanten') }}">← Terug naar dashboard</a></header>
+<div class="card"><small>Geregistreerde klanten (lokale database)</small>
+<div class="metric">{{ customer_count if customer_count is not none else '—' }}</div>
+<p><small>Registratie- en loginmeldingen worden vanaf activering opgeslagen. Geen historische gebeurtenissen verzonnen.</small></p></div>
+<div class="card"><h2>Laatste succesvolle klantacties</h2>
+{% if error %}<p role="alert">{{ error }}</p>{% elif events %}
+<div class="tablewrap"><table><thead><tr><th>Tijd (UTC)</th><th>Klantnummer</th><th>Activiteit</th></tr></thead><tbody>
+{% for event in events %}<tr><td>{{ event.occurred_at }}</td><td>#{{ event.customer_id }}</td>
+<td><span class="label">{{ 'Registratie' if event.event_type == 'registered' else 'Ingelogd' }}</span></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<p>Nog geen klantactiviteiten geregistreerd.</p>{% endif %}</div>
+</main></body></html>

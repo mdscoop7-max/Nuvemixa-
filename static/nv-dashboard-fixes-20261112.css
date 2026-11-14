@@ -1,0 +1,24 @@
+/* NUVEMIXA test-only dashboard readability and button layout */
+.sidebar .shop-exit,.sidebar .side-bottom a{background:#0757bd!important;color:#fff!important;border:1px solid #0757bd!important;box-shadow:0 4px 12px #0757bd33!important}
+.sidebar .shop-exit:hover,.sidebar .side-bottom a:hover{background:#06458f!important;color:#fff!important}
+.sidebar .shop-exit .side-icon{color:#fff!important}
+.nv26-actions{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(135px,1fr))!important;gap:12px!important}
+.nv26-actions>a{display:flex!important;flex-direction:column!important;min-height:100px!important;background:#0757bd!important;color:#fff!important;border-color:#0757bd!important;font-size:22px!important}
+.nv26-actions>a span{color:#fff!important;font-size:14px!important;font-weight:800!important;line-height:1.35!important}
+.nv26-actions>a:hover{background:#06458f!important}
+.nv26-primary,.nv26-link,.integration a.integration-status,.panel a.integration-status,.quick a,.nv-admin-form button,.nv-admin-feed-form button{background:#0757bd!important;color:#fff!important;border:1px solid #0757bd!important;box-shadow:0 4px 12px #0757bd22!important}
+.nv26-primary:hover,.nv26-link:hover,.integration a.integration-status:hover,.panel a.integration-status:hover,.quick a:hover,.nv-admin-form button:hover,.nv-admin-feed-form button:hover{background:#06458f!important;color:#fff!important}
+.quick a b,.quick a small,.quick .bubble{color:#fff!important}
+.integration:has(>h2) > p:has(>a.integration-status){display:inline-block!important;vertical-align:top!important;margin:5px 9px 8px 0!important;max-width:100%!important}
+.integration:has(>h2) > p:has(>a.integration-status) a{height:100%;min-height:54px;white-space:normal!important}
+.panel > a.integration-status + p:has(>a.integration-status){display:inline-block!important;margin:0 0 0 10px!important;vertical-align:middle!important}
+.nv26-card a,.panel a{overflow-wrap:anywhere}
+@media(max-width:760px){.nv26-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}.nv26-actions>a{min-width:0!important;min-height:84px!important}.integration:has(>h2)>p:has(>a.integration-status){display:block!important;margin:8px 0!important}.integration:has(>h2)>p:has(>a.integration-status) a{width:100%!important}.panel>a.integration-status+p:has(>a.integration-status){display:block!important;margin:10px 0 0!important}}
+@media(max-width:400px){.nv26-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* NUVEMIXA management additions, desktop-first */
+.sidebar{background:linear-gradient(180deg,#06162e,#092d60)!important;color:#fff!important}
+.sidebar .side-links a{color:#e7f1ff!important}.sidebar .side-links a:hover,.sidebar .side-links a.active{background:#0866f5!important;color:#fff!important;border-left-color:#43baff!important}
+.sidebar .brand{border-bottom-color:#294d7a!important}.sidebar .shop-exit{background:#0866f5!important;color:#fff!important}
+.nv-manager{margin-bottom:20px}.nv-manager-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:20px 0}.nv-manager-form label{display:grid;gap:6px;font-weight:700;font-size:13px}.nv-manager-form input,.nv-manager-form select{padding:12px;border:1px solid #b6cee9;border-radius:10px;min-width:0;background:#fff;color:#10243d}.nv-manager button,.nv-manager-form button{background:linear-gradient(#0968ef,#063a91);color:#fff;border:0;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer}.nv-manager td form{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;margin:3px}.nv-manager td input{width:155px;padding:8px;border:1px solid #b6cee9;border-radius:8px}.nv-visitor-panel{margin:18px 0}.nv-visitor-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.nv-visitor-grid>div{background:#eef5ff;padding:17px;border-radius:12px;display:grid;gap:6px}.nv-visitor-grid small{color:#466283;font-weight:700}.nv-visitor-grid strong{font-size:30px;color:#073b92}.nv-visitor-grid span{font-size:12px;color:#466283}
+@media(max-width:950px){.nv-manager-form{grid-template-columns:repeat(2,minmax(0,1fr))}.nv-visitor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.nv-manager-form{grid-template-columns:1fr}.nv-visitor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

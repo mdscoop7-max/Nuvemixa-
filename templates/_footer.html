@@ -1,70 +1,111 @@
 {% from '_tm_icons.html' import tm_icon %}
+
 {% include '_bottomnav.html' %}
 
+
+
 <footer class="site-footer tm-footer tm-footer-v2">
+
   <div class="shell">
+
     <div class="tm-footer-grid">
+
       <div class="tm-footer-brand">
+
         <a class="brand footer-logo" href="/" aria-label="NUVEMIXA home"><img class="nv-brand-image" src="{{ url_for('static', filename='nuvemixa-logo-test.png', v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
-        <p data-tm-tr data-tm-nl="Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties." data-tm-en="Smart and practical products for everyday life, organized into five collections.">Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties.</p>
-        <p class="tm-footer-muted" data-tm-tr data-tm-nl="NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief." data-tm-en="NUVEMIXA is under development. Orders and payments are not yet available.">NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief.</p>
+
+        <p data-tm-tr data-tm-nl="Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties." data-tm-en="Smart, practical products for everyday life, organised into five collections.">Slimme en praktische producten voor elke dag, overzichtelijk verdeeld over vijf collecties.</p>
+
+        <p class="tm-footer-muted" data-tm-tr data-tm-nl="NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief." data-tm-en="NUVEMIXA is in development. Orders and payments are not yet available.">NUVEMIXA is in ontwikkeling. Bestellingen en betalingen zijn nog niet actief.</p>
+
       </div>
+
       <nav class="footer-column" aria-label="Winkel">
+
         <h3 data-tm-tr data-tm-nl="Winkel" data-tm-en="Shop">Winkel</h3>
+
         <a href="/shop" data-tm-tr data-tm-nl="Alle producten" data-tm-en="All products">Alle producten</a>
-        <a href="/gadgets">Gadgets</a>
-        <a href="/smart-home">Smart Home</a>
+
+        <a href="/gadgets" data-tm-tr data-tm-nl="Gadgets" data-tm-en="Gadgets">Gadgets</a>
+
+        <a href="/smart-home" data-tm-tr data-tm-nl="Smart Home" data-tm-en="Smart Home">Smart Home</a>
+
         <a href="/beauty-care">Beauty &amp; Care</a>
+
         <a href="/home-living">Home &amp; Living</a>
+
         <a href="/lifestyle-sport">Lifestyle &amp; Sport</a>
+
         <a href="/aanbiedingen" data-tm-tr data-tm-nl="Aanbiedingen" data-tm-en="Deals">Aanbiedingen</a>
+
       </nav>
+
       <nav class="footer-column" aria-label="Klantenservice">
+
         <h3 data-tm-tr data-tm-nl="Klantenservice" data-tm-en="Customer service">Klantenservice</h3>
-        <a href="/contact">Contact</a>
+
+        <a href="/contact" data-tm-tr data-tm-nl="Contact" data-tm-en="Contact">Contact</a>
+
         <a href="/faq" data-tm-tr data-tm-nl="Veelgestelde vragen" data-tm-en="Frequently asked questions">Veelgestelde vragen</a>
+
         <a href="/bestellen" data-tm-tr data-tm-nl="Bestellen en levering" data-tm-en="Ordering and delivery">Bestellen en levering</a>
+
         <a href="/retouren" data-tm-tr data-tm-nl="Retouren en herroeping" data-tm-en="Returns and withdrawal">Retouren en herroeping</a>
+
         <a href="/account" data-tm-tr data-tm-nl="Mijn account" data-tm-en="My account">Mijn account</a>
+
       </nav>
+
       <nav class="footer-column" aria-label="Over NUVEMIXA en informatie">
+
         <h3 data-tm-tr data-tm-nl="Over NUVEMIXA" data-tm-en="About NUVEMIXA">Over NUVEMIXA</h3>
+
         <a href="/over-nuvemixa" data-tm-tr data-tm-nl="Over ons" data-tm-en="About us">Over ons</a>
-        <a href="/voorwaarden" data-tm-tr data-tm-nl="Algemene voorwaarden" data-tm-en="Terms and Conditions">Algemene voorwaarden</a>
+
+        <a href="/voorwaarden" data-tm-tr data-tm-nl="Algemene voorwaarden" data-tm-en="Terms and conditions">Algemene voorwaarden</a>
+
         <a href="/privacy" data-tm-tr data-tm-nl="Privacyverklaring" data-tm-en="Privacy policy">Privacyverklaring</a>
+
         <a href="/cookies" data-tm-tr data-tm-nl="Cookies en voorkeuren" data-tm-en="Cookies and preferences">Cookies en voorkeuren</a>
+
       </nav>
+
     </div>
-    <div class="footer-bottom"><span data-tm-tr data-tm-nl="© 2026 NUVEMIXA · Alle rechten voorbehouden" data-tm-en="© 2026 NUVEMIXA · All rights reserved">© 2026 NUVEMIXA · Alle rechten voorbehouden</span></div>
+
+    <div class="footer-bottom"><span>© 2026 NUVEMIXA · Alle rechten voorbehouden</span></div>
+
   </div>
+
 </footer>
+
 <div class="contact-modal" id="contactModal" hidden><div class="contact-backdrop" data-contact-close></div><section class="contact-dialog" role="dialog" aria-modal="true" aria-labelledby="contactTitle"><button type="button" class="contact-close" data-contact-close aria-label="Sluiten">{{ tm_icon('close') }}</button><span class="eyebrow dark">NUVEMIXA</span><h2 id="contactTitle" data-i18n="contactTitle">Contact</h2><p data-i18n="contactText">Heb je een vraag? Stuur ons direct een bericht.</p><form class="contact-form contact-form-modal" action="/contact" method="post" novalidate><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
   <div class="contact-form-row">
+
     <label><span data-i18n="contactName">Naam</span><input type="text" name="name" autocomplete="name" placeholder="Je naam" data-i18n-placeholder="contactNamePlaceholder" required></label>
+
     <label><span data-i18n="contactEmail">E-mail</span><input type="email" name="email" autocomplete="email" placeholder="jouw@email.nl" data-i18n-placeholder="contactEmailPlaceholder" required></label>
+
   </div>
+
   <label><span data-i18n="contactMessage">Bericht</span><textarea name="message" rows="6" placeholder="Waar kunnen we je mee helpen?" data-i18n-placeholder="contactMessagePlaceholder" required></textarea></label>
+
   <button type="submit" class="btn btn-dark" data-i18n="contactSubmit">Verstuur bericht →</button>
+
   <div class="contact-form-status" hidden role="status" aria-live="polite"></div>
+
 </form></section></div>
 
-{# Return control shown only when user arrived from the local dashboard preview. #}
+
+
+
+
+
+{% if dashboard_back %}
 <style>
-.tm-return-dashboard{position:fixed;right:20px;bottom:95px;z-index:1900;display:none;align-items:center;gap:8px;padding:12px 17px;border:1px solid #95c4ff;border-radius:13px;background:#0866f5;color:#fff!important;font:800 13px/1.2 system-ui,sans-serif;box-shadow:0 10px 25px #1459ba46;text-decoration:none!important}
+.tm-return-dashboard{position:fixed;right:20px;bottom:95px;z-index:1900;display:inline-flex;align-items:center;gap:8px;padding:12px 17px;border:1px solid #95c4ff;border-radius:13px;background:#0866f5;color:#fff!important;font:800 13px/1.2 system-ui,sans-serif;box-shadow:0 10px 25px #1459ba46;text-decoration:none!important}
 .tm-return-dashboard:focus-visible{outline:3px solid #f8a525;outline-offset:3px}
 @media(max-width:760px){.tm-return-dashboard{bottom:calc(103px + env(safe-area-inset-bottom,0px));right:12px;padding:11px;font-size:12px}}
 </style>
-<a href="/dashboard" id="tmReturnDashboard" class="tm-return-dashboard">↩ Terug naar dashboard</a>
-<script>
-(function(){
- const key='tm-dashboard-preview';
- try{
-  const qs=new URLSearchParams(window.location.search);
-  if(qs.get('from_dashboard')==='1')sessionStorage.setItem(key,'1');
-  const localHost=['localhost','127.0.0.1'].includes(window.location.hostname);
-  if(localHost&&sessionStorage.getItem(key)==='1'){
-   const link=document.getElementById('tmReturnDashboard');if(link)link.style.display='inline-flex';
-  }
- }catch(_error){}
-})();
-</script>
+<a href="{{ dashboard_back }}" class="tm-return-dashboard">← Terug naar dashboard</a>
+{% endif %}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="same-origin">
+<title>2FA instellen | NUVEMIXA</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:22px;min-height:100vh;display:grid;place-items:center;background:#eef4fb;color:#15304f;font:16px/1.5 system-ui,Arial}
+main{width:min(100%,560px);background:white;padding:30px;border:1px solid #d4e1ef;border-radius:18px;box-shadow:0 16px 45px #18324a18}
+h1{font-size:25px;margin:0 0 10px}p{color:#4d627a}.notice{padding:12px;border-radius:9px;background:#fff5e5;color:#744b12}.error{padding:12px;background:#fff0f0;color:#9b1c1c;border-radius:9px}
+label{display:block;font-weight:700;margin:16px 0 6px}input{width:100%;padding:13px;border:1px solid #b8c9da;border-radius:9px;font:inherit}
+button,.link{display:inline-block;margin-top:16px;padding:13px 17px;border:0;border-radius:9px;background:#123d70;color:white;font-weight:750;text-decoration:none;cursor:pointer}
+.qr{display:block;width:240px;height:240px;max-width:100%;margin:18px auto;border:10px solid white;box-shadow:0 0 0 1px #d8e1eb}
+.codes{padding:15px;background:#f3f7fc;border:1px solid #d6e2ef;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font:700 15px ui-monospace,monospace;overflow-wrap:anywhere}
+small{color:#586b80}.actions{display:flex;flex-wrap:wrap;gap:10px}
+</style>
+</head>
+<body><main>
+<h1>NUVEMIXA – tweestapsverificatie</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+{% if activated %}
+  <p><strong>2FA is nu actief.</strong> Bewaar deze tien herstelcodes op een veilige plek, bij voorkeur offline. Iedere code kan één keer worden gebruikt.</p>
+  <div class="codes">{% for code in recovery_codes %}<span>{{ code }}</span>{% endfor %}</div>
+  <p class="notice">Deze codes worden niet opnieuw getoond. Sluit deze pagina pas nadat je ze veilig hebt opgeslagen.</p>
+  <a class="link" href="/dashboard">Ik heb de herstelcodes veilig bewaard – naar dashboard</a>
+{% elif qr_data_uri %}
+  <p>1. Scan deze QR-code met Google Authenticator of een compatibele authenticator-app.</p>
+  <img class="qr" src="{{ qr_data_uri }}" alt="Eenmalige QR-code voor NUVEMIXA">
+  <p>2. Vul de actuele zescijferige code uit de app in om de koppeling te bevestigen. De 2FA-beveiliging wordt pas daarna geactiveerd.</p>
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="activate">
+    <label for="code">Authenticator-code</label>
+    <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required autofocus>
+    <button type="submit">Code bevestigen en 2FA activeren</button>
+  </form>
+  <p><small>De QR-koppeling verloopt na tien minuten. Houd deze pagina privé.</small></p>
+{% else %}
+  <p>Voor de eerste beveiligde inschrijving moet je je beheerderswachtwoord opnieuw bevestigen.</p>
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="start">
+    <label for="password">Beheerderswachtwoord</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Beveiligde QR-code aanmaken</button>
+  </form>
+{% endif %}
+</main></body></html>

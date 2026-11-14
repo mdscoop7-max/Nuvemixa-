@@ -1,0 +1,300 @@
+"""NUVEMIXA local dashboard accounts and discounts."""
+import os, sqlite3, re, secrets
+from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
+from functools import wraps
+from contextlib import closing, contextmanager
+from flask import Blueprint, request, session, redirect, abort, current_app, g, flash, url_for
+from nv_permissions import RIGHTS, DEFAULT_RIGHTS, allowed
+from nv_storage_paths import DASHBOARD_DB
+from werkzeug.security import generate_password_hash, check_password_hash
+
+bp=Blueprint('nv_manage',__name__)
+DB=DASHBOARD_DB
+@contextmanager
+def connect():
+    DB.parent.mkdir(parents=True, exist_ok=True)
+    db = sqlite3.connect(DB, timeout=8)
+    db.row_factory = sqlite3.Row
+    try:
+        with db:
+            db.executescript("""CREATE TABLE IF NOT EXISTS staff(
+                id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
+                password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'viewer',
+                active INTEGER NOT NULL DEFAULT 1);
+            CREATE TABLE IF NOT EXISTS coupons(id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE, kind TEXT NOT NULL, amount REAL NOT NULL, starts TEXT, ends TEXT, usage_limit INTEGER, used INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1);
+            CREATE TABLE IF NOT EXISTS visits(day TEXT NOT NULL, visitor TEXT NOT NULL, views INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(day,visitor));""")
+            _migrate_staff(db)
+            yield db
+    finally:
+        db.close()
+
+
+def _migrate_staff(db):
+    columns = {column["name"] for column in db.execute("PRAGMA table_info(staff)")}
+    if {"username", "session_version", "permissions"} <= columns:
+        return
+    db.execute("BEGIN IMMEDIATE")
+    columns = {column["name"] for column in db.execute("PRAGMA table_info(staff)")}
+    if "username" not in columns:
+        db.execute("ALTER TABLE staff ADD COLUMN username TEXT COLLATE NOCASE")
+    if "session_version" not in columns:
+        db.execute("ALTER TABLE staff ADD COLUMN session_version TEXT NOT NULL DEFAULT ''")
+    if "permissions" not in columns:
+        db.execute("ALTER TABLE staff ADD COLUMN permissions TEXT")
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS staff_username ON staff(username)")
+    db.commit()
+
+
+def admin():
+    return current_app.extensions["nuvemixa_admin_checker"]()
+
+
+def require_admin(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if not admin():
+            abort(403)
+        return view(*args, **kwargs)
+    return wrapper
+
+
+def staff_auth(identity, password):
+    with connect() as db:
+        row = db.execute(
+            """SELECT id,password_hash,session_version FROM staff
+               WHERE (email = ? COLLATE NOCASE OR username = ?) AND active = 1
+               ORDER BY id LIMIT 1""",
+            (identity, identity),
+        ).fetchone()
+    if row and check_password_hash(row["password_hash"], password):
+        return row["id"], row["session_version"]
+    return None
+
+
+def staff_current():
+    if "nv_staff" not in g:
+        g.nv_staff = None
+        ident = session.get("nv_staff_id")
+        version = session.get("nv_staff_version")
+        if type(ident) is int and isinstance(version, str):
+            try:
+                with closing(sqlite3.connect(DB.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.3)) as db:
+                    db.row_factory = sqlite3.Row
+                    row = db.execute(
+                        """SELECT id,email,name,username,role,permissions FROM staff
+                           WHERE id=? AND session_version=? AND active=1""",
+                        (ident, version),
+                    ).fetchone()
+                g.nv_staff = dict(row) if row else None
+            except (sqlite3.Error, OSError):
+                current_app.logger.error("Dashboardaccountdatabase niet beschikbaar")
+    return g.nv_staff
+
+
+def team_rows():
+    with connect() as db:
+        return db.execute(
+            "SELECT id,email,name,username,role,active,permissions FROM staff ORDER BY name COLLATE NOCASE,id"
+        ).fetchall()
+
+
+def management_result(section, message, success=False):
+    flash(message, "success" if success else "error")
+    return redirect(url_for("control", section=section), code=303)
+
+
+@bp.post("/admin/nv/team")
+@require_admin
+def team():
+    operation = request.form.get("op", "create")
+    if operation not in {"create", "edit", "disable", "enable", "reset"}:
+        abort(400)
+    account_id = request.form.get("id", type=int)
+    password = request.form.get("password", "")
+    if operation in {"create", "reset"} and not 12 <= len(password) <= 128:
+        return management_result("accountbeheer", "Gebruik een wachtwoord van 12 tot 128 tekens.")
+    if operation in {"create", "edit"}:
+        username = request.form.get("username", "").strip().lower()
+        email = request.form.get("email", "").strip().casefold()
+        name = request.form.get("name", "").strip()
+        role = request.form.get("role")
+        status = request.form.get("active", "1" if operation == "create" else None)
+        if status not in {"0", "1", None}:
+            abort(400)
+        active = int(status) if status is not None else None
+        rights = (set(request.form.getlist("permission")) if request.form.get("permissions_present") == "1"
+                  else DEFAULT_RIGHTS if operation == "create" else None)
+        if rights is not None and rights - RIGHTS.keys():
+            abort(400)
+        permissions = ",".join(sorted(rights)) if rights is not None else None
+        if (not re.fullmatch(r"[a-z0-9._-]{3,64}", username)
+                or not 1 <= len(name) <= 80 or not 3 <= len(email) <= 254
+                or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email)
+                or role not in {"admin", "employee"}):
+            return management_result("accountbeheer", "Controleer naam, gebruikersnaam, e-mailadres en rol.")
+        if email == os.environ["NUVEMIXA_ADMIN_EMAIL"].strip().casefold():
+            return management_result("accountbeheer", "Dit e-mailadres hoort bij de vaste beheerder.")
+
+    password_hash = generate_password_hash(password) if operation in {"create", "reset"} else None
+    version = secrets.token_urlsafe(24)
+    try:
+        with connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            # Recheck authorization in the same transaction as the change.
+            if session.get("nv_admin") is not True and not db.execute(
+                """SELECT 1 FROM staff WHERE id=? AND session_version=?
+                   AND active=1 AND role='admin'""",
+                (session.get("nv_staff_id"), session.get("nv_staff_version")),
+            ).fetchone():
+                abort(403)
+            if operation != "create" and not db.execute(
+                "SELECT 1 FROM staff WHERE id=?", (account_id,)
+            ).fetchone():
+                abort(404)
+            # The configured administrator has no mutable row and is always retained.
+            if operation in {"create", "edit"} and db.execute(
+                "SELECT 1 FROM staff WHERE email=? COLLATE NOCASE AND id<>?",
+                (email, account_id if operation == "edit" else -1),
+            ).fetchone():
+                raise sqlite3.IntegrityError
+            if operation == "create":
+                db.execute(
+                    """INSERT INTO staff(username,email,name,role,password_hash,session_version,active,permissions)
+                       VALUES(?,?,?,?,?,?,?,?)""",
+                    (username, email, name, role, password_hash, version, active, permissions),
+                )
+            elif operation == "edit":
+                db.execute(
+                    """UPDATE staff SET username=?,email=?,name=?,role=?,
+                       active=COALESCE(?,active),permissions=COALESCE(?,permissions),session_version=? WHERE id=?""",
+                    (username, email, name, role, active, permissions, version, account_id),
+                )
+            elif operation == "reset":
+                db.execute(
+                    "UPDATE staff SET password_hash=?,session_version=? WHERE id=?",
+                    (password_hash, version, account_id),
+                )
+            else:
+                db.execute(
+                    "UPDATE staff SET active=?,session_version=? WHERE id=?",
+                    (int(operation == "enable"), version, account_id),
+                )
+    except sqlite3.IntegrityError:
+        return management_result("accountbeheer", "Gebruikersnaam of e-mailadres is al in gebruik.")
+    except (sqlite3.Error, OSError):
+        current_app.logger.error("Dashboardaccount kon niet worden opgeslagen")
+        return management_result("accountbeheer", "Opslaan mislukt. Probeer het opnieuw.")
+    return management_result("accountbeheer", "Dashboardaccount opgeslagen.", success=True)
+
+
+@bp.post("/admin/nv/my-password")
+def password():
+    staff = staff_current()
+    if not staff:
+        abort(403)
+    old = request.form.get("old", "")
+    new = request.form.get("new", "")
+    if len(old) > 128 or not 12 <= len(new) <= 128:
+        abort(400, "Gebruik een wachtwoord van 12 tot 128 tekens.")
+    try:
+        with connect() as db:
+            row = db.execute(
+                "SELECT password_hash FROM staff WHERE id=? AND active=1 AND session_version=?",
+                (staff["id"], session["nv_staff_version"]),
+            ).fetchone()
+            if not row or not check_password_hash(row["password_hash"], old):
+                abort(403, "Huidig wachtwoord onjuist.")
+            changed = db.execute(
+                """UPDATE staff SET password_hash=?,session_version=?
+                   WHERE id=? AND active=1 AND session_version=?""",
+                (generate_password_hash(new), secrets.token_urlsafe(24),
+                 staff["id"], session["nv_staff_version"]),
+            ).rowcount
+            if not changed:
+                abort(409, "De accountstatus is gewijzigd. Log opnieuw in.")
+    except (sqlite3.Error, OSError):
+        current_app.logger.error("Dashboardwachtwoord kon niet worden opgeslagen")
+        abort(503, "Accountdatabase tijdelijk niet beschikbaar.")
+    session.clear()
+    return redirect(url_for("admin_login"), code=303)
+
+
+def coupon_rows():
+    with connect() as db:
+        return db.execute("SELECT * FROM coupons ORDER BY id DESC").fetchall()
+
+
+def amount_in_cents(value):
+    if not re.fullmatch(r"\d{1,7}(?:[.,]\d{1,2})?", value):
+        raise ValueError("Vul een geldig bedrag in met maximaal twee decimalen.")
+    return int(Decimal(value.replace(",", ".")) * 100)
+
+
+def test_checkout_discount(code, subtotal):
+    with connect() as db:
+        row = db.execute("SELECT * FROM coupons WHERE code=?", (code.strip().upper(),)).fetchone()
+        return coupon_amount(row, subtotal, date.today().isoformat())
+
+
+def coupon_amount(row, subtotal, today):
+    if (not row or not row["active"] or (row["starts"] and row["starts"] > today)
+            or (row["ends"] and row["ends"] < today)
+            or (row["usage_limit"] is not None and row["used"] >= row["usage_limit"])):
+        return None
+    amount = Decimal(str(row["amount"]))
+    if not amount.is_finite() or amount <= 0 or row['kind'] not in {'percent', 'fixed'}:
+        return None
+    discount = Decimal(subtotal) * amount / 100 if row["kind"] == "percent" else amount * 100
+    return min(subtotal, int(discount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
+
+
+@bp.post("/admin/nv/coupons")
+def coupons():
+    operation = request.form.get("op", "create")
+    if not (allowed("discount_view", "discount_manage") if operation == "preview" else allowed("discount_manage")):
+        abort(403)
+    code = request.form.get("code", "").strip().upper()
+    try:
+        with connect() as db:
+            if operation == "create":
+                kind = request.form.get("kind")
+                amount = amount_in_cents(request.form.get("amount", "").strip())
+                starts = request.form.get("starts") or None
+                ends = request.form.get("ends") or None
+                if starts:
+                    starts = date.fromisoformat(starts).isoformat()
+                if ends:
+                    ends = date.fromisoformat(ends).isoformat()
+                if (not re.fullmatch(r"[A-Z0-9_-]{3,32}", code)
+                        or kind not in {"percent", "fixed"} or not amount
+                        or (kind == "percent" and amount > 10000)
+                        or (starts and ends and starts > ends)):
+                    raise ValueError
+                db.execute("INSERT INTO coupons(code,kind,amount,starts,ends) VALUES(?,?,?,?,?)",
+                           (code, kind, amount / 100, starts, ends))
+            elif operation in {"disable", "enable"}:
+                updated = db.execute("UPDATE coupons SET active=? WHERE id=?",
+                                     (int(operation == "enable"), request.form.get("id", type=int)))
+                if not updated.rowcount:
+                    abort(404)
+            elif operation == "preview":
+                subtotal = amount_in_cents(request.form.get("subtotal", "").strip())
+                row = db.execute("SELECT * FROM coupons WHERE code=?", (code,)).fetchone()
+                discount = coupon_amount(row, subtotal, date.today().isoformat())
+                if discount is None:
+                    return management_result("kortingen", "Deze code is niet geldig voor de testdatum.")
+                return management_result(
+                    "kortingen", f"Korting EUR {discount / 100:.2f} · Testtotaal EUR {(subtotal - discount) / 100:.2f}.",
+                    success=True,
+                )
+            else:
+                abort(400)
+    except ValueError:
+        return management_result("kortingen", "Controleer code, bedrag, percentage en datums.")
+    except sqlite3.IntegrityError:
+        return management_result("kortingen", "Deze kortingscode bestaat al.")
+    except (sqlite3.Error, OSError):
+        current_app.logger.error("Kortingsdatabase niet beschikbaar")
+        return management_result("kortingen", "Kortingen zijn tijdelijk niet beschikbaar.")
+    return management_result("kortingen", "Kortingsactie opgeslagen.", success=True)

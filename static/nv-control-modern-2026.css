@@ -1,0 +1,57 @@
+/* NUVEMIXA Control 2026 — scoped beheeromgeving, geen webshop-CSS */
+:root{--nv26-navy:#071936;--nv26-navy2:#0d2a56;--nv26-blue:#0864e9;--nv26-ink:#12233f;--nv26-muted:#59708b;--nv26-border:#dae5f3;--nv26-surface:#f4f8ff}
+body:has(#tmAdminNavigation){background:var(--nv26-surface)!important;color:var(--nv26-ink);font-family:Inter,'Segoe UI',system-ui,sans-serif!important}
+body:has(#tmAdminNavigation) .nv26-sidebar{background:linear-gradient(165deg,#06152f 0%,#0d2a56 100%)!important;color:#eff6ff!important;border:0!important;box-shadow:4px 0 28px rgba(2,19,49,.11)}
+body:has(#tmAdminNavigation) .nv26-sidebar a{color:#e8f2ff!important;text-decoration:none!important;border-radius:12px!important;transition:background .15s,transform .15s}
+body:has(#tmAdminNavigation) .nv26-sidebar a:hover{background:#18477f!important;transform:translateX(2px)}
+body:has(#tmAdminNavigation) .nv26-sidebar a.active,body:has(#tmAdminNavigation) .nv26-sidebar a[aria-current="page"]{background:linear-gradient(110deg,#1478ff,#0052cd)!important;color:white!important;box-shadow:0 4px 14px #1168dc50}
+body:has(#tmAdminNavigation) .nv26-sidebar .side-icon{color:#d8e9ff!important}
+body:has(#tmAdminNavigation) .nv26-sidebar input{background:#ffffff!important;color:#173254!important;border-radius:12px}
+body:has(#tmAdminNavigation) main{min-width:0}
+.nv26-panel{margin:0 0 28px;padding:clamp(12px,2vw,24px);background:#f4f8ff;border-radius:22px;color:#12233f;max-width:1440px}
+.nv26-panel *{box-sizing:border-box}
+.nv26-panel-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.nv26-panel-head h2{font-size:clamp(1.7rem,3vw,2.5rem)!important;letter-spacing:-.04em;margin:3px 0 5px!important;line-height:1.12;color:#0b1930!important}
+.nv26-panel-head p{color:#526683!important;margin:0!important;font-size:1rem}
+.nv26-eyebrow{font-size:.76rem;letter-spacing:.14em;font-weight:800;color:#0864e9}
+.nv26-chip{display:inline-flex;align-items:center;padding:7px 13px;border-radius:99px;background:#e6f8ee;color:#126b42;font-weight:800;font-size:.78rem;white-space:nowrap}
+.nv26-chip-warn{background:#fff0db;color:#8b5200}
+.nv26-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.nv26-kpi{min-width:0;min-height:105px;border-radius:17px;padding:18px 20px;color:white;box-shadow:0 7px 18px #14345816}
+.nv26-kpi span{font-size:.93rem;font-weight:700;display:block}.nv26-kpi strong{font-size:clamp(1.55rem,2.8vw,2.3rem);line-height:1.4;display:block}
+.nv26-blue{background:linear-gradient(120deg,#188eff,#004acb)}.nv26-purple{background:linear-gradient(110deg,#b154ff,#6413b3)}.nv26-green{background:linear-gradient(110deg,#00cf82,#00955e)}.nv26-orange{background:linear-gradient(110deg,#ffae05,#fa6000)}
+.nv26-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.nv26-card{background:white;border:1px solid #dce7f3;border-radius:18px;padding:clamp(16px,2vw,24px);box-shadow:0 8px 23px rgba(10,35,80,.06);min-width:0}
+.nv26-card h3{margin:0 0 13px;font-size:1.15rem;font-weight:800;color:#101d39}.nv26-muted{color:#607087;font-size:.93rem;line-height:1.6}
+.nv26-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.nv26-actions a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;min-height:88px;border-radius:13px;background:#eaf2ff;color:#1556b6!important;text-decoration:none!important;font-size:1.4rem;font-weight:800}
+.nv26-actions a:nth-child(3n+2){background:#f0e9ff;color:#6e35b7!important}.nv26-actions a:nth-child(3n){background:#e4f7ec;color:#167b53!important}
+.nv26-actions a span{font-size:.76rem;color:#142849;line-height:1.25;overflow-wrap:anywhere}
+.nv26-actions a:hover,.nv26-link:hover,.nv26-primary:hover{filter:brightness(.95)}
+.nv26-primary{display:inline-flex;background:#4d0dad;border-radius:12px;padding:12px 20px;color:white!important;text-decoration:none!important;font-weight:800}
+.nv26-link{display:inline-flex;color:#115bc1!important;font-weight:700;text-decoration:none!important}
+.nv26-between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.nv26-categories>div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #e8edf6}.nv26-categories strong{color:#155ac0}
+.nv26-customer-grid{display:grid;grid-template-columns:1fr 2fr;gap:16px}.nv26-figure{font-weight:850;font-size:3rem;color:#0864e9;margin:12px 0}
+.nv26-table-scroll{overflow-x:auto}.nv26-panel table{width:100%;border-collapse:collapse;white-space:nowrap}.nv26-panel th,.nv26-panel td{padding:11px;text-align:left;border-bottom:1px solid #edf1f7;font-size:.9rem;color:#172b48}.nv26-panel th{background:#edf4ff}
+.nv26-woo-box iframe{display:block;width:100%;height:750px;border:1px solid #d6e0f0;border-radius:14px;background:white}
+@media(max-width:1100px){.nv26-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:780px){.nv26-panel{padding:10px}.nv26-home-grid,.nv26-customer-grid{grid-template-columns:1fr}.nv26-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.nv26-woo-box iframe{height:620px}}@media(max-width:390px){.nv26-kpis{grid-template-columns:1fr}}
+
+/* NV26_READABILITY_LOCAL_V1 */
+.nv26-panel{font-size:16px;line-height:1.55}
+.nv26-card h3{font-size:clamp(1.12rem,2vw,1.3rem)!important;line-height:1.35}
+.nv26-muted,.nv26-panel-head p{font-size:1rem!important;line-height:1.65!important;color:#415572!important}
+.nv26-chip{font-size:.88rem!important}
+.nv26-actions a{min-height:92px;gap:10px;padding:12px!important}
+.nv26-actions a span{font-size:.9rem!important;line-height:1.4!important}
+.nv26-panel table th,.nv26-panel table td{font-size:.95rem!important;line-height:1.45!important}
+.nv26-panel a:focus-visible,body:has(#tmAdminNavigation) .nv26-sidebar a:focus-visible{outline:3px solid #0c79e8!important;outline-offset:2px}
+@media(max-width:780px){.nv26-panel{padding:14px!important}.nv26-card{padding:16px!important}.nv26-actions a{min-height:80px}.nv26-panel-head{align-items:flex-start}.nv26-panel table{min-width:500px}.nv26-table-scroll{overflow-x:auto}}
+
+/* NV_SHOP_EXIT_HOVER_2026 — light button remains readable on hover and focus */
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit{background:#eaf3ff!important;color:#064b99!important;border:1px solid #8dc1ff!important}
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit .side-icon{color:inherit!important}
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:is(:hover,:focus-visible){background:#1265ce!important;color:#fff!important;border-color:#1265ce!important;transform:none!important}
+
+/* NUVEMIXA: keep shop button blue in every pointer/keyboard state. */
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit,body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:visited,body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:hover,body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:focus-visible,body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:active{background:#1265ce!important;color:#fff!important;border-color:#1265ce!important;}

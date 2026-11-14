@@ -1,0 +1,11 @@
+.nv-back {display:inline-block;margin-bottom:1rem}
+.nv-rights {grid-column:1/-1;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:.5rem 1rem;padding:1rem;border:1px solid #bfd2e7;border-radius:.65rem}
+.nv-rights label {display:flex;align-items:center;gap:.5rem}
+.nv-rights input[type=checkbox] {width:auto;min-width:1rem}
+.nv-form-back {align-self:center;justify-self:start;color:#1758a2;text-decoration:underline}
+.nv-scan-status {display:inline-block;padding:.3rem .6rem;border-radius:.5rem;font-weight:700;white-space:nowrap}
+.nv-scan-works {background:#dcfce7;color:#166534}
+.nv-scan-attention {background:#ffedd5;color:#9a3412}
+.nv-scan-error {background:#fee2e2;color:#991b1b}
+.nv-scan-unchecked {background:#e5e7eb;color:#374151}
+.nv-scan-report dd {margin:0 0 .6rem;overflow-wrap:anywhere}

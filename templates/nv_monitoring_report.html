@@ -1,0 +1,16 @@
+{% extends "dashboard.html" %}
+{% block monitoring_report %}
+<section class="panel nv-scan-report">
+<h2>Resultaten systeemcontrole</h2>
+<p>Gecontroleerd op <time datetime="{{ report.checked_at }}">{{ report.checked_at }}</time>.</p>
+<p>{% for key, label in scan_labels.items() %}<span class="nv-scan-status nv-scan-{{ key }}">{{ report.summary.get(key, 0) }} · {{ label }}</span> {% endfor %}</p>
+<p><a class="nv-blue-action" href="{{ url_for('admin_monitoring_check', download=1) }}">Rapport downloaden (JSON)</a></p>
+{% for row in report.checks %}
+<details class="panel-after">
+<summary><span class="nv-scan-status nv-scan-{{ row.status }}">{{ scan_labels[row.status] }}</span> <strong>{{ row.name }}</strong> · {{ row.result }}</summary>
+<dl><dt>Gecontroleerd</dt><dd>{{ row.check }}</dd><dt>Tijdstip</dt><dd>{{ row.checked_at }}</dd>
+{% if row.solution %}<dt>Vervolg</dt><dd>{{ row.solution }}</dd>{% endif %}</dl>
+</details>
+{% endfor %}
+</section>
+{% endblock %}

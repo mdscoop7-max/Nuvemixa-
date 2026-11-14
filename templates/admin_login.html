@@ -19,16 +19,20 @@ a{color:#1758a2}*:focus-visible{outline:3px solid #ffa529;outline-offset:3px}
 <a class="brand" href="/" aria-label="Terug naar NUVEMIXA"><img src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
 <h1>Beveiligd beheerdashboard</h1>
 {% if config_missing %}
-<div class="notice" role="alert">Beheerlogin is nog niet ingesteld. Stel op de server <code>SECRET_KEY</code> en <code>NUVEMIXA_ADMIN_PASSWORD_HASH</code> in. Tot die tijd blijft het dashboard afgesloten.</div>
+<div class="notice" role="alert">Beheerlogin is nog niet ingesteld. Stel lokaal <code>SECRET_KEY</code>, <code>NUVEMIXA_ADMIN_EMAIL</code> en <code>NUVEMIXA_ADMIN_PASSWORD_HASH</code> in. Tot die tijd blijft het dashboard afgesloten.</div>
 {% else %}
-<p>Alleen voor de beheerder van NUVEMIXA.</p>
+<p>Voor beheerders en medewerkers van NUVEMIXA.</p>
 {% if error %}<div class="notice" role="alert">{{ error }}</div>{% endif %}
 <form method="post" action="{{ url_for('admin_login') }}">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-<label for="password">Beheerderswachtwoord</label>
-<input id="password" name="password" type="password" autocomplete="current-password" required minlength="12" autofocus>
+<label for="email">Gebruikersnaam of e-mailadres</label>
+<input id="email" name="email" type="text" autocomplete="username" required maxlength="254" autofocus>
+<label for="password">Wachtwoord</label>
+<input id="password" name="password" type="password" autocomplete="current-password" required>
+<button type="button" id="nv-eye" aria-label="Wachtwoord tonen" aria-pressed="false" style="margin-top:8px;width:auto;padding:8px 12px;background:#eaf3ff;color:#123a66;border:1px solid #aac3e1">👁 Wachtwoord tonen</button>
 <button type="submit">Veilig inloggen</button>
 </form>
+<script>const eye=document.getElementById("nv-eye"),pw=document.getElementById("password");if(eye&&pw)eye.addEventListener("click",()=>{const visible=pw.type==="password";pw.type=visible?"text":"password";eye.setAttribute("aria-pressed",String(visible));eye.setAttribute("aria-label",visible?"Wachtwoord verbergen":"Wachtwoord tonen");eye.textContent=visible?"👁 Wachtwoord verbergen":"👁 Wachtwoord tonen";});</script>
 {% endif %}
 <p style="margin-top:20px;font-size:13px"><a href="/">Terug naar webshop</a></p>
 </main></body></html>

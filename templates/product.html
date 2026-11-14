@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f6f7fb">
-  <title>{{ product.seo_title }}</title>
+  <title>{{ product.seo_title | replace(' | TrendMix', ' | NUVEMIXA') }}</title>
   <meta name="description" content="{{ product.seo_description }}">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ product.product_url }}">
@@ -18,7 +18,7 @@
   {% if product.images %}
   <meta property="og:image" content="{{ product.images[0] }}">
   {% endif %}
-  <meta property="og:title" content="{{ product.seo_title }}">
+  <meta property="og:title" content="{{ product.seo_title | replace(' | TrendMix', ' | NUVEMIXA') }}">
   <meta property="og:description" content="{{ product.seo_description }}">
   <meta property="og:type" content="product">
   <meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ product.product_url }}">
@@ -53,9 +53,7 @@
     ]
   }|tojson }}
   </script>
-<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261027-global-bright3') }}">
-<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-footer-unified.css', v='20261110-footer-allpages') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='nuvemixa-refresh.css', v='20261110-footer-allpages') }}">
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-ui-2026.css', v='20261110-flitsfix') }}">
 </head>
 <body>
 {% include "_header.html" %}

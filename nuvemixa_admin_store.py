@@ -2,26 +2,21 @@
 
 Only manually entered supplier contacts and research notes are stored here.
 This module never creates customer orders, charges payments or publishes products.
-The SQLite location must live outside the git checkout in production.
+Production configuration should keep SQLite files outside the git checkout.
 """
-import os
 import sqlite3
 from contextlib import contextmanager
-from pathlib import Path
+
+from nv_storage_paths import ADMIN_DB
 
 
 def database_path():
-    raw = os.environ.get("NUVEMIXA_ADMIN_DB", "").strip()
-    if not raw:
-        return None
-    return Path(raw).expanduser()
+    return ADMIN_DB
 
 
 @contextmanager
 def connect():
     path = database_path()
-    if path is None:
-        raise RuntimeError("NUVEMIXA_ADMIN_DB is not configured")
     if not path.parent.is_dir():
         raise RuntimeError("Admin database parent directory does not exist")
     conn = sqlite3.connect(str(path), timeout=10)

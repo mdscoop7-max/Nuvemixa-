@@ -83,7 +83,7 @@ def test_security_headers_and_request_size_limit(monkeypatch):
     assert app.config["MAX_CONTENT_LENGTH"] == 65536
     assert client.get("/winkelwagen").headers["Cache-Control"] == "no-store"
     monkeypatch.setenv("VERCEL_ENV", "production")
-    assert "max-age=" in client.get("/").headers["Strict-Transport-Security"]
+    assert "max-age=" in client.get("/", base_url="https://localhost").headers["Strict-Transport-Security"]
     oversized = client.post("/contact", data={"message": "A" * 70000})
     assert oversized.status_code == 413
 

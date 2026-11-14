@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Google Authenticator | NUVEMIXA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6fb;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .kaart {
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            width: min(360px, 85vw);
+            box-shadow: 0 8px 30px #00000012;
+        }
+        input, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 16px;
+        }
+        button {
+            background: #1769e0;
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .fout { color: #b42318; }
+    </style>
+</head>
+<body>
+    <main class="kaart">
+        <h2>NUVEMIXA beveiliging</h2>
+        <p>Voer je 6-cijferige Google Authenticator-code in.</p>
+
+        {% if error %}
+        <p class="fout" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form method="post">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input
+                type="text"
+                name="code"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="32"
+                placeholder="Authenticator- of herstelcode"
+                required
+                autofocus
+            >
+            <button type="submit">Bevestigen</button>
+        </form>
+    </main>
+</body>
+</html>

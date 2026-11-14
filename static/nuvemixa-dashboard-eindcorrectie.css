@@ -1,0 +1,25 @@
+/* NUVEMIXA dashboard-only correction. Loaded last to win conflicting older styles. */
+body:has(#tmAdminNavigation){--nv-button:#0b315c;--nv-button-hover:#154b82}
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit,
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:visited{background:var(--nv-button)!important;color:#fff!important;border:1px solid var(--nv-button)!important;box-shadow:0 5px 15px #0b315c2b!important}
+body:has(#tmAdminNavigation) .sidebar .side-links a.shop-exit:hover{background:var(--nv-button-hover)!important;color:#fff!important}
+body:has(#tmAdminNavigation) .sidebar .shop-exit .side-icon{color:#fff!important}
+/* Uniform action buttons, without recoloring non-interactive status badges. */
+body:has(#tmAdminNavigation) :is(.nv26-primary,.nv26-link,.panel a.integration-status,.integration a.integration-status,.nv-admin-form button,.nv-admin-feed-form button,.side-bottom a){display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;background:var(--nv-button)!important;border:1px solid var(--nv-button)!important;border-radius:12px!important;color:#fff!important;font-weight:800!important;line-height:1.35!important;text-align:center!important;text-decoration:none!important;min-height:45px!important;padding:12px 17px!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;box-shadow:0 5px 15px #0b315c22!important}
+body:has(#tmAdminNavigation) :is(.nv26-primary,.nv26-link,.panel a.integration-status,.integration a.integration-status,.nv-admin-form button,.nv-admin-feed-form button,.side-bottom a):hover{background:var(--nv-button-hover)!important;border-color:var(--nv-button-hover)!important;color:#fff!important}
+/* Top-level quick actions: readable white text/icons. */
+body:has(#tmAdminNavigation) nav.quick{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important}
+body:has(#tmAdminNavigation) nav.quick>a,body:has(#tmAdminNavigation) nav.quick>a:nth-child(n){background:linear-gradient(145deg,#154b82,#0b315c)!important;color:#fff!important;border:1px solid #174b80!important;border-radius:14px!important;min-width:0!important;box-shadow:0 6px 16px #0b315c26!important}
+body:has(#tmAdminNavigation) nav.quick>a :is(b,small,.bubble){color:#fff!important;opacity:1!important}
+/* Dashboard action tiles: desktop columns, mobile two columns. */
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a,body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a:nth-child(n){display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:9px!important;min-width:0!important;min-height:94px!important;background:linear-gradient(145deg,#154b82,#0b315c)!important;border:1px solid #174b80!important;border-radius:14px!important;color:#fff!important;text-align:center!important;font-size:1.35rem!important;font-weight:800!important;padding:12px!important;box-shadow:0 6px 16px #0b315c26!important}
+body:has(#tmAdminNavigation) .nv26-panel .nv26-actions>a span{color:#fff!important;font-size:.9rem!important;font-weight:800!important;line-height:1.35!important}
+/* Keep separate integration buttons side by side on desktop. */
+body:has(#tmAdminNavigation) .panel.integration>p:has(>a.integration-status){display:inline-flex!important;vertical-align:top!important;max-width:100%!important;margin:6px 10px 8px 0!important}
+body:has(#tmAdminNavigation) .panel.integration>a.integration-status{margin:6px 10px 8px 0!important}
+body:has(#tmAdminNavigation) :is(a,button):focus-visible{outline:3px solid #f4a62a!important;outline-offset:3px!important}
+@media(max-width:1050px){body:has(#tmAdminNavigation) nav.quick{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:700px){body:has(#tmAdminNavigation) .nv26-panel .nv26-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:520px){body:has(#tmAdminNavigation) nav.quick{grid-template-columns:1fr!important}body:has(#tmAdminNavigation) .panel.integration>p:has(>a.integration-status){display:flex!important;width:100%!important;margin:6px 0!important}body:has(#tmAdminNavigation) .panel.integration>p>a.integration-status{width:100%!important}}
+@media(prefers-reduced-motion:reduce){body:has(#tmAdminNavigation) :is(a,button){transition:none!important}}
