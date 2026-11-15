@@ -1,19 +1,34 @@
 <section class="panel panel-after">
 <h2>Webshopbezoeken</h2>
-<p>Lokale telling per browsersessie en UTC-dag. Een volgende dag kan dezelfde sessie opnieuw meetellen.</p>
-<p role="status">Registratie {{ 'actief' if visitor_stats.enabled else 'uitgeschakeld' }}{% if visitor_stats.enabled %}  - {{ 'testverkeer' if visitor_stats.traffic == 'test' else 'webshopverkeer' }}{% endif %}.</p>
+<p>Per browsersessie telt maximaal één bevestigd bezoek per Nederlandse kalenderdag. Telling begint zodra de meetcookie terugkomt. Week, maand en totaal tellen sessiedagen op.</p>
+<p role="status">Registratie {{ 'actief' if visitor_stats.enabled else 'uitgeschakeld' }} · {{ visitor_stats.backend }}{% if visitor_stats.enabled %} · {{ 'testverkeer' if visitor_stats.traffic == 'test' else 'webshopverkeer' }}{% endif %}.</p>
 {% if visitor_stats.error %}
 <p class="notice" role="alert">De bezoekmeting kan tijdelijk niet worden gelezen.</p>
 {% elif visitor_stats.groups %}
 {% for traffic, today, yesterday, week, month, total, first, latest in visitor_stats.groups %}
 <h3>{{ 'Testverkeer' if traffic == 'test' else 'Webshopverkeer' }}</h3>
-<div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th style="font-size:26px !important; font-weight:800; color:#FFFFFF !important; background:#173B68 !important; padding:16px 12px; text-align:center;">Vandaag</th><th style="font-size:26px !important; font-weight:800; color:#FFFFFF !important; background:#173B68 !important; padding:16px 12px; text-align:center;">Gisteren</th><th style="font-size:26px !important; font-weight:800; color:#FFFFFF !important; background:#173B68 !important; padding:16px 12px; text-align:center;">7 dagen</th><th style="font-size:26px !important; font-weight:800; color:#FFFFFF !important; background:#173B68 !important; padding:16px 12px; text-align:center;">30 dagen</th><th style="font-size:26px !important; font-weight:800; color:#FFFFFF !important; background:#173B68 !important; padding:16px 12px; text-align:center;">Totaal</th></tr></thead>
-<tbody><tr><td style="font-size:28px !important; font-weight:800; color:#173B68 !important; background:#E8F1FF !important; padding:16px 12px; text-align:center;">{{ today }}</td><td style="font-size:28px !important; font-weight:800; color:#173B68 !important; background:#E8F1FF !important; padding:16px 12px; text-align:center;">{{ yesterday }}</td><td style="font-size:28px !important; font-weight:800; color:#173B68 !important; background:#E8F1FF !important; padding:16px 12px; text-align:center;">{{ week }}</td><td style="font-size:28px !important; font-weight:800; color:#173B68 !important; background:#E8F1FF !important; padding:16px 12px; text-align:center;">{{ month }}</td><td style="font-size:28px !important; font-weight:800; color:#173B68 !important; background:#E8F1FF !important; padding:16px 12px; text-align:center;">{{ total }}</td></tr></tbody>
-</table></div>
-<p>Eerste geregistreerde meting <time datetime="{{ first }}">{{ first }}</time><br>Laatste meting <time datetime="{{ latest }}">{{ latest }}</time></p>
+<div class="nv-visit-totals">
+  {% for label, number in [('Vandaag', today), ('Deze week', week), ('Deze maand', month), ('Totaal', total)] %}
+  <div><span>{{ label }}</span><strong>{{ number }}</strong></div>
+  {% endfor %}
+</div>
+<p>Eerste meting <time datetime="{{ first }}">{{ first }}</time> · Laatste meting <time datetime="{{ latest }}">{{ latest }}</time>.</p>
+{% for key, label in [('day', 'Dagelijks'), ('week', 'Wekelijks (vanaf maandag)'), ('month', 'Maandelijks')] %}
+  {% set points = visitor_stats.charts.get(traffic, {}).get(key, []) %}
+  <details class="panel-after" {% if key == 'day' %}open{% endif %}>
+    <summary>{{ label }}</summary>
+    {% if points %}
+    {% set maximum = points | map(attribute=1) | max %}
+    <ul class="nv-visit-chart">
+      {% for period, number in points %}
+      <li><span>{{ period }}</span><meter min="0" max="{{ maximum }}" value="{{ number }}" aria-label="{{ period }}"></meter><strong>{{ number }}</strong></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p>Geen metingen in deze periode.</p>{% endif %}
+  </details>
+{% endfor %}
 {% endfor %}
 {% else %}
-<p>Er zijn nog geen lokale metingen beschikbaar.</p>
+<p>Er zijn nog geen metingen beschikbaar.</p>
 {% endif %}
 </section>

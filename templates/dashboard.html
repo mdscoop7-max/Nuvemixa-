@@ -52,6 +52,13 @@
 .nv-admin-form button{min-height:46px;border:0;border-radius:11px;background:#0c305a;color:#fff;font-weight:800;padding:10px 18px;cursor:pointer;justify-self:start}
 .nv-admin-form :is(input,textarea,button):focus-visible{outline:3px solid #ffb548;outline-offset:2px}
 @media(max-width:760px){.nv-admin-form{grid-template-columns:1fr;padding:14px}.nv-admin-form label:has(textarea){grid-column:auto}.nv-admin-form button{width:100%}}
+/* Visitor metrics and charts */
+.nv-visit-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px}
+.nv-visit-totals div{display:grid;gap:6px;background:#eef5ff;border:1px solid #cbdff5;color:#183b61;border-radius:12px;padding:14px}
+.nv-visit-totals strong{font-size:clamp(20px,4vw,30px);font-variant-numeric:tabular-nums}
+.nv-visit-chart{list-style:none;padding:0;margin:12px 0}
+.nv-visit-chart li{display:grid;grid-template-columns:4.5rem minmax(0,1fr) 3rem;align-items:center;gap:10px;padding:4px 0;font-size:13px}
+.nv-visit-chart meter{width:100%;min-width:0}
 /* Merchant readiness rows */
 .nv-merchant-audit{margin-top:20px;border:1px solid #dde8f5;border-radius:14px;overflow-x:auto}
 .nv-merchant-audit .admin-table td:last-child{color:#4d6480;font-size:12px}
@@ -259,6 +266,15 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <p>Bewaar gecontroleerde leverancierscontacten. Het toevoegen van een leverancier activeert geen productfeed, voorraadkoppeling of automatische orderverwerking.</p>
 {% if supplier_error %}<div class="notice" role="status">{{ supplier_error }}</div>{% endif %}
 {% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Leverancier toegevoegd.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de gegevens of controleer of de leverancier al bestaat.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
+<details class="panel-after">
+<summary>B2B-kandidaten voor verificatie</summary>
+<p>Gecontroleerd op 15 november 2026. Vraag per SKU en land een offerte op met voorraad, verzending, retouradres en levertijd. De genoemde diensten krijgen pas een goedkeuring na bewijs en een proefbestelling.</p>
+<ul>
+<li><a href="https://www.dropxl.com/nl/about-dropxl.html">dropXL</a> · B2B-distributeur voor onder andere Nederland en andere EU-markten. Controleer magazijn, pakketgrootte en retourvoorwaarden per SKU.</li>
+<li><a href="https://www.avasam.com/dropship-suppliers/">Avasam</a> · platform voor Britse B2B-leveranciers. Verifieer de leverende partij en voorwaarden per product.</li>
+<li><a href="https://www.cjdropshipping.com/help-center?faqType=5&amp;navType=faq&amp;pageNum=9&amp;scrollToNum=400">CJdropshipping</a> · sourcing- en fulfilmentoptie. Vraag naar fabrikant, beschikbare voorraad en de route naar het gekozen land.</li>
+</ul>
+</details>
 {% if supplier_rows is not none %}
 <form action="{{ url_for('admin_add_supplier') }}" method="post" class="nv-admin-form">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">

@@ -1929,11 +1929,15 @@ def recent_woo_orders():
 
     """Read WooCommerce orders only if already configured. Never fabricate orders."""
 
-    if not woo_configured():
-
-        return None, "WooCommerce niet gekoppeld."
-
-    result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
+    try:
+        if read_configuration_present():
+            result = read_recent_orders()
+        elif woo_configured():
+            result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
+        else:
+            return None, "WooCommerce niet gekoppeld."
+    except CommerceConnectionError:
+        return None, "WooCommerce-leesverbinding mislukt. Controleer de verbinding bij Monitoring."
 
     if not isinstance(result, list):
 
@@ -3213,11 +3217,11 @@ def trendmix_security_headers(response):
 
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
 
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/dashboard/internationaal", "/dashboard/viral", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/dashboard/internationaal", "/dashboard/viral", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/", "/dashboard/")):
 
         response.headers["Cache-Control"] = "no-store"
 
-    if request.path in ("/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith("/admin/"):
+    if request.path in ("/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/admin/", "/dashboard/")):
 
         response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
 

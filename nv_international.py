@@ -14,7 +14,8 @@ MARKETS = {
     "NL": ("Nederland", "EUR", "nl-NL", 1), "BE": ("België", "EUR", "nl-BE / fr-BE", 1),
     "DE": ("Duitsland", "EUR", "de-DE", 2), "FR": ("Frankrijk", "EUR", "fr-FR", 2),
     "GB": ("Verenigd Koninkrijk", "GBP", "en-GB", 3), "US": ("Verenigde Staten", "USD", "en-US", 3),
-    "CA": ("Canada", "CAD", "en-CA / fr-CA", 3),
+    "CA": ("Canada", "CAD", "en-CA / fr-CA", 3), "ES": ("Spanje", "EUR", "es-ES", 2),
+    "AU": ("Australië", "AUD", "en-AU", 3),
 }
 PRODUCTS = {
     "bureau": ("Bureau-organizer", "Home & Living", "29.95"),
@@ -90,7 +91,7 @@ def dashboard_market():
     return dict(markets=MARKETS, candidates=PRODUCTS, market=market, candidate=product, data=record,
                 amounts=AMOUNTS, text_fields=TEXT, result=assessment(record), storage_error=error,
                 evidence=references["benchmarks"].get(market, {}).get(product, []),
-                search_terms=references["keywords"][market][product], suppliers=references["suppliers"][product],
+                search_terms=references["keywords"].get(market, {}).get(product, []), suppliers=references["suppliers"][product],
                 observations=references["observed_on"])
 
 

@@ -4,6 +4,7 @@ from contextlib import closing
 from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
+from time import perf_counter
 import os
 import re
 import sqlite3
@@ -15,7 +16,7 @@ from nuvemixa_admin_store import database_path
 from nv_merchant_audit import audit as merchant_audit
 from nv_dashboard_manager import DB, coupon_amount
 from nv_permissions import RIGHTS, SECTIONS
-from nv_seo_scan import ProductMetadata
+from nv_seo_scan import ProductMetadata, canonical_matches
 from nv_visits import visit_summary
 
 
@@ -81,11 +82,13 @@ def inspect_files():
 def scan(items, categories, customer_db, integrations):
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     results = []
+    started = perf_counter()
 
     def add(name, check, status, result, solution=""):
         results.append(dict(name=name, check=check, status=status, result=result, solution=solution, checked_at=timestamp))
 
     def run(name, check, operation, recovery):
+        check_started = perf_counter()
         try:
             add(name, check, *operation())
         except (OSError, sqlite3.Error, ValueError, LookupError) as exc:
@@ -93,6 +96,7 @@ def scan(items, categories, customer_db, integrations):
         except Exception as exc:
             current_app.logger.error("Systeemcontrole %s mislukt (%s)", name, type(exc).__name__)
             add(name, check, "error", f"Controle mislukt ({type(exc).__name__}).", recovery)
+        results[-1]["duration_ms"] = round((perf_counter() - check_started) * 1000)
 
     def routes():
         required = {
@@ -183,7 +187,7 @@ def scan(items, categories, customer_db, integrations):
         parser.feed(response.get_data(as_text=True))
         schema = any(isinstance(row, dict) and row.get("@type") == "Product" for row in parser.structured_data)
         if (response.status_code != 200 or not all((parser.title, parser.description, schema))
-                or urlsplit(parser.canonical).path != path):
+                or not canonical_matches(parser.canonical, path, request.host_url)):
             return "error", "Steekproef op productmetadata mislukt.", "Controleer producttemplate en metadata."
         if not DB.is_file():
             return "attention", "Metadata aanwezig; rapportopslag nog niet ingericht.", "Voer een lokale SEO-controle uit."
@@ -242,6 +246,6 @@ def scan(items, categories, customer_db, integrations):
         "Live orderverwerking is ingeschakeld." if live_orders else "De vaste beheerconfiguratie is aanwezig; live orders staan uit.",
         "Schakel live orders uit voor een lokale test." if live_orders else "")
     counts = Counter(row["status"] for row in results)
-    return {"checked_at": timestamp,
+    return {"checked_at": timestamp, "duration_ms": round((perf_counter() - started) * 1000),
             "summary": {status: counts[status] for status in ("works", "attention", "error", "unchecked", "unconfigured", "failed", "disabled")},
             "checks": results}

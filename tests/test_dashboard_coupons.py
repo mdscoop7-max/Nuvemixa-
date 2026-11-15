@@ -44,7 +44,7 @@ def test_create_coupon_shows_code_and_keeps_legacy_rows(administrator, monkeypat
     ]
     response = administrator.post(ROUTE, data={
         "_csrf_token": CSRF_TOKEN, "op": "create", "percentage": "20",
-        "code": "OVERRIDE", "kind": "fixed", "amount": "200", "starts": "2999-01-01",
+        "code": "OVERRIDE", "kind": "fixed", "amount": "200",
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b'<code id="nv-created-coupon">NV-BBBB-BBBB</code>' in response.data

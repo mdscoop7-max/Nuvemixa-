@@ -1,5 +1,6 @@
 """Local, reproducible checks of the shop's rendered SEO metadata."""
 import json
+import os
 import sqlite3
 from html.parser import HTMLParser
 from urllib.parse import urlsplit
@@ -46,6 +47,18 @@ class ProductMetadata(HTMLParser):
         self.capture = None
 
 
+def canonical_matches(value, path, base_url):
+    try:
+        canonical = urlsplit(value)
+        target = urlsplit(os.getenv("NUVEMIXA_CANONICAL_URL") or base_url)
+        return (canonical.scheme in {"http", "https"} and canonical.scheme == target.scheme
+                and canonical.hostname == target.hostname and canonical.hostname is not None
+                and canonical.port == target.port and not canonical.username and not canonical.password
+                and not canonical.query and not canonical.fragment and canonical.path == path)
+    except ValueError:
+        return False
+
+
 def last_scan():
     with connect() as db:
         table = db.execute("SELECT 1 FROM sqlite_master WHERE name='seo_scans'").fetchone()
@@ -69,13 +82,12 @@ def seo_scan():
         metadata = ProductMetadata()
         metadata.feed(response.get_data(as_text=True))
         metadata.close()
-        canonical = urlsplit(metadata.canonical)
         schema = next((item for item in metadata.structured_data
                        if isinstance(item, dict) and item.get("@type") == "Product"), None)
         checks = [
             ["Paginatitel", bool(metadata.title), metadata.title],
             ["Metabeschrijving", bool(metadata.description), metadata.description],
-            ["Canonieke productlink", canonical.scheme in {"http", "https"} and canonical.path == path,
+            ["Canonieke productlink", canonical_matches(metadata.canonical, path, request.host_url),
              metadata.canonical],
             ["Productgegevens (JSON-LD)", bool(schema), str(schema.get("name") or "") if schema else ""],
         ]

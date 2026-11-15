@@ -1,5 +1,7 @@
 {% set r = market_research %}
 {% set country, currency, locale, phase = r.markets[r.market] %}
+{% set planned_domain = 'NUVEMIXA.nl' if r.market in ('NL','BE','DE','FR','ES') else 'NUVEMIXA.com' %}
+<p>Gepland verkoopdomein voor {{ country }} · {{ planned_domain }}</p>
 <section class="panel">
   <form method="get" action="{{ url_for('control') }}" class="nv-admin-form">
     <input type="hidden" name="section" value="internationaal">

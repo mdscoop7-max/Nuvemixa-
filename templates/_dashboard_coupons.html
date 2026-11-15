@@ -25,6 +25,8 @@
   <option value="" selected disabled>Kies een percentage</option>
   {% for percentage in range(2, 21) %}<option value="{{ percentage }}">{{ percentage }}%</option>{% endfor %}
 </select></label>
+<label>Begindatum (optioneel)<input name="starts" type="date"></label>
+<label>Einddatum (optioneel)<input name="ends" type="date"></label>
 <button type="submit">Kortingscode maken</button>
 </form>{% endif %}
 <div class="admin-table-wrap"><table class="admin-table">

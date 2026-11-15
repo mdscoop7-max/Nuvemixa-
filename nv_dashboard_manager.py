@@ -1,6 +1,7 @@
 """NUVEMIXA local dashboard accounts and discounts."""
 import os, sqlite3, re, secrets
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from decimal import Decimal, ROUND_HALF_UP
 from functools import wraps
 from contextlib import closing, contextmanager
@@ -220,8 +221,12 @@ def password():
     return redirect(url_for("admin_login"), code=303)
 
 
+def coupon_today():
+    return datetime.now(ZoneInfo("Europe/Amsterdam")).date().isoformat()
+
+
 def coupon_rows():
-    today = date.today().isoformat()
+    today = coupon_today()
     with connect() as db:
         return [dict(row, status=coupon_status(row, today))
                 for row in db.execute("SELECT * FROM coupons ORDER BY id DESC")]
@@ -236,7 +241,7 @@ def amount_in_cents(value):
 def test_checkout_discount(code, subtotal):
     with connect() as db:
         row = db.execute("SELECT * FROM coupons WHERE code=?", (code.strip().upper(),)).fetchone()
-        return coupon_amount(row, subtotal, date.today().isoformat())
+        return coupon_amount(row, subtotal, coupon_today())
 
 
 def coupon_status(row, today):
@@ -261,18 +266,18 @@ def coupon_amount(row, subtotal, today):
     return min(subtotal, int(discount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
 
 
-def create_percentage_coupon(db, percent):
+def create_percentage_coupon(db, percent, starts=None, ends=None):
     alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
     for _ in range(12):
         suffix = "".join(secrets.choice(alphabet) for _ in range(8))
         code = f"NV-{suffix[:4]}-{suffix[4:]}"
         # Check legacy spelling and reserve the canonical code in one SQLite write.
         inserted = db.execute("""
-            INSERT INTO coupons(code, kind, amount)
-            SELECT ?, 'percent', ?
+            INSERT INTO coupons(code, kind, amount, starts, ends)
+            SELECT ?, 'percent', ?, ?, ?
             WHERE NOT EXISTS (SELECT 1 FROM coupons WHERE code = ? COLLATE NOCASE)
             ON CONFLICT(code) DO NOTHING
-        """, (code, percent, code))
+        """, (code, percent, starts, ends, code))
         if inserted.rowcount == 1:
             return code
     return None
@@ -287,10 +292,21 @@ def coupons():
         percentage = request.form.get("percentage", "")
         if not re.fullmatch(r"[2-9]|1[0-9]|20", percentage):
             return management_result("kortingen", "Kies een heel percentage van 2% tot en met 20%.")
+        dates = [request.form.get(field, "") for field in ("starts", "ends")]
+        try:
+            starts, ends = [date.fromisoformat(value).isoformat()
+                            if re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value)
+                            else None for value in dates]
+        except ValueError:
+            return management_result("kortingen", "Kies geldige kalenderdatums.")
+        if any(value and not parsed for value, parsed in zip(dates, (starts, ends))):
+            return management_result("kortingen", "Kies geldige kalenderdatums.")
+        if starts and ends and ends < starts:
+            return management_result("kortingen", "De einddatum moet op of na de begindatum vallen.")
     try:
         with connect() as db:
             if operation == "create":
-                code = create_percentage_coupon(db, int(percentage))
+                code = create_percentage_coupon(db, int(percentage), starts, ends)
             elif operation in {"disable", "enable"}:
                 updated = db.execute("UPDATE coupons SET active=? WHERE id=?",
                                      (int(operation == "enable"), request.form.get("id", type=int)))
@@ -300,7 +316,7 @@ def coupons():
                 code = request.form.get("code", "").strip().upper()
                 subtotal = amount_in_cents(request.form.get("subtotal", "").strip())
                 row = db.execute("SELECT * FROM coupons WHERE code=?", (code,)).fetchone()
-                discount = coupon_amount(row, subtotal, date.today().isoformat())
+                discount = coupon_amount(row, subtotal, coupon_today())
                 if discount is None:
                     return management_result("kortingen", "Deze code is niet geldig voor de testdatum.")
                 return management_result(

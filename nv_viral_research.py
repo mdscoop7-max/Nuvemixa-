@@ -10,6 +10,8 @@ from nuvemixa_admin_store import connect
 from nv_dashboard_manager import bp
 from nv_international import AMOUNTS, MARKETS, assessment as cost_result, record_from_form
 from nv_permissions import allowed
+from nv_product_dossier import dossier_view
+from nv_research_assistant import research_enabled
 
 PLATFORMS = {
     "tiktok": ("TikTok", ("tiktok.com",)), "tiktok-shop": ("TikTok Shop", ("tiktok.com", "tiktokshop.com")),
@@ -212,7 +214,9 @@ def viral_dashboard():
                      growth=growth, qualified=qualified, components=contribution,
                      alert=qualified and any(g["metric"] in ("interest", "views", "likes", "shares", "saves", "orders")
                          and g["percent"]>=50 and g["window"] in (7,30) for g in growth)))
-    return dict(records=records, filters=filters, countries=COUNTRIES, niches=NICHES, platforms=PLATFORMS,
+    selected = next((row for row in records if row["id"] == detail), None)
+    dossier = dossier_view(selected) if selected else None
+    return dict(records=records, filters=filters, dossier=dossier, research_ai=research_enabled(), countries=COUNTRIES, niches=NICHES, platforms=PLATFORMS,
                 factors=FACTORS, checks=CHECKS, amounts=AMOUNTS, detail=detail, error=error,
                 currencies={code:row[1] for code,row in MARKETS.items()}|{"AU":"AUD","ES":"EUR","SE":"SEK","JP":"JPY"},
                 today=date.today().isoformat())

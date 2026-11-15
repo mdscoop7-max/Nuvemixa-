@@ -1,0 +1,63 @@
+{% set d = v.dossier %}
+<section class="panel-after">
+<h3>Productdossier</h3>
+{% if d.error %}<p class="notice" role="alert">Het productdossier kan tijdelijk niet worden geladen.</p>
+{% else %}
+<form method="get" action="{{ url_for('control') }}" class="nv-admin-form">
+<input type="hidden" name="section" value="viral">
+<input type="hidden" name="detail" value="{{ row.id }}">
+<label>Verkoopland <select name="offer_market">
+{% for code, info in d.markets.items() %}<option value="{{ code }}" {% if d.market == code %}selected{% endif %}>{{ info[0] }} · {{ info[1] }}</option>{% endfor %}
+</select></label><button type="submit">Markt bekijken</button>
+</form>
+<p><strong>{{ d.market_info[0] }}</strong> · {{ d.market_info[2] }} · {{ d.stages[d.stage] }}</p>
+{% if d.offers %}<p>Opgeslagen markten {% for code in d.offers %}<a href="{{ url_for('control', section='viral', detail=row.id, offer_market=code) }}">{{ d.markets[code][0] }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+{% if d.financials %}
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>Bijdrage per order</th><th>Break-even acquisitiekosten</th><th>Break-even ROAS</th><th>Nettomarge</th><th>Tegenvallend scenario</th></tr></thead>
+<tbody><tr>
+{% for key in ('contribution', 'breakeven_cpa', 'roas', 'net_margin', 'stress') %}
+<td>{% if d.financials[key] is none %}Onbekend{% else %}{{ '%.2f'|format(d.financials[key]) }} {{ '%' if key == 'net_margin' else '×' if key == 'roas' else d.market_info[1] }}{% endif %}</td>
+{% endfor %}
+</tr></tbody></table></div>
+{% else %}<p>Bijdrage en nettomarge onbekend. Vul de benodigde kosten in. Gebruik 0 alleen voor een bevestigde nulpost.</p>{% endif %}
+<form method="post" action="{{ url_for('nv_manage.save_dossier') }}" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="candidate" value="{{ row.id }}">
+<input type="hidden" name="market" value="{{ d.market }}">
+<label>Leverancier uit leveranciersbeheer <select name="supplier_id"><option value="">Onbekend</option>
+{% for supplier in d.suppliers if supplier.status != 'afgekeurd' %}<option value="{{ supplier.id }}" {% if d.record.get('supplier_id') == supplier.id %}selected{% endif %}>{{ supplier.name }} · {{ supplier.status }}</option>{% endfor %}
+</select></label>
+<label>Of voorgestelde leverancier <input name="supplier_name" maxlength="500" value="{{ d.record.get('supplier_name','') }}"></label>
+<label>Rol <select name="supplier_kind"><option value="">Onbekend</option>
+{% for value,label in d.types.items() %}<option value="{{ value }}" {% if d.record.get('supplier_kind') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+</select></label>
+<label>Oorspronkelijke fabrikant <input name="manufacturer" maxlength="500" value="{{ d.record.get('manufacturer','') }}"></label>
+<label>SKU <input name="sku" maxlength="500" value="{{ d.record.get('sku','') }}"></label>
+<label>Voorraad <select name="stock"><option value="">Onbekend</option>
+{% for code,label in [('in_stock','Op voorraad'),('out_of_stock','Uitverkocht')] %}<option value="{{ code }}" {% if d.record.get('stock') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+</select></label>
+{% for key,label in [('delivery','Levering en levertijd'),('returns_terms','Retourvoorwaarden'),('quality','Kwaliteitscontrole'),('risks','Risico’s')] %}
+<label>{{ label }} <textarea name="{{ key }}" maxlength="500">{{ d.record.get(key,'') }}</textarea></label>
+{% endfor %}
+<label>Offertebedrag in oorspronkelijke valuta <input name="offer_amount" inputmode="decimal" value="{{ d.record.get('offer_amount','') }}"></label>
+<label>Offertevaluta <input name="offer_currency" maxlength="3" value="{{ d.record.get('offer_currency','') }}"></label>
+<label>Wisselkoers naar {{ d.market_info[1] }} <input name="exchange_rate" inputmode="decimal" value="{{ d.record.get('exchange_rate','') }}"></label>
+{% for key,label in d.sources.items() %}
+<label>{{ label }} <input name="{{ key }}_url" type="url" maxlength="450" value="{{ d.record.get(key ~ '_url','') }}"></label>
+<label>Controledatum · {{ label|lower }} <input name="{{ key }}_date" type="date" value="{{ d.record.get(key ~ '_date','') }}"></label>
+{% endfor %}
+<fieldset class="nv-market-fields"><legend>Bedragen per order · {{ d.market_info[1] }}</legend>
+{% for key,label in d.fields.items() %}<label>{{ label }} <input name="{{ key }}" inputmode="decimal" value="{{ d.record.get(key,'') }}"></label>{% endfor %}
+</fieldset>
+<label>Catalogusproduct voor Merchant-controle <select name="catalog_id"><option value="">Onbekend</option>
+{% for id,product in d.products.items() %}<option value="{{ id }}" {% if d.record.get('catalog_id') == id %}selected{% endif %}>{{ product.name }}</option>{% endfor %}
+</select></label>
+{% for key,label in [('demand_confirmed','Vraag gecontroleerd'),('dropship','Rechtstreekse levering aan klant bevestigd'),('trial_passed','Proefbestelling geslaagd'),('merchant_confirmed','Landingspagina, levering en checkout voor deze markt gecontroleerd')] %}
+<label class="nv-checkbox"><input type="checkbox" name="{{ key }}" value="1" {% if d.record.get(key) %}checked{% endif %}> {{ label }}</label>
+{% endfor %}
+<button type="submit">Dossier opslaan</button>
+</form>
+<nav aria-label="Onderzoeksmodules"><a href="{{ url_for('control', section='internationaal') }}">Marktonderzoek</a> · <a href="{{ url_for('control', section='leveranciers') }}">Leveranciersbeheer</a> · <a href="{{ url_for('control', section='calculator') }}">Calculator</a> · <a href="{{ url_for('control', section='google-shopping') }}">Merchant</a></nav>
+{% endif %}
+</section>

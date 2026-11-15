@@ -56,6 +56,15 @@
 {% if row.saved.get('supplier_name') %}<p>Leverancier {{ row.saved.supplier_name }}</p>{% endif %}
 {% if row.alert %}<p class="notice" role="status">Onderzoekssignaal · minstens 50% gemeten groei in 7 of 30 dagen en een positieve bijdrage na dropshippingcontrole.</p>{% endif %}
 {% for g in row.growth %}<p>{{ g.window }} dagen · {{ v.platforms[g.platform][0] }} · {{ g.metric }} · {{ '%+.1f'|format(g.percent) }}% · tot {{ g.end }}. <a href="{{ g.source }}">Bron</a></p>{% endfor %}
+{% if v.detail == row.id and v.dossier %}
+{% include "_dashboard_product_dossier.html" %}
+{% if v.research_ai %}
+<form method="post" action="{{ url_for('nv_manage.research_suggestion') }}" class="nv-admin-form">
+{{ csrf() }}<input type="hidden" name="candidate" value="{{ row.id }}">
+<button type="submit">AI-advies over bestaande waarnemingen</button>
+</form>
+{% else %}<p>AI-onderzoeksassistent wacht op configuratie.</p>{% endif %}
+{% else %}<p><a href="{{ url_for('control', section='viral', detail=row.id) }}">Productdossier openen</a></p>{% endif %}
 <details{% if v.detail == row.id %} open{% endif %}><summary>Bronnen en beoordeling</summary>
 {% if row.evidence %}
 <div class="admin-table-wrap"><table class="admin-table">
