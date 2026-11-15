@@ -76,13 +76,13 @@ def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
             missing.append(label)
     try:
         price = Decimal(str(item.get("price")))
-        if not price.is_finite() or price <= 0:
+        if not price.is_finite() or price <= 0 or price != price.quantize(Decimal("0.01")):
             missing.append("prijs")
     except (InvalidOperation, ValueError):
         missing.append("prijs")
     if item.get("currency", "EUR") != "EUR":
         missing.append("valuta")
-    if item.get("stock_status") not in {"in_stock", "out_of_stock"}:
+    if item.get("stock_status") not in ("in_stock", "out_of_stock"):
         missing.append("voorraad")
     gtin = str(item.get("gtin") or "")
     if gtin:
@@ -102,9 +102,10 @@ def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
             url = urllib.parse.urlsplit(urllib.parse.urljoin(base_url.rstrip("/") + "/", value))
             if (not value or any(char.isspace() for char in value) or url.scheme != "https"
                     or not url.hostname or url.username or url.password
-                    or (key == "product_url" and url.hostname != urllib.parse.urlsplit(base_url).hostname)
-                    or (key == "image" and url.path.startswith("/img/product/"))):
+                    or (key == "product_url" and url.netloc.lower() != urllib.parse.urlsplit(base_url).netloc.lower())):
                 missing.append(label)
+            elif key == "image" and url.path.startswith("/img/product/"):
+                missing.append("gegenereerde tijdelijke afbeelding")
         except ValueError:
             missing.append(label)
     return missing

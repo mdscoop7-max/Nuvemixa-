@@ -221,8 +221,10 @@ def password():
 
 
 def coupon_rows():
+    today = date.today().isoformat()
     with connect() as db:
-        return db.execute("SELECT * FROM coupons ORDER BY id DESC").fetchall()
+        return [dict(row, status=coupon_status(row, today))
+                for row in db.execute("SELECT * FROM coupons ORDER BY id DESC")]
 
 
 def amount_in_cents(value):
@@ -237,10 +239,20 @@ def test_checkout_discount(code, subtotal):
         return coupon_amount(row, subtotal, date.today().isoformat())
 
 
+def coupon_status(row, today):
+    if not row["active"]:
+        return "Uitgeschakeld"
+    if row["starts"] and row["starts"] > today:
+        return "Gepland"
+    if row["ends"] and row["ends"] < today:
+        return "Verlopen"
+    if row["usage_limit"] is not None and row["used"] >= row["usage_limit"]:
+        return "Gebruikslimiet bereikt"
+    return "Actief"
+
+
 def coupon_amount(row, subtotal, today):
-    if (not row or not row["active"] or (row["starts"] and row["starts"] > today)
-            or (row["ends"] and row["ends"] < today)
-            or (row["usage_limit"] is not None and row["used"] >= row["usage_limit"])):
+    if not row or coupon_status(row, today) != "Actief":
         return None
     amount = Decimal(str(row["amount"]))
     if not amount.is_finite() or amount <= 0 or row['kind'] not in {'percent', 'fixed'}:
@@ -249,36 +261,43 @@ def coupon_amount(row, subtotal, today):
     return min(subtotal, int(discount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
 
 
+def create_percentage_coupon(db, percent):
+    alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+    for _ in range(12):
+        suffix = "".join(secrets.choice(alphabet) for _ in range(8))
+        code = f"NV-{suffix[:4]}-{suffix[4:]}"
+        # Check legacy spelling and reserve the canonical code in one SQLite write.
+        inserted = db.execute("""
+            INSERT INTO coupons(code, kind, amount)
+            SELECT ?, 'percent', ?
+            WHERE NOT EXISTS (SELECT 1 FROM coupons WHERE code = ? COLLATE NOCASE)
+            ON CONFLICT(code) DO NOTHING
+        """, (code, percent, code))
+        if inserted.rowcount == 1:
+            return code
+    return None
+
+
 @bp.post("/admin/nv/coupons")
 def coupons():
     operation = request.form.get("op", "create")
     if not (allowed("discount_view", "discount_manage") if operation == "preview" else allowed("discount_manage")):
         abort(403)
-    code = request.form.get("code", "").strip().upper()
+    if operation == "create":
+        percentage = request.form.get("percentage", "")
+        if not re.fullmatch(r"[2-9]|1[0-9]|20", percentage):
+            return management_result("kortingen", "Kies een heel percentage van 2% tot en met 20%.")
     try:
         with connect() as db:
             if operation == "create":
-                kind = request.form.get("kind")
-                amount = amount_in_cents(request.form.get("amount", "").strip())
-                starts = request.form.get("starts") or None
-                ends = request.form.get("ends") or None
-                if starts:
-                    starts = date.fromisoformat(starts).isoformat()
-                if ends:
-                    ends = date.fromisoformat(ends).isoformat()
-                if (not re.fullmatch(r"[A-Z0-9_-]{3,32}", code)
-                        or kind not in {"percent", "fixed"} or not amount
-                        or (kind == "percent" and amount > 10000)
-                        or (starts and ends and starts > ends)):
-                    raise ValueError
-                db.execute("INSERT INTO coupons(code,kind,amount,starts,ends) VALUES(?,?,?,?,?)",
-                           (code, kind, amount / 100, starts, ends))
+                code = create_percentage_coupon(db, int(percentage))
             elif operation in {"disable", "enable"}:
                 updated = db.execute("UPDATE coupons SET active=? WHERE id=?",
                                      (int(operation == "enable"), request.form.get("id", type=int)))
                 if not updated.rowcount:
                     abort(404)
             elif operation == "preview":
+                code = request.form.get("code", "").strip().upper()
                 subtotal = amount_in_cents(request.form.get("subtotal", "").strip())
                 row = db.execute("SELECT * FROM coupons WHERE code=?", (code,)).fetchone()
                 discount = coupon_amount(row, subtotal, date.today().isoformat())
@@ -291,10 +310,13 @@ def coupons():
             else:
                 abort(400)
     except ValueError:
-        return management_result("kortingen", "Controleer code, bedrag, percentage en datums.")
-    except sqlite3.IntegrityError:
-        return management_result("kortingen", "Deze kortingscode bestaat al.")
+        return management_result("kortingen", "Controleer het subtotaal.")
     except (sqlite3.Error, OSError):
         current_app.logger.error("Kortingsdatabase niet beschikbaar")
         return management_result("kortingen", "Kortingen zijn tijdelijk niet beschikbaar.")
+    if operation == "create":
+        if code is None:
+            return management_result("kortingen", "Geen unieke code beschikbaar. Probeer opnieuw.")
+        flash(code, "coupon_created")
+        return redirect(url_for("control", section="kortingen"), code=303)
     return management_result("kortingen", "Kortingsactie opgeslagen.", success=True)

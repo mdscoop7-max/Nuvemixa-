@@ -12,7 +12,7 @@ from flask import current_app, g, request
 from jinja2 import meta
 
 from nuvemixa_admin_store import database_path
-from nv_merchant_audit import product_issues
+from nv_merchant_audit import audit as merchant_audit
 from nv_dashboard_manager import DB, coupon_amount
 from nv_permissions import RIGHTS, SECTIONS
 from nv_seo_scan import ProductMetadata
@@ -30,6 +30,31 @@ def database_check(path, tables, columns=None):
             if not set(columns) <= actual:
                 return "attention", "Het accountschema wacht op migratie.", "Open Accountbeheer als beheerder."
     return "works", "De vereiste tabellen zijn leesbaar.", ""
+
+
+def customer_database_uri(path):
+    return path.resolve().as_uri() + "?mode=ro"
+
+
+def check_customers(path):
+    if not path.is_file():
+        if path.exists() or path.is_symlink():
+            return "error", "Het ingestelde klantdatabasepad is geen bestand.", "Controleer het ingestelde pad."
+        if not path.parent.is_dir():
+            return "error", "De ingestelde opslagmap voor klanten ontbreekt.", "Controleer het databasepad en de opslagmap."
+        return ("attention", "Geen databasebestand op het ingestelde klantdatabasepad.",
+                "Controleer of de bestaande klantdatabase elders staat. Initialiseer alleen als dit een lege installatie is.")
+    with closing(sqlite3.connect(customer_database_uri(path), uri=True, timeout=0.25)) as db:
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='customers' COLLATE NOCASE").fetchone():
+            return ("attention", "Het databasebestand bestaat, maar de klanttabel ontbreekt.",
+                    "Initialiseer de klanttabel alleen als dit het bedoelde bestand is.")
+        columns = {row[1].lower() for row in db.execute("PRAGMA table_info(customers)")}
+        missing = {"id", "name", "email", "password_hash", "created_at"} - columns
+        if missing:
+            return ("error", "Ontbrekende klantkolommen: " + ", ".join(sorted(missing)) + ".",
+                    "Controleer de bestaande schema-versie voordat je iets wijzigt.")
+        has_customers = db.execute("SELECT 1 FROM customers LIMIT 1").fetchone() is not None
+    return "works", "Klanttabel is leesbaar." if has_customers else "Klanttabel is leesbaar en leeg.", ""
 
 
 def inspect_files():
@@ -183,27 +208,34 @@ def scan(items, categories, customer_db, integrations):
     run("Productcatalogus", "Product-ID's en aantallen per categorie", catalogue, "Controleer de catalogusbestanden.")
     run("Productafbeeldingen", "Lokale bestanden en verwijzingen naar gegenereerde beelden", images, "Controleer de afbeeldingspaden.")
     run("Kortingen", "Opgeslagen kortingswaarden", coupons, "Controleer de kortingsdatabase.")
-    run("Klantdatabase", "Leesbare klanttabel", lambda: database_check(customer_db, ["customers"]), "Controleer de klantdatabase.")
+    run("Klantdatabase", "Geconfigureerd pad en vereiste klantkolommen",
+        lambda: check_customers(customer_db), "Controleer het pad, de leesrechten en de database-integriteit.")
     run("Onderzoek en leveranciers", "Leesbare SQLite-tabellen voor notities en leveranciers",
         lambda: database_check(database_path(), ["research_notes", "suppliers"]),
         "Controleer ADMIN_DB (of NUVEMIXA_ADMIN_DB).")
     run("Calculator", "Vereiste invoervelden in het dashboard", calculator, "Controleer het dashboardtemplate.")
     run("SEO en rapportopslag", "Metadata van één productpagina en aanwezigheid van een opgeslagen rapport", seo, "Controleer het SEO-scherm.")
     def merchant():
-        ready = sum(not product_issues(item, current_app.static_folder) for item in items)
-        return ("works" if items and ready == len(items) else "attention",
-                f"{ready} van {len(items)} doorstaan de interne controle.", "Bekijk de redenen per product bij Merchant.")
+        report = merchant_audit(items, current_app.static_folder)
+        ready, total = report["ready"], report["total"]
+        return ("works" if total and ready == total else "attention",
+                f"{ready} van {total} doorstaan de interne controle.", "Bekijk de redenen per product bij Merchant.")
     run("Merchant-preview", "Interne validatie van catalogusproducten", merchant, "Controleer productgegevens en export.")
-    visits = visit_summary()
-    add("Bezoekersteller", "Status van de lokale meetbron",
-        "error" if visits["error"] else "works" if visits["groups"] else "unchecked",
-        ("Meetbron niet leesbaar." if visits["error"] else
-         "Meetbron leesbaar." if visits["groups"] else "Nog geen lokale meetgegevens."),
-        "Bekijk de registratie-instelling bij Statistieken.")
-    for name, present in integrations.items():
-        add(name, "Aanwezigheid van lokale configuratie", "unchecked",
-            "Instellingen aanwezig; verbinding niet getest." if present else "Geen koppeling ingericht.",
-            "Test de externe verbinding afzonderlijk wanneer die is ingericht.")
+    def visitors():
+        visits = visit_summary()
+        if visits["error"]:
+            return "error", "De opgeslagen bezoekcijfers zijn onleesbaar.", "Controleer de lokale dashboarddatabase."
+        if not visits["enabled"]:
+            stored = " Bestaande meetgegevens zijn leesbaar." if visits["groups"] else ""
+            return "disabled", "Bezoekersregistratie staat uit." + stored, ""
+        kind = visits["traffic"]
+        if any(group[0] == kind and group[4] for group in visits["groups"]):
+            return "works", f"Registratie ({kind}) staat aan en opgeslagen metingen zijn leesbaar.", ""
+        return "unchecked", f"Registratie ({kind}) staat aan. Voor deze bron ontbreken meetgegevens.", ""
+
+    run("Bezoekersteller", "Registratie-instelling en leesbaarheid van de meetbron", visitors, "Controleer Statistieken.")
+    for name, (status, result, solution) in integrations.items():
+        add(name, "Configuratie en resultaat van eventuele alleen-lezen verbindingstest", status, result, solution)
     live_orders = current_app.extensions["nuvemixa_live_orders"]()
     add("Applicatie-instellingen", "Vaste beheerconfiguratie en schakelaar voor live orders",
         "attention" if live_orders else "works",
@@ -211,5 +243,5 @@ def scan(items, categories, customer_db, integrations):
         "Schakel live orders uit voor een lokale test." if live_orders else "")
     counts = Counter(row["status"] for row in results)
     return {"checked_at": timestamp,
-            "summary": {status: counts[status] for status in ("works", "attention", "error", "unchecked")},
+            "summary": {status: counts[status] for status in ("works", "attention", "error", "unchecked", "unconfigured", "failed", "disabled")},
             "checks": results}

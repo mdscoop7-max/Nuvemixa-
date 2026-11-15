@@ -1,4 +1,24 @@
 (() => {
+  const copyCoupon = document.querySelector('[data-copy-coupon]');
+  if (copyCoupon) {
+    const code = document.querySelector('#nv-created-coupon');
+    const status = document.querySelector('[data-copy-coupon-status]');
+    copyCoupon.hidden = false;
+    copyCoupon.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(code.textContent);
+        status.textContent = 'Gekopieerd';
+      } catch {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(code);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        status.textContent = 'Code geselecteerd. Kopieer de code met het toetsenbord of het contextmenu.';
+      }
+    });
+  }
+
   const scan = document.querySelector('[data-run-system-scan]');
   if (scan) scan.addEventListener('click', () => {
     document.querySelector('[data-scan-progress]').textContent = 'Lokale controles worden uitgevoerd…';

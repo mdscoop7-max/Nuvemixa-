@@ -241,7 +241,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <tbody>{% for row in merchant_preview_rows %}
 <tr><td><strong>{{ row.name }}</strong><br>{{ row.id }}</td><td>
 {% if row.issues %}<details><summary>{{ row.issues|length }} punten bekijken</summary><ul>
-{% for issue in row.issues %}<li><strong>{{ issue.reason }}</strong> · {{ issue.field }}. {{ issue.solution }}</li>{% endfor %}
+{% for issue in row.issues %}<li><strong>{{ issue.reason }}</strong> · {{ issue.field }}. {% if issue.detail %}{{ issue.detail }} {% endif %}{{ issue.solution }}</li>{% endfor %}
 </ul></details>{% else %}Interne controle geslaagd{% endif %}
 </td></tr>{% else %}<tr><td colspan="2">Geen producten in de catalogus.</td></tr>{% endfor %}</tbody></table></div>
 <p>Google beoordeelt ook het account, de winkel, bereikbaarheid en voorwaarden per markt. Deze lokale controle heeft geen Google-beoordeling opgevraagd.</p>
@@ -326,16 +326,24 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "accountbeheer" %}
 {% include "_dashboard_team.html" %}
 {% elif section == "monitoring" %}
-<section class="panel integration"><h2>Monitoring en koppelingen</h2><p>De koppelingstabel toont aanwezige instellingen. De lokale controle test ook of de catalogus en dashboarddatabase beschikbaar zijn.</p>
-<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Configuratiestatus</th></tr></thead><tbody>
-<tr><td>RankFix</td><td>{{ 'Ingesteld · niet getest' if integration_status.rankfix else 'Niet ingesteld' }}</td></tr>
-<tr><td>WooCommerce</td><td>{{ 'Ingesteld · niet getest' if integration_status.woo else 'Niet ingesteld' }}</td></tr>
-<tr><td>Klantenservice e-mail</td><td>{{ 'Ingesteld · niet getest' if integration_status.contact else 'Niet ingesteld' }}</td></tr>
-<tr><td>Betaling</td><td>{{ 'Sleutel aanwezig · niet getest' if integration_status.payment else 'Niet ingesteld (bewust uitgesteld)' }}</td></tr>
-<tr><td>Merchant-preview</td><td>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }} intern goedgekeurd · niet gepubliceerd</td></tr>
-<tr><td>Google Ads</td><td>Geen werkende koppeling bevestigd</td></tr>
+<section class="panel integration"><h2>Monitoring en koppelingen</h2>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Status</th></tr></thead><tbody>
+{% for name, (status, result, follow_up) in monitoring_connections.items() %}
+<tr><td>{{ name }}</td><td>{{ scan_labels[status] }} · {{ result }}
+{% if is_admin and status == "unchecked" and name in monitoring_probes %}
+<form method="post" action="{{ url_for('admin_monitoring_check') }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<button type="submit" name="action" value="{{ name }}">Test alleen-lezen verbinding (JSON)</button>
+</form>
+{% endif %}
+</td></tr>
+{% endfor %}
+<tr><td>Merchant-preview</td><td>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }} intern goedgekeurd</td></tr>
 <tr><td>Bezoekersteller</td><td>{{ "Lokale registratie actief" if visitor_stats.enabled else "Lokale registratie uitgeschakeld" }}</td></tr>
-</tbody></table></div>{% if is_admin %}<p><a class="integration-status" href="{{ url_for('admin_integrations') }}" target="_blank" rel="noopener">Technische configuratiestatus (JSON) →</a></p>{% endif %}<div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>✓ Alles controleren (veilig, alleen lezen) →</a><span role="status" data-scan-progress></span></div><p>De controle toont route-, catalogus- en databasestatus. Externe bereikbaarheid en bezoekersmetingen vereisen een actieve gegevensbron.</p></section>
+</tbody></table></div>
+{% if is_admin %}<p><a class="integration-status" href="{{ url_for('admin_integrations') }}" target="_blank" rel="noopener">Technische configuratiestatus (JSON) →</a></p>{% endif %}
+<div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>Lokale systeemcontrole uitvoeren →</a><span role="status" data-scan-progress></span></div>
+</section>
 {% block monitoring_report %}{% endblock %}
 {% include "_dashboard_visits.html" %}
 {% elif section == "klantenservice" %}

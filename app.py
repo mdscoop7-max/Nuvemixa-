@@ -12,6 +12,7 @@ import urllib.request
 
 import urllib.error
 
+from contextlib import closing
 from pathlib import Path
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -20,7 +21,7 @@ from flask import g, has_request_context, Flask, Response, current_app, render_t
 from werkzeug.security import check_password_hash
 from werkzeug.local import LocalProxy
 from nv_catalog_manager import catalog_changes
-from nuvemixa_integrations import merchant_product_checks
+from nuvemixa_integrations import mollie_readonly_check
 from nv_storage_paths import CUSTOMER_DB
 
 from datetime import datetime, timezone
@@ -1190,8 +1191,8 @@ from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_c
 from nv_seo_scan import last_scan
 from nv_permissions import RIGHTS, SECTIONS, account_rights, allowed
 from nv_visits import record_visit, visit_summary
-from nv_system_check import scan as run_system_scan
-from nv_merchant_audit import audit as merchant_audit, product_issues
+from nv_system_check import check_customers, customer_database_uri, scan as run_system_scan
+from nv_merchant_audit import audit as merchant_audit
 from nv_international import dashboard_market
 from nv_viral_research import viral_dashboard
 
@@ -1705,25 +1706,76 @@ def admin_research_preview():
 
 
 
-def system_report():
+def monitoring_integrations():
+    woo_readonly = read_configuration_present()
     integrations = {
-        "WooCommerce": read_configuration_present() or woo_configured(),
-        "Leverancierskoppeling": False,
-        "Gmail-inbox": False,
-        "Google Ads": False,
-        "RankFix": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
-        "Betalingen": bool(os.getenv("MOLLIE_API_KEY")),
+        "WooCommerce": (woo_readonly or woo_configured(),
+                        "" if woo_readonly else "De leestest vereist een WooCommerce-leesconfiguratie met bevestigde host."),
+        "Leverancierskoppeling": (False, "CSV-voorcontrole is lokaal. Er is geen externe voorraadbron gekoppeld."),
+        "Gmail-inbox": (False, "De Gmail-inbox heeft nog geen geautoriseerde koppeling."),
+        "Google Ads": (False, "Er is nog geen geautoriseerde campagnebron."),
+        "RankFix": (bool(os.getenv("RANKFIX_API_URL", "").strip() and os.getenv("RANKFIX_API_TOKEN", "").strip()),
+                    "Het dashboard heeft geen RankFix-API-verbindingstest. De bestaande link is afzonderlijk."),
+        "Betalingen": (bool(os.getenv("MOLLIE_API_KEY", "").strip()), "Er is een Mollie-sleutel nodig."),
     }
-    return run_system_scan(list(catalog_items()), CATEGORIES, _CUSTOMER_DB, integrations)
+    return {name: ("unchecked", "Instellingen aanwezig. Verbinding niet getest.", follow_up)
+            if configured else ("unconfigured", "Geen externe koppeling ingericht.", follow_up)
+            for name, (configured, follow_up) in integrations.items()}
 
 
-@app.route("/admin/monitoring/check")
+def probe_monitoring_connection(name, current):
+    if current[0] == "unconfigured":
+        return current
+    if name == "WooCommerce":
+        if not read_configuration_present():
+            return current
+        try:
+            if read_recent_orders() is not None:
+                return "works", "Alleen-lezen orderuitlezing bevestigd.", ""
+        except CommerceConnectionError:
+            pass
+        return "failed", "WooCommerce-orderuitlezing mislukt.", "Controleer HTTPS, host en leesrechten."
+    result = mollie_readonly_check()
+    if result["state"] in ("connected_test", "connected_live_credentials"):
+        return "works", result["message"], ""
+    if result["state"] == "invalid_configuration":
+        return "error", result["message"], "Controleer de bestaande Mollie-configuratie."
+    return "failed", result["message"], "Controleer bereikbaarheid en de bestaande Mollie-configuratie."
+
+
+def system_report(integrations=None):
+    return run_system_scan(list(catalog_items()), CATEGORIES, _CUSTOMER_DB,
+                           monitoring_integrations() if integrations is None else integrations)
+
+
+@app.route("/admin/monitoring/check", methods=["GET", "POST"])
 def admin_monitoring_check():
     if not allowed("monitoring"):
-        if not staff_current():
+        if request.method == "GET" and not staff_current():
             return redirect(url_for("admin_login"))
         abort(403)
-    response = jsonify(system_report())
+    integrations = monitoring_integrations()
+    if request.method == "POST":
+        if not admin_is_authenticated():
+            abort(403)
+        action = request.form.get("action")
+        if action == "initialize_customers":
+            try:
+                status, _, _ = check_customers(_CUSTOMER_DB)
+                if status == "attention":
+                    with closing(_customer_conn()):
+                        pass
+                    status, _, _ = check_customers(_CUSTOMER_DB)
+            except (OSError, sqlite3.Error, ValueError):
+                status = "error"
+            if status != "works":
+                return jsonify(error="Klanttabel kan niet veilig worden geïnitialiseerd."), 409
+            return redirect(url_for("control", section="monitoring", scan=1), code=303)
+        if action not in ("WooCommerce", "Betalingen"):
+            abort(400)
+        integrations[action] = probe_monitoring_connection(action, integrations[action])
+    response = jsonify(system_report(integrations))
+    response.headers["Cache-Control"] = "no-store"
     if request.args.get("download") == "1":
         response.headers["Content-Disposition"] = "attachment; filename=nuvemixa-systeemcontrole.json"
     return response
@@ -1955,8 +2007,6 @@ def admin_mollie_check():
 
         return redirect(url_for("admin_login"))
 
-    from nuvemixa_integrations import mollie_readonly_check
-
     response = jsonify(mollie_readonly_check())
 
     response.headers["Cache-Control"] = "no-store"
@@ -1978,7 +2028,9 @@ def admin_merchant_feed_preview():
 
     from nuvemixa_integrations import merchant_feed_preview
 
-    xml, count = merchant_feed_preview(item for item in catalog_items() if not product_issues(item, app.static_folder))
+    items = list(catalog_items())
+    report = merchant_audit(items, app.static_folder)
+    xml, count = merchant_feed_preview(item for item, row in zip(items, report["products"]) if not row["issues"])
 
     response = Response(xml, content_type="application/xml; charset=utf-8")
 
@@ -2206,11 +2258,12 @@ def control():
             staff_error = "Dashboardaccounts kunnen tijdelijk niet worden geladen."
     if section == "klanten":
         try:
-            with _customer_conn() as conn:
+            with closing(sqlite3.connect(customer_database_uri(_CUSTOMER_DB), uri=True, timeout=0.5)) as conn:
+                conn.row_factory = sqlite3.Row
                 admin_customer_rows = [dict(row) for row in conn.execute(
                     "SELECT id,name,email,created_at FROM customers ORDER BY id DESC LIMIT 100").fetchall()]
-        except sqlite3.Error:
-            admin_customer_error = "Klantdatabase kan niet worden gelezen."
+        except (OSError, sqlite3.Error):
+            admin_customer_error = "Klantdatabase kan niet worden gelezen. Bekijk de klantdatabasecontrole bij Monitoring."
 
     report = system_report() if section == "monitoring" and request.args.get("scan") == "1" else None
     view_template = "control.html" if request.path == "/catalogus-overzicht" else "dashboard.html"
@@ -2290,7 +2343,12 @@ def control():
         staff=staff,
         employee_sections=employee_sections,
         report=report,
-        scan_labels={"works": "Werkt", "attention": "Aandacht nodig", "error": "Fout", "unchecked": "Niet gekoppeld / niet getest"},
+        scan_labels={"works": "Werkt", "attention": "Aandacht nodig", "error": "Fout",
+                     "unchecked": "Niet getest", "unconfigured": "Niet gekoppeld",
+                     "failed": "Verbinding mislukt", "disabled": "Uitgeschakeld"},
+        monitoring_connections=monitoring_integrations() if section == "monitoring" else {},
+        monitoring_probes=("WooCommerce", "Betalingen") if section == "monitoring" and read_configuration_present()
+                          else ("Betalingen",),
         visitor_stats=visit_summary() if section in {"statistieken", "monitoring"} else None,
         allowed=allowed,
         rights_labels=RIGHTS,

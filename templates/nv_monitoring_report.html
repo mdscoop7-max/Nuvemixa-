@@ -10,6 +10,12 @@
 <summary><span class="nv-scan-status nv-scan-{{ row.status }}">{{ scan_labels[row.status] }}</span> <strong>{{ row.name }}</strong> · {{ row.result }}</summary>
 <dl><dt>Gecontroleerd</dt><dd>{{ row.check }}</dd><dt>Tijdstip</dt><dd>{{ row.checked_at }}</dd>
 {% if row.solution %}<dt>Vervolg</dt><dd>{{ row.solution }}</dd>{% endif %}</dl>
+{% if row.name == "Klantdatabase" and row.status == "attention" and is_admin %}
+<form method="post" action="{{ url_for('admin_monitoring_check') }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<button type="submit" name="action" value="initialize_customers">Lege klanttabel initialiseren</button>
+</form>
+{% endif %}
 </details>
 {% endfor %}
 </section>
