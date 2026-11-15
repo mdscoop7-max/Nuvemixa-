@@ -7,7 +7,13 @@
 <h2>Kandidaten en trendsignalen</h2>
 <p>Registreer controleerbare waarnemingen uit openbare pagina’s en toegestane exports. De score is een onderbouwde beoordeling. Groei vereist twee vergelijkbare metingen van dezelfde bron, platform, maatstaf en periode.</p>
 {% for category, message in get_flashed_messages(with_categories=true) %}
+{% if category == 'supplier_sources' %}
+<div class="notice"><strong>AI-zoekresultaten ter verificatie</strong><ul>
+{% for link in message %}<li><a href="{{ link.href }}" rel="noopener noreferrer">{{ link.name }}</a></li>{% endfor %}
+</ul><p>Verifieer productmatch, echte voorraadlocatie, levertijd en offerte voordat je een aanbod bevestigt.</p></div>
+{% else %}
 <p class="notice" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+{% endif %}
 {% endfor %}
 {% if v.error %}<p class="notice" role="alert">{{ v.error }}</p>{% else %}
 {% set platform_options = v.platforms.items()|list %}

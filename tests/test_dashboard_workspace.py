@@ -194,7 +194,7 @@ def test_postgres_visits_and_verified_snapshot_import(databases, monkeypatch, tm
     monkeypatch.setattr(nv_dashboard_postgres, "connect", test_connection)
     monkeypatch.setenv("NUVEMIXA_DASHBOARD_DATABASE_URL", dsn)
     summary = nv_visits.visit_summary()
-    assert len(data) == 14
+    assert len(data) == 15
     assert summary["backend"] == "PostgreSQL" and summary["groups"][0][1] == 1
     monkeypatch.setenv("NUVEMIXA_VISIT_COUNTER", "true")
     monkeypatch.setenv("NUVEMIXA_VISIT_TRAFFIC", "test")

@@ -32,6 +32,7 @@ FILES = {
         "viral_candidates": ("id title country niche notes assessment", "id"),
         "viral_observations": ("candidate platform source observed window metric value estimate", "candidate platform source observed window metric"),
         "product_dossier_offers": ("candidate_id market payload", "candidate_id market"),
+        "supplier_comparisons": ("candidate_id market supplier_key payload", "candidate_id market supplier_key"),
     },
 }
 REQUIRED = {"staff", "coupons", "customers", "suppliers", "research_notes"}
@@ -68,7 +69,8 @@ def source_rows(bundle, checksums):
                 if actual != set(columns):
                     raise ValueError(f"Pas de kolomtoewijzing bewust aan voor {table}.")
                 selection = ",".join(f'"{col}"' for col in columns)
-                rows = db.execute(f'SELECT {selection} FROM "{table}"').fetchall()
+                order = " ORDER BY rowid" if table == "catalog_edits" else ""
+                rows = db.execute(f'SELECT {selection} FROM "{table}"{order}').fetchall()
                 if table == "coupons":
                     rows = [row[:3] + (Decimal(str(row[3])),) + row[4:] for row in rows]
                 result[table] = (columns, keys.split(), rows)

@@ -268,12 +268,10 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Leverancier toegevoegd.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de gegevens of controleer of de leverancier al bestaat.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
 <details class="panel-after">
 <summary>B2B-kandidaten voor verificatie</summary>
-<p>Gecontroleerd op 15 november 2026. Vraag per SKU en land een offerte op met voorraad, verzending, retouradres en levertijd. De genoemde diensten krijgen pas een goedkeuring na bewijs en een proefbestelling.</p>
-<ul>
-<li><a href="https://www.dropxl.com/nl/about-dropxl.html">dropXL</a> · B2B-distributeur voor onder andere Nederland en andere EU-markten. Controleer magazijn, pakketgrootte en retourvoorwaarden per SKU.</li>
-<li><a href="https://www.avasam.com/dropship-suppliers/">Avasam</a> · platform voor Britse B2B-leveranciers. Verifieer de leverende partij en voorwaarden per product.</li>
-<li><a href="https://www.cjdropshipping.com/help-center?faqType=5&amp;navType=faq&amp;pageNum=9&amp;scrollToNum=400">CJdropshipping</a> · sourcing- en fulfilmentoptie. Vraag naar fabrikant, beschikbare voorraad en de route naar het gekozen land.</li>
-</ul>
+<p>Zoek voor NL eerst in Nederland, België en Duitsland. Controleer magazijn en levering per SKU. Gebruik de <a href="{{ url_for('control', section='viral') }}">leveranciersvergelijking in het productdossier</a> voor offertes, levertijden en score.</p>
+<ul>{% for country,name,url,note in supplier_directory %}
+<li><a href="{{ url }}" rel="noopener noreferrer">{{ name }}</a> · {{ country }}. {{ note }}</li>
+{% endfor %}</ul>
 </details>
 {% if supplier_rows is not none %}
 <form action="{{ url_for('admin_add_supplier') }}" method="post" class="nv-admin-form">

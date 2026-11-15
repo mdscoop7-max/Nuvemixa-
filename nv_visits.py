@@ -20,7 +20,7 @@ STOREFRONT = {"home", "shop", "deals", "products_page", "category_page", "produc
 TIMEZONE = ZoneInfo("Europe/Amsterdam")
 COOKIE = "nv_measurement"
 COOKIE_AGE = 30 * 24 * 60 * 60
-STORAGE_ERRORS = (OSError, ValueError, sqlite3.Error, psycopg.Error)
+STORAGE_ERRORS = (OSError, ValueError, KeyError, sqlite3.Error, psycopg.Error)
 
 
 def enabled():

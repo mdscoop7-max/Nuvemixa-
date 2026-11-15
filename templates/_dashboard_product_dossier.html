@@ -11,6 +11,7 @@
 </select></label><button type="submit">Markt bekijken</button>
 </form>
 <p><strong>{{ d.market_info[0] }}</strong> · {{ d.market_info[2] }} · {{ d.stages[d.stage] }}</p>
+{% if d.supplier_gate %}<p>Bevestig in de vergelijking een passend aanbod voor de gekozen leverancier voordat dit dossier verder gaat.</p>{% endif %}
 {% if d.offers %}<p>Opgeslagen markten {% for code in d.offers %}<a href="{{ url_for('control', section='viral', detail=row.id, offer_market=code) }}">{{ d.markets[code][0] }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
 {% if d.financials %}
 <div class="admin-table-wrap"><table class="admin-table">
@@ -58,6 +59,7 @@
 {% endfor %}
 <button type="submit">Dossier opslaan</button>
 </form>
+{% include "_dashboard_supplier_comparison.html" %}
 <nav aria-label="Onderzoeksmodules"><a href="{{ url_for('control', section='internationaal') }}">Marktonderzoek</a> · <a href="{{ url_for('control', section='leveranciers') }}">Leveranciersbeheer</a> · <a href="{{ url_for('control', section='calculator') }}">Calculator</a> · <a href="{{ url_for('control', section='google-shopping') }}">Merchant</a></nav>
 {% endif %}
 </section>

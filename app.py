@@ -12,7 +12,7 @@ import urllib.request
 
 import urllib.error
 
-from contextlib import closing
+from contextlib import closing, contextmanager
 from pathlib import Path
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -23,6 +23,7 @@ from werkzeug.local import LocalProxy
 from nv_catalog_manager import catalog_changes
 from nuvemixa_integrations import mollie_readonly_check
 from nv_storage_paths import CUSTOMER_DB
+import nv_dashboard_postgres
 
 from datetime import datetime, timezone
 
@@ -899,17 +900,17 @@ _CUSTOMER_ATTEMPTS = {}
 
 
 
+@contextmanager
 def _customer_conn():
-
+    if nv_dashboard_postgres.runtime_enabled():
+        with nv_dashboard_postgres.application_db() as conn:
+            yield conn
+        return
     _CUSTOMER_DB.parent.mkdir(parents=True, exist_ok=True)
-
-    conn = sqlite3.connect(str(_CUSTOMER_DB), timeout=10)
-
-    conn.row_factory = sqlite3.Row
-
-    conn.execute("CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
-
-    return conn
+    with closing(sqlite3.connect(str(_CUSTOMER_DB), timeout=10)) as conn, conn:
+        conn.row_factory = sqlite3.Row
+        conn.execute("CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+        yield conn
 
 
 
@@ -964,9 +965,11 @@ def customer_register():
 
         with _customer_conn() as conn:
 
-            cursor = conn.execute("INSERT INTO customers (name,email,password_hash) VALUES (?,?,?)", (name,email,generate_password_hash(password,method="scrypt")))
-
-            customer_id = cursor.lastrowid
+            insert = "INSERT INTO customers (name,email,password_hash) VALUES (?,?,?)"
+            postgres = nv_dashboard_postgres.runtime_enabled()
+            cursor = conn.execute(insert + (" RETURNING id" if postgres else ""),
+                                  (name, email, generate_password_hash(password, method="scrypt")))
+            customer_id = cursor.fetchone()[0] if postgres else cursor.lastrowid
 
     except sqlite3.IntegrityError:
 
@@ -1191,9 +1194,10 @@ from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_c
 from nv_seo_scan import last_scan
 from nv_permissions import RIGHTS, SECTIONS, account_rights, allowed
 from nv_visits import record_visit, visit_summary
-from nv_system_check import check_customers, customer_database_uri, scan as run_system_scan
+from nv_system_check import check_customers, scan as run_system_scan
 from nv_merchant_audit import audit as merchant_audit
 from nv_international import dashboard_market
+from nv_supplier_finder import directories as supplier_directories
 from nv_viral_research import viral_dashboard
 
 app.after_request(record_visit)
@@ -1763,7 +1767,7 @@ def admin_monitoring_check():
             try:
                 status, _, _ = check_customers(_CUSTOMER_DB)
                 if status == "attention":
-                    with closing(_customer_conn()):
+                    with _customer_conn():
                         pass
                     status, _, _ = check_customers(_CUSTOMER_DB)
             except (OSError, sqlite3.Error, ValueError):
@@ -2262,8 +2266,7 @@ def control():
             staff_error = "Dashboardaccounts kunnen tijdelijk niet worden geladen."
     if section == "klanten":
         try:
-            with closing(sqlite3.connect(customer_database_uri(_CUSTOMER_DB), uri=True, timeout=0.5)) as conn:
-                conn.row_factory = sqlite3.Row
+            with nv_dashboard_postgres.read_db(_CUSTOMER_DB) as conn:
                 admin_customer_rows = [dict(row) for row in conn.execute(
                     "SELECT id,name,email,created_at FROM customers ORDER BY id DESC LIMIT 100").fetchall()]
         except (OSError, sqlite3.Error):
@@ -2327,6 +2330,7 @@ def control():
         merchant_preview_rows=merchant_preview_rows,
 
         supplier_rows=supplier_rows,
+        supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
 
         supplier_error=supplier_error,
 

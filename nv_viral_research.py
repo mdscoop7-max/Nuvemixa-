@@ -10,7 +10,9 @@ from nuvemixa_admin_store import connect
 from nv_dashboard_manager import bp
 from nv_international import AMOUNTS, MARKETS, assessment as cost_result, record_from_form
 from nv_permissions import allowed
+import nv_dashboard_postgres
 from nv_product_dossier import dossier_view
+from nv_supplier_finder import comparison_view
 from nv_research_assistant import research_enabled
 
 PLATFORMS = {
@@ -48,6 +50,8 @@ CHECKS = {
 
 
 def tables(db):
+    if nv_dashboard_postgres.runtime_enabled():
+        return
     db.execute("""CREATE TABLE IF NOT EXISTS viral_candidates (
         id INTEGER PRIMARY KEY, title TEXT NOT NULL COLLATE NOCASE, country TEXT NOT NULL,
         niche TEXT NOT NULL, notes TEXT NOT NULL, assessment TEXT NOT NULL,
@@ -93,10 +97,10 @@ def save_observation(db, candidate):
     if metric == "interest" and (platform not in ("google-trends", "pinterest") or value > 100):
         raise ValueError
     db.execute("""INSERT INTO viral_observations
-        (candidate,platform,source,observed,window,metric,value,estimate) VALUES (?,?,?,?,?,?,?,?)
-        ON CONFLICT(candidate,platform,source,observed,window,metric)
+        (candidate,platform,source,observed,"window",metric,value,estimate) VALUES (?,?,?,?,?,?,?,?)
+        ON CONFLICT(candidate,platform,source,observed,"window",metric)
         DO UPDATE SET value=excluded.value, estimate=excluded.estimate""",
-        (candidate, platform, source, observed.isoformat(), window, metric, value, request.form.get("estimate")=="1"))
+        (candidate, platform, source, observed.isoformat(), window, metric, value, int(request.form.get("estimate")=="1")))
 
 
 @bp.post("/dashboard/viral")
@@ -216,6 +220,15 @@ def viral_dashboard():
                          and g["percent"]>=50 and g["window"] in (7,30) for g in growth)))
     selected = next((row for row in records if row["id"] == detail), None)
     dossier = dossier_view(selected) if selected else None
+    if dossier and not dossier.get("error"):
+        comparison = comparison_view(selected["id"], dossier["market"], dossier["record"])
+        dossier["comparison"] = comparison
+        offers = comparison.get("offers", [])
+        supplier = dossier["record"].get("supplier_name", "").casefold()
+        if offers and dossier["stage"] >= 2 and not any(
+                row["ready"] and row["name"].casefold() == supplier for row in offers):
+            dossier["stage"] = 1
+            dossier["supplier_gate"] = True
     return dict(records=records, filters=filters, dossier=dossier, research_ai=research_enabled(), countries=COUNTRIES, niches=NICHES, platforms=PLATFORMS,
                 factors=FACTORS, checks=CHECKS, amounts=AMOUNTS, detail=detail, error=error,
                 currencies={code:row[1] for code,row in MARKETS.items()}|{"AU":"AUD","ES":"EUR","SE":"SEK","JP":"JPY"},

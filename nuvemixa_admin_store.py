@@ -8,6 +8,7 @@ import sqlite3
 from contextlib import contextmanager
 
 from nv_storage_paths import ADMIN_DB
+import nv_dashboard_postgres
 
 
 def database_path():
@@ -16,6 +17,10 @@ def database_path():
 
 @contextmanager
 def connect():
+    if nv_dashboard_postgres.runtime_enabled():
+        with nv_dashboard_postgres.application_db() as db:
+            yield db
+        return
     path = database_path()
     if not path.parent.is_dir():
         raise RuntimeError("Admin database parent directory does not exist")
@@ -66,7 +71,7 @@ def list_suppliers():
     with connect() as db:
         rows = db.execute(
             "SELECT id,name,contact_email,website,notes,status,updated_at "
-            "FROM suppliers ORDER BY name COLLATE NOCASE LIMIT 250"
+            "FROM suppliers ORDER BY lower(name) LIMIT 250"
         ).fetchall()
         return [dict(row) for row in rows]
 

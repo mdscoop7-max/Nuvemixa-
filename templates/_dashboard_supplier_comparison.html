@@ -1,0 +1,76 @@
+{% set c = d.comparison %}
+<section class="panel-after">
+<h3>Leveranciers vergelijken · {{ d.market_info[0] }}</h3>
+{% if c.error %}<p class="notice" role="alert">Vergelijking tijdelijk niet beschikbaar.</p>
+{% else %}
+<p>Levertijd = verwerking + transport. De categorieën zijn selectievoorkeuren in werkdagen. Bevestig de route en tijd per SKU en afzetland.</p>
+<details class="panel-after"><summary>Hoe de score wordt opgebouwd</summary>
+<ul><li>Levertijd maximaal 22 punten, met maximaal 8 extra punten voor bevestigde voorraad in de regio.</li>
+<li>Kosten en marge maximaal 25 punten bij 30% of meer bijdrage ten opzichte van de netto-omzet.</li>
+<li>Betrouwbaarheid maximaal 10 punten voor bedrijfsverificatie, 4 voor tracking en 6 voor aantoonbare leveringen op tijd.</li>
+<li>Product maximaal 8 punten voor voorraad en 7 voor getoetste kwaliteit.</li>
+<li>Retouren en service maximaal 6 punten voor een bevestigd retouradres in de regio en 4 voor gecontroleerde klantenservice.</li></ul>
+<p>Productmatch, dropshipping, productveiligheid, bedrijf, magazijn, voorraad, levertijd en kosten zijn verplicht voor de ranglijst van vergelijkbare aanbiedingen.</p></details>
+<p>{{ c.qualified }} aanbiedingen met bevestigde basisgegevens{% if c.qualified < 3 %}. Streef naar drie vergelijkbare, onderbouwde aanbiedingen{% endif %}.</p>
+{% if c.offers %}
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>Leverancier en bewijzen</th><th>Magazijn en levertijd</th><th>Kosten en marge</th><th>Beoordeling</th></tr></thead>
+<tbody>
+{% for offer in c.offers %}<tr>
+<td><strong>{{ offer.name }}</strong> · {{ d.types[offer.kind] }}<br>
+Bedrijfsland {{ offer.company_country or 'onbekend' }}<br>
+{{ c.identifiers[offer.identifier] }} {{ offer.match_value or 'onbekend' }}<br>
+{% if offer.manufacturer %}Fabrikant / distributie {{ offer.manufacturer }}<br>{% endif %}
+Gecontroleerd {{ offer.checked }}
+<ul>{% for key,label in c.sources.items() if offer.get(key) %}<li><a href="{{ offer[key] }}" rel="noopener noreferrer">{{ label }}</a></li>{% endfor %}</ul>
+</td>
+<td>{{ offer.warehouse_country or 'Onbekend magazijn' }} {{ offer.warehouse_location }}
+{% if offer.days is not none %}<br>{{ offer.processing }} + {{ offer.transport }} = {{ offer.days }} werkdagen · {{ offer.band }}{% endif %}
+<br>Track-and-trace {{ 'bevestigd' if offer.tracking else 'onbekend' }}
+<br>Retouradres {{ offer.return_country or 'onbekend' }} {{ offer.return_address }}
+{% if offer.delivery_history is not none %}<br>{{ offer.on_time }} van {{ offer.deliveries }} op tijd volgens bron{% endif %}</td>
+<td>{% for key,label in c.costs.items() %}{{ label }} {{ offer[key] if offer[key] else 'onbekend' }}<br>{% endfor %}
+Totaal {% if offer.total is none %}onbekend{% else %}{{ offer.total }} {{ d.market_info[1] }}{% endif %}<br>
+{% if offer.financials %}Verwachte bijdrage {{ '%.2f'|format(offer.financials.contribution) }} {{ d.market_info[1] }}
+{% if offer.financials.net_margin is not none %}<br>Nettomarge {{ '%.1f'|format(offer.financials.net_margin) }}%{% endif %}
+{% else %}Verwachte marge onbekend. Vul de kosten en verkoopprijs in het productdossier in.{% endif %}</td>
+<td><strong>{{ offer.score }}/100 · {{ 'Vergelijkbaar' if offer.ready else 'Nog te controleren' }}</strong>
+{% if offer.better_than_eu %}<p>Beter onderbouwd aanbod dan de beschikbare EU-opties.</p>{% endif %}
+{% if offer.blockers %}<p>Ontbreekt: {{ offer.blockers|join(', ') }}.</p>{% endif %}
+<details><summary>Punten per categorie</summary><ul>
+{% for key,(label,maximum) in c.points.items() %}<li>{{ label }} {{ offer.points[key] }}/{{ maximum }}</li>{% endfor %}
+</ul></details>
+</td>
+</tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+<details class="panel-after"><summary>Onderzoek starten</summary>
+<ul>{% for country,name,url,note in c.directories %}<li><a href="{{ url }}" rel="noopener noreferrer">{{ name }}</a> · {{ country }}. {{ note }}</li>{% endfor %}</ul>
+{% if c.ai %}
+<form method="post" action="{{ url_for('nv_manage.supplier_search') }}" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="candidate" value="{{ row.id }}"><input type="hidden" name="market" value="{{ d.market }}">
+<label>Openbare SKU, GTIN of merk en model <input name="identifier" maxlength="120"></label>
+<label class="nv-checkbox"><input type="checkbox" name="international" value="1"> Neem geselecteerde bronnen buiten de EU mee</label>
+<button type="submit">Zoek B2B-bronnen met AI</button>
+</form>
+{% else %}<p>AI-zoektoegang wacht op configuratie. De B2B-bronnen hierboven zijn beschikbaar.</p>{% endif %}
+</details>
+<details class="panel-after"><summary>Aanbod vastleggen of vervangen</summary>
+<form method="post" action="{{ url_for('nv_manage.save_supplier_comparison') }}" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="candidate" value="{{ row.id }}"><input type="hidden" name="market" value="{{ d.market }}">
+<label>Verkopersrol <select name="kind" required><option value="">Kies een rol</option>{% for key,label in d.types.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+<label>Productmatch <select name="identifier" required><option value="">Kies een identificatiemethode</option>{% for key,label in c.identifiers.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+{% for key,label in c.text_fields.items() %}<label>{{ label }} <input name="{{ key }}" maxlength="{{ 2 if key.endswith('_country') else 200 }}" {% if key == 'name' %}required{% endif %}></label>{% endfor %}
+<label>Controledatum <input name="checked" type="date" required></label>
+{% for key,label in c.numbers.items() %}<label>{{ label }} <input name="{{ key }}" type="number" min="0" max="9999"></label>{% endfor %}
+{% for key,label in c.costs.items() %}<label>{{ label }} ({{ d.market_info[1] }}) <input name="{{ key }}" inputmode="decimal"></label>{% endfor %}
+{% for key,label in c.sources.items() %}<label>{{ label }} · bronlink <input name="{{ key }}" type="url" maxlength="450"></label>{% endfor %}
+{% for key,label in c.flags.items() %}<label class="nv-checkbox"><input type="checkbox" name="{{ key }}" value="1"> {{ label }}</label>{% endfor %}
+<label class="nv-checkbox"><input type="checkbox" name="replace_existing" value="1"> Vervang bewust een bestaand aanbod van deze leverancier in dit land</label>
+<button type="submit">Aanbod opslaan</button>
+</form>
+</details>
+{% endif %}
+</section>

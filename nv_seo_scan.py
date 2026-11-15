@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 
 from flask import current_app, request
 from nv_dashboard_manager import bp, connect, management_result, require_admin
+import nv_dashboard_postgres
 
 
 class ProductMetadata(HTMLParser):
@@ -61,8 +62,7 @@ def canonical_matches(value, path, base_url):
 
 def last_scan():
     with connect() as db:
-        table = db.execute("SELECT 1 FROM sqlite_master WHERE name='seo_scans'").fetchone()
-        if not table:
+        if not nv_dashboard_postgres.table_exists(db, "seo_scans"):
             return None
         row = db.execute("SELECT created_at,payload FROM seo_scans ORDER BY id DESC LIMIT 1").fetchone()
         return (row["created_at"], json.loads(row["payload"])) if row else None
@@ -93,9 +93,10 @@ def seo_scan():
         ]
         report = {"path": path, "checks": checks}
         with connect() as db:
-            db.execute("""CREATE TABLE IF NOT EXISTS seo_scans(
-                       id INTEGER PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       payload TEXT NOT NULL)""")
+            if not nv_dashboard_postgres.runtime_enabled():
+                db.execute("""CREATE TABLE IF NOT EXISTS seo_scans(
+                           id INTEGER PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           payload TEXT NOT NULL)""")
             db.execute("INSERT INTO seo_scans(payload) VALUES(?)", (json.dumps(report, ensure_ascii=False),))
     except (sqlite3.Error, OSError, ValueError):
         current_app.logger.error("Lokale SEO-controle mislukt")

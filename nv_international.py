@@ -9,6 +9,7 @@ from flask import abort, current_app, flash, redirect, request, url_for
 from nuvemixa_admin_store import connect
 from nv_dashboard_manager import bp
 from nv_permissions import allowed
+import nv_dashboard_postgres
 
 MARKETS = {
     "NL": ("Nederland", "EUR", "nl-NL", 1), "BE": ("België", "EUR", "nl-BE / fr-BE", 1),
@@ -66,6 +67,8 @@ def assessment(record):
 
 
 def market_table(db):
+    if nv_dashboard_postgres.runtime_enabled():
+        return
     db.execute("""CREATE TABLE IF NOT EXISTS market_research (
         market TEXT NOT NULL, product TEXT NOT NULL, data TEXT NOT NULL,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -109,7 +112,7 @@ def save_market():
         with connect() as db:
             market_table(db)
             db.execute("""INSERT INTO market_research(market, product, data) VALUES(?, ?, ?)
-                ON CONFLICT(market, product) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP""",
+                ON CONFLICT(market, product) DO UPDATE SET data=excluded.data, updated_at=CAST(CURRENT_TIMESTAMP AS TEXT)""",
                 (market, product, json.dumps(record, ensure_ascii=False)))
     except ValueError as exc:
         abort(400, str(exc))

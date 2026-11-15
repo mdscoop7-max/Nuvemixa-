@@ -37,7 +37,7 @@ PROOFS = {
     "exchange": "Wisselkoersbron",
 }
 SUPPLIER_KINDS = {"manufacturer": "Fabrikant", "distributor": "Distributeur", "dropshipper": "Dropshipper", "retailer": "Prijsreferentie (retailer)"}
-STORAGE_ERRORS = (sqlite3.Error, psycopg.Error, OSError, ValueError, RuntimeError)
+STORAGE_ERRORS = (sqlite3.Error, psycopg.Error, OSError, ValueError, KeyError, RuntimeError)
 
 
 def amount(value):
@@ -80,16 +80,26 @@ def financials(record):
 
 
 @contextmanager
-def dossiers():
+def dossier_connection(table):
+    definitions = {
+        "product_dossier_offers": ("", "candidate_id, market"),
+        "supplier_comparisons": ("supplier_key text NOT NULL,", "candidate_id, market, supplier_key"),
+    }
+    extra, key = definitions[table]
     if nv_dashboard_postgres.configured():
         with nv_dashboard_postgres.connect() as db:
-            yield db, "nuvemixa_dashboard.product_dossier_offers", "%s"
+            yield db, f"nuvemixa_dashboard.{table}", "%s"
     else:
         with connect() as db:
-            db.execute("""CREATE TABLE IF NOT EXISTS product_dossier_offers (
-               candidate_id integer NOT NULL, market text NOT NULL, payload text NOT NULL,
-               PRIMARY KEY(candidate_id, market))""")
-            yield db, "product_dossier_offers", "?"
+            db.execute(f"""CREATE TABLE IF NOT EXISTS {table} (
+                candidate_id integer NOT NULL, market text NOT NULL, {extra}
+                payload text NOT NULL, PRIMARY KEY({key}))""")
+            yield db, table, "?"
+
+
+def candidate_exists(candidate):
+    with connect() as db:
+        return bool(db.execute("SELECT 1 FROM viral_candidates WHERE id=?", (candidate,)).fetchone())
 
 
 def dossier_stage(record, listed_product, currency):
@@ -118,7 +128,7 @@ def dossier_view(candidate):
     listed_products = current_app.extensions["nuvemixa_catalog_api"][1]()
     products = {str(item["id"]): item for item in listed_products}
     try:
-        with dossiers() as (db, table, mark):
+        with dossier_connection("product_dossier_offers") as (db, table, mark):
             rows = db.execute(f"SELECT market, payload FROM {table} WHERE candidate_id={mark} ORDER BY market",
                               (candidate["id"],)).fetchall()
         offers = {row[0]: json.loads(row[1]) for row in rows}
@@ -185,7 +195,7 @@ def save_dossier():
                 raise ValueError("Vul wisselkoers, bron en datum in bij een offerte in een andere valuta.")
             record["buy"] = str((Decimal(original) * (Decimal(rate) if currency != MARKETS[market][1] else 1))
                                 .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-        with dossiers() as (db, table, mark):
+        with dossier_connection("product_dossier_offers") as (db, table, mark):
             db.execute(f"INSERT INTO {table} (candidate_id,market,payload) VALUES ({mark},{mark},{mark})"
                        " ON CONFLICT(candidate_id,market) DO UPDATE SET payload=excluded.payload",
                        (candidate, market, json.dumps(record, ensure_ascii=False)))

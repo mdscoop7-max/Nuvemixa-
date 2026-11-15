@@ -77,9 +77,9 @@ def research_suggestion():
             row = db.execute("SELECT country FROM viral_candidates WHERE id=?", (candidate,)).fetchone()
             if row is None:
                 abort(404)
-            rows = db.execute("""SELECT platform, observed, window, metric, value, estimate
+            rows = db.execute("""SELECT platform, observed, "window", metric, value, estimate
                 FROM viral_observations WHERE candidate=?
-                ORDER BY observed DESC, platform, metric, window, source LIMIT 12""", (candidate,)).fetchall()
+                ORDER BY observed DESC, platform, metric, "window", source LIMIT 12""", (candidate,)).fetchall()
         if not rows:
             flash("Voeg een controleerbare waarneming toe voordat je AI inschakelt.", "error")
             return redirect(destination, code=303)

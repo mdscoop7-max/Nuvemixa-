@@ -8,12 +8,17 @@ from contextlib import closing, contextmanager
 from flask import Blueprint, request, session, redirect, abort, current_app, g, flash, url_for
 from nv_permissions import RIGHTS, DEFAULT_RIGHTS, allowed
 from nv_storage_paths import DASHBOARD_DB
+import nv_dashboard_postgres
 from werkzeug.security import generate_password_hash, check_password_hash
 
 bp=Blueprint('nv_manage',__name__)
 DB=DASHBOARD_DB
 @contextmanager
 def connect():
+    if nv_dashboard_postgres.runtime_enabled():
+        with nv_dashboard_postgres.application_db() as db:
+            yield db
+        return
     DB.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(DB, timeout=8)
     db.row_factory = sqlite3.Row
@@ -64,7 +69,7 @@ def staff_auth(identity, password):
     with connect() as db:
         row = db.execute(
             """SELECT id,password_hash,session_version FROM staff
-               WHERE (email = ? COLLATE NOCASE OR username = ?) AND active = 1
+               WHERE (lower(email) = lower(?) OR lower(username) = lower(?)) AND active = 1
                ORDER BY id LIMIT 1""",
             (identity, identity),
         ).fetchone()
@@ -80,8 +85,7 @@ def staff_current():
         version = session.get("nv_staff_version")
         if type(ident) is int and isinstance(version, str):
             try:
-                with closing(sqlite3.connect(DB.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.3)) as db:
-                    db.row_factory = sqlite3.Row
+                with nv_dashboard_postgres.read_db(DB, timeout=0.3) as db:
                     row = db.execute(
                         """SELECT id,email,name,username,role,permissions FROM staff
                            WHERE id=? AND session_version=? AND active=1""",
@@ -96,7 +100,7 @@ def staff_current():
 def team_rows():
     with connect() as db:
         return db.execute(
-            "SELECT id,email,name,username,role,active,permissions FROM staff ORDER BY name COLLATE NOCASE,id"
+            "SELECT id,email,name,username,role,active,permissions FROM staff ORDER BY lower(name),id"
         ).fetchall()
 
 
@@ -141,7 +145,7 @@ def team():
     version = secrets.token_urlsafe(24)
     try:
         with connect() as db:
-            db.execute("BEGIN IMMEDIATE")
+            nv_dashboard_postgres.lock_staff(db)
             # Recheck authorization in the same transaction as the change.
             if session.get("nv_admin") is not True and not db.execute(
                 """SELECT 1 FROM staff WHERE id=? AND session_version=?
@@ -155,7 +159,7 @@ def team():
                 abort(404)
             # The configured administrator has no mutable row and is always retained.
             if operation in {"create", "edit"} and db.execute(
-                "SELECT 1 FROM staff WHERE email=? COLLATE NOCASE AND id<>?",
+                "SELECT 1 FROM staff WHERE lower(email)=lower(?) AND id<>?",
                 (email, account_id if operation == "edit" else -1),
             ).fetchone():
                 raise sqlite3.IntegrityError
@@ -275,7 +279,7 @@ def create_percentage_coupon(db, percent, starts=None, ends=None):
         inserted = db.execute("""
             INSERT INTO coupons(code, kind, amount, starts, ends)
             SELECT ?, 'percent', ?, ?, ?
-            WHERE NOT EXISTS (SELECT 1 FROM coupons WHERE code = ? COLLATE NOCASE)
+            WHERE NOT EXISTS (SELECT 1 FROM coupons WHERE lower(code) = lower(?))
             ON CONFLICT(code) DO NOTHING
         """, (code, percent, starts, ends, code))
         if inserted.rowcount == 1:

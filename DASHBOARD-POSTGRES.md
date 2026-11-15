@@ -7,7 +7,8 @@ Dit is de werkwijze voor een lokaal of geïsoleerd migratiedoel. De reviewbranch
 - Gebruik een aparte migratierol als eigenaar van schema `nuvemixa_dashboard` en een aparte applicatierol voor de dashboardverbinding.
 - Beperk de applicatierol tot `USAGE` op dit schema en `SELECT, INSERT, UPDATE` op de tabellen die de applicatie gebruikt. Verleen waar vereist `USAGE` op bijbehorende sequenties. Houd `CREATE`, `TRUNCATE` en toegang tot `nuvemixa_auth` buiten deze rol.
 - Zet de DSN via `NUVEMIXA_DASHBOARD_DATABASE_URL`. Het dashboard valideert het TLS-certificaat en de hostname. Het bestaande 2FA-schema, de rol en de sleutel blijven afzonderlijk.
-- De bezoekersteller en productdossiers ondersteunen deze PostgreSQL-verbinding. De overige bestaande routes lezen en schrijven nog via SQLite. Een geslaagde import is daarom alleen een migratieproef. Voor een omschakeling moeten ook die routes aantoonbaar dezelfde gegevens lezen en schrijven.
+- De bezoekersteller, productdossiers en leveranciersvergelijking gebruiken deze PostgreSQL-verbinding zodra de DSN aanwezig is. Met `NUVEMIXA_DASHBOARD_BACKEND=postgres` gebruiken ook teamaccounts, klanten, kortingsacties, catalogus, leveranciers, onderzoek en SEO die opslag. Verifieer vooraf op een geïsoleerd doel dat alle routes aangemelde gegevens lezen en schrijven. De vaste hoofdbeheerder en bestaande 2FA gebruiken hun afzonderlijke configuratie en opslag.
+- Bewaar toegang tot de vorige opslag en de geverifieerde snapshots. Bij ontbrekende of onbereikbare PostgreSQL-opslag geeft de applicatie in PostgreSQL-modus een fout. Een automatische terugval zou twee versies van dezelfde gegevens kunnen creëren.
 
 ## Back-up en proefimport
 
@@ -23,3 +24,8 @@ Dit is de werkwijze voor een lokaal of geïsoleerd migratiedoel. De reviewbranch
 5. Een mislukte import wordt teruggedraaid. Bewaar het bronbestand en de gevalideerde kopie. Als een latere omschakeling al nieuwe schrijfacties heeft aangenomen, is eerst een export en reconciliatie nodig voordat het oude systeem weer schrijvend kan worden gebruikt.
 
 Historische metingen blijven als afzonderlijke sessiedagen bewaard. Voor de nieuwe meting telt een teruggekeerde meetcookie eenmaal per Nederlandse kalenderdag. Alleen sessies waarvan minimaal één volgende geschikte aanvraag aankomt komen in de telling.
+
+
+## Leverancierszoeker
+
+De bestaande onderzoeksassistent en handmatige bronnen werken onafhankelijk van de optionele webzoekfunctie. Geef `NUVEMIXA_SUPPLIER_SEARCH_MODEL` alleen een model met Responses API-webzoekondersteuning en houd de OpenAI-sleutel in de omgeving. De zoekopdracht stuurt titel, openbaar productkenmerk en bestemmingsland naar de provider. Het dashboard toont uitsluitend geciteerde links uit bekende B2B-domeinen. De magazijnlocatie, prijs, voorraad, veiligheid en dropshippingstatus worden per SKU en land handmatig onderbouwd.

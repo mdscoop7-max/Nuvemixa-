@@ -6,6 +6,7 @@ import uuid
 from contextlib import closing
 from decimal import Decimal
 from pathlib import Path
+import nv_dashboard_postgres
 from urllib.parse import urlsplit
 
 from flask import abort, current_app, g, has_request_context, request
@@ -17,12 +18,12 @@ def catalog_changes():
     if not DB.is_file():
         return [], []
     try:
-        with closing(sqlite3.connect(DB.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)) as db:
-            db.row_factory = sqlite3.Row
-            exists = db.execute("SELECT 1 FROM sqlite_master WHERE name='catalog_edits'").fetchone()
+        with nv_dashboard_postgres.read_db(DB, timeout=2) as db:
+            exists = nv_dashboard_postgres.table_exists(db, "catalog_edits")
             if not exists:
                 return [], []
-            rows = db.execute("SELECT kind, category, slug, payload FROM catalog_edits ORDER BY rowid")
+            order = "position" if nv_dashboard_postgres.runtime_enabled() else "rowid"
+            rows = db.execute(f"SELECT kind, category, slug, payload FROM catalog_edits ORDER BY {order}")
             categories, products = [], []
             for row in rows:
                 target = categories if row["kind"] == "category" else products
@@ -88,10 +89,11 @@ def catalog():
         abort(403)
     try:
         with connect() as db:
-            db.execute("""CREATE TABLE IF NOT EXISTS catalog_edits(
-                kind TEXT NOT NULL, category TEXT NOT NULL, slug TEXT NOT NULL, payload TEXT NOT NULL,
-                PRIMARY KEY(kind,category,slug))""")
-            db.execute("BEGIN IMMEDIATE")
+            if not nv_dashboard_postgres.runtime_enabled():
+                db.execute("""CREATE TABLE IF NOT EXISTS catalog_edits(
+                    kind TEXT NOT NULL, category TEXT NOT NULL, slug TEXT NOT NULL, payload TEXT NOT NULL,
+                    PRIMARY KEY(kind,category,slug))""")
+            nv_dashboard_postgres.lock_catalog(db)
             # Read the current committed snapshot while holding the write lock.
             if section == "categorieen":
                 name = request.form.get("name", "").strip()

@@ -1,6 +1,5 @@
 """Bounded local checks for the NUVEMIXA dashboard. No external requests."""
 from collections import Counter
-from contextlib import closing
 from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -15,41 +14,38 @@ from jinja2 import meta
 from nuvemixa_admin_store import database_path
 from nv_merchant_audit import audit as merchant_audit
 from nv_dashboard_manager import DB, coupon_amount
+import nv_dashboard_postgres
 from nv_permissions import RIGHTS, SECTIONS
 from nv_seo_scan import ProductMetadata, canonical_matches
 from nv_visits import visit_summary
 
 
 def database_check(path, tables, columns=None):
-    if not path.is_file():
+    if not nv_dashboard_postgres.runtime_enabled() and not path.is_file():
         return "attention", "Databasebestand ontbreekt.", "Open de bijbehorende functie om de lokale database in te richten."
-    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.25)) as db:
+    with nv_dashboard_postgres.read_db(path, timeout=0.25) as db:
         for table in tables:
             db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
         if columns:
-            actual = {row[1] for row in db.execute("PRAGMA table_info(staff)")}
+            actual = nv_dashboard_postgres.columns_for(db, "staff")
             if not set(columns) <= actual:
                 return "attention", "Het accountschema wacht op migratie.", "Open Accountbeheer als beheerder."
     return "works", "De vereiste tabellen zijn leesbaar.", ""
 
 
-def customer_database_uri(path):
-    return path.resolve().as_uri() + "?mode=ro"
-
-
 def check_customers(path):
-    if not path.is_file():
+    if not nv_dashboard_postgres.runtime_enabled() and not path.is_file():
         if path.exists() or path.is_symlink():
             return "error", "Het ingestelde klantdatabasepad is geen bestand.", "Controleer het ingestelde pad."
         if not path.parent.is_dir():
             return "error", "De ingestelde opslagmap voor klanten ontbreekt.", "Controleer het databasepad en de opslagmap."
         return ("attention", "Geen databasebestand op het ingestelde klantdatabasepad.",
                 "Controleer of de bestaande klantdatabase elders staat. Initialiseer alleen als dit een lege installatie is.")
-    with closing(sqlite3.connect(customer_database_uri(path), uri=True, timeout=0.25)) as db:
-        if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='customers' COLLATE NOCASE").fetchone():
+    with nv_dashboard_postgres.read_db(path, timeout=0.25) as db:
+        if not nv_dashboard_postgres.table_exists(db, "customers"):
             return ("attention", "Het databasebestand bestaat, maar de klanttabel ontbreekt.",
                     "Initialiseer de klanttabel alleen als dit het bedoelde bestand is.")
-        columns = {row[1].lower() for row in db.execute("PRAGMA table_info(customers)")}
+        columns = {name.lower() for name in nv_dashboard_postgres.columns_for(db, "customers")}
         missing = {"id", "name", "email", "password_hash", "created_at"} - columns
         if missing:
             return ("error", "Ontbrekende klantkolommen: " + ", ".join(sorted(missing)) + ".",
@@ -151,12 +147,11 @@ def scan(items, categories, customer_db, integrations):
         return "works", f"Lokale beeldpaden gecontroleerd. {len(external)} externe links niet opgevraagd.", ""
 
     def coupons():
-        if not DB.is_file():
+        if not nv_dashboard_postgres.runtime_enabled() and not DB.is_file():
             return "attention", "Kortingsdatabase wacht op initialisatie.", "Open Kortingen."
         today = timestamp[:10]
         invalid = 0
-        with closing(sqlite3.connect(DB.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.25)) as db:
-            db.row_factory = sqlite3.Row
+        with nv_dashboard_postgres.read_db(DB, timeout=0.25) as db:
             rows = db.execute("SELECT * FROM coupons LIMIT 1001").fetchall()
         if len(rows) > 1000:
             return "attention", "Meer dan 1000 codes; controle begrensd.", "Controleer het kortingsregister."
@@ -189,10 +184,10 @@ def scan(items, categories, customer_db, integrations):
         if (response.status_code != 200 or not all((parser.title, parser.description, schema))
                 or not canonical_matches(parser.canonical, path, request.host_url)):
             return "error", "Steekproef op productmetadata mislukt.", "Controleer producttemplate en metadata."
-        if not DB.is_file():
+        if not nv_dashboard_postgres.runtime_enabled() and not DB.is_file():
             return "attention", "Metadata aanwezig; rapportopslag nog niet ingericht.", "Voer een lokale SEO-controle uit."
-        with closing(sqlite3.connect(DB.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.25)) as db:
-            table = db.execute("SELECT 1 FROM sqlite_master WHERE name='seo_scans'").fetchone()
+        with nv_dashboard_postgres.read_db(DB, timeout=0.25) as db:
+            table = nv_dashboard_postgres.table_exists(db, "seo_scans")
             stored = table and db.execute("SELECT 1 FROM seo_scans LIMIT 1").fetchone()
         return ("works", "Metadata en opgeslagen rapport leesbaar.", "") if stored else (
             "attention", "Metadata aanwezig; er is nog geen rapport opgeslagen.", "Voer een lokale SEO-controle uit.")
@@ -214,7 +209,7 @@ def scan(items, categories, customer_db, integrations):
     run("Kortingen", "Opgeslagen kortingswaarden", coupons, "Controleer de kortingsdatabase.")
     run("Klantdatabase", "Geconfigureerd pad en vereiste klantkolommen",
         lambda: check_customers(customer_db), "Controleer het pad, de leesrechten en de database-integriteit.")
-    run("Onderzoek en leveranciers", "Leesbare SQLite-tabellen voor notities en leveranciers",
+    run("Onderzoek en leveranciers", "Leesbare tabellen voor notities en leveranciers",
         lambda: database_check(database_path(), ["research_notes", "suppliers"]),
         "Controleer ADMIN_DB (of NUVEMIXA_ADMIN_DB).")
     run("Calculator", "Vereiste invoervelden in het dashboard", calculator, "Controleer het dashboardtemplate.")
