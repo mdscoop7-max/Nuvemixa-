@@ -9,3 +9,57 @@
 .nv-scan-error {background:#fee2e2;color:#991b1b}
 .nv-scan-unchecked {background:#e5e7eb;color:#374151}
 .nv-scan-report dd {margin:0 0 .6rem;overflow-wrap:anywhere}
+
+/* Dashboard-only layout, typography, and market research. */
+.nv-admin-ui {font-size: 16px; color: #12263e; background: #f5f7fb;}
+.nv-admin-ui .workspace,
+.nv-admin-ui .admin,
+.nv-admin-ui .panel {min-width: 0;}
+.nv-admin-ui .admin {max-width: 1480px; margin-inline: auto; line-height: 1.55;}
+.nv-admin-ui .heading h1,
+.nv-admin-ui .section-header h1 {font-size: clamp(1.8rem, 4vw, 2.65rem); line-height: 1.16; letter-spacing: -.025em;}
+.nv-admin-ui .admin h2 {font-size: 1.25rem; line-height: 1.25;}
+.nv-admin-ui .admin h3 {font-size: 1.08rem;}
+.nv-admin-ui .admin p,
+.nv-admin-ui .admin td,
+.nv-admin-ui .nv-admin-form label {font-size: .95rem; color: #263e57;}
+.nv-admin-ui .admin small,
+.nv-admin-ui .metric-note,
+.nv-admin-ui .admin th {font-size: .875rem; color: #3d526a;}
+.nv-admin-ui .metric-value,
+.nv-admin-ui td {font-variant-numeric: tabular-nums;}
+.nv-admin-ui .panel,
+.nv-admin-ui .metric {border: 1px solid #dce5ef; box-shadow: 0 2px 8px #19345108;}
+.nv-admin-ui .admin-table th {background: #edf2f8; text-align: left;}
+.nv-admin-ui .admin-table td,
+.nv-admin-ui .admin-table th {padding: .75rem;}
+.nv-admin-ui .admin-table-wrap,
+.nv-admin-ui .nv26-table-scroll {max-width: 100%; overflow-x: auto;}
+.nv-admin-ui .admin :is(input,select,textarea,button) {font-size: 1rem;}
+.nv-admin-ui .admin :is(input:not([type=checkbox]):not([type=hidden]),select,button) {min-height: 44px;}
+.nv-admin-ui :is(a,summary,button,input,select,textarea):focus-visible {outline: 3px solid #5979eb; outline-offset: 3px;}
+.nv-admin-ui .notice[role=alert] {background: #fff0ed; color: #771f19; border-color: #efc3ba;}
+.nv-admin-ui .notice[role=status] {background: #eaf6ee; color: #175330; border-color: #b7dfc4;}
+.nv-admin-ui form[aria-busy=true] button[type=submit] {opacity: .65; cursor: wait;}
+.nv-admin-ui .nv-menu-shell > summary {display: none;}
+.nv-admin-ui #tmAdminNavigation {display: grid; gap: .55rem; overflow: visible; padding: 0;}
+.nv-admin-ui #tmAdminNavigation a,
+.nv-admin-ui .nv-nav-group > summary {font-size: .95rem; min-height: 42px; padding: .6rem .75rem; white-space: normal; overflow-wrap: anywhere;}
+.nv-admin-ui .nv-nav-group > summary {cursor: pointer; color: #e5efff; font-weight: 650;}
+.nv-admin-ui #tmAdminNavigation .nv-nav-group a {margin: .15rem 0 .15rem .5rem; display: block;}
+.nv-admin-ui #tmAdminNavigation a[aria-current=page] {background: #e9f0ff; color: #15356d; font-weight: 750;}
+.nv-admin-ui .nv-market-grid,
+.nv-admin-ui .nv-market-fields {display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit,minmax(min(100%, 235px),1fr));}
+.nv-admin-ui .nv-market-grid article {border: 1px solid #dce5ef; padding: 1rem; border-radius: 12px; overflow-wrap: anywhere;}
+.nv-admin-ui .nv-market-fields {grid-column: 1/-1; min-width: 0; border: 1px solid #dce5ef; border-radius: 12px; padding: 1rem;}
+.nv-admin-ui .nv-market-fields legend {font-weight: 700; padding-inline: .4rem;}
+.nv-admin-ui .nv-checkbox {display: flex; align-items: center; gap: .5rem; margin-block: .4rem;}
+.nv-admin-ui .nv-checkbox input {width: auto;}
+@media (max-width: 760px) {
+  .nv-admin-ui .sidebar {height: auto; max-height: none; overflow: visible;}
+  .nv-admin-ui .nv-menu-shell > summary {display: list-item; padding: .75rem; cursor: pointer; color: #fff; font-weight: 700;}
+  .nv-admin-ui .topbar {flex-wrap: wrap; gap: .6rem;}
+  .nv-admin-ui .top-search {flex-basis: 100%; order: 2;}
+  .nv-admin-ui .admin {padding-inline: 1rem;}
+  .nv-admin-ui .metrics {grid-template-columns: repeat(2,minmax(0,1fr));}
+}

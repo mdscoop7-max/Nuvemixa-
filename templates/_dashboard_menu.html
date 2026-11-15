@@ -1,0 +1,27 @@
+{% set groups = [
+  ('Winkel', [('producten','Producten'),('categorieen','Categorieën'),('afbeeldingen','Afbeeldingen'),('bestellingen','Bestellingen'),('klanten','Klanten'),('klantenservice','Klantenservice'),('kortingen','Kortingen')]),
+  ('Onderzoek', [('onderzoek','Productonderzoek'),('internationaal','Internationaal marktonderzoek'),('viral','Viral Product Finder'),('calculator','Prijs- en margecalculator'),('statistieken','Rapportages')]),
+  ('Vindbaarheid', [('seo','SEO & GEO'),('rankfix','RankFix AI'),('google-shopping','Google Shopping'),('google-ads','Google Ads'),('marketing','Marketing')]),
+  ('Beheer', [('leveranciers','Leveranciers'),('woocommerce','WooCommerce'),('accountbeheer','Accountbeheer'),('monitoring','Monitoring'),('instellingen','Instellingen')])
+] %}
+<details class="nv-menu-shell" open>
+<summary>Beheermenu</summary>
+<nav class="side-links nv26-menu" aria-label="Beheermenu" id="tmAdminNavigation">
+  <a href="/dashboard?section=dashboard"{% if section == 'dashboard' %} class="active" aria-current="page"{% endif %}>Dashboard</a>
+  {% for group, items in groups %}
+  {% set visible = namespace(items=[]) %}
+  {% for key, label in items if is_admin or key in employee_sections %}
+    {% set visible.items = visible.items + [(key,label)] %}
+  {% endfor %}
+  {% if visible.items %}
+  <details class="nv-nav-group"{% if section in visible.items|map(attribute=0)|list %} open{% endif %}>
+    <summary>{{ group }}</summary>
+    {% for key, label in visible.items %}
+    <a href="/dashboard?section={{ key }}"{% if section == key %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </details>
+  {% endif %}
+  {% endfor %}
+  <a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener">Winkel bekijken ↗</a>
+</nav>
+</details>

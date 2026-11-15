@@ -27,6 +27,8 @@ SECTIONS = {
     "bestellingen": ("order_view",),
     "klanten": ("customer_view",),
     "onderzoek": ("research",),
+    "internationaal": ("research",),
+    "viral": ("research",),
     "calculator": ("calculator",),
     "statistieken": ("stats",),
     "seo": ("seo_view",),

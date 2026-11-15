@@ -97,3 +97,28 @@
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* Keep the floating control above the active storefront controls. */
+.nv-scroll-top {
+  position: fixed;
+  z-index: 1100;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: var(--nv-scroll-top-bottom, 20px);
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #0866f5;
+  color: #fff;
+  box-shadow: 0 4px 14px #142b5c40;
+  cursor: pointer;
+}
+.nv-scroll-top[hidden], .tm-mobile-overlay-open .nv-scroll-top {display: none;}
+.nv-scroll-top:hover {background: #064dbb;}
+.nv-scroll-top:focus-visible {outline: 3px solid #ffba4a; outline-offset: 3px;}
+@media (max-width: 760px) {
+  .nv-scroll-top {width: 46px; height: 46px;}
+}

@@ -1,0 +1,186 @@
+{
+  "observed_on": "14 november 2026",
+  "benchmarks": {
+    "NL": {
+      "bureau": [
+        [
+          "IKEA DRÖNJÖNS",
+          "€ 12,99",
+          "https://www.ikea.com/nl/nl/p/dronjons-bureauhouder-wit-00428827/"
+        ]
+      ],
+      "kabels": [
+        [
+          "IKEA SIGNUM · 70 cm",
+          "€ 14,99",
+          "https://www.ikea.com/nl/nl/cat/kabelmanagement-kabelgoten-kabelorganizers-16195/"
+        ]
+      ],
+      "reis": [
+        [
+          "Decathlon FORCLAZ · 3 stuks",
+          "€ 9,99",
+          "https://www.decathlon.nl/sport-accessoires/suitcase-organizers"
+        ]
+      ]
+    },
+    "BE": {
+      "kabels": [
+        [
+          "IKEA SIGNUM · 70 cm",
+          "€ 14,99",
+          "https://www.ikea.com/be/fr/p/signum-range-cables-couleur-argent-30200253/"
+        ]
+      ]
+    },
+    "DE": {
+      "bureau": [
+        [
+          "IKEA DRÖNJÖNS",
+          "€ 14,99",
+          "https://www.ikea.com/de/de/cat/droenjoens-serie-54963/"
+        ]
+      ],
+      "kabels": [
+        [
+          "IKEA SIGNUM · 70 cm",
+          "€ 19,99",
+          "https://www.ikea.com/de/de/p/signum-kabelkanal-waagerecht-silberfarben-30200253/"
+        ]
+      ],
+      "reis": [
+        [
+          "Decathlon · 3 stuks",
+          "",
+          "https://www.decathlon.de/p/aufbewahrungsbeutel-travel-3er-set/303058/c392c71c230m8512006"
+        ]
+      ]
+    },
+    "FR": {
+      "bureau": [
+        [
+          "IKEA DRÖNJÖNS",
+          "",
+          "https://www.ikea.com/fr/fr/p/droenjoens-organiseur-bureau-blanc-00428827/"
+        ]
+      ],
+      "kabels": [
+        [
+          "IKEA SIGNUM · 70 cm",
+          "€ 14,99",
+          "https://www.ikea.com/fr/fr/p/signum-range-cables-couleur-argent-30200253/"
+        ]
+      ],
+      "reis": [
+        [
+          "Decathlon · 3 stuks",
+          "",
+          "https://www.decathlon.fr/p/kit-de-3-housses-de-rangement-de-voyage-commute/303058/c392c71c230m8512006"
+        ]
+      ]
+    },
+    "GB": {
+      "kabels": [
+        [
+          "IKEA SIGNUM · 70 cm",
+          "£ 10,00",
+          "https://www.ikea.com/gb/en/p/signum-cable-trunking-horizontal-silver-colour-30200253/"
+        ]
+      ]
+    },
+    "US": {
+      "kabels": [
+        [
+          "IKEA FÖRSÄSONG · 38 cm",
+          "USD 12,99",
+          "https://www.ikea.com/us/en/p/foersaesong-cable-management-tray-white-00573188/"
+        ]
+      ]
+    },
+    "CA": {
+      "kabels": [
+        [
+          "IKEA FÖRSÄSONG · 38 cm",
+          "CAD 9,99",
+          "https://www.ikea.com/ca/en/p/foersaesong-cable-management-tray-white-00573188/"
+        ]
+      ],
+      "reis": [
+        [
+          "Decathlon · 3 stuks",
+          "",
+          "https://www.decathlon.ca/en/p/set-of-3-packing-cubes/303058/c392c71c230m8512006"
+        ]
+      ]
+    }
+  },
+  "suppliers": {
+    "bureau": [
+      [
+        "Orderchamp · groothandelsplatform",
+        "https://www.orderchamp.com/nl/marketplace/stationery/desk-accessories/desktop-organisers"
+      ]
+    ],
+    "kabels": [
+      [
+        "ASSMANN / DIGITUS · Duitse fabrikant, DA-90450",
+        "https://www.assmann.com/product-pdf/4016032481836?PL=en"
+      ],
+      [
+        "Upliftec · fabrikant China",
+        "https://www.upliftec.com/standing-desk-cable-management-2664770/"
+      ],
+      [
+        "UPLIFT Desk · Amerikaans merk, B2B te toetsen",
+        "https://www.upliftdesk.com/wire-management-tray-by-uplift-desk/"
+      ],
+      [
+        "StarTech · Noord-Amerikaanse fabrikant, kanaal te toetsen",
+        "https://media.startech.com/cms/pdfs/udcmtray_coo.pdf"
+      ]
+    ],
+    "reis": [
+      [
+        "Faire · groothandelsplatform voor een offertezoektocht",
+        "https://www.faire.com/"
+      ]
+    ]
+  },
+  "keywords": {
+    "NL": {
+      "bureau": "bureau organizer",
+      "kabels": "kabelmanagement bureau",
+      "reis": "packing cubes"
+    },
+    "BE": {
+      "bureau": "bureau organizer, organiseur bureau",
+      "kabels": "kabelgoot bureau, range câbles bureau",
+      "reis": "packing cubes, organiseur valise"
+    },
+    "DE": {
+      "bureau": "Schreibtisch Organizer",
+      "kabels": "Kabelmanagement Schreibtisch",
+      "reis": "Packwürfel Koffer"
+    },
+    "FR": {
+      "bureau": "organiseur bureau",
+      "kabels": "range câbles bureau",
+      "reis": "organiseur valise"
+    },
+    "GB": {
+      "bureau": "desk organiser",
+      "kabels": "under desk cable tray",
+      "reis": "packing cubes"
+    },
+    "US": {
+      "bureau": "desk organizer",
+      "kabels": "under desk cable management",
+      "reis": "packing cubes"
+    },
+    "CA": {
+      "bureau": "desk organizer, organiseur bureau",
+      "kabels": "under desk cable tray, range câbles bureau",
+      "reis": "packing cubes, organiseur valise"
+    }
+  }
+}

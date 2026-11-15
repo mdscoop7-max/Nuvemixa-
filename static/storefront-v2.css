@@ -281,3 +281,76 @@ button,a,input,select,textarea{touch-action:manipulation}
 /* Consistent bright storefront background even when using legacy templates. */
 body{background:#fafdff;color:#152e4c}
 :where(.item,.product-card,.categorytile,.cart-panel,.empty-state){border-color:#dfebf8}
+
+/* The banner artwork includes Dutch text. Use the shared HTML copy on
+   smaller screens so the same language selector works at every width. */
+@media (max-width: 991px) {
+    main .tm-new-hero,
+    main .tm-shop-hero,
+    main .tm-offers-hero {
+        color: #fff;
+        background: linear-gradient(125deg, #102946, #15447f);
+    }
+
+    main .tm-new-hero:has(img[src*="gadgets.jpg"]) {
+        background: linear-gradient(125deg, #081a38, #15447f);
+    }
+
+    main .tm-new-hero > a,
+    main .tm-desktop-hero-copy {
+        display: block;
+    }
+
+    main .tm-new-hero img,
+    main .tm-shop-hero img,
+    main .tm-offers-hero img {
+        display: none !important;
+    }
+
+    main .tm-desktop-hero-copy {
+        padding: clamp(20px, 5vw, 38px);
+        text-align: left;
+        color: inherit;
+    }
+
+    main .tm-desktop-brand,
+    main .tm-desktop-tag {
+        display: block;
+        width: fit-content;
+        font-weight: 800;
+    }
+
+    main .tm-desktop-tag {
+        margin-top: 8px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        background: #ffffff26;
+        font-size: 11px;
+        letter-spacing: .06em;
+    }
+
+    main .tm-desktop-hero-copy h2 {
+        margin: 10px 0 7px;
+        font-size: clamp(22px, 4.5vw, 32px);
+        line-height: 1.12;
+        color: inherit;
+    }
+
+    main .tm-desktop-hero-copy p {
+        max-width: 46ch;
+        margin: 0 0 14px;
+        color: inherit;
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    main .tm-desktop-cta {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: #0866f5;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+    }
+}

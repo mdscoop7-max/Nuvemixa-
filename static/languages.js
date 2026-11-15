@@ -25,7 +25,7 @@ const contactTranslations={
 Object.keys(contactTranslations).forEach(lang=>{translations[lang]={...(translations[lang]||{}),...contactTranslations[lang]};});
 
 /* Shared translations that were previously hard-coded in the footer/hero. */
-const sharedTranslations={
+const sharedPageTranslations={
  nl:{curatedPick:'GESELECTEERD',resultsFor:'resultaten voor',footerFaq:'Info',footerFaqLink:'Veelgestelde vragen',footerAbout:'Over NUVEMIXA',footerPrivacy:'Privacy',footerCookies:'Cookies & voorkeuren',footerBadgeMobile:'✓ Mobile first',footerBadgeLanguages:'✓ 6 talen',footerBadgeCollections:'✓ 5 collecties',footerBottom:'Modern · overzichtelijk · transparant · toegankelijk'},
  en:{curatedPick:'CURATED PICK',resultsFor:'results for',footerFaq:'Info',footerFaqLink:'Frequently asked questions',footerAbout:'About NUVEMIXA',footerPrivacy:'Privacy',footerCookies:'Cookies & preferences',footerBadgeMobile:'✓ Mobile first',footerBadgeLanguages:'✓ 6 languages',footerBadgeCollections:'✓ 5 collections',footerBottom:'Modern · clear · transparent · accessible'},
  fr:{curatedPick:'SÉLECTION',resultsFor:'résultats pour',footerFaq:'Infos',footerFaqLink:'Questions fréquentes',footerAbout:'À propos de NUVEMIXA',footerPrivacy:'Confidentialité',footerCookies:'Cookies & préférences',footerBadgeMobile:'✓ Mobile d’abord',footerBadgeLanguages:'✓ 6 langues',footerBadgeCollections:'✓ 5 collections',footerBottom:'Moderne · clair · transparent · accessible'},
@@ -33,7 +33,7 @@ const sharedTranslations={
  it:{curatedPick:'SELEZIONATO',resultsFor:'risultati per',footerFaq:'Info',footerFaqLink:'Domande frequenti',footerAbout:'Chi è NUVEMIXA',footerPrivacy:'Privacy',footerCookies:'Cookie & preferenze',footerBadgeMobile:'✓ Mobile first',footerBadgeLanguages:'✓ 6 lingue',footerBadgeCollections:'✓ 5 collezioni',footerBottom:'Moderno · chiaro · trasparente · accessibile'},
  es:{curatedPick:'SELECCIÓN',resultsFor:'resultados para',footerFaq:'Info',footerFaqLink:'Preguntas frecuentes',footerAbout:'Sobre NUVEMIXA',footerPrivacy:'Privacidad',footerCookies:'Cookies y preferencias',footerBadgeMobile:'✓ Mobile first',footerBadgeLanguages:'✓ 6 idiomas',footerBadgeCollections:'✓ 5 colecciones',footerBottom:'Moderno · claro · transparente · accesible'}
 };
-Object.keys(sharedTranslations).forEach(lang=>{translations[lang]={...(translations[lang]||{}),...sharedTranslations[lang]};});
+Object.keys(sharedPageTranslations).forEach(lang=>{translations[lang]={...(translations[lang]||{}),...sharedPageTranslations[lang]};});
 
 /* Category cards were server-rendered in Dutch and therefore stayed unchanged.
    Translate their names, eyebrow text and hero category whenever the language changes. */

@@ -72,6 +72,11 @@ def _windows_user_sid():
     return rows[0][-1]
 
 
+class WindowsAclError(RuntimeError):
+    def __init__(self, path, returncode):
+        super().__init__(f"Windows-toegangsrechten konden niet worden beperkt: {path}")
+        self.returncode = returncode
+
 def secure_permissions(path, directory=False):
     path = Path(path)
     if os.name == "nt":
@@ -82,7 +87,7 @@ def secure_permissions(path, directory=False):
             text=True,
         )
         if result.returncode:
-            raise RuntimeError(f"Windows-toegangsrechten konden niet worden beperkt: {path}")
+            raise WindowsAclError(path, result.returncode)
         return
 
     mode = 0o700 if directory else 0o600

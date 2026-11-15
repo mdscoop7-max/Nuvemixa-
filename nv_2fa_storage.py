@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from cryptography.fernet import Fernet
+import nv_2fa_postgres as postgres
 from nv_storage_paths import TWO_FA_DIR
 
 SLEUTELBESTAND = TWO_FA_DIR / "nv_2fa.key"
@@ -107,6 +108,9 @@ def opslaan(geheime_sleutel, herstel_hashes):
 
 
 def laden():
+    if postgres.enabled():
+        return postgres.load()
+
     _beveilig_bestand(OPSLAGBESTAND)
     encrypted = OPSLAGBESTAND.read_bytes()
     return json.loads(_fernet().decrypt(encrypted))
@@ -180,6 +184,9 @@ def hmac_compare(a, b):
 
 def verbruik_herstelcode(code):
     """Verbruik een herstelcode atomair en cross-platform vergrendeld."""
+    if postgres.enabled():
+        return postgres.consume_recovery_code(code)
+
     from nv_2fa import gebruik_herstelcode
 
     with _bestandsslot():

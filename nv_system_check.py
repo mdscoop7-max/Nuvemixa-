@@ -87,7 +87,7 @@ def scan(items, categories, customer_db, integrations):
         for section in SECTIONS:
             if not set(SECTIONS[section]) <= RIGHTS.keys():
                 raise ValueError("Invalid permission map")
-        source, _, _ = current_app.jinja_env.loader.get_source(current_app.jinja_env, "dashboard.html")
+        source, _, _ = current_app.jinja_env.loader.get_source(current_app.jinja_env, "_dashboard_menu.html")
         if any(f"'{section}'" not in source for section in SECTIONS):
             raise ValueError("Navigation missing")
         return "works", f"{len(required)} beheerrouteverwijzingen en {len(SECTIONS)} menurechten gevonden.", ""

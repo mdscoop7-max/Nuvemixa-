@@ -148,6 +148,11 @@
     document.documentElement.lang=lang;
     const globalSelect=$('#tmGlobalLanguage');
     if(globalSelect)globalSelect.value=lang;
+    $$('[data-tm-label-nl]').forEach(node=>{
+      node.setAttribute('aria-label', lang==='en'?node.dataset.tmLabelEn:node.dataset.tmLabelNl);
+    });
+    const scrollTopButton=$('[data-nv-scroll-top]');
+    if(scrollTopButton) scrollTopButton.setAttribute('aria-label', lang==='en'?'Back to top':'Naar boven');
     $$('[data-tm-tr]').forEach(node=>{
       const text=node.dataset[lang==='en'?'tmEn':'tmNl'];
       if(text!==undefined)node.textContent=text;
@@ -274,7 +279,42 @@
     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   }
+  function bindScrollTop(){
+    const button=$('[data-nv-scroll-top]');
+    if(!button)return;
+    const obstacles=$$('.tm-dock,.tm-assist-fab,.mobile-sticky-cart,.tm-return-dashboard,[data-cookie-banner],.cookie-banner');
+    function update(){
+      if(window.scrollY < 360){
+        button.hidden=true;
+        return;
+      }
+      const edge=window.innerWidth-80;
+      let bottom=20;
+      for(const obstacle of obstacles){
+        if(!obstacle.getClientRects().length)continue;
+        const rect=obstacle.getBoundingClientRect();
+        if(rect.right>edge && rect.top<window.innerHeight && rect.bottom>0){
+          bottom=Math.max(bottom,window.innerHeight-rect.top+12);
+        }
+      }
+      button.style.setProperty('--nv-scroll-top-bottom',bottom+'px');
+      button.hidden=bottom+64>window.innerHeight;
+    }
+    window.addEventListener('scroll',update,{passive:true});
+    window.addEventListener('resize',update);
+    window.addEventListener('pageshow',update);
+    if('ResizeObserver' in window){
+      const observer=new ResizeObserver(update);
+      obstacles.forEach(obstacle=>observer.observe(obstacle));
+    }
+    button.addEventListener('click',()=>{
+      window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+    });
+    update();
+  }
+
   function boot(){
+    bindScrollTop();
     lang=stored()==='en'?'en':'nl';setLanguage(lang,false);
     const globalSelect=$('#tmGlobalLanguage');
     if(globalSelect)globalSelect.addEventListener('change',()=>setLanguage(globalSelect.value,true));

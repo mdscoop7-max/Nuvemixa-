@@ -3,13 +3,14 @@
 
 import os
 
+import nv_2fa_postgres as postgres
 from nv_storage_paths import TWO_FA_DIR
 
 MARKERING = TWO_FA_DIR / "nv_2fa_verplicht.flag"
 
 
 def is_verplicht():
-    return MARKERING.exists()
+    return postgres.enabled() or MARKERING.exists()
 
 
 def maak_verplicht():

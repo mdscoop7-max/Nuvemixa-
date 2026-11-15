@@ -1137,6 +1137,8 @@ def product(product_id):
 
 # Use a persistent SECRET_KEY; never store credentials in the repository.
 
+import nv_2fa_postgres as postgres_2fa
+
 _ADMIN_LOGIN_ATTEMPTS = {}
 
 _ADMIN_MAX_ATTEMPTS = 6
@@ -1187,6 +1189,8 @@ from nv_permissions import RIGHTS, SECTIONS, account_rights, allowed
 from nv_visits import record_visit, visit_summary
 from nv_system_check import scan as run_system_scan
 from nv_merchant_audit import audit as merchant_audit, product_issues
+from nv_international import dashboard_market
+from nv_viral_research import viral_dashboard
 
 app.after_request(record_visit)
 
@@ -1264,11 +1268,21 @@ def admin_login():
 
         ip = request.remote_addr or "unknown"
 
-        now = time.monotonic()
+        ticket = None
+        if postgres_2fa.enabled():
+            try:
+                ticket = postgres_2fa.reserve_attempt(
+                    "password", ip, _ADMIN_MAX_ATTEMPTS, _ADMIN_ATTEMPT_WINDOW
+                )
+            except postgres_2fa.StorageUnavailable:
+                return "Beveiligde login tijdelijk niet beschikbaar", 503
+            blocked = ticket is None
+        else:
+            now = time.monotonic()
+            attempts = [t for t in _ADMIN_LOGIN_ATTEMPTS.get(ip, []) if now - t < _ADMIN_ATTEMPT_WINDOW]
+            blocked = len(attempts) >= _ADMIN_MAX_ATTEMPTS
 
-        attempts = [t for t in _ADMIN_LOGIN_ATTEMPTS.get(ip, []) if now - t < _ADMIN_ATTEMPT_WINDOW]
-
-        if len(attempts) >= _ADMIN_MAX_ATTEMPTS:
+        if blocked:
 
             return render_template("admin_login.html", config_missing=False, error="Te veel pogingen. Probeer het later opnieuw."), 429
 
@@ -1292,7 +1306,13 @@ def admin_login():
 
         if primary or staff_login:
 
-            _ADMIN_LOGIN_ATTEMPTS.pop(ip, None)
+            if ticket is not None:
+                try:
+                    postgres_2fa.finish_password_attempt(ip, ticket)
+                except postgres_2fa.StorageUnavailable:
+                    return "Beveiligde login tijdelijk niet beschikbaar", 503
+            else:
+                _ADMIN_LOGIN_ATTEMPTS.pop(ip, None)
 
             session.clear()
 
@@ -1320,9 +1340,14 @@ def admin_login():
 
             return redirect("/dashboard")
 
-        attempts.append(now)
-
-        _ADMIN_LOGIN_ATTEMPTS[ip] = attempts
+        if ticket is not None:
+            try:
+                postgres_2fa.fail_password_attempt(ticket)
+            except postgres_2fa.StorageUnavailable:
+                return "Beveiligde login tijdelijk niet beschikbaar", 503
+        else:
+            attempts.append(now)
+            _ADMIN_LOGIN_ATTEMPTS[ip] = attempts
 
         error = "Gebruikersnaam, e-mailadres of wachtwoord klopt niet."
 
@@ -2025,6 +2050,8 @@ def control():
 
 
     section_names = {
+        "internationaal": "Internationaal marktonderzoek",
+        "viral": "Viral Product Finder",
 
         "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "categorieen": "Categorieën",
 
@@ -2055,6 +2082,8 @@ def control():
     }
 
     section_descriptions = {
+        "internationaal": "Vergelijk vraag, leveranciers en marge per verkoopmarkt.",
+        "viral": "Leg trendsignalen vast en beoordeel commerciële kansen per land.",
 
         "producten": "Zoek en bekijk producten, prijzen en voorraad in de testcatalogus.",
 
@@ -2184,6 +2213,8 @@ def control():
     return render_template(
 
         view_template,
+        market_research=dashboard_market() if section == "internationaal" else None,
+        viral=viral_dashboard() if section == "viral" else None,
 
         products=featured_products,
 
@@ -3107,7 +3138,7 @@ def trendmix_security_headers(response):
 
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
 
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/dashboard/internationaal", "/dashboard/viral", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
 
         response.headers["Cache-Control"] = "no-store"
 

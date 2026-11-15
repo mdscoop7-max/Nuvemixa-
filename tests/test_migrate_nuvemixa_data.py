@@ -6,9 +6,11 @@ import tempfile
 import unittest
 from contextlib import closing
 from pathlib import Path
+from unittest.mock import patch
 
 from cryptography.fernet import Fernet
 
+import migrate_nuvemixa_data as migration
 from migrate_nuvemixa_data import (
     DATABASE_FILENAMES,
     OPTIONAL_2FA_FILES,
@@ -27,6 +29,55 @@ from migrate_nuvemixa_data import (
     wal_report,
     write_manifest,
 )
+
+
+class MigrationFilesystemTests(unittest.TestCase):
+    """Exercise migration logic even on Windows runners without WRITE_DAC."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        if os.name != "nt":
+            return
+        with tempfile.TemporaryDirectory() as temp:
+            probe = Path(temp) / "acl-probe"
+            probe.touch()
+            try:
+                secure_permissions(probe)
+            except migration.WindowsAclError as error:
+                if error.returncode != 5:
+                    raise
+                acl_fixture = patch.multiple(
+                    migration,
+                    secure_permissions=cls._record_private,
+                    permissions_are_private=cls._is_recorded_private,
+                )
+                cls._private_paths = set()
+                acl_fixture.start()
+                cls.addClassCleanup(acl_fixture.stop)
+
+    @classmethod
+    def _record_private(cls, path, directory=False):
+        cls._private_paths.add((Path(path).resolve(), directory))
+
+    @classmethod
+    def _is_recorded_private(cls, path, directory=False):
+        return (Path(path).resolve(), directory) in cls._private_paths
+
+
+class WindowsMigrationAclTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows NTFS-test")
+    def test_native_acl_can_be_restricted(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "acl-probe"
+            path.touch()
+            try:
+                migration.secure_permissions(path)
+            except migration.WindowsAclError as error:
+                if error.returncode != 5:
+                    raise
+                self.skipTest("Deze Windows-runner kan geen bestands-ACL aanpassen (WRITE_DAC).")
+            self.assertTrue(migration.permissions_are_private(path))
 
 
 class WalReportTests(unittest.TestCase):
@@ -58,7 +109,7 @@ class WalReportTests(unittest.TestCase):
             self.assertEqual(report["trailing_bytes"], 0)
 
 
-class SqliteBackupTests(unittest.TestCase):
+class SqliteBackupTests(MigrationFilesystemTests):
     def test_backup_api_creates_a_consistent_independent_snapshot(self):
         with tempfile.TemporaryDirectory() as temp:
             source = Path(temp) / "source.sqlite3"
@@ -98,7 +149,7 @@ class SqliteBackupTests(unittest.TestCase):
             self.assertEqual(destination.read_bytes(), b"keep")
 
 
-class InstallTests(unittest.TestCase):
+class InstallTests(MigrationFilesystemTests):
     def test_install_exclusive_preserves_existing_destination(self):
         with tempfile.TemporaryDirectory() as temp:
             source = Path(temp) / "snapshot.bin"
@@ -127,12 +178,12 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(destination.read_bytes(), b"snapshot")
 
 
-class MigrationSecurityTests(unittest.TestCase):
+class MigrationSecurityTests(MigrationFilesystemTests):
     def test_created_backup_file_has_restrictive_permissions(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "secret.bin"
             copy_bytes_exclusive(path, b"private fixture")
-            secure_permissions(path)
+            migration.secure_permissions(path)
             self.assertTrue(path.is_file())
             if os.name != "nt":
                 self.assertEqual(path.stat().st_mode & 0o777, 0o600)
@@ -205,7 +256,7 @@ class MigrationSecurityTests(unittest.TestCase):
                 with closing(sqlite3.connect(database)) as connection:
                     connection.execute("CREATE TABLE fixture(value TEXT)")
                     connection.execute("INSERT INTO fixture VALUES ('preserved')")
-                secure_permissions(database)
+                migration.secure_permissions(database)
                 with closing(sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
                     check_integrity(connection)
                     tables = table_summary(connection)

@@ -177,15 +177,15 @@ function updateShellLanguage(lang){
   set('.nav-link[href="/smart-home"]',t.navSmart); set('.nav-link[href="/beauty-care"]',t.navBeauty);
   set('.nav-link[href="/lifestyle-sport"]',t.navSport); set('.nav-more',t.navMore);
   set('.header-contact','✉ '+t.contact);
-  document.querySelectorAll('.tm-footer .footer-column').forEach((col,i)=>{
+  document.querySelectorAll('.tm-footer:not(.tm-footer-v2) .footer-column').forEach((col,i)=>{
     const title=col.querySelector('h3'); if(!title)return;
     title.textContent=[t.shop,t.service,'TrendMix'][i]||title.textContent;
   });
-  set('.tm-footer .footer-column a[href="/faq"]',t.faq);
-  set('.tm-footer .footer-column a[href="/bestellen"]',t.delivery);
-  set('.tm-footer .footer-column a[href="/over-trendmix"]',t.about);
-  set('.tm-footer .footer-column a[href="/privacy"]',t.privacy);
-  set('.tm-footer .footer-column a[href="/cookies"]',t.cookies);
+  set('.tm-footer:not(.tm-footer-v2) .footer-column a[href="/faq"]',t.faq);
+  set('.tm-footer:not(.tm-footer-v2) .footer-column a[href="/bestellen"]',t.delivery);
+  set('.tm-footer:not(.tm-footer-v2) .footer-column a[href="/over-trendmix"]',t.about);
+  set('.tm-footer:not(.tm-footer-v2) .footer-column a[href="/privacy"]',t.privacy);
+  set('.tm-footer:not(.tm-footer-v2) .footer-column a[href="/cookies"]',t.cookies);
 }
 const _applyShellLanguage=applyLanguage;
 applyLanguage=function(lang){_applyShellLanguage(lang);updateShellLanguage(lang);};
