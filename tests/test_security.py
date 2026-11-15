@@ -97,3 +97,33 @@ def test_all_storefront_post_forms_include_csrf_tokens():
         audit = PostFormAudit()
         audit.feed(response.get_data(as_text=True))
         assert all(not form["post"] or form["csrf"] for form in audit.forms), route
+
+
+def test_dashboard_checks_primary_2fa_once_per_request(monkeypatch):
+    from unittest.mock import Mock
+
+    import nv_2fa_login
+
+    monkeypatch.setenv("SECRET_KEY", "fixture-only")
+    monkeypatch.setenv("NUVEMIXA_ADMIN_EMAIL", "fixture@example.invalid")
+    monkeypatch.setenv("NUVEMIXA_ADMIN_PASSWORD_HASH", "fixture-only")
+    monkeypatch.setitem(app.config, "SESSION_COOKIE_SECURE", False)
+    check = Mock(side_effect=[True, RuntimeError("simulated database outage"), True])
+    monkeypatch.setattr(nv_2fa_login, "is_2fa_actief", check)
+
+    client = app.test_client()
+    with client.session_transaction() as saved:
+        saved["nv_admin"] = True
+
+    first = client.get("/dashboard")
+    assert first.status_code == 200
+    assert b"Viral Product Finder" in first.data
+    assert check.call_count == 1
+
+    blocked = client.get("/dashboard")
+    assert blocked.status_code == 302
+    assert blocked.location == "/admin/login"
+    assert check.call_count == 2
+
+    assert client.get("/dashboard?section=viral").status_code == 200
+    assert check.call_count == 3

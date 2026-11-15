@@ -1154,12 +1154,15 @@ def admin_is_authenticated():
     if not admin_configured():
         return False
     if session.get("nv_admin") is True:
-        # Ook oude beheerderssessies zijn niet geldig zolang primaire 2FA niet actief is.
-        try:
-            from nv_2fa_login import is_2fa_actief
-            return is_2fa_actief()
-        except Exception:
-            return False
+        # Reuse the primary 2FA check across all permission checks in this request.
+        cache_key = "nuvemixa.primary_2fa_active"
+        if cache_key not in request.environ:
+            try:
+                from nv_2fa_login import is_2fa_actief
+                request.environ[cache_key] = is_2fa_actief()
+            except Exception:
+                request.environ[cache_key] = False
+        return request.environ[cache_key]
     staff = staff_current()
     return bool(staff and staff["role"] == "admin")
 
