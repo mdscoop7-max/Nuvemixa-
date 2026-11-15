@@ -5,3 +5,4 @@ pyotp==2.9.0
 cryptography>=44.0.0,<47
 qrcode[pil]>=8.0,<9
 psycopg[binary]>=3.3,<4
+certifi>=2024.7.4

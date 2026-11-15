@@ -24,10 +24,11 @@ def enabled():
 
 
 def connect(dsn):
+    import certifi
     import psycopg
 
     return psycopg.connect(
-        dsn, sslmode="verify-full", sslrootcert="system",
+        dsn, sslmode="verify-full", sslrootcert=certifi.where(),
         connect_timeout=5, prepare_threshold=None,
     )
 
