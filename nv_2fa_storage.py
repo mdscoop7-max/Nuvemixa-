@@ -118,6 +118,9 @@ def laden():
 
 def bewaar_pending(token, geheime_sleutel, aangemaakt):
     """Bewaar een tijdelijke activatiesleutel versleuteld, nooit in de browsercookie."""
+    if postgres.enabled():
+        return postgres.store_pending(token, geheime_sleutel)
+
     gegevens = {
         "token": token,
         "totp_secret": geheime_sleutel,
@@ -128,6 +131,9 @@ def bewaar_pending(token, geheime_sleutel, aangemaakt):
 
 
 def laad_pending(token, nu):
+    if postgres.enabled():
+        return postgres.load_pending(token)
+
     try:
         _beveilig_bestand(PENDING_BESTAND)
         gegevens = json.loads(_fernet().decrypt(PENDING_BESTAND.read_bytes()))

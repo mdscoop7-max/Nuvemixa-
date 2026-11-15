@@ -1,4 +1,4 @@
-"""PostgreSQL storage for an already enrolled primary administrator."""
+"""PostgreSQL storage for primary administrator 2FA."""
 
 import base64
 import binascii
@@ -70,12 +70,81 @@ def decode(ciphertext, encryption_key):
         raise StorageUnavailable("Actieve 2FA-opslag kan niet worden gevalideerd.") from None
 
 
-def _active(db, lock=False):
-    sql = "SELECT ciphertext FROM nuvemixa_auth.state WHERE singleton AND required"
+def _state(db, lock=False):
+    sql = "SELECT required, ciphertext FROM nuvemixa_auth.state WHERE singleton"
     row = db.execute(sql + (" FOR UPDATE" if lock else "")).fetchone()
     if row is None:
         raise StorageUnavailable("Verplichte 2FA-opslag ontbreekt.")
-    return row[0]
+    return row
+
+
+def _active(db, lock=False):
+    required, ciphertext = _state(db, lock)
+    if not required:
+        raise StorageUnavailable("2FA-inschrijving is nog niet voltooid.")
+    return ciphertext
+
+
+def is_active():
+    with transaction() as db:
+        required, ciphertext = _state(db)
+        encryption_key = key()
+        if required:
+            decode(ciphertext, encryption_key)
+        else:
+            Fernet(encryption_key)
+        return required
+
+
+def store_pending(token, secret):
+    with transaction() as db:
+        required, _ = _state(db, lock=True)
+        if required:
+            raise StorageUnavailable("2FA is al actief.")
+        ciphertext = Fernet(key()).encrypt(json.dumps({"token": token, "totp_secret": secret}).encode())
+        db.execute(
+            "UPDATE nuvemixa_auth.state SET pending = %s, "
+            "pending_until = clock_timestamp() + interval '10 minutes' WHERE singleton",
+            (ciphertext,),
+        )
+
+
+def _pending(db, token):
+    row = db.execute(
+        "SELECT pending FROM nuvemixa_auth.state "
+        "WHERE singleton AND NOT required AND pending_until > clock_timestamp()"
+    ).fetchone()
+    if row is None:
+        return None
+    payload = json.loads(Fernet(key()).decrypt(bytes(row[0])))
+    if hmac.compare_digest(payload["token"], token):
+        return payload
+    return None
+
+
+def load_pending(token):
+    with transaction() as db:
+        return _pending(db, token)
+
+
+def activate_pending(token, secret, recovery_hashes, step):
+    with transaction() as db:
+        required, _ = _state(db, lock=True)
+        pending = None if required else _pending(db, token)
+        if pending is None or not hmac.compare_digest(pending["totp_secret"], secret):
+            return False
+        if not _register_step(db, step):
+            return False
+        ciphertext = Fernet(key()).encrypt(json.dumps(
+            {"enabled": True, "totp_secret": secret, "recovery_hashes": recovery_hashes}
+        ).encode())
+        db.execute(
+            "UPDATE nuvemixa_auth.state SET required = true, ciphertext = %s, "
+            "pending = NULL, pending_until = NULL WHERE singleton",
+            (ciphertext,),
+        )
+        return True
+
 
 
 def load():
@@ -97,10 +166,14 @@ def consume_recovery_code(code):
 def register_totp_step(step):
     with transaction() as db:
         _active(db)
-        return db.execute(
-            "INSERT INTO nuvemixa_auth.replay (step) VALUES (%s) ON CONFLICT DO NOTHING RETURNING step",
-            (step,),
-        ).fetchone() is not None
+        return _register_step(db, step)
+
+
+def _register_step(db, step):
+    return db.execute(
+        "INSERT INTO nuvemixa_auth.replay (step) VALUES (%s) ON CONFLICT DO NOTHING RETURNING step",
+        (step,),
+    ).fetchone() is not None
 
 
 def attempt_key(scope, identity, encryption_key):
@@ -110,7 +183,7 @@ def attempt_key(scope, identity, encryption_key):
 def reserve_attempt(scope, identity, limit, window):
     with transaction() as db:
         # One short transaction serializes admission and cleanup across workers.
-        _active(db, lock=True)
+        _state(db, lock=True)
         now = db.execute("SELECT EXTRACT(EPOCH FROM clock_timestamp())::double precision").fetchone()[0]
         db.execute(
             "DELETE FROM nuvemixa_auth.attempts WHERE occurred_at <= %s OR "
@@ -134,7 +207,7 @@ def reserve_attempt(scope, identity, limit, window):
 
 def finish_password_attempt(identity, ticket):
     with transaction() as db:
-        _active(db, lock=True)
+        _state(db, lock=True)
         tag = attempt_key("password", identity, key())
         # Clear only this request and prior failures. Concurrent newer attempts stay counted.
         db.execute(

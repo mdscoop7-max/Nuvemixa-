@@ -1451,7 +1451,10 @@ def admin_2fa_setup():
         return "Beveiligde 2FA-opslag tijdelijk niet beschikbaar", 503
 
     token = session.get("nv_2fa_setup_token")
-    pending = laad_pending(token, time.time()) if token else None
+    try:
+        pending = laad_pending(token, time.time()) if token else None
+    except postgres_2fa.StorageUnavailable:
+        return "Beveiligde 2FA-opslag tijdelijk niet beschikbaar", 503
     error = None
     qr_data_uri = None
     recovery_codes = None
@@ -1526,15 +1529,23 @@ def admin_2fa_setup():
                             ),
                             None,
                         )
-                        if matched_step is None or not registreer_eenmalig(matched_step):
-                            error = "Deze Authenticator-code is al gebruikt. Wacht op een nieuwe code."
-                            raise ValueError("TOTP setup replay blocked")
                         recovery_codes, recovery_hashes = maak_herstelcodes(10)
-                        activeer(pending["totp_secret"], recovery_hashes)
-                        try:
-                            wis_pending()
-                        except OSError:
-                            app.logger.warning("Tijdelijke 2FA-inschrijving kon niet direct worden verwijderd")
+                        if postgres_2fa.enabled():
+                            activated = matched_step is not None and postgres_2fa.activate_pending(
+                                token, pending["totp_secret"], recovery_hashes, matched_step
+                            )
+                            if not activated:
+                                error = "De inschrijving is verlopen of de code is al gebruikt."
+                                raise ValueError("TOTP setup replay blocked")
+                        else:
+                            if matched_step is None or not registreer_eenmalig(matched_step):
+                                error = "Deze Authenticator-code is al gebruikt. Wacht op een nieuwe code."
+                                raise ValueError("TOTP setup replay blocked")
+                            activeer(pending["totp_secret"], recovery_hashes)
+                            try:
+                                wis_pending()
+                            except OSError:
+                                app.logger.warning("Tijdelijke 2FA-inschrijving kon niet direct worden verwijderd")
                         session.clear()
                         session["nv_admin"] = True
                         response = app.make_response(render_template(
@@ -1560,7 +1571,10 @@ def admin_2fa_setup():
         else:
             error = "Ongeldige aanvraag."
 
-    pending = laad_pending(session.get("nv_2fa_setup_token"), time.time()) if session.get("nv_2fa_setup_token") else None
+    try:
+        pending = laad_pending(session.get("nv_2fa_setup_token"), time.time()) if session.get("nv_2fa_setup_token") else None
+    except postgres_2fa.StorageUnavailable:
+        return "Beveiligde 2FA-opslag tijdelijk niet beschikbaar", 503
     if pending:
         try:
             import base64

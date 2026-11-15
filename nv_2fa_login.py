@@ -2,12 +2,17 @@
 import time
 import pyotp
 
+import nv_2fa_postgres as postgres
+
 from nv_2fa import controleer_code
 from nv_2fa_storage import laden, verbruik_herstelcode
 
 
 def is_2fa_actief():
     """Controleer actieve 2FA en fail-closed bij een verplichte ontbrekende opslag."""
+    if postgres.enabled():
+        return postgres.is_active()
+
     from nv_2fa_status import is_verplicht
 
     verplicht = is_verplicht()
