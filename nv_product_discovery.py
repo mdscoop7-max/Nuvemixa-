@@ -1,0 +1,87 @@
+"""Live, source-linked product discovery signals for the existing NUVEMIXA dashboard.
+
+A news mention is NOT a verified trend, sales volume, profit estimate or supplier.
+No social-network scraping and no invented numbers.
+"""
+from datetime import datetime, timezone
+from urllib.parse import urlencode
+import xml.etree.ElementTree as ET
+
+import requests
+
+COUNTRIES = {
+    "NL": ("Nederland", "nl", "NL"),
+    "BE": ("België", "nl", "BE"),
+    "DE": ("Duitsland", "de", "DE"),
+    "FR": ("Frankrijk", "fr", "FR"),
+    "ES": ("Spanje", "es", "ES"),
+    "IT": ("Italië", "it", "IT"),
+    "PL": ("Polen", "pl", "PL"),
+    "GB": ("Verenigd Koninkrijk", "en", "GB"),
+    "US": ("Verenigde Staten", "en", "US"),
+    "CA": ("Canada", "en", "CA"),
+    "AU": ("Australië", "en", "AU"),
+}
+PLATFORMS = ("Google", "TikTok", "Instagram", "Facebook")
+EU_COUNTRIES = {"NL", "BE", "DE", "FR", "ES", "IT", "PL"}
+# Discovery destinations, not verified supplier matches or inventory.
+SUPPLIER_DIRECTORIES = (
+    ("BigBuy", "https://www.bigbuy.eu/"),
+    ("Syncee", "https://syncee.com/"),
+    ("Spocket", "https://www.spocket.co/"),
+)
+
+
+def research_links(term, platforms):
+    from urllib.parse import quote
+    q = quote(term, safe="")
+    urls = {
+        "Google": "https://www.google.com/search?q=" + q,
+        "TikTok": "https://www.tiktok.com/search?q=" + q,
+        "Instagram": "https://www.instagram.com/explore/tags/" + quote(term.replace(" ", ""), safe="") + "/",
+        "Facebook": "https://www.facebook.com/search/top?q=" + q,
+    }
+    return [(platform, urls[platform]) for platform in platforms if platform in urls]
+
+
+def discover(term, country="NL", mode="trends", platforms=None, fetch=None):
+    """Fetch real Google News RSS items; never claim they are platform metrics.
+
+    Fetcher injection supports deterministic tests without outbound requests.
+    """
+    term = (term or "").strip()[:100]
+    if not term:
+        return {"error": "Vul een product, niche of zoekterm in.", "items": []}
+    country = country if country in COUNTRIES else "NL"
+    platforms = [p for p in (platforms or PLATFORMS) if p in PLATFORMS]
+    if not platforms:
+        return {"error": "Selecteer minimaal één platform.", "items": []}
+    name, language, region = COUNTRIES[country]
+    search_phrase = term + (" product trend" if mode == "trends" else "")
+    params = urlencode({"q": search_phrase, "hl": language + "-" + region, "gl": region, "ceid": region + ":" + language})
+    feed_url = "https://news.google.com/rss/search?" + params
+    result = {
+        "term": term, "country": country, "country_name": name, "mode": mode,
+        "platforms": platforms, "links": research_links(term, platforms),
+        "items": [], "error": None, "checked_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "supplier_directories": SUPPLIER_DIRECTORIES if country in EU_COUNTRIES else (),
+    }
+    try:
+        response = (fetch or requests.get)(feed_url, timeout=7, headers={"User-Agent": "NUVEMIXA-Research/1.0"})
+        response.raise_for_status()
+        if len(response.content) > 500_000:
+            raise ValueError("Feed te groot")
+        root = ET.fromstring(response.content)
+        for item in root.findall("./channel/item")[:10]:
+            title = (item.findtext("title") or "").strip()[:240]
+            url = (item.findtext("link") or "").strip()
+            if not title or not url.startswith("https://"):
+                continue
+            result["items"].append({
+                "title": title, "url": url,
+                "published": (item.findtext("pubDate") or "").strip()[:80],
+                "source": (item.findtext("source") or "Google Nieuws").strip()[:100],
+            })
+    except (requests.RequestException, ET.ParseError, ValueError, OSError):
+        result["error"] = "Live nieuwsbronnen zijn tijdelijk niet bereikbaar. Probeer later opnieuw."
+    return result
