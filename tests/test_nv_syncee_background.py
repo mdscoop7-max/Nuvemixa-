@@ -106,3 +106,14 @@ def test_macros_render_confirmed_and_unknown_fields():
     assert "Hongarije (bevestigd)" in html and "Hungary (volgens productvermelding)" in html
     assert "Vestigingsland</strong> Niet bevestigd" in html and "Magazijn / verzendland</strong> Niet bevestigd" in html
     assert "Syncee haalt nog aanvullende resultaten op" in html and html.count("location.reload") == 1
+
+
+def test_syncee_background_reads_are_patient_but_catalogues_are_not():
+    seen = {}
+
+    def fetch(url, **options):
+        seen[url] = options["timeout"]
+        return Response(syncee_card() if "/collections/" in url else b"")
+    npd.read_source(fetch, "https://syncee.com/a", {}, deadline=time.monotonic() + 28, limit=15, patient=True)
+    npd.read_source(fetch, "https://shop.example/a", {}, deadline=time.monotonic() + 7)
+    assert seen["https://syncee.com/a"][1] > 5 >= seen["https://shop.example/a"][1]

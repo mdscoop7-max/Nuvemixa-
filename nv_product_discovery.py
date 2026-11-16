@@ -224,7 +224,7 @@ USER_AGENT = "Mozilla/5.0 (compatible; NUVEMIXA-Research/1.0; +https://trendmix.
 MAX_RETRY_WAIT = 3.0
 
 
-def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadline=None, limit=7):
+def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadline=None, limit=7, patient=False):
     """Bound untrusted responses and prevent a provider redirect from changing host.
 
     Antwoorden worden 10 minuten gedeeld (nv_source_guard). Bij HTTP 429/503 wordt alleen opnieuw
@@ -232,10 +232,10 @@ def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadlin
     """
     host = urlsplit(url).netloc
     key = (url, tuple(sorted((params or {}).items())), language, max_bytes)
-    return nv_source_guard.shared(key, lambda: _download(fetch, url, params, host, max_bytes, language, deadline, limit))
+    return nv_source_guard.shared(key, lambda: _download(fetch, url, params, host, max_bytes, language, deadline, limit, patient))
 
 
-def _download(fetch, url, params, host, max_bytes, language, deadline, limit):
+def _download(fetch, url, params, host, max_bytes, language, deadline, limit, patient=False):
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json, text/html;q=0.9, */*;q=0.5"}
     if language:
         headers["Accept-Language"] = language
@@ -247,6 +247,8 @@ def _download(fetch, url, params, host, max_bytes, language, deadline, limit):
         if budget <= 0:
             raise requests.Timeout("Research deadline reached")
         timeout = (min(3, budget * .4), min(5, budget * .6)) if deadline is not None else (3, min(5, budget))
+        if patient:  # achtergrondtaak: traag eerste antwoord van de bron afwachten (de pagina wacht hier niet op)
+            timeout = (min(5, budget * .4), min(12, budget * .9))
         try:
             with nv_source_guard.slot(host), fetch(url, params=params, timeout=timeout, allow_redirects=False,
                                                     stream=True, headers=headers) as response:

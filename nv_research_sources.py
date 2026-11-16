@@ -241,7 +241,7 @@ def syncee_search(fetch, query, country, categories, seeds, read, matches, relev
     candidates = {}
     if deadline is not None:
         # De bron mag nooit langer duren dan de zoekopdracht zelf: lees binnen dezelfde tijdslimiet.
-        read = partial(read, deadline=deadline)
+        read = partial(read, deadline=deadline, limit=15, patient=True)
 
     # Syncee canonicalizes spaces to %20 and drops unrecognized shipping parameters.
     # The public listing does not establish shipping for an individual product.
