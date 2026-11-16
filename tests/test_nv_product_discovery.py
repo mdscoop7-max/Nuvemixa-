@@ -1,12 +1,12 @@
 """Offline regression coverage for category, source, article and supplier selection."""
-from datetime import date
+from datetime import date, timedelta
 import json
 from unittest.mock import Mock
 import unittest
 
 import requests
 
-from nv_product_discovery import COUNTRIES, EMPTY_RESULTS, MODES, discover
+from nv_product_discovery import COUNTRIES, EMPTY_RESULTS, MODES, discover, product_matches
 from nv_research_sources import CJ_PRODUCT, syncee_product_details
 
 CATEGORIES = {
@@ -74,6 +74,10 @@ class DiscoveryTests(unittest.TestCase):
         return discover(term, categories=CATEGORIES, **kwargs)
 
     def supplier_fetch(self, url, **options):
+        if "hurtel.com" in url:
+            return Response()
+        if any(host in url for host in ("nedis-shop.nl", "xtorm.eu")):
+            return Response(catalogue())
         if "search/suggest.json" in url:
             return Response(catalogue(
                 item("Magnetic Power Bank 10000mAh", "magnetic-power-bank-10000", type="Power Bank"),
@@ -101,20 +105,24 @@ class DiscoveryTests(unittest.TestCase):
         self.assertTrue(all("10000" in p["title"] for p in r["products"]))
         self.assertFalse(any("stock" in p or "price" in p for p in r["products"]))
         store_calls = [c for c in fetch.call_args_list if "/search/suggest.json" in c.args[0]]
-        self.assertEqual(len(store_calls), 2)
+        initial = [c for c in store_calls if c.kwargs["params"]["q"].casefold() == "magnetic power bank 10000mah"]
+        self.assertEqual(len(initial), 4)
+        self.assertTrue(any(c.kwargs["params"]["q"] == "Qi2 magnetic charger" for c in store_calls))
         for c in store_calls:
-            self.assertEqual(c.kwargs["params"]["q"], "magnetic power bank 10000mah")
             self.assertFalse(c.kwargs["allow_redirects"])
 
     def test_category_and_market_determine_provider(self):
         valid = item("SwitchBot RGBICWW Floor Lamp", "switchbot-rgbicww-floor-lamp", type="LIGHTING")
-        fetch = Mock(return_value=Response(catalogue(valid, item("Table Lamp", "table-lamp"))))
+        fetch = Mock(side_effect=lambda url, **kwargs: Response(
+            catalogue() if "nedis-shop.nl" in url else catalogue(valid, item("Table Lamp", "table-lamp"))
+        ))
         result = self.search("lamp", category="smart-home", mode="niche",
                              platforms=["Productcatalogi"], fetch=fetch)
         self.assertEqual([p["title"] for p in result["products"]], [valid["title"]])
         self.assertFalse(any("ugreen" in c.args[0] for c in fetch.call_args_list))
 
         fetch.reset_mock()
+        fetch.side_effect = None
         fetch.return_value = Response(catalogue(item("Security Camera", "security-camera")))
         result = self.search("", category="smart-home", mode="niche", country="US",
                              platforms=["Productcatalogi"], fetch=fetch)
@@ -172,6 +180,8 @@ class DiscoveryTests(unittest.TestCase):
                 return Response(feed)
             if url == "https://9to5mac.com/":
                 return Response(b"<rss><channel/></rss>")
+            if url == "https://www.androidcentral.com/search":
+                return Response()
             return self.supplier_fetch(url, **kwargs)
         for mode in MODES:
             with self.subTest(mode=mode):
@@ -232,3 +242,88 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(r["products"], [])
         self.assertEqual(r["suppliers"], [])
         self.assertEqual(r["news"], [])
+
+
+    def test_strict_requested_specs_accept_source_aliases_and_reject_other_capacities(self):
+        term = "Magnetische powerbank 10.000 mAh met USB‑C"
+        self.assertTrue(product_matches(term, "MagSafe-compatible power bank 10K", "1× Type-C port"))
+        self.assertFalse(product_matches(term, "Magnetic power bank 5000mAh", "Other model 10000 mAh with USB-C"))
+        self.assertFalse(product_matches(term, "Magnetic power bank 10000 mAh", "USB-A output only"))
+        self.assertFalse(product_matches(term, "Qi2 wireless charger stand", "Suitable for magnetic power bank 10000mAh USB-C"))
+
+    def test_compound_query_reaches_independent_trade_sources_and_checks_description(self):
+        compound = "Magnetische powerbank 10.000 mAh met USB-C"
+        title = "Dudao Magnetic Power Bank 10000mAh with USB-C"
+        href = "https://hurtel.com/en/products/dudao-power-bank-214203"
+        hurtel = ''.join(
+            f'<a class="search_top__name" href="{url}"><span class="search_top__name_text">{title}</span></a>'
+            for url in (href + "?query_id=1", href + "?query_id=2", "https://hurtel.com.evil.example/en/products/fake-3")
+        ).encode()
+        def provider(url, **opts):
+            if url.startswith("https://hurtel.com/"):
+                return Response(hurtel)
+            if url.startswith("https://www.xtorm.eu/"):
+                if opts["params"]["q"].startswith("MagSafe"):
+                    return Response(catalogue(item("MagSafe power bank 10K", "magnetic-bank",
+                                                   body="<p>USB Type-C input</p>")))
+                return Response(catalogue(
+                    item("Magnetic power bank 5000 mAh", "wrong-capacity", body="10000 mAh model with USB-C"),
+                    item("Magnetic power bank 10000 mAh", "wrong-port", body="<script>USB-C</script>USB-A"),
+                ))
+            if url.startswith("https://eu.baseus.com/"):
+                return Response(catalogue(item("Magnetic power bank 10000 mAh", "magnetic-bank",
+                                               body="<p>Type-C input and output</p>")))
+            if "/search/suggest.json" in url:
+                return Response(catalogue())
+            return Response()
+        fetch = Mock(side_effect=provider)
+        r = self.search(compound, category="gadgets", mode="suppliers", platforms=["Productcatalogi"], fetch=fetch)
+        suppliers = {c["name"]: c for c in r["suppliers"]}
+        self.assertEqual(set(suppliers), {"Baseus", "Xtorm", "Hurtel"})
+        self.assertEqual(r["supplier_products"], 3)
+        self.assertEqual(suppliers["Hurtel"]["origin"], "PL")
+        self.assertIs(suppliers["Hurtel"]["dropshipping"], False)
+        self.assertEqual(suppliers["Hurtel"]["products"][0]["url"], href)
+        self.assertTrue(any(c.kwargs["params"].get("q", "").startswith("MagSafe") for c in fetch.call_args_list))
+        for scope, allowed in (("eu", {"Xtorm", "Hurtel"}), ("international", {"Baseus"}), ("dropship", set())):
+            with self.subTest(scope=scope):
+                filtered = self.search(compound, category="gadgets", mode="suppliers", supplier_filter=scope,
+                                       platforms=["Productcatalogi"], fetch=provider)
+                self.assertEqual({c["name"] for c in filtered["suppliers"]}, allowed)
+
+    def test_recent_editorial_reviews_are_signals_and_old_publications_are_not_trends(self):
+        base = "https://www.androidcentral.com/accessories/power-charging/"
+        now = date.today()
+        feed = (editorial_card(base + "recent", "MagSafe power bank review", "Hands-on test", now.isoformat())
+                + editorial_card(base + "old", "Magnetic power bank review", "Hands-on test",
+                                 (now - timedelta(days=500)).isoformat())).encode()
+        fetch = Mock(side_effect=lambda url, **kwargs: Response(feed if "androidcentral" in url else b"<rss><channel/></rss>"))
+        r = self.search("Magnetische powerbank 10.000 mAh met USB-C", category="gadgets", mode="trends",
+                        platforms=["Publicaties"], fetch=fetch)
+        self.assertEqual([article["url"] for article in r["news"]], [base + "recent", base + "old"])
+        self.assertEqual([article["url"] for article in r["trends"]], [base + "recent"])
+        self.assertEqual(r["trends"][0]["scope"], "Verwante niche")
+        self.assertEqual([c.kwargs["params"]["searchTerm"] for c in fetch.call_args_list
+                          if "searchTerm" in c.kwargs["params"]], ["magnetic power bank"] * 2)
+
+
+    def test_eu_dropship_filter_uses_sourced_origin_and_keeps_shipping_evidence(self):
+        product_url = SYNCEE_PRODUCT.replace("253317", "279866").replace("powerbank-magnetic-10000mah", "ceramic-table-lamp")
+        card = syncee_card("Ceramic Table Lamp").replace(b"253317", b"279866")
+        card = card.replace(b"nne-living", b"golden-pigs").replace(b"NNE Living", b"Golden Pigs")
+        card = card.replace(b"powerbank-magnetic-10000mah", b"ceramic-table-lamp")
+        detail = syncee_details(["NL"]).replace(b"253317", b"279866").replace(b"Australia", b"Romania")
+
+        def fetch(url, **kwargs):
+            if url == product_url:
+                return Response(detail)
+            self.assertTrue(url.startswith("https://syncee.com/collections/"))
+            return Response(card)
+
+        result = self.search("tafellamp", category="home-living", mode="dropship", country="NL",
+                             supplier_filter="eu", platforms=["Productcatalogi"], fetch=fetch)
+        company, = result["suppliers"]
+        self.assertEqual((company["name"], company["origin"]), ("Golden Pigs", "RO"))
+        self.assertTrue(company["dropshipping"])
+        self.assertIn("Geverifieerd", company["shipping"])
+        self.assertEqual(company["products"][0]["url"], product_url)

@@ -17,8 +17,10 @@ class ProductResearchPageTests(unittest.TestCase):
 
     def test_form_choices_and_rendered_results(self):
         def fetch(url, **kwargs):
-            if url.startswith("https://syncee.com/collections/"):
+            if url.startswith(("https://syncee.com/collections/", "https://hurtel.com/")):
                 return Response()
+            if url.startswith("https://nedis-shop.nl/"):
+                return Response(catalogue())
             self.assertIn(url, {
                 "https://eu.switch-bot.com/search/suggest.json", "https://eu.eufy.com/search/suggest.json",
             })
@@ -72,7 +74,10 @@ class ProductResearchPageTests(unittest.TestCase):
             client = app.test_client()
             research = client.get("/dashboard?section=onderzoek").get_data(as_text=True)
             search = client.get("/dashboard", query_string={"section": "producten", "q": name})
-        topbar = research.split('class="top-search"', 1)[1].split("</form>", 1)[0]
+        self.assertNotIn('class="top-search"', research)
+        self.assertNotIn("Zoek producten in beheer", research)
+        self.assertIn('name="research_term"', research)
+        topbar = search.get_data(as_text=True).split('class="top-search"', 1)[1].split("</form>", 1)[0]
         self.assertIn('name="section" value="producten"', topbar)
         self.assertIn('type="submit"', topbar)
         self.assertNotIn("research_term", topbar)

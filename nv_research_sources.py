@@ -19,6 +19,13 @@ FILTERS = {
     "trade": "Groothandel / fabrikant",
 }
 SYNCEE_HELP = "https://help.syncee.com/en/articles/8925120-shipping-information"
+# Explicit company/brand location evidence, separate from the ship-from
+# warehouse in the marketplace product record.
+SYNCEE_SUPPLIER_ORIGINS = {
+    "253317": ("AU", "https://syncee.com/supplier/253317/nne-living"),
+    "105656": ("IT", "https://www.maiden-art.com/policies/legal-notice"),
+    "279866": ("RO", "https://www.orderchamp.com/store/tomescu-st-cristian-pfa/listings/1842806604644353"),
+}
 SYNCEE_INTEGRATION = "https://help.syncee.com/en/articles/8885881-how-to-install-syncee-to-your-wordpress-store-woocommerce-integration"
 CJ_TERMS = "https://oss.cjdropshipping.com/pdf/CJ%20Dropshipping%20Agreement%202025.6.12.pdf"
 CJ_PRODUCT = (
@@ -26,6 +33,10 @@ CJ_PRODUCT = (
     "mini-fast-charging-magnetic-wireless-power-bank-5000-mah-portable-p-1462611587847294976.html"
 )
 TECHRADAR = "https://www.techradar.com"
+ANDROID_CENTRAL = "https://www.androidcentral.com"
+HURTEL = "https://hurtel.com"
+HURTEL_BUSINESS = HURTEL + "/en/about/hurtel-wholesale-become-our-b2b-partner-192"
+HURTEL_FAQ = HURTEL + "/pl/help/faq-najczesciej-zadawane-pytania-w-hurtowni-hurtel-210"
 ARTICLE_PATH = re.compile(r"/(?:[a-z0-9-]+/){1,4}[a-z0-9-]+/?")
 INTENTS = (
     ("Veiligheid en terugroepacties", r"recall|recalled|fire risk|safety alert|terugroepactie"),
@@ -36,6 +47,7 @@ INTENTS = (
 
 
 def visible_text(html):
+    html = re.sub(r"<(script|style)\b[^>]*>.*?</\1>", " ", html, flags=re.I | re.S)
     return " ".join(unescape(re.sub(r"<[^>]*>", " ", html)).split())
 
 
@@ -50,7 +62,7 @@ def supplier(name, origin, kind, website, *, dropshipping=None, shipping=UNKNOWN
     }
 
 
-def hama_products(fetch, term, country, read, matches, relevant):
+def hama_products(fetch, term, country, read, matches, relevant, product_matches):
     locale = {"NL": "nl/nl", "DE": "de/de"}[country]
     business = {
         "NL": "https://business.nl.hama.com/nieuw-sluit-u-nu-aan/klant-worden",
@@ -64,7 +76,10 @@ def hama_products(fetch, term, country, read, matches, relevant):
     # The catalogue uses powerbank as one word and local writing for capacity.
     query = re.sub(r"(?i)\bpower\s+bank\b", "powerbank", search)
     query = re.sub(r"(?<=\d)[. ](?=\d{3})|(?<=\d)\s+(?=mah)", "", query, flags=re.I)
-    body = read(fetch, f"{root}/{locale}/catalogsearch/result/", {"q": query}, max_bytes=2_500_000).decode("utf-8")
+    try:
+        body = read(fetch, f"{root}/{locale}/catalogsearch/result/", {"q": query}, max_bytes=2_500_000).decode("utf-8")
+    except (requests.RequestException, ValueError, OSError):
+        body = ""
     paths = rf'{re.escape(root)}/{locale}/[a-z0-9-]+-[0-9]{{8}}'
     candidates = re.findall(
         rf'<a\s+class="product-item-info"\s+href="({paths})"[^>]*>(.*?)</a>',
@@ -73,12 +88,14 @@ def hama_products(fetch, term, country, read, matches, relevant):
     listings = []
     for url, card in candidates[:20]:
         name_match = re.search(r'<strong class="product name product-item-name">(.{1,350}?)</strong>', card, re.S)
-        if name_match and relevant("gadgets", visible_text(name_match[1])) and (not term or matches(term, visible_text(name_match[1]))):
+        if name_match and relevant("gadgets", visible_text(name_match[1])) and product_matches(term, visible_text(name_match[1])):
             listings.append({"title": visible_text(name_match[1]), "url": url, "category": "gadgets"})
 
     # Direct product record covers a model that the public search index omits in some locales.
     model = "Hama Qi2 magnetische draadloze powerbank 10000mAh 15W"
-    if not term or matches(term, model):
+    # USB-C is a detail-page specification, so allow that model to be examined
+    # and let the actual product details decide whether it qualifies.
+    if not term or product_matches(term, model, "USB-C"):
         product_path = {
             "NL": "qi2-draadloos-power-pack-10000mah-magnetisch-inductief-opladen-15w-ant-00201752",
             "DE": "qi2-kabelloses-power-pack-10000mah-magnetisch-induktiv-laden-15w-anth-00201752",
@@ -89,12 +106,39 @@ def hama_products(fetch, term, country, read, matches, relevant):
         except (requests.RequestException, ValueError, OSError):
             detail = ""
         title = re.search(r"<h1\b[^>]*>(.{1,600}?)</h1>", detail, re.S)
-        if title and matches("magnetic power bank 10000mah", visible_text(title[1])):
-            listings.insert(0, {"title": visible_text(title[1]), "url": url, "category": "gadgets"})
+        details = detail.partition('class="product info detailed"')[2][:80_000]
+        if title and matches("magnetic power bank 10000mah", visible_text(title[1])) and product_matches(
+            term, visible_text(title[1]), visible_text(details),
+        ):
+            listings.insert(0, {"title": visible_text(title[1]), "url": url, "category": "gadgets",
+                                "match_detail": "Specificaties in catalogus gecontroleerd"})
     return [(profile, row) for row in listings]
 
 
-def syncee_product_details(fetch, url, country, read):
+def hurtel_products(fetch, term, country, categories, seeds, read, index_query, product_matches, relevant):
+    eligible = [category for category in categories if category in {"gadgets", "smart-home"}]
+    query = index_query(term) if term else seeds[eligible[0]]
+    body = read(fetch, HURTEL + "/en/search", {"text": query}, max_bytes=2_000_000).decode("utf-8")
+    profile = supplier("Hurtel", "PL", "Groothandel / distributeur", HURTEL_BUSINESS,
+                       dropshipping=False, integration="CSV/XML-catalogus na zakelijke aanmelding",
+                       evidence=(("Zakelijke voorwaarden en dropshippingstatus", HURTEL_FAQ),))
+    rows = {}
+    for href, title in re.findall(
+        r'<a class="search_top__name" href="([^"]+)"><span class="search_top__name_text">([^<]{1,300})',
+        body,
+    )[:45]:
+        url = unescape(href).split("?", 1)[0]
+        if not re.fullmatch(r"https://hurtel\.com/en/products/[a-z0-9-]+-[0-9]+", url):
+            continue
+        title = visible_text(title)
+        category = next((cid for cid in eligible if relevant(cid, title)
+                         and product_matches(term or seeds[cid], title)), None)
+        if category and url not in rows:
+            rows[url] = {"title": title, "url": url, "category": category}
+    return [(profile, item) for item in list(rows.values())[:10]]
+
+
+def syncee_product_details(fetch, url, country, read, *, include_description=False):
     try:
         html = read(fetch, url, {}, max_bytes=4_000_000).decode("utf-8")
         state = re.search(r'<script id="ng-state" type="application/json">(.*?)</script>', html, re.S)
@@ -115,20 +159,24 @@ def syncee_product_details(fetch, url, country, read):
     settings = product.get("SETTINGS")
     warehouse = settings.get("warehouseLocation") if isinstance(settings, dict) else None
     warehouse = warehouse[:80] if isinstance(warehouse, str) and warehouse.strip() else UNKNOWN
+    result = {"warehouse": warehouse}
+    description = product.get("DESCRIPTION")
+    if include_description and isinstance(description, str):
+        result["_description"] = visible_text(description[:35_000])
     if country in destinations:
         row = next(row for row in rows if country in (row.get("locations") or []))
         days = (row.get("minShippingDays"), row.get("maxShippingDays"))
         time = (f"{days[0]}–{days[1]} werkdagen (geschat door aanbieder)"
                 if all(type(value) is int and 0 < value <= 365 for value in days) else UNKNOWN)
-        return {"shipping": "Geverifieerd in deze productvermelding", "warehouse": warehouse, "lead_time": time}
+        return {**result, "shipping": "Geverifieerd in deze productvermelding", "lead_time": time}
     # A list of destination countries excludes the selected country. An empty
     # list or unrecognized region must stay unconfirmed.
     if destinations and all(re.fullmatch(r"[A-Z]{2}", code) and code != "EU" for code in destinations):
         return {"shipping": "Niet beschikbaar voor dit doelland"}
-    return {"warehouse": warehouse}
+    return result
 
 
-def syncee_products(fetch, query, country, categories, seeds, read, matches, relevant):
+def syncee_products(fetch, query, country, categories, seeds, read, matches, relevant, *, term, product_matches):
     candidates = {}
 
     # Syncee canonicalizes spaces to %20 and drops unrecognized shipping parameters.
@@ -148,11 +196,14 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
             continue
         seller_url = "https://syncee.com" + seller[1]
         # Only assign a country when supported by the supplier's public profile.
-        origin = {"253317": "AU"}.get(seller[1].split("/")[2])
+        origin, location_source = SYNCEE_SUPPLIER_ORIGINS.get(seller[1].split("/")[2], (None, None))
+        evidence = (("Dropshipping en verzending", SYNCEE_HELP), ("WooCommerce", SYNCEE_INTEGRATION))
+        if location_source:
+            evidence += (("Vestigingsland", location_source),)
         profile = supplier(visible_text(seller[2]), origin, "Dropshippingpartner via Syncee", seller_url,
                            dropshipping=True, orders="Platformfunctie; activering per leverancier controleren",
                            integration="WooCommerce-koppeling via Syncee; aansluiting en voorwaarden controleren",
-                           evidence=(("Dropshipping en verzending", SYNCEE_HELP), ("WooCommerce", SYNCEE_INTEGRATION)))
+                           evidence=evidence)
         entries = candidates.setdefault(seller_url, {})
         entries[product[1]] = (profile, {"title": title, "url": "https://syncee.com" + product[1], "category": category})
 
@@ -163,9 +214,14 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
     if not selected:
         return results
     with ThreadPoolExecutor(max_workers=8) as pool:
-        details = pool.map(lambda offer: syncee_product_details(fetch, offer[1]["url"], country, read), selected)
+        details = pool.map(lambda offer: syncee_product_details(fetch, offer[1]["url"], country, read,
+                                                                 include_description=True), selected)
         for (profile, product), data in zip(selected, details):
-            if data.get("shipping") != "Niet beschikbaar voor dit doelland":
+            description = data.pop("_description", "")
+            if (data.get("shipping") != "Niet beschikbaar voor dit doelland"
+                    and product_matches(term, product["title"], description)):
+                if term and not matches(term, product["title"]):
+                    data["match_detail"] = "Specificaties in catalogus gecontroleerd"
                 results.append(({**profile, **data}, {**product, **data}))
     return results
 
@@ -193,10 +249,18 @@ def publication_kind(text):
 
 
 def publication_candidates(fetch, query, country, language, read):
-    page = read(fetch, TECHRADAR + "/search", {"searchTerm": query},
+    return publisher_search(fetch, query, country, language, read, TECHRADAR, "TechRadar")
+
+
+def android_publications(fetch, query, country, language, read):
+    return publisher_search(fetch, query, country, language, read, ANDROID_CENTRAL, "Android Central")
+
+
+def publisher_search(fetch, query, country, language, read, site, publisher):
+    page = read(fetch, site + "/search", {"searchTerm": query},
                 max_bytes=3_500_000, language=f"{language}-{country}").decode("utf-8")
     for url, title, article in re.findall(
-        r'<a href="(https://www\.techradar\.com/[^"]+)" class="article-link" aria-label="([^"]+)"[^>]*>\s*<article\b[^>]*>(.*?)</article>',
+        rf'<a href="({re.escape(site)}/[^"]+)" class="article-link" aria-label="([^"]+)"[^>]*>\s*<article\b[^>]*>(.*?)</article>',
         page, re.S,
     )[:30]:
         parsed = urlsplit(unescape(url))
@@ -205,7 +269,7 @@ def publication_candidates(fetch, query, country, language, read):
         time = re.search(r'(Published|last updated)\s+<time datetime="([0-9]{4}-[0-9]{2}-[0-9]{2})T', article, re.I)
         summary = re.search(r'<p class="synopsis">(.{1,700}?)</p>', article, re.S)
         if time:
-            yield {"title": visible_text(title), "url": TECHRADAR + parsed.path, "source": "TechRadar",
+            yield {"title": visible_text(title), "url": site + parsed.path, "source": publisher,
                    "date": time[2], "date_label": "Publicatie" if time[1].lower() == "published" else "Bijgewerkt",
                    "summary": visible_text(summary[1]) if summary else ""}
 
