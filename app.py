@@ -2238,6 +2238,24 @@ def control():
     supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
 
     research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
+    product_margin = None
+    product_margin_error = None
+    if section == "onderzoek" and request.args.get("margin_run") == "1":
+        from nv_product_margin import calculate_margin
+        try:
+            product_margin = calculate_margin(request.args)
+        except ValueError as exc:
+            product_margin_error = str(exc)
+    product_discovery = None
+    if section == "onderzoek" and request.args.get("research_run") == "1":
+        from nv_product_discovery import discover
+        product_discovery = discover(
+            request.args.get("research_term", ""),
+            country=request.args.get("research_country", "NL"),
+            mode=request.args.get("research_mode", "trends"),
+            platforms=request.args.getlist("research_platform"),
+        )
+
 
     order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
 
@@ -2337,6 +2355,10 @@ def control():
         research_rows=research_rows,
 
         research_error=research_error,
+        product_discovery=product_discovery,
+        product_margin=product_margin,
+        product_margin_error=product_margin_error,
+        product_research_countries=__import__("nv_product_discovery").COUNTRIES if section == "onderzoek" else {},
 
         order_rows=order_rows,
 

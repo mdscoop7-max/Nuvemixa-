@@ -220,15 +220,98 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "internationaal" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
-<section class="panel"><h2>Productonderzoek — eigen onderzoeksnotities</h2>
-<p>Leg niches en producten vast met de bron. Geen verzonnen zoekvolumes of prijzen. Gegevens blijven intern en worden niet automatisch gepubliceerd.</p>
+<section class="panel">
+  <h2>AI Productonderzoek</h2>
+  <p>Zoek producten, niches en trends via actuele nieuwsvermeldingen en directe zoeklinks naar Google, TikTok, Instagram en Facebook. Nieuwsvermeldingen zijn signalen, geen bewezen verkoopcijfers of virale scores.</p>
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
+    <input type="hidden" name="section" value="onderzoek">
+    <input type="hidden" name="research_run" value="1">
+    <label>Product, trend of niche
+      <input name="research_term" maxlength="100" required placeholder="Bijvoorbeeld: slimme gadgets, draadloze oplader, DDR5 32GB" value="{{ request.args.get('research_term','')|e }}">
+    </label>
+    <label>Zoektype
+      <select name="research_mode">
+        <option value="trends" {% if request.args.get('research_mode','trends') == 'trends' %}selected{% endif %}>Trends en nichekansen</option>
+        <option value="product" {% if request.args.get('research_mode') == 'product' %}selected{% endif %}>Specifiek product</option>
+      </select>
+    </label>
+    <label>Doelland
+      <select name="research_country">
+        {% for code, details in product_research_countries.items() %}
+        <option value="{{ code }}" {% if request.args.get('research_country','NL') == code %}selected{% endif %}>{{ details[0] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <fieldset><legend>Onderzoekplatforms</legend>
+      {% for platform in ['Google','TikTok','Instagram','Facebook'] %}
+      <label><input type="checkbox" name="research_platform" value="{{ platform }}" {% if not request.args.get('research_run') or platform in request.args.getlist('research_platform') %}checked{% endif %}> {{ platform }}</label>
+      {% endfor %}
+    </fieldset>
+    <button type="submit">Zoek producten en trends</button>
+  </form>
+  {% if product_discovery %}
+    {% if product_discovery.error %}<div class="notice" role="alert">{{ product_discovery.error }}</div>{% endif %}
+    {% if product_discovery.term %}
+      <h3>Onderzoeksbronnen voor {{ product_discovery.term }} · {{ product_discovery.country_name }}</h3>
+      <p>Gecontroleerd: {{ product_discovery.checked_at }}. De links hieronder openen zoekresultaten op het gekozen platform; sociale media zijn nog niet automatisch geanalyseerd.</p>
+      <div class="nv-action-row">
+        {% for platform, link in product_discovery.links %}
+          <a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">Zoek op {{ platform }} →</a>
+        {% endfor %}
+      </div>
+      <h3>Actuele nieuwsvermeldingen</h3>
+      {% if product_discovery.items %}
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderwerp</th><th>Bron</th><th>Publicatie</th></tr></thead><tbody>
+        {% for item in product_discovery.items %}
+          <tr><td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></td><td>{{ item.source }}</td><td>{{ item.published or 'Onbekend' }}</td></tr>
+        {% endfor %}
+        </tbody></table></div>
+      {% else %}<p>Geen nieuwsresultaten gevonden of de bron is niet beschikbaar. Dit betekent niet dat er geen marktvraag is.</p>{% endif %}
+      {% if product_discovery.supplier_directories %}
+        <h3>EU-leveranciers onderzoeken</h3>
+        <p>Dit zijn startpunten voor leverancierszoekwerk, <strong>geen geverifieerde productmatches</strong>. Controleer per artikel EU-magazijn, dropshipping, voorraad, verzendkosten en retourvoorwaarden.</p>
+        <div class="nv-action-row">
+          {% for name, link in product_discovery.supplier_directories %}
+            <a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ name }} →</a>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <p class="integration-status">Trendgroei, verkoopvolume, leveranciersvoorraad en winstmarge: nog niet geverifieerd. Geen fictieve percentages.</p>
+    {% endif %}
+  {% endif %}
+</section>
+<section class="panel">
+<h2>Prijs- en margescenario voor dit product</h2>
+<p>Vul uitsluitend je eigen controleerbare bedragen in. Dit is een rekenhulp, geen AI-schatting of bevestigde leveranciersprijs. Alle bedragen in euro.</p>
+<form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
+<input type="hidden" name="section" value="onderzoek">
+<input type="hidden" name="margin_run" value="1">
+{% for key, label in [('selling_price','Verkoopprijs incl. btw (€)'),('purchase_cost','Inkoopprijs excl. btw (€)'),('shipping_cost','Verzendkosten excl. btw (€)'),('advertising_cost','Advertentiekosten excl. btw (€)'),('platform_fee','Platform- en transactiekosten excl. btw (€)'),('returns_reserve','Retourreserve excl. btw (€)'),('other_cost','Overige kosten excl. btw (€)'),('vat_rate','Btw-percentage (%)')] %}
+<label>{{ label }}<input type="number" name="{{ key }}" min="0" max="{{ '100' if key == 'vat_rate' else '1000000' }}" step="0.01" required inputmode="decimal" value="{{ request.args.get(key,'')|e }}"></label>
+{% endfor %}
+<button type="submit">Bereken scenario</button>
+</form>
+{% if product_margin_error %}<div class="notice" role="alert">{{ product_margin_error }}</div>{% endif %}
+{% if product_margin %}
+<div class="admin-table-wrap"><table class="admin-table"><tbody>
+<tr><th>Omzet excl. btw</th><td>€ {{ product_margin.revenue_ex_vat }}</td></tr>
+<tr><th>Btw uit verkoopprijs</th><td>€ {{ product_margin.vat_amount }}</td></tr>
+<tr><th>Totale ingevoerde kosten</th><td>€ {{ product_margin.total_cost }}</td></tr>
+<tr><th>Resultaat per verkoop</th><td>€ {{ product_margin.profit }}</td></tr>
+<tr><th>Marge op omzet excl. btw</th><td>{{ product_margin.margin_pct }}%</td></tr>
+</tbody></table></div>
+<p>{{ product_margin.assumptions }}</p>
+{% endif %}
+</section>
+<section class="panel"><h2>Productdossier — eigen onderzoeksnotities</h2>
+<p>Bewaar je onderzoek met een controleerbare bron. Bestaande dossiers blijven beschikbaar.</p>
 {% if research_error %}<div class="notice" role="status">{{ research_error }}</div>{% endif %}
 {% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Onderzoeksnotitie opgeslagen.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de verplichte velden.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
 {% if research_rows is not none %}
 <form action="{{ url_for('admin_add_research_note') }}" method="post" class="nv-admin-form">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <label>Categorie<input name="category" maxlength="80" required placeholder="Bijvoorbeeld Smart Home"></label>
-<label>Product / niche<input name="product_name" maxlength="160" required placeholder="Naam of niche"></label>
+<label>Product / niche<input name="product_name" maxlength="160" required placeholder="Naam of niche" value="{{ request.args.get('research_term','')|e }}"></label>
 <label>Bron<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
 <label>Onderzoeksnotitie<textarea name="notes" maxlength="1500" rows="3" placeholder="Waarom interessant? Welke gegevens moeten worden bevestigd?"></textarea></label>
 <button type="submit">Onderzoek opslaan</button>
@@ -238,7 +321,9 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </tbody></table></div>
 {% endif %}
 </section>
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">⌕</div><h2>Productonderzoek & niches</h2><p>De bestaande testcatalogus is beschikbaar voor beoordeling. Echte marktgegevens, leveranciersprijzen en concurrentiecijfers zijn nog niet aangesloten. Gebruik onderstaande acties voor de bestaande catalogus en interne controles.</p><div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('admin_research_preview') }}">Onderzoeksrapport (JSON) →</a><a class="nv-blue-action" href="/dashboard?section=producten">Productcatalogus →</a><a class="nv-blue-action" href="/dashboard?section=calculator">Prijscalculator →</a></div><p></p><span class="integration-status">Geen ongeverifieerde trends of winsten getoond</span></section>
+<section class="panel integration"><h2>Overige bestaande controles</h2>
+<div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('admin_research_preview') }}">Onderzoeksrapport (JSON) →</a><a class="nv-blue-action" href="/dashboard?section=producten">Productcatalogus →</a><a class="nv-blue-action" href="/dashboard?section=calculator">Prijscalculator →</a></div>
+</section>
 {% elif section == "rankfix" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>RankFix blijft een aparte applicatie. NUVEMIXA toont pas gecontroleerde SEO/GEO-scanresultaten wanneer een beveiligde koppeling is geïnstalleerd en de scanbewijzen gevalideerd zijn. Automatische wijzigingen blijven uitgeschakeld.</p><a href="{{ url_for('admin_rankfix_open') }}" class="integration-status" target="_blank" rel="noopener noreferrer">Open RankFix-scanner voor NUVEMIXA →</a><p style="margin-top:14px">De scan opent in de afzonderlijke RankFix-omgeving. Log daar in met je RankFix-account. Automatisch scans starten of resultaten in NUVEMIXA opslaan is nog niet geactiveerd.</p></section>
 {% elif section == "google-shopping" %}
