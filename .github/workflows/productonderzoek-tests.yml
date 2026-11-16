@@ -28,10 +28,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install runtime dependencies
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install -r requirements.txt pytest
       - name: Check Python syntax
         run: python -m compileall -q app.py nv_product_discovery.py nv_product_margin.py
-      - name: Productonderzoek unit tests
-        run: python -m unittest discover -s tests -p 'test_nv_*.py' -v
+      - name: Dashboard and Productonderzoek regression tests
+        run: python -m pytest -q tests
       - name: Check Jinja template parses
         run: python -c "from jinja2 import Environment; Environment().parse(open('templates/dashboard.html', encoding='utf-8').read()); print('Template syntax OK')"

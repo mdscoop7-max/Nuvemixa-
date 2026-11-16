@@ -220,121 +220,232 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "internationaal" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
-<section class="panel">
+<section class="panel nv-research-panel">
   <h2>AI Productonderzoek</h2>
-  <p>Zoek producten, niches en trends via openbare internetresultaten, nieuws en leveranciersvermeldingen. Gebruik platformlinks voor aanvullende controle op Google, TikTok, Instagram en Facebook. Nieuwsvermeldingen zijn signalen, geen bewezen verkoopcijfers of virale scores.</p>
-  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form">
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
-    <label>Product, trend of niche
-      <input name="research_term" maxlength="100" required placeholder="Bijvoorbeeld: slimme gadgets, draadloze oplader, DDR5 32GB" value="{{ request.args.get('research_term','')|e }}">
+    <label>Webshopcategorie
+      <select name="research_category">
+        {% for slug, name in research_options.categories.items() %}
+        <option value="{{ slug }}" {% if research_options.category == slug %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
     </label>
     <label>Zoektype
       <select name="research_mode">
-        <option value="trends" {% if request.args.get('research_mode','trends') == 'trends' %}selected{% endif %}>Trends en nichekansen</option>
-        <option value="product" {% if request.args.get('research_mode') == 'product' %}selected{% endif %}>Specifiek product</option>
-      </select>
-    </label>
-    <label>Doelland
-      <select name="research_country">
-        {% for code, details in product_research_countries.items() %}
-        <option value="{{ code }}" {% if request.args.get('research_country','NL') == code %}selected{% endif %}>{{ details[0] }}</option>
+        {% for mode, name in research_options.modes.items() %}
+        <option value="{{ mode }}" {% if research_options.mode == mode %}selected{% endif %}>{{ name }}</option>
         {% endfor %}
       </select>
     </label>
-    <fieldset class="nv-research-platforms"><legend>Onderzoekplatforms</legend>
-      {% for platform in ['Google','TikTok','Instagram','Facebook'] %}
-      <label><input type="checkbox" name="research_platform" value="{{ platform }}" {% if not request.args.get('research_run') or platform in request.args.getlist('research_platform') %}checked{% endif %}> {{ platform }}</label>
+    <div class="nv-research-search">
+      <label>Product of niche
+        <input type="search" name="research_term" maxlength="100"
+               placeholder="Bijvoorbeeld magnetische powerbank 10.000 mAh"
+               value="{{ request.args.get('research_term', '') }}">
+      </label>
+      <button type="submit">Zoek producten en trends</button>
+    </div>
+    <label>Doelland
+      <select name="research_country">
+        {% for code, details in research_options.countries.items() %}
+        <option value="{{ code }}" {% if research_options.country == code %}selected{% endif %}>{{ details[0] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <fieldset class="nv-research-platforms">
+      <legend>Onderzoeksplatforms</legend>
+      {% for platform in research_options.platforms %}
+      <label><input type="checkbox" name="research_platform" value="{{ platform }}"
+        {% if platform in research_options.selected_platforms %}checked{% endif %}>
+        {{ 'Bing (nieuws en reviews)' if platform == 'Bing' else platform }}</label>
       {% endfor %}
+      <small>Google en sociale media openen een handmatige zoekopdracht. Selecteer Productcatalogi voor producten en leveranciers.</small>
     </fieldset>
-    <button type="submit">Zoek producten en trends</button>
   </form>
   {% if product_discovery %}
   <div id="nv-research-results" class="nv-research-results" aria-live="polite">
-    {% if product_discovery.error %}<div class="notice" role="alert">{{ product_discovery.error }}</div>{% endif %}
-    {% if product_discovery.term %}
-      <h3>Onderzoeksbronnen voor {{ product_discovery.term }} · {{ product_discovery.country_name }}</h3>
-      <p>Gecontroleerd: {{ product_discovery.checked_at }}. De links hieronder openen zoekresultaten op het gekozen platform; sociale media zijn nog niet automatisch geanalyseerd.</p>
-      <div class="nv-action-row">
-        {% for platform, link in product_discovery.links %}
-          <a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">Zoek op {{ platform }} →</a>
-        {% endfor %}
+    {% if product_discovery.error %}
+      <p class="notice" role="alert">{{ product_discovery.error }}</p>
+    {% else %}
+      <h3>{{ product_discovery.category_name }} · {{ product_discovery.country_name }}{% if product_discovery.term %} · {{ product_discovery.term }}{% endif %}</h3>
+      {% if product_discovery.source_unavailable %}
+        <p class="notice">Een of meer onderzoeksbronnen zijn tijdelijk onbereikbaar.</p>
+      {% endif %}
+      {% if research_options.mode == 'suppliers' and not product_discovery.suppliers %}
+        <p class="notice">{{ research_options.empty_message }}</p>
+      {% endif %}
+      <nav class="nv-research-tabs" aria-label="Onderzoeksresultaten">
+        <a href="#nv-research-products">Productresultaten ({{ product_discovery.products|length }})</a>
+        <a href="#nv-research-trends">Trends &amp; inzichten</a>
+        <a href="#nv-research-suppliers">Leveranciers ({{ product_discovery.suppliers|length }})</a>
+        <a href="#nv-research-news">Nieuws &amp; reviews</a>
+      </nav>
+      <div id="nv-research-products">
+        {% if product_discovery.products %}
+        <ul class="nv-research-cards">
+          {% for item in product_discovery.products %}
+          <li>
+            {% if item.image %}<img src="{{ item.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
+            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+            <small>{{ item.source }} · {{ research_options.categories[item.category] }}</small>
+          </li>
+          {% endfor %}
+        </ul>
+        {% elif research_options.mode == 'suppliers' %}<p>Dit zoektype toont matches onder Leveranciers.</p>
+        {% else %}<p>{{ research_options.empty_message }}</p>{% endif %}
       </div>
-      <h3>Actuele nieuwsvermeldingen</h3>
-      {% if product_discovery['items'] %}
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderwerp</th><th>Bron</th><th>Publicatie</th></tr></thead><tbody>
-        {% for item in product_discovery['items'] %}
-          <tr><td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></td><td>{{ item.source }}</td><td>{{ item.published or 'Onbekend' }}</td></tr>
-        {% endfor %}
-        </tbody></table></div>
-      {% else %}<p>Geen nieuwsresultaten gevonden of de bron is niet beschikbaar. Dit betekent niet dat er geen marktvraag is.</p>{% endif %}
-      <h3>Internetresultaten</h3>
-      {% if product_discovery['web_items'] %}
-      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Website</th><th>Bron</th></tr></thead><tbody>
-      {% for item in product_discovery['web_items'] %}<tr><td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></td><td>{{ item.source }}</td></tr>{% endfor %}
-      </tbody></table></div>
-      {% else %}<p>Geen openbare webresultaten ontvangen. Gebruik de bronlinks om zelf te controleren.</p>{% endif %}
-      <h3>Leveranciers en dropshipleveranciers</h3>
-      <p>Dit zijn zoekvermeldingen, geen geverifieerde productmatches of voorraden. Controleer magazijn, dropshippingvoorwaarden en levertijd rechtstreeks bij de aanbieder.</p>
-      {% if product_discovery['supplier_items'] %}
-      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Vermelding</th><th>Bron</th></tr></thead><tbody>
-      {% for item in product_discovery['supplier_items'] %}<tr><td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></td><td>{{ item.source }}</td></tr>{% endfor %}
-      </tbody></table></div>
-      {% else %}<p>Geen leveranciersvermeldingen ontvangen voor deze zoekopdracht.</p>{% endif %}
-      {% if product_discovery.supplier_directories %}
-        <h3>EU-leveranciers onderzoeken</h3>
-        <p>Dit zijn startpunten voor leverancierszoekwerk, <strong>geen geverifieerde productmatches</strong>. Controleer per artikel EU-magazijn, dropshipping, voorraad, verzendkosten en retourvoorwaarden.</p>
+      <div id="nv-research-trends">
+        {% if product_discovery.trends %}
+        <p>Trendvermeldingen uit publicaties. Verkoopvolume en trendgroei zijn onbekend.</p>
+        <ul class="nv-research-articles">
+          {% for item in product_discovery.trends %}
+          <li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> · {{ item.source }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}<p>Geen relevante trendvermeldingen gevonden.</p>{% endif %}
+      </div>
+      <div id="nv-research-suppliers">
+        {% if product_discovery.suppliers %}
+        <p>De aanbieder heeft een zakelijk verkoopkanaal en vermeldt dit product in zijn catalogus. Vraag de inkoopprijs, voorraad, levering en voorwaarden per product op.</p>
+        <ul class="nv-research-cards">
+          {% for item in product_discovery.suppliers %}
+          <li>
+            <strong>{{ item.source }}</strong>
+            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+            <a href="{{ item.trade_url }}" target="_blank" rel="noopener noreferrer">Zakelijk inkopen bij {{ item.source }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<p>Geen betrouwbare, relevante leveranciers gevonden.</p>{% endif %}
+      </div>
+      <div id="nv-research-news">
+        {% if product_discovery.news %}
+        <ul class="nv-research-articles">
+          {% for item in product_discovery.news %}
+          <li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> · {{ item.source }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}<p>Geen relevante nieuwsartikelen of reviews gevonden.</p>{% endif %}
+      </div>
+      {% if product_discovery.links %}
+      <details class="nv-research-links">
+        <summary>Handmatig zoeken op de geselecteerde platforms</summary>
         <div class="nv-action-row">
-          {% for name, link in product_discovery.supplier_directories %}
-            <a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ name }} →</a>
+          {% for platform, link in product_discovery.links %}
+          <a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ platform }} →</a>
           {% endfor %}
         </div>
+      </details>
       {% endif %}
-      <p class="integration-status">Trendgroei, verkoopvolume, leveranciersvoorraad en winstmarge: nog niet geverifieerd. Geen fictieve percentages.</p>
     {% endif %}
   </div>
   {% endif %}
 </section>
 <style>
-.nv-research-platforms label{display:inline-flex!important;align-items:center;gap:.5rem;margin:.35rem 1rem .35rem 0;white-space:nowrap}
-.nv-research-platforms input[type=checkbox]{width:18px!important;height:18px!important;flex:0 0 18px;margin:0!important}
-.nv-research-results{margin-top:1.5rem;scroll-margin-top:1.5rem}
-.nv-research-results a{overflow-wrap:anywhere}
+.nv-research-search{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;grid-column:1/-1}
+.nv-research-search input{min-height:52px}
+.nv-research-search button{min-height:52px}
+.nv-research-platforms{min-width:0}
+.nv-research-platforms label{display:inline-flex;align-items:center;gap:.35rem;margin:.25rem .65rem .25rem 0}
+.nv-research-platforms input[type=checkbox]{width:18px;height:18px;margin:0}
+.nv-research-platforms small{display:block}
+.nv-research-results{margin-top:1.5rem;scroll-margin-top:1rem}
+.nv-research-tabs,.nv-research-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:1rem 0}
+.nv-research-tabs a{padding:12px;background:#eef5ff;border-radius:10px;text-align:center;color:#12355d;font-weight:750}
+.nv-research-tabs a[aria-selected=true]{background:#0757bd;color:#fff}
+.nv-research-cards{list-style:none;padding:0}
+.nv-research-cards li{display:grid;align-content:start;gap:8px;padding:14px;border:1px solid #d9e7f4;border-radius:12px;background:#f8fbff}
+.nv-research-cards img{width:100%;height:148px;object-fit:contain}
+.nv-research-cards a,.nv-research-articles a{overflow-wrap:anywhere;color:#0757bd;font-weight:700}
+.nv-research-articles li{margin:.5rem 0}
+.nv-research-links{margin:1rem 0 0}
+.nv-research-links summary{cursor:pointer}
+@media(max-width:1000px){.nv-research-cards,.nv-research-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nv-research-search{grid-template-columns:minmax(0,1fr)}}
 </style>
-{% if product_discovery %}<script>window.addEventListener('load',function(){var el=document.getElementById('nv-research-results');if(el)el.scrollIntoView({block:'start',behavior:'instant'});});</script>{% endif %}
+{% if product_discovery and not product_discovery.error %}
+<script>
+(() => {
+  const nav = document.querySelector(".nv-research-tabs");
+  const tabs = Array.from(nav.querySelectorAll("a"));
+  nav.setAttribute("role", "tablist");
+  function activate(selected, focus = false) {
+    tabs.forEach(tab => {
+      const current = tab === selected;
+      tab.setAttribute("aria-selected", current);
+      tab.tabIndex = current ? 0 : -1;
+      document.getElementById(tab.hash.slice(1)).hidden = !current;
+    });
+    if (focus) selected.focus();
+  }
+  tabs.forEach((tab, index) => {
+    const panel = document.getElementById(tab.hash.slice(1));
+    tab.id = panel.id + "-tab";
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-controls", panel.id);
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", tab.id);
+    panel.tabIndex = 0;
+    tab.addEventListener("click", event => {
+      event.preventDefault();
+      activate(tab);
+    });
+    tab.addEventListener("keydown", event => {
+      const selected = {
+        ArrowRight: (index + 1) % tabs.length,
+        ArrowLeft: (index + tabs.length - 1) % tabs.length,
+        Home: 0,
+        End: tabs.length - 1,
+      }[event.key];
+      if (selected === undefined) return;
+      event.preventDefault();
+      activate(tabs[selected], true);
+    });
+  });
+  activate(tabs.find(tab => tab.hash === location.hash) || tabs[{{ 2 if research_options.mode == 'suppliers' else 0 }}]);
+})();
+</script>
+{% endif %}
 <section class="panel">
-<h2>Prijs- en margescenario voor dit product</h2>
-<p>Vul uitsluitend je eigen controleerbare bedragen in. Dit is een rekenhulp, geen AI-schatting of bevestigde leveranciersprijs. Alle bedragen in euro.</p>
+<h2>Automatisch verkoopadvies en winstmarge</h2>
+<p>Vul alleen de inkoopprijs exclusief btw in. NUVEMIXA berekent een indicatief verkoopadvies en alle kosten op basis van duidelijk vermelde aannames.</p>
 <form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
 <input type="hidden" name="section" value="onderzoek">
 <input type="hidden" name="margin_run" value="1">
-{% for key, label in [('selling_price','Verkoopprijs incl. btw (€)'),('purchase_cost','Inkoopprijs excl. btw (€)'),('shipping_cost','Verzendkosten excl. btw (€)'),('advertising_cost','Advertentiekosten excl. btw (€)'),('platform_fee','Platform- en transactiekosten excl. btw (€)'),('returns_reserve','Retourreserve excl. btw (€)'),('other_cost','Overige kosten excl. btw (€)'),('vat_rate','Btw-percentage (%)')] %}
-<label>{{ label }}<input type="number" name="{{ key }}" min="0" max="{{ '100' if key == 'vat_rate' else '1000000' }}" step="0.01" required inputmode="decimal" value="{{ request.args.get(key,'')|e }}"></label>
-{% endfor %}
-<button type="submit">Bereken scenario</button>
+<label>Inkoopprijs excl. btw (€)
+<input type="number" name="purchase_cost" min="0.01" max="1000000" step="0.01" required inputmode="decimal" placeholder="Bijvoorbeeld 12,50" value="{{ request.args.get('purchase_cost','')|e }}"></label>
+<button type="submit">Bereken automatisch</button>
 </form>
 {% if product_margin_error %}<div class="notice" role="alert">{{ product_margin_error }}</div>{% endif %}
 {% if product_margin %}
 <div class="admin-table-wrap"><table class="admin-table"><tbody>
+<tr><th>Inkoopprijs excl. btw</th><td>€ {{ product_margin.purchase }}</td></tr>
+<tr><th>Adviesverkoopprijs incl. btw</th><td><strong>€ {{ product_margin.selling }}</strong></td></tr>
 <tr><th>Omzet excl. btw</th><td>€ {{ product_margin.revenue_ex_vat }}</td></tr>
-<tr><th>Btw uit verkoopprijs</th><td>€ {{ product_margin.vat_amount }}</td></tr>
-<tr><th>Totale ingevoerde kosten</th><td>€ {{ product_margin.total_cost }}</td></tr>
-<tr><th>Resultaat per verkoop</th><td>€ {{ product_margin.profit }}</td></tr>
-<tr><th>Marge op omzet excl. btw</th><td>{{ product_margin.margin_pct }}%</td></tr>
+<tr><th>Btw in verkoopprijs</th><td>€ {{ product_margin.vat }}</td></tr>
+<tr><th>Geschatte verzending</th><td>€ {{ product_margin.shipping }}</td></tr>
+<tr><th>Geschatte reclamekosten</th><td>€ {{ product_margin.advertising }}</td></tr>
+<tr><th>Geschatte transactiekosten</th><td>€ {{ product_margin.platform }}</td></tr>
+<tr><th>Geschatte retourreserve</th><td>€ {{ product_margin.returns }}</td></tr>
+<tr><th>Totale kosten incl. inkoop</th><td>€ {{ product_margin.total_cost }}</td></tr>
+<tr><th>Geschatte winst per verkoop</th><td><strong>€ {{ product_margin.profit }}</strong></td></tr>
+<tr><th>Geschatte winstmarge</th><td><strong>{{ product_margin.margin_pct }}%</strong></td></tr>
 </tbody></table></div>
-<p>{{ product_margin.assumptions }}</p>
+<p class="integration-status">{{ product_margin.assumptions }}</p>
 {% endif %}
 </section>
-<section class="panel"><h2>Productdossier — eigen onderzoeksnotities</h2>
+<section class="panel"><details><summary><strong>Productdossier — eigen onderzoeksnotities (optioneel)</strong></summary>
 <p>Bewaar je onderzoek met een controleerbare bron. Bestaande dossiers blijven beschikbaar.</p>
 {% if research_error %}<div class="notice" role="status">{{ research_error }}</div>{% endif %}
 {% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Onderzoeksnotitie opgeslagen.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de verplichte velden.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
 {% if research_rows is not none %}
 <form action="{{ url_for('admin_add_research_note') }}" method="post" class="nv-admin-form">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-<label>Categorie<input name="category" maxlength="80" required placeholder="Bijvoorbeeld Smart Home"></label>
+<label>Categorie<input name="category" maxlength="80" required value="Productonderzoek" placeholder="Bijvoorbeeld Smart Home"></label>
 <label>Product / niche<input name="product_name" maxlength="160" required placeholder="Naam of niche" value="{{ request.args.get('research_term','')|e }}"></label>
-<label>Bron<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
+<label>Bron (optioneel)<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
 <label>Onderzoeksnotitie<textarea name="notes" maxlength="1500" rows="3" placeholder="Waarom interessant? Welke gegevens moeten worden bevestigd?"></textarea></label>
 <button type="submit">Onderzoek opslaan</button>
 </form>
@@ -342,7 +453,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% for row in research_rows %}<tr><td><strong>{{ row.product_name }}</strong></td><td>{{ row.category }}</td><td>{{ row.source or 'Niet opgegeven' }}</td><td>{{ row.notes or '—' }}</td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="5">Nog geen opgeslagen onderzoeksnotities.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
-</section>
+</details></section>
 <section class="panel integration"><h2>Overige bestaande controles</h2>
 <div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('admin_research_preview') }}">Onderzoeksrapport (JSON) →</a><a class="nv-blue-action" href="/dashboard?section=producten">Productcatalogus →</a><a class="nv-blue-action" href="/dashboard?section=calculator">Prijscalculator →</a></div>
 </section>

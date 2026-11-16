@@ -42,3 +42,39 @@ def calculate_margin(data):
         "vat_amount": q(selling - revenue_ex_vat),
         "assumptions": "Scenario, geen geverifieerde marktdata. Verkoopprijs inclusief btw; kosten exclusief btw. Geen berekening van voorbelasting, invoerrechten of landspecifieke btw-regels.",
     }
+
+
+def automatic_margin(purchase_price, vat_rate="21"):
+    """Illustrative Dutch sales-price scenario from one VAT-exclusive purchase price.
+
+    Defaults are assumptions, not verified supplier quotes or tax advice.
+    """
+    purchase = _amount(purchase_price, "inkoopprijs")
+    if purchase == 0:
+        raise ValueError("Vul een inkoopprijs groter dan € 0 in.")
+    vat = _amount(vat_rate, "btw")
+    if vat > 100:
+        raise ValueError("Btw-percentage buiten bereik.")
+    shipping = Decimal("4.95")
+    advertising = Decimal("3.00")
+    returns = Decimal("1.00")
+    transaction_fixed = Decimal("0.35")
+    transaction_pct = Decimal("0.025")
+    target_margin = Decimal("0.25")
+    factor = Decimal("1") + vat / 100
+    denominator = (Decimal("1") - target_margin) / factor - transaction_pct
+    selling = ((purchase + shipping + advertising + returns + transaction_fixed) / denominator).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    fee = transaction_fixed + selling * transaction_pct
+    revenue = selling / factor
+    total_cost = purchase + shipping + advertising + returns + fee
+    profit = revenue - total_cost
+    q = lambda v: str(v.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    return {
+        "purchase": q(purchase), "selling": q(selling), "vat": q(selling-revenue),
+        "revenue_ex_vat": q(revenue), "shipping": q(shipping),
+        "advertising": q(advertising), "returns": q(returns),
+        "platform": q(fee), "total_cost": q(total_cost),
+        "profit": q(profit), "margin_pct": q(profit / revenue * 100),
+        "vat_rate": q(vat),
+        "assumptions": "Indicatief Nederlands scenario: inkoop exclusief btw; 21% btw, € 4,95 verzending, € 3,00 reclame, € 1,00 retourreserve en € 0,35 + 2,5% transactiekosten. Verkoopadvies gebaseerd op circa 25% marge op omzet excl. btw. Geen geverifieerde marktprijs, leverancierskosten of belastingadvies."
+    }
