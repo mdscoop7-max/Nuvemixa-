@@ -2253,7 +2253,7 @@ def control():
 
         research_categories = {slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}
         research_category = request.args.get("research_category", ALL_PRODUCTS)
-        research_mode = request.args.get("research_mode", "trends")
+        research_mode = request.args.get("research_mode", "products")
         research_country = request.args.get("research_country", "NL")
         research_platforms = [
             "Publicaties" if value == "Bing" else value for value in request.args.getlist("research_platform")

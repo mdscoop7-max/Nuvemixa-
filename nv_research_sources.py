@@ -5,6 +5,7 @@ from email.utils import parsedate_to_datetime
 from html import unescape
 import json
 import re
+from time import monotonic
 from urllib.parse import quote, urlencode, urlsplit
 import xml.etree.ElementTree as ET
 
@@ -218,7 +219,24 @@ def delivery_status(destinations, country):
     return UNKNOWN
 
 
-def syncee_products(fetch, query, country, categories, seeds, read, matches, relevant, *, term, product_matches):
+def syncee_products(fetch, query, country, categories, seeds, read, matches, relevant, *, term, product_matches,
+                    attempts=None, alternates=(), deadline=None):
+    queries = dict.fromkeys((query, *alternates))
+    for variant in list(queries)[:3]:
+        if deadline is not None and monotonic() >= deadline:
+            break
+        attempt = {"source": "Syncee", "query": variant, "raw": None}
+        result = syncee_search(fetch, variant, country, categories, seeds, read, matches, relevant,
+                               term, product_matches, attempt)
+        if attempts is not None:
+            attempts.append(attempt)
+        if result:
+            return result
+    return []
+
+
+def syncee_search(fetch, query, country, categories, seeds, read, matches, relevant,
+                  term, product_matches, attempt):
     candidates = {}
 
     # Syncee canonicalizes spaces to %20 and drops unrecognized shipping parameters.
@@ -226,7 +244,9 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
     query_params = urlencode({"search": query, "searchType": "PRODUCTS"}, quote_via=quote)
     body = read(fetch, "https://syncee.com/collections/1/products?" + query_params,
                 {}, max_bytes=4_000_000).decode("utf-8")
-    for card in re.findall(r"<app-product-card\b[^>]*>(.*?)</app-product-card>", body, re.S)[:60]:
+    cards = re.findall(r"<app-product-card\b[^>]*>(.*?)</app-product-card>", body, re.S)
+    attempt["raw"] = len(cards)
+    for card in cards[:60]:
         product = re.search(r'href="(/product/[0-9_]+/[a-z0-9-]+)"[^>]*>\s*<div[^>]+class="h5 title cursor-pointer"[^>]*>([^<]{1,300})</div>', card)
         seller = re.search(r'href="(/supplier/[0-9]+/[a-z0-9-]+)"[^>]*>([^<]{1,140})</a>', card)
         if not product or not seller:
@@ -255,7 +275,12 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
     # visible as a lead, unless the route is expressly unavailable.
     results = []
     selected = [offer for seller in list(candidates.values())[:6] for offer in list(seller.values())[:2]]
+    attempt["rejected"] = {
+        "productlink, categorie of zoekvariant past niet": min(len(cards), 60) - sum(map(len, candidates.values())),
+        "controlelimiet per leverancier of bron": max(0, len(cards) - 60) + sum(map(len, candidates.values())) - len(selected),
+    }
     if not selected:
+        attempt["exact"] = 0
         return results
     with ThreadPoolExecutor(max_workers=8) as pool:
         details = pool.map(lambda offer: syncee_product_details(fetch, offer[1]["url"], country, read,
@@ -267,6 +292,8 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
                 if term and not matches(term, product["title"]):
                     data["match_detail"] = "Specificaties in catalogus gecontroleerd"
                 results.append(({**profile, **data}, {**product, **data}))
+    attempt["exact"] = len(results)
+    attempt["rejected"]["productspecificaties of levering onbevestigd"] = len(selected) - len(results)
     return results
 
 

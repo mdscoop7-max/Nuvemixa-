@@ -284,7 +284,32 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     {% else %}
       <h3>{{ product_discovery.category_name }} · {{ product_discovery.country_name }}{% if product_discovery.term %} · {{ product_discovery.term }}{% endif %}</h3>
       {% if product_discovery.source_unavailable %}
-        <p class="notice">Een of meer onderzoeksbronnen zijn tijdelijk onbereikbaar.</p>
+        <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {{ product_discovery.unavailable_sources|join(', ') }}.</p>
+      {% endif %}
+      {% if product_discovery.sources_checked %}
+        <details>
+          <summary>Geraadpleegde bronnen</summary>
+          <p>{{ product_discovery.sources_checked|join(', ') }}.</p>
+          {% if product_discovery.search_attempts %}
+          <ul>
+          {% for attempt in product_discovery.search_attempts %}
+            <li>{{ attempt.source }} · {{ attempt.query }} ·
+              {% if attempt.error %}{{ attempt.error }}
+              {% else %}{{ attempt.raw }} bronvermeldingen, {{ attempt.exact }} bevestigd
+                {% if attempt.similar %}, {{ attempt.similar }} vergelijkbaar{% endif %}
+                {% for reason, count in attempt.rejected.items() if count %} · {{ count }} {{ reason }}{% endfor %}
+                {% if attempt.detail_errors %} · Variantencontrole: {{ attempt.detail_errors|join(', ') }}{% endif %}
+              {% endif %}
+            </li>
+          {% endfor %}
+          </ul>
+          {% endif %}
+          {% if product_discovery.source_errors %}
+          <ul>{% for failure in product_discovery.source_errors %}
+            <li>{{ failure.source }} · {{ failure.error }}</li>
+          {% endfor %}</ul>
+          {% endif %}
+        </details>
       {% endif %}
       <nav class="nv-research-tabs" aria-label="Onderzoeksresultaten">
         <a href="#nv-research-products">Productresultaten ({{ product_discovery.products|length }})</a>
@@ -345,12 +370,32 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             {% if item.image %}<img src="{{ item.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
             <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
             <small>{{ item.source }} · {{ research_options.categories[item.category] }}</small>
+            {% if item.other_sources %}
+            <details>
+              <summary>Andere bronnen voor dit product</summary>
+              <ul>{% for source in item.other_sources %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></li>{% endfor %}</ul>
+            </details>
+            {% endif %}
             {{ offer_assessment(item) }}
           </li>
           {% endfor %}
         </ul>
         {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
-        {% else %}<p>{{ research_options.empty_message }}</p>{% endif %}
+        {% else %}
+          <p>{{ research_options.empty_message }}</p>
+          {% if product_discovery.alternatives %}
+          <h4>Vergelijkbare producten</h4>
+          <ul class="nv-research-cards">
+            {% for item in product_discovery.alternatives %}
+            <li>
+              <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+              <small>{{ item.source }} · {{ research_options.categories[item.category] }}</small>
+              <p>Afwijkend of onbevestigd: {{ item.match_missing|join(', ') }}.</p>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        {% endif %}
       </div>
       {% macro publications(items) %}
         <ul class="nv-research-articles">
