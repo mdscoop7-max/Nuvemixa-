@@ -2241,9 +2241,9 @@ def control():
     product_margin = None
     product_margin_error = None
     if section == "onderzoek" and request.args.get("margin_run") == "1":
-        from nv_product_margin import calculate_margin
+        from nv_product_margin import automatic_margin
         try:
-            product_margin = calculate_margin(request.args)
+            product_margin = automatic_margin(request.args.get("purchase_cost", ""))
         except ValueError as exc:
             product_margin_error = str(exc)
     product_discovery = None
