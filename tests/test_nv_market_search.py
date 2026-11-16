@@ -153,3 +153,34 @@ def test_unknown_product_searches_everything_and_reports_failures():
     r = discover("zzqx", categories=CATEGORIES, mode="product", platforms=["Productcatalogi"], fetch=fetch)
     assert not r["products"] and not r["suppliers"]
     assert r["source_unavailable"] and r["all_failed" if False else "all_sources_failed"]
+
+
+def _http_error(code):
+    import requests
+    class Bad(Response):
+        def __init__(self):
+            super().__init__(b"", code)
+        def raise_for_status(self):
+            error = requests.HTTPError(f"{code}")
+            error.response = self
+            raise error
+    return Bad()
+
+
+def test_read_source_retries_once_on_429_then_succeeds():
+    from nv_product_discovery import read_source, USER_AGENT
+    answers = [_http_error(429), Response(b"ok")]
+    fetch = Mock(side_effect=lambda *a, **k: answers.pop(0))
+    assert read_source(fetch, "https://x.example/a", {}, retry_pause=0) == b"ok"
+    assert fetch.call_count == 2 and fetch.call_args.kwargs["headers"]["User-Agent"] == USER_AGENT
+    assert "NUVEMIXA" in USER_AGENT and "+https://" in USER_AGENT
+
+
+def test_read_source_gives_up_after_second_429_and_explains():
+    import requests
+    from nv_product_discovery import read_source, source_error
+    fetch = Mock(side_effect=lambda *a, **k: _http_error(429))
+    with pytest.raises(requests.HTTPError) as caught:
+        read_source(fetch, "https://x.example/a", {}, retry_pause=0)
+    assert fetch.call_count == 2
+    assert "HTTP 429" in source_error(caught.value) and "blokkeert" in source_error(caught.value)

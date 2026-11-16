@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from html import unescape
 import json
 import re
+import time
 from time import monotonic
 from urllib.parse import quote, unquote, urlsplit
 import xml.etree.ElementTree as ET
@@ -217,30 +218,43 @@ def research_links(term, platforms, country, language):
     return [(platform, urls[platform]) for platform in platforms if platform in urls]
 
 
-def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadline=None):
-    """Bound untrusted responses and prevent a provider redirect from changing host."""
-    headers = {"User-Agent": "NUVEMIXA-Research/1.0"}
+USER_AGENT = "Mozilla/5.0 (compatible; NUVEMIXA-Research/1.0; +https://trendmix.onrender.com)"
+
+
+def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadline=None, retry_pause=1.5):
+    """Bound untrusted responses and prevent a provider redirect from changing host.
+
+    Bij HTTP 429 of 503 wordt één keer opnieuw geprobeerd (korte pauze, binnen de tijdslimiet).
+    """
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json, text/html;q=0.9, */*;q=0.5"}
     if language:
         headers["Accept-Language"] = language
-    now = monotonic()
-    expires = min(now + 7, deadline) if deadline is not None else now + 7
-    budget = expires - now
-    if budget <= 0:
-        raise requests.Timeout("Research deadline reached")
-    timeout = (min(3, budget * .4), min(5, budget * .6)) if deadline is not None else (3, 5)
-    with fetch(url, params=params, timeout=timeout, allow_redirects=False, stream=True,
-               headers=headers) as response:
-        response.raise_for_status()
-        if response.status_code != 200:
-            raise ValueError("Unexpected source status")
-        content = bytearray()
-        for chunk in response.iter_content(chunk_size=16384):
-            content.extend(chunk)
-            if monotonic() > expires:
-                raise requests.Timeout("Research source exceeded request deadline")
-            if len(content) > max_bytes:
-                raise ValueError("Source response is too large")
-        return bytes(content)
+    for attempt in (1, 2):
+        now = monotonic()
+        expires = min(now + 7, deadline) if deadline is not None else now + 7
+        budget = expires - now
+        if budget <= 0:
+            raise requests.Timeout("Research deadline reached")
+        timeout = (min(3, budget * .4), min(5, budget * .6)) if deadline is not None else (3, 5)
+        try:
+            with fetch(url, params=params, timeout=timeout, allow_redirects=False, stream=True,
+                       headers=headers) as response:
+                response.raise_for_status()
+                if response.status_code != 200:
+                    raise ValueError("Unexpected source status")
+                content = bytearray()
+                for chunk in response.iter_content(chunk_size=16384):
+                    content.extend(chunk)
+                    if monotonic() > expires:
+                        raise requests.Timeout("Research source exceeded request deadline")
+                    if len(content) > max_bytes:
+                        raise ValueError("Source response is too large")
+                return bytes(content)
+        except requests.HTTPError as error:
+            status = getattr(error.response, "status_code", None)
+            if attempt == 2 or status not in (429, 503) or budget < retry_pause + 2:
+                raise
+            time.sleep(retry_pause)
 
 
 def catalogue_items(source, term, mode, fetch, attempts, deadline):
@@ -570,7 +584,8 @@ SOURCE_ERRORS = (requests.RequestException, ET.ParseError, ValueError, KeyError,
 def source_error(error):
     response = getattr(error, "response", None)
     if response is not None:
-        return f"HTTP {response.status_code}"
+        code = response.status_code
+        return f"HTTP {code}" + (" (bron beperkt of blokkeert verzoeken vanaf deze server)" if code in (403, 429) else "")
     if isinstance(error, requests.Timeout):
         return "time-out"
     if isinstance(error, requests.RequestException):
