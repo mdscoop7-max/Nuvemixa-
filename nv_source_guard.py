@@ -30,6 +30,7 @@ _semaphores = {}
 _cache = OrderedDict()
 _cache_bytes = 0
 _key_locks = {}
+_jobs = {}
 _global = threading.BoundedSemaphore(GLOBAL_LIMIT)
 
 
@@ -44,6 +45,7 @@ def reset():
         _semaphores.clear()
         _cache.clear()
         _key_locks.clear()
+        _jobs.clear()
         _cache_bytes = 0
         _global = threading.BoundedSemaphore(GLOBAL_LIMIT)
 
@@ -155,3 +157,16 @@ def shared(key, produce):
             with _lock:
                 _key_locks.pop(key, None)
         return body
+
+
+def job(key, submit):
+    """Eén achtergrondtaak per sleutel (10 minuten). Alle modules delen dezelfde lopende of klare taak."""
+    with _lock:
+        entry = _jobs.get(key)
+        if entry and entry[1] > time.monotonic():
+            future = entry[0]
+            if not (future.done() and (future.cancelled() or future.exception())):
+                return future
+        future = submit()
+        _jobs[key] = (future, time.monotonic() + CACHE_TTL)
+        return future

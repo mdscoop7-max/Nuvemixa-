@@ -289,6 +289,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% if product_discovery.interpretation and product_discovery.term %}
         <p><strong>Zo zoekt NUVEMIXA:</strong> {{ product_discovery.interpretation.queries|join(' · ') }}{% if product_discovery.interpretation.automatic %} — categorie automatisch herkend: {{ product_discovery.interpretation.categories|join(', ') }}{% endif %}</p>
       {% endif %}
+      {% from '_supplier_logistics.html' import logistics, pending_notice %}
+      {{ pending_notice(product_discovery.pending_sources) }}
       {% if product_discovery.source_unavailable %}
         <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</p>
       {% endif %}
@@ -459,8 +461,9 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             <div><strong>Zakelijke samenwerking</strong> {% if company.business is sameas true %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">Bevestigd</a>{% else %}Niet bevestigd{% endif %}</div>
             <div><strong>Verzending naar {{ product_discovery.country_name }}</strong> {{ company.shipping }}</div>
             {% if research_options.country != 'NL' %}<div><strong>Verzending naar Nederland</strong> {{ company.shipping_nl or 'Niet bevestigd' }}</div>{% endif %}
+            {{ logistics(company) }}
             {% if company.region == 'international' %}
-            <p class="nv-supplier-context">Controleer vanuit welk magazijn het product vertrekt. Bij invoer van buiten de EU kunnen invoerkosten, btw en extra levertijd gelden. Vraag de conformiteitsdocumentatie op voor het gekozen model.</p>
+            <p class="nv-supplier-context">Vraag de conformiteitsdocumentatie op voor het gekozen model.</p>
             {% endif %}
             <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
             <details>

@@ -1,0 +1,26 @@
+{% macro logistics(company) %}
+<div class="nv-logistics">
+  <div><strong>Vestigingsland</strong> {% if company.origin %}{{ company.origin_name }} (bevestigd){% else %}Niet bevestigd{% endif %}</div>
+  <div><strong>Magazijn / verzendland</strong> {% if company.warehouse_label %}{{ company.warehouse_label }} (volgens productvermelding){% else %}Niet bevestigd{% endif %}</div>
+  {% if company.lead_time_note %}<div><strong>Levertijd</strong> {{ company.lead_time_note }}</div>{% endif %}
+  {% for note in company.logistics_notes %}<p class="nv-supplier-context">{{ note }}</p>{% endfor %}
+</div>
+{% endmacro %}
+{% macro pending_notice(sources) %}
+{% if sources %}
+<p class="nv-pending" role="status" data-nv-pending>{{ sources|join(', ') }} haalt nog aanvullende resultaten op. Deze pagina ververst automatisch (maximaal 4 keer); wat nu getoond wordt blijft zichtbaar.</p>
+<script>
+(function () {
+  try {
+    var key = 'nvp:' + location.pathname + location.search, now = Date.now();
+    var saved = (sessionStorage.getItem(key) || '0:0').split(':'), count = +saved[0] || 0;
+    if (now - (+saved[1] || 0) > 90000) { count = 0; }
+    if (count < 4) {
+      sessionStorage.setItem(key, (count + 1) + ':' + (count ? saved[1] : now));
+      setTimeout(function () { location.reload(); }, 7000);
+    }
+  } catch (e) {}
+})();
+</script>
+{% endif %}
+{% endmacro %}

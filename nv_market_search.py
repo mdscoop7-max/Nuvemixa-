@@ -140,7 +140,7 @@ def search_view(kind, categories, args, *, fetch=None):
             "supplier_types": SUPPLIER_TYPES, "periods": PERIODS, "sources": VIRAL_SOURCES,
             "price_note": PRICE_NOTE, "trend_note": TREND_NOTE, "ran": False, "error": None,
             "products": [], "suppliers": [], "publications": [], "trends": [], "competitors": [],
-            "opportunities": [], "risks": [], "links": [], "unavailable": [], "sources_checked": [],
+            "opportunities": [], "risks": [], "pending_sources": [], "links": [], "unavailable": [], "sources_checked": [],
             "empty_message": "", "result": None}
     if not form["run"]:
         return view
@@ -173,7 +173,7 @@ def search_view(kind, categories, args, *, fetch=None):
         result=result, products=products, suppliers=suppliers, publications=publications, trends=trends,
         competitors=[{"source": name, "count": number,
                       "links": [p for p in products if p["source"] == name][:3]} for name, number in counts.most_common()],
-        links=result.get("links", []), unavailable=result.get("unavailable_sources", []), unavailable_reasons=result.get("unavailable_reasons", {}),
+        links=result.get("links", []), unavailable=result.get("unavailable_sources", []), unavailable_reasons=result.get("unavailable_reasons", {}), pending_sources=result.get("pending_sources", []),
         sources_checked=result.get("sources_checked", []), empty_message="Geen bevestigde producten gevonden voor deze selectie.",
         alternatives=result.get("alternatives", []), country_name=result["country_name"],
         interpretation=result.get("interpretation"), all_failed=result.get("all_sources_failed", False),
