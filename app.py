@@ -2238,6 +2238,16 @@ def control():
     supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
 
     research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
+    product_discovery = None
+    if section == "onderzoek" and request.args.get("research_run") == "1":
+        from nv_product_discovery import discover
+        product_discovery = discover(
+            request.args.get("research_term", ""),
+            country=request.args.get("research_country", "NL"),
+            mode=request.args.get("research_mode", "trends"),
+            platforms=request.args.getlist("research_platform"),
+        )
+
 
     order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
 
@@ -2337,6 +2347,7 @@ def control():
         research_rows=research_rows,
 
         research_error=research_error,
+        product_discovery=product_discovery,
 
         order_rows=order_rows,
 
