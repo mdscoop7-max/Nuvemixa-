@@ -176,6 +176,7 @@ def search_view(kind, categories, args, *, fetch=None):
         links=result.get("links", []), unavailable=result.get("unavailable_sources", []),
         sources_checked=result.get("sources_checked", []), empty_message="Geen bevestigde producten gevonden voor deze selectie.",
         alternatives=result.get("alternatives", []), country_name=result["country_name"],
+        interpretation=result.get("interpretation"), all_failed=result.get("all_sources_failed", False),
     )
     view["opportunities"], view["risks"] = opportunities_and_risks(view, form)
     return view

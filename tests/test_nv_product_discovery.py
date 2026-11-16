@@ -136,7 +136,10 @@ class DiscoveryTests(unittest.TestCase):
         fetch.return_value = Response(catalogue(valid, item("Table Lamp", "table-lamp")))
         result = self.search("lamp", category="shop", mode="products", platforms=["Productcatalogi"], fetch=fetch)
         storefronts = [c.args[0] for c in fetch.call_args_list if "/search/suggest.json" in c.args[0]]
-        self.assertGreater(len(storefronts), 5)
+        self.assertTrue(storefronts)
+        self.assertTrue(all("ugreen" not in url and "baseus" not in url for url in storefronts))
+        self.assertTrue(any("fermliving" in url for url in storefronts))
+        self.assertEqual(result["interpretation"]["categories"], ["Home & Living"])
         self.assertTrue(result["products"])
 
     def test_unique_company_count_and_region_filters(self):

@@ -14,7 +14,7 @@
     {% set visible.items = visible.items + [(key,label)] %}
   {% endfor %}
   {% if visible.items %}
-  <details class="nv-nav-group"{% if section in visible.items|map(attribute=0)|list %} open{% endif %}>
+  <details class="nv-nav-group nv-g-{{ loop.index }}"{% if section in visible.items|map(attribute=0)|list %} open{% endif %}>
     <summary>{{ group }}</summary>
     {% for key, label in visible.items %}
     <a href="/dashboard?section={{ key }}"{% if section == key %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
@@ -25,3 +25,17 @@
   <a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener">Winkel bekijken ↗</a>
 </nav>
 </details>
+
+<style>
+.nv-nav-group{--accent:#0757bd;--tint:#eaf2ff;border-left:3px solid var(--accent);border-radius:10px;margin:8px 0;padding-left:4px}
+.nv-nav-group.nv-g-1{--accent:#0b7fd6;--tint:#e6f4ff}
+.nv-nav-group.nv-g-2{--accent:#6a4fd6;--tint:#efeaff}
+.nv-nav-group.nv-g-3{--accent:#0f9d8a;--tint:#e3f6f2}
+.nv-nav-group.nv-g-4{--accent:#d98a14;--tint:#fff3de}
+.nv-nav-group>summary{color:var(--accent);font-weight:800;letter-spacing:.02em;padding:8px 10px;cursor:pointer}
+.nv-nav-group>a{margin:2px 0;transition:background-color .15s,color .15s}
+.side-links .nv-nav-group>a:hover{background:var(--tint);color:#10233f}
+.side-links a.active,.side-links .nv-nav-group>a.active{background:#0757bd;color:#fff;border-left:0;box-shadow:0 4px 12px #0757bd44}
+.side-links a.active:hover{background:#064eaa;color:#fff}
+@media(max-width:760px){.nv-nav-group{border-left:0;border-top:3px solid var(--accent);margin:4px 6px}}
+</style>
