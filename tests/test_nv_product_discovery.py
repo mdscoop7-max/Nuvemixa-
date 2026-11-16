@@ -1,6 +1,7 @@
 """Offline regression coverage for category, source, article and supplier selection."""
 from datetime import date, timedelta
 import json
+import zlib
 from unittest.mock import Mock
 import unittest
 
@@ -18,7 +19,7 @@ SYNCEE_PRODUCT = "https://syncee.com/product/253317_83365_123/powerbank-magnetic
 
 
 def item(title, handle, **overrides):
-    return {"id": 123, "title": title, "handle": handle, "type": "",
+    return {"id": zlib.crc32(handle.encode("utf-8")), "title": title, "handle": handle, "type": "",
             "url": f"/products/{handle}?_pos=1", **overrides}
 
 
@@ -34,12 +35,13 @@ def syncee_card(title="Magnetic Power Bank 10000mAh"):
     ).encode()
 
 
-def syncee_details(destinations):
+def syncee_details(destinations, title="Magnetic Power Bank 10000mAh", *, dropship=True):
     product_id = "253317_83365_123"
-    body = {"ID": product_id, "SHIPPING": [{"locations": destinations, "minShippingDays": 4, "maxShippingDays": 7}],
+    body = {"ID": product_id, "TITLE": title, "SHIPPING": [{"locations": destinations, "minShippingDays": 4, "maxShippingDays": 7}],
             "SETTINGS": {"warehouseLocation": "Australia"}}
     state = {"1": {"u": "https://entry.syncee.com/syncee-product-service/api/v1/products/" + product_id, "b": body}}
-    return ('<script id="ng-state" type="application/json">' + json.dumps(state) + "</script>").encode()
+    heading = f"<title>{'Dropship ' if dropship else ''}{title} - Syncee</title>"
+    return (heading + '<script id="ng-state" type="application/json">' + json.dumps(state) + "</script>").encode()
 
 
 def editorial_card(url, title, summary, published=None):
@@ -100,7 +102,7 @@ class DiscoveryTests(unittest.TestCase):
     def test_product_uses_verified_catalogue_and_strict_capacity_matching(self):
         fetch = Mock(side_effect=self.supplier_fetch)
         r = self.search(TERM, category="gadgets", mode="product", platforms=["Productcatalogi"], fetch=fetch)
-        self.assertEqual(len(r["products"]), 5)
+        self.assertEqual(len(r["products"]), 6)
         self.assertNotIn("NNE Living", [c["name"] for c in r["suppliers"]])
         self.assertTrue(all("10000" in p["title"] for p in r["products"]))
         self.assertFalse(any("stock" in p or "price" in p for p in r["products"]))
@@ -167,7 +169,7 @@ class DiscoveryTests(unittest.TestCase):
             if country == "AU":
                 nne = next(c for c in result["suppliers"] if c["name"] == "NNE Living")
                 self.assertEqual(nne["product_count"], 1)
-                self.assertIn("Geverifieerd", nne["shipping"])
+                self.assertIn("Bevestigd", nne["shipping"])
                 self.assertIn("4–7", nne["products"][0]["lead_time"])
         self.assertEqual(syncee_product_details(None, SYNCEE_PRODUCT, "NL", lambda *a, **k: syncee_details(["EU"])),
                          {"warehouse": "Australia"})
@@ -312,7 +314,7 @@ class DiscoveryTests(unittest.TestCase):
         card = syncee_card("Ceramic Table Lamp").replace(b"253317", b"279866")
         card = card.replace(b"nne-living", b"golden-pigs").replace(b"NNE Living", b"Golden Pigs")
         card = card.replace(b"powerbank-magnetic-10000mah", b"ceramic-table-lamp")
-        detail = syncee_details(["NL"]).replace(b"253317", b"279866").replace(b"Australia", b"Romania")
+        detail = syncee_details(["NL"], "Ceramic Table Lamp").replace(b"253317", b"279866").replace(b"Australia", b"Romania")
 
         def fetch(url, **kwargs):
             if url == product_url:
@@ -325,5 +327,39 @@ class DiscoveryTests(unittest.TestCase):
         company, = result["suppliers"]
         self.assertEqual((company["name"], company["origin"]), ("Golden Pigs", "RO"))
         self.assertTrue(company["dropshipping"])
-        self.assertIn("Geverifieerd", company["shipping"])
+        self.assertIn("Bevestigd", company["shipping"])
         self.assertEqual(company["products"][0]["url"], product_url)
+
+
+    def test_catalogue_for_unserved_market_remains_a_lead_without_shipping_credit(self):
+        fetch = Mock(side_effect=self.supplier_fetch)
+        result = self.search(TERM, country="AU", category="gadgets", mode="wholesale",
+                             platforms=["Productcatalogi"], fetch=fetch)
+        names = {offer["name"]: offer for offer in result["suppliers"]}
+        self.assertIn("UGREEN", names)
+        self.assertIn("Baseus", names)
+        self.assertEqual(names["UGREEN"]["shipping"], "Niet bevestigd")
+        self.assertIn("https://eu.ugreen.com/search/suggest.json", [call.args[0] for call in fetch.call_args_list])
+
+    def test_marketplace_membership_does_not_confirm_product_dropshipping(self):
+        def fetch(url, **kwargs):
+            if url == SYNCEE_PRODUCT:
+                return Response(syncee_details(["AU"], dropship=False))
+            return Response(syncee_card())
+        result = self.search(TERM, category="gadgets", mode="dropship", country="AU",
+                             platforms=["Productcatalogi"], fetch=fetch)
+        nne = next(profile for profile in result["suppliers"] if profile["name"] == "NNE Living")
+        self.assertIsNone(nne["dropshipping"])
+        self.assertIn("Bevestigd", nne["shipping"])
+        self.assertEqual(nne["shipping_nl"], "Niet beschikbaar")
+        self.assertEqual(nne["products"][0]["assessment"]["status"], "Nader onderzoeken")
+        filtered = self.search(TERM, category="gadgets", mode="dropship", country="AU", supplier_filter="dropship",
+                               platforms=["Productcatalogi"], fetch=fetch)
+        self.assertNotIn("NNE Living", [company["name"] for company in filtered["suppliers"]])
+
+
+    def test_accessories_do_not_match_the_product_itself(self):
+        self.assertFalse(product_matches("tafellamp", "Orange lamp cable for table lamp"))
+        self.assertFalse(product_matches("yogamat", "Yoga Mat Spray"))
+        self.assertTrue(product_matches("yogamat spray", "Yoga Mat Spray"))
+        self.assertTrue(product_matches("tafellamp", "Ceramic Table Lamp"))
