@@ -12,6 +12,9 @@ on:
       - 'app.py'
       - 'nv_market_search.py'
       - 'nv_source_guard.py'
+      - 'nv_2fa_postgres.py'
+      - 'nv_2fa_postgres*.sql'
+      - 'requirements.txt'
       - 'tests/conftest.py'
       - 'nv_webshop_visits.py'
       - 'nv_dashboard_postgres.sql'
@@ -37,6 +40,9 @@ on:
       - 'app.py'
       - 'nv_market_search.py'
       - 'nv_source_guard.py'
+      - 'nv_2fa_postgres.py'
+      - 'nv_2fa_postgres*.sql'
+      - 'requirements.txt'
       - 'tests/conftest.py'
       - 'nv_webshop_visits.py'
       - 'nv_dashboard_postgres.sql'
@@ -70,10 +76,40 @@ jobs:
       - name: Install runtime dependencies
         run: python -m pip install -r requirements.txt pytest
       - name: Check Python syntax
-        run: python -m compileall -q app.py nv_source_guard.py nv_market_search.py nv_webshop_visits.py nv_product_discovery.py nv_research_sources.py nv_research_assessment.py nv_research_identity.py nv_research_intent.py nv_research_safety.py nv_product_margin.py
+        run: python -m compileall -q app.py nv_2fa_postgres.py nv_source_guard.py nv_market_search.py nv_webshop_visits.py nv_product_discovery.py nv_research_sources.py nv_research_assessment.py nv_research_identity.py nv_research_intent.py nv_research_safety.py nv_product_margin.py
+      - name: Start PgBouncer in transaction mode (2FA pool tests)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q pgbouncer
+          sudo systemctl stop pgbouncer || true
+          mkdir -p "$RUNNER_TEMP/pgb"
+          printf '"postgres" "fixture-only"\n' > "$RUNNER_TEMP/pgb/userlist.txt"
+          cat > "$RUNNER_TEMP/pgb/pgbouncer.ini" <<INI
+          [databases]
+          * = host=127.0.0.1 port=${{ job.services.postgres.ports[5432] }}
+
+          [pgbouncer]
+          listen_addr = 127.0.0.1
+          listen_port = 6432
+          auth_type = scram-sha-256
+          auth_file = $RUNNER_TEMP/pgb/userlist.txt
+          pool_mode = transaction
+          max_client_conn = 100
+          default_pool_size = 5
+          ignore_startup_parameters = extra_float_digits
+          logfile = $RUNNER_TEMP/pgb/pgbouncer.log
+          pidfile = $RUNNER_TEMP/pgb/pgbouncer.pid
+          INI
+          pgbouncer --version
+          pgbouncer -d "$RUNNER_TEMP/pgb/pgbouncer.ini"
+          export PATH="/usr/lib/postgresql/16/bin:$PATH"
+          for attempt in $(seq 1 20); do pg_isready -h 127.0.0.1 -p 6432 && break; sleep 1; done
+          pg_isready -h 127.0.0.1 -p 6432 || { cat "$RUNNER_TEMP/pgb/pgbouncer.log"; exit 1; }
       - name: Dashboard and Productonderzoek regression tests
         env:
           NUVEMIXA_TEST_POSTGRES_DSN: postgresql://postgres:fixture-only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?sslmode=disable
+          NUVEMIXA_TEST_PGBOUNCER_DSN: postgresql://postgres:fixture-only@127.0.0.1:6432/postgres?sslmode=disable
+          NUVEMIXA_REQUIRE_PGBOUNCER: '1'
         run: |
           export PATH="/usr/lib/postgresql/16/bin:$PATH"
           pg_dump --version
