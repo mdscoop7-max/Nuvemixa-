@@ -220,24 +220,9 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "internationaal" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
-<style>
-/* Scoped to Productonderzoek: keep the rest of the dashboard unchanged. */
-.nv-research-panel, .nv-research-panel * {box-sizing:border-box}
-.nv-research-panel {min-width:0;max-width:100%;overflow-wrap:anywhere}
-.nv-research-panel .nv-admin-form {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
-.nv-research-panel .nv-admin-form > label,.nv-research-panel .nv-admin-form > fieldset {min-width:0}
-.nv-research-panel .nv-admin-form input:not([type=checkbox]),.nv-research-panel .nv-admin-form select {width:100%;max-width:100%;min-width:0}
-.nv-research-panel .nv-platforms {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;padding:12px 16px;border:1px solid #c7d4e2;border-radius:12px}
-.nv-research-panel .nv-platforms label {display:flex;align-items:center;gap:9px;min-width:0;margin:0;white-space:normal}
-.nv-research-panel .nv-platforms input[type=checkbox] {flex:0 0 auto;width:18px;height:18px;margin:0}
-.nv-research-panel .nv-admin-form > button {justify-self:start}
-.nv-research-panel .nv-action-row {display:flex;flex-wrap:wrap;gap:10px}
-.nv-research-panel .nv-results {margin-top:24px;scroll-margin-top:24px}
-@media(max-width:700px){.nv-research-panel .nv-admin-form{grid-template-columns:minmax(0,1fr)}.nv-research-panel .nv-platforms{grid-template-columns:minmax(0,1fr)}.nv-research-panel .nv-admin-form > button{width:100%}}
-</style>
-<section class="panel nv-research-panel">
+<section class="panel">
   <h2>AI Productonderzoek</h2>
-  <p>Zoek producten, niches en trends via actuele nieuwsvermeldingen en directe zoeklinks naar Google, TikTok, Instagram en Facebook. Nieuwsvermeldingen zijn signalen, geen bewezen verkoopcijfers of virale scores.</p>
+  <p>Zoek producten, niches en trends via openbare internetresultaten, nieuws en leveranciersvermeldingen. Gebruik platformlinks voor aanvullende controle op Google, TikTok, Instagram en Facebook. Nieuwsvermeldingen zijn signalen, geen bewezen verkoopcijfers of virale scores.</p>
   <form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
@@ -257,7 +242,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% endfor %}
       </select>
     </label>
-    <fieldset class="nv-platforms"><legend>Onderzoekplatforms</legend>
+    <fieldset class="nv-research-platforms"><legend>Onderzoekplatforms</legend>
       {% for platform in ['Google','TikTok','Instagram','Facebook'] %}
       <label><input type="checkbox" name="research_platform" value="{{ platform }}" {% if not request.args.get('research_run') or platform in request.args.getlist('research_platform') %}checked{% endif %}> {{ platform }}</label>
       {% endfor %}
@@ -265,7 +250,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <button type="submit">Zoek producten en trends</button>
   </form>
   {% if product_discovery %}
-    <div class="nv-results" id="onderzoeksresultaten">
+  <div id="nv-research-results" class="nv-research-results" aria-live="polite">
     {% if product_discovery.error %}<div class="notice" role="alert">{{ product_discovery.error }}</div>{% endif %}
     {% if product_discovery.term %}
       <h3>Onderzoeksbronnen voor {{ product_discovery.term }} · {{ product_discovery.country_name }}</h3>
@@ -283,6 +268,19 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% endfor %}
         </tbody></table></div>
       {% else %}<p>Geen nieuwsresultaten gevonden of de bron is niet beschikbaar. Dit betekent niet dat er geen marktvraag is.</p>{% endif %}
+      <h3>Internetresultaten</h3>
+      {% if product_discovery['web_items'] %}
+      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Website</th><th>Bron</th></tr></thead><tbody>
+      {% for item in product_discovery['web_items'] %}<tr><td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></td><td>{{ item.source }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% else %}<p>Geen openbare webresultaten ontvangen. Gebruik de bronlinks om zelf te controleren.</p>{% endif %}
+      <h3>Leveranciers en dropshipleveranciers</h3>
+      <p>Dit zijn zoekvermeldingen, geen geverifieerde productmatches of voorraden. Controleer magazijn, dropshippingvoorwaarden en levertijd rechtstreeks bij de aanbieder.</p>
+      {% if product_discovery['supplier_items'] %}
+      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Vermelding</th><th>Bron</th></tr></thead><tbody>
+      {% for item in product_discovery['supplier_items'] %}<tr><td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></td><td>{{ item.source }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% else %}<p>Geen leveranciersvermeldingen ontvangen voor deze zoekopdracht.</p>{% endif %}
       {% if product_discovery.supplier_directories %}
         <h3>EU-leveranciers onderzoeken</h3>
         <p>Dit zijn startpunten voor leverancierszoekwerk, <strong>geen geverifieerde productmatches</strong>. Controleer per artikel EU-magazijn, dropshipping, voorraad, verzendkosten en retourvoorwaarden.</p>
@@ -294,9 +292,16 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% endif %}
       <p class="integration-status">Trendgroei, verkoopvolume, leveranciersvoorraad en winstmarge: nog niet geverifieerd. Geen fictieve percentages.</p>
     {% endif %}
-    </div>
+  </div>
   {% endif %}
 </section>
+<style>
+.nv-research-platforms label{display:inline-flex!important;align-items:center;gap:.5rem;margin:.35rem 1rem .35rem 0;white-space:nowrap}
+.nv-research-platforms input[type=checkbox]{width:18px!important;height:18px!important;flex:0 0 18px;margin:0!important}
+.nv-research-results{margin-top:1.5rem;scroll-margin-top:1.5rem}
+.nv-research-results a{overflow-wrap:anywhere}
+</style>
+{% if product_discovery %}<script>window.addEventListener('load',function(){var el=document.getElementById('nv-research-results');if(el)el.scrollIntoView({block:'start',behavior:'instant'});});</script>{% endif %}
 <section class="panel">
 <h2>Prijs- en margescenario voor dit product</h2>
 <p>Vul uitsluitend je eigen controleerbare bedragen in. Dit is een rekenhulp, geen AI-schatting of bevestigde leveranciersprijs. Alle bedragen in euro.</p>
