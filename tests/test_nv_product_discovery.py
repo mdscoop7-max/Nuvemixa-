@@ -305,3 +305,25 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(r["trends"][0]["scope"], "Verwante niche")
         self.assertEqual([c.kwargs["params"]["searchTerm"] for c in fetch.call_args_list
                           if "searchTerm" in c.kwargs["params"]], ["magnetic power bank"] * 2)
+
+
+    def test_eu_dropship_filter_uses_sourced_origin_and_keeps_shipping_evidence(self):
+        product_url = SYNCEE_PRODUCT.replace("253317", "279866").replace("powerbank-magnetic-10000mah", "ceramic-table-lamp")
+        card = syncee_card("Ceramic Table Lamp").replace(b"253317", b"279866")
+        card = card.replace(b"nne-living", b"golden-pigs").replace(b"NNE Living", b"Golden Pigs")
+        card = card.replace(b"powerbank-magnetic-10000mah", b"ceramic-table-lamp")
+        detail = syncee_details(["NL"]).replace(b"253317", b"279866").replace(b"Australia", b"Romania")
+
+        def fetch(url, **kwargs):
+            if url == product_url:
+                return Response(detail)
+            self.assertTrue(url.startswith("https://syncee.com/collections/"))
+            return Response(card)
+
+        result = self.search("tafellamp", category="home-living", mode="dropship", country="NL",
+                             supplier_filter="eu", platforms=["Productcatalogi"], fetch=fetch)
+        company, = result["suppliers"]
+        self.assertEqual((company["name"], company["origin"]), ("Golden Pigs", "RO"))
+        self.assertTrue(company["dropshipping"])
+        self.assertIn("Geverifieerd", company["shipping"])
+        self.assertEqual(company["products"][0]["url"], product_url)

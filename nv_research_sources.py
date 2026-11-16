@@ -19,6 +19,13 @@ FILTERS = {
     "trade": "Groothandel / fabrikant",
 }
 SYNCEE_HELP = "https://help.syncee.com/en/articles/8925120-shipping-information"
+# Explicit company/brand location evidence, separate from the ship-from
+# warehouse in the marketplace product record.
+SYNCEE_SUPPLIER_ORIGINS = {
+    "253317": ("AU", "https://syncee.com/supplier/253317/nne-living"),
+    "105656": ("IT", "https://www.maiden-art.com/policies/legal-notice"),
+    "279866": ("RO", "https://www.orderchamp.com/store/tomescu-st-cristian-pfa/listings/1842806604644353"),
+}
 SYNCEE_INTEGRATION = "https://help.syncee.com/en/articles/8885881-how-to-install-syncee-to-your-wordpress-store-woocommerce-integration"
 CJ_TERMS = "https://oss.cjdropshipping.com/pdf/CJ%20Dropshipping%20Agreement%202025.6.12.pdf"
 CJ_PRODUCT = (
@@ -189,11 +196,14 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
             continue
         seller_url = "https://syncee.com" + seller[1]
         # Only assign a country when supported by the supplier's public profile.
-        origin = {"253317": "AU"}.get(seller[1].split("/")[2])
+        origin, location_source = SYNCEE_SUPPLIER_ORIGINS.get(seller[1].split("/")[2], (None, None))
+        evidence = (("Dropshipping en verzending", SYNCEE_HELP), ("WooCommerce", SYNCEE_INTEGRATION))
+        if location_source:
+            evidence += (("Vestigingsland", location_source),)
         profile = supplier(visible_text(seller[2]), origin, "Dropshippingpartner via Syncee", seller_url,
                            dropshipping=True, orders="Platformfunctie; activering per leverancier controleren",
                            integration="WooCommerce-koppeling via Syncee; aansluiting en voorwaarden controleren",
-                           evidence=(("Dropshipping en verzending", SYNCEE_HELP), ("WooCommerce", SYNCEE_INTEGRATION)))
+                           evidence=evidence)
         entries = candidates.setdefault(seller_url, {})
         entries[product[1]] = (profile, {"title": title, "url": "https://syncee.com" + product[1], "category": category})
 
