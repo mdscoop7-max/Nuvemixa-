@@ -6,7 +6,7 @@ on:
       - 'nv_product_margin.py'
       - 'app.py'
       - 'templates/dashboard.html'
-      - 'tests/test_nv_product_*.py'
+      - 'tests/test_nv_*.py'
       - '.github/workflows/productonderzoek-tests.yml'
   push:
     branches:
@@ -16,7 +16,7 @@ on:
       - 'nv_product_margin.py'
       - 'app.py'
       - 'templates/dashboard.html'
-      - 'tests/test_nv_product_*.py'
+      - 'tests/test_nv_*.py'
       - '.github/workflows/productonderzoek-tests.yml'
 jobs:
   test:
@@ -31,6 +31,6 @@ jobs:
       - name: Check Python syntax
         run: python -m compileall -q app.py nv_product_discovery.py nv_product_margin.py
       - name: Productonderzoek unit tests
-        run: python -m unittest discover -s tests -p 'test_nv_product_*.py' -v
+        run: python -m unittest discover -s tests -p 'test_nv_*.py' -v
       - name: Check Jinja template parses
         run: python -c "from jinja2 import Environment; Environment().parse(open('templates/dashboard.html', encoding='utf-8').read()); print('Template syntax OK')"
