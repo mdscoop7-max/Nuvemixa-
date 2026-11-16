@@ -237,8 +237,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     </label>
     <label>Doelland
       <select name="research_country">
-        {% for code, label in [('NL','Nederland'),('BE','België'),('DE','Duitsland'),('FR','Frankrijk'),('ES','Spanje'),('IT','Italië'),('PL','Polen'),('GB','Verenigd Koninkrijk'),('US','Verenigde Staten'),('CA','Canada'),('AU','Australië')] %}
-        <option value="{{ code }}" {% if request.args.get('research_country','NL') == code %}selected{% endif %}>{{ label }}</option>
+        {% for code, details in product_research_countries.items() %}
+        <option value="{{ code }}" {% if request.args.get('research_country','NL') == code %}selected{% endif %}>{{ details[0] }}</option>
         {% endfor %}
       </select>
     </label>
