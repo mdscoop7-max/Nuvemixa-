@@ -83,7 +83,7 @@
     <h3>{{ m.form.q }} · {{ m.country_name }}</h3>
     {% if m.all_failed %}<p class="notice" role="alert"><strong>Externe bronnen niet bereikbaar.</strong> Er is niets doorzocht dat resultaten kon geven; dit is geen bewijs dat het product niet bestaat. Probeer het later opnieuw.</p>{% endif %}
     {% if m.interpretation %}<p class="nv-market-note"><strong>Zo zoekt NUVEMIXA:</strong> {{ m.interpretation.queries|join(' · ') }}{% if m.interpretation.categories %} — categorie{{ 'ën' if m.interpretation.categories|length > 1 }}: {{ m.interpretation.categories|join(', ') }}{% if m.interpretation.automatic %} (automatisch herkend){% endif %}{% endif %}</p>{% endif %}
-    {% if m.unavailable %}<p class="notice">Niet volledig beschikbaar: {{ m.unavailable|join(', ') }}.</p>{% endif %}
+    {% if m.unavailable %}<p class="notice">Niet volledig beschikbaar: {% for name in m.unavailable %}{{ name }}{% if m.unavailable_reasons.get(name) %} ({{ m.unavailable_reasons[name] }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
     {% if m.sources_checked %}<p><small>Geraadpleegd: {{ m.sources_checked|join(', ') }}.</small></p>{% endif %}
     {% if viral_page %}
       <p class="nv-market-note">{{ m.trend_note }}</p>

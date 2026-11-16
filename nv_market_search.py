@@ -173,7 +173,7 @@ def search_view(kind, categories, args, *, fetch=None):
         result=result, products=products, suppliers=suppliers, publications=publications, trends=trends,
         competitors=[{"source": name, "count": number,
                       "links": [p for p in products if p["source"] == name][:3]} for name, number in counts.most_common()],
-        links=result.get("links", []), unavailable=result.get("unavailable_sources", []),
+        links=result.get("links", []), unavailable=result.get("unavailable_sources", []), unavailable_reasons=result.get("unavailable_reasons", {}),
         sources_checked=result.get("sources_checked", []), empty_message="Geen bevestigde producten gevonden voor deze selectie.",
         alternatives=result.get("alternatives", []), country_name=result["country_name"],
         interpretation=result.get("interpretation"), all_failed=result.get("all_sources_failed", False),
