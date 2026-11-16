@@ -303,38 +303,43 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </style>
 {% if product_discovery %}<script>window.addEventListener('load',function(){var el=document.getElementById('nv-research-results');if(el)el.scrollIntoView({block:'start',behavior:'instant'});});</script>{% endif %}
 <section class="panel">
-<h2>Prijs- en margescenario voor dit product</h2>
-<p>Vul uitsluitend je eigen controleerbare bedragen in. Dit is een rekenhulp, geen AI-schatting of bevestigde leveranciersprijs. Alle bedragen in euro.</p>
+<h2>Automatisch verkoopadvies en winstmarge</h2>
+<p>Vul alleen de inkoopprijs exclusief btw in. NUVEMIXA berekent een indicatief verkoopadvies en alle kosten op basis van duidelijk vermelde aannames.</p>
 <form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
 <input type="hidden" name="section" value="onderzoek">
 <input type="hidden" name="margin_run" value="1">
-{% for key, label in [('selling_price','Verkoopprijs incl. btw (€)'),('purchase_cost','Inkoopprijs excl. btw (€)'),('shipping_cost','Verzendkosten excl. btw (€)'),('advertising_cost','Advertentiekosten excl. btw (€)'),('platform_fee','Platform- en transactiekosten excl. btw (€)'),('returns_reserve','Retourreserve excl. btw (€)'),('other_cost','Overige kosten excl. btw (€)'),('vat_rate','Btw-percentage (%)')] %}
-<label>{{ label }}<input type="number" name="{{ key }}" min="0" max="{{ '100' if key == 'vat_rate' else '1000000' }}" step="0.01" required inputmode="decimal" value="{{ request.args.get(key,'')|e }}"></label>
-{% endfor %}
-<button type="submit">Bereken scenario</button>
+<label>Inkoopprijs excl. btw (€)
+<input type="number" name="purchase_cost" min="0.01" max="1000000" step="0.01" required inputmode="decimal" placeholder="Bijvoorbeeld 12,50" value="{{ request.args.get('purchase_cost','')|e }}"></label>
+<button type="submit">Bereken automatisch</button>
 </form>
 {% if product_margin_error %}<div class="notice" role="alert">{{ product_margin_error }}</div>{% endif %}
 {% if product_margin %}
 <div class="admin-table-wrap"><table class="admin-table"><tbody>
+<tr><th>Inkoopprijs excl. btw</th><td>€ {{ product_margin.purchase }}</td></tr>
+<tr><th>Adviesverkoopprijs incl. btw</th><td><strong>€ {{ product_margin.selling }}</strong></td></tr>
 <tr><th>Omzet excl. btw</th><td>€ {{ product_margin.revenue_ex_vat }}</td></tr>
-<tr><th>Btw uit verkoopprijs</th><td>€ {{ product_margin.vat_amount }}</td></tr>
-<tr><th>Totale ingevoerde kosten</th><td>€ {{ product_margin.total_cost }}</td></tr>
-<tr><th>Resultaat per verkoop</th><td>€ {{ product_margin.profit }}</td></tr>
-<tr><th>Marge op omzet excl. btw</th><td>{{ product_margin.margin_pct }}%</td></tr>
+<tr><th>Btw in verkoopprijs</th><td>€ {{ product_margin.vat }}</td></tr>
+<tr><th>Geschatte verzending</th><td>€ {{ product_margin.shipping }}</td></tr>
+<tr><th>Geschatte reclamekosten</th><td>€ {{ product_margin.advertising }}</td></tr>
+<tr><th>Geschatte transactiekosten</th><td>€ {{ product_margin.platform }}</td></tr>
+<tr><th>Geschatte retourreserve</th><td>€ {{ product_margin.returns }}</td></tr>
+<tr><th>Totale kosten incl. inkoop</th><td>€ {{ product_margin.total_cost }}</td></tr>
+<tr><th>Geschatte winst per verkoop</th><td><strong>€ {{ product_margin.profit }}</strong></td></tr>
+<tr><th>Geschatte winstmarge</th><td><strong>{{ product_margin.margin_pct }}%</strong></td></tr>
 </tbody></table></div>
-<p>{{ product_margin.assumptions }}</p>
+<p class="integration-status">{{ product_margin.assumptions }}</p>
 {% endif %}
 </section>
-<section class="panel"><h2>Productdossier — eigen onderzoeksnotities</h2>
+<section class="panel"><details><summary><strong>Productdossier — eigen onderzoeksnotities (optioneel)</strong></summary>
 <p>Bewaar je onderzoek met een controleerbare bron. Bestaande dossiers blijven beschikbaar.</p>
 {% if research_error %}<div class="notice" role="status">{{ research_error }}</div>{% endif %}
 {% if request.args.get('result') == 'toegevoegd' %}<div class="notice" role="status">Onderzoeksnotitie opgeslagen.</div>{% elif request.args.get('result') == 'ongeldig' %}<div class="notice" role="alert">Controleer de verplichte velden.</div>{% elif request.args.get('result') == 'fout' %}<div class="notice" role="alert">Opslaan is niet gelukt.</div>{% endif %}
 {% if research_rows is not none %}
 <form action="{{ url_for('admin_add_research_note') }}" method="post" class="nv-admin-form">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-<label>Categorie<input name="category" maxlength="80" required placeholder="Bijvoorbeeld Smart Home"></label>
+<label>Categorie<input name="category" maxlength="80" required value="Productonderzoek" placeholder="Bijvoorbeeld Smart Home"></label>
 <label>Product / niche<input name="product_name" maxlength="160" required placeholder="Naam of niche" value="{{ request.args.get('research_term','')|e }}"></label>
-<label>Bron<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
+<label>Bron (optioneel)<input name="source" maxlength="500" placeholder="Link of omschrijving van de bron"></label>
 <label>Onderzoeksnotitie<textarea name="notes" maxlength="1500" rows="3" placeholder="Waarom interessant? Welke gegevens moeten worden bevestigd?"></textarea></label>
 <button type="submit">Onderzoek opslaan</button>
 </form>
@@ -342,7 +347,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% for row in research_rows %}<tr><td><strong>{{ row.product_name }}</strong></td><td>{{ row.category }}</td><td>{{ row.source or 'Niet opgegeven' }}</td><td>{{ row.notes or '—' }}</td><td>{{ row.updated_at }}</td></tr>{% else %}<tr><td colspan="5">Nog geen opgeslagen onderzoeksnotities.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
-</section>
+</details></section>
 <section class="panel integration"><h2>Overige bestaande controles</h2>
 <div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('admin_research_preview') }}">Onderzoeksrapport (JSON) →</a><a class="nv-blue-action" href="/dashboard?section=producten">Productcatalogus →</a><a class="nv-blue-action" href="/dashboard?section=calculator">Prijscalculator →</a></div>
 </section>
