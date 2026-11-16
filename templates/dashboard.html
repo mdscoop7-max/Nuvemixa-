@@ -120,6 +120,10 @@
 .nv-blue-action{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 18px;border-radius:12px;background:#0757bd!important;color:#fff!important;border:1px solid #0757bd;font-size:14px;font-weight:750;text-decoration:none;box-shadow:0 4px 12px #0757bd22}
 .nv-blue-action:hover{background:#06458f!important}.nv-blue-action:focus-visible{outline:3px solid #f5a623;outline-offset:3px}
 @media(max-width:620px){.nv-action-row{display:grid}.nv-blue-action{width:100%}}
+.top-search{display:flex;gap:8px;min-width:0}
+.top-search input{min-width:0}
+@media(max-width:760px){.topbar:has(.top-search){flex-wrap:wrap}.top-search{flex:1 0 100%;order:3}}
+.top-search button{padding:8px 14px;border:0;border-radius:8px;background:#0757bd;color:white;font-weight:700;cursor:pointer}
 </style>
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
@@ -131,7 +135,7 @@
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar">{% if allowed("product_view", "product_edit") %}<form class="top-search" action="/dashboard" method="get" role="search"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search|default('') }}" type="search" placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<header class="topbar">{% if allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin">
 {% if staff and section == "dashboard" %}
 <section class="panel">
@@ -247,6 +251,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       </label>
       <button type="submit">Zoek producten en trends</button>
     </div>
+    <div class="nv-research-filters">
     <label>Doelland
       <select name="research_country">
         {% for code, details in research_options.countries.items() %}
@@ -254,14 +259,22 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% endfor %}
       </select>
     </label>
+    <label>Leverancierfilter
+      <select name="research_supplier_filter">
+        {% for value, name in research_options.supplier_filters.items() %}
+        <option value="{{ value }}" {% if research_options.supplier_filter == value %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    </div>
     <fieldset class="nv-research-platforms">
       <legend>Onderzoeksplatforms</legend>
       {% for platform in research_options.platforms %}
       <label><input type="checkbox" name="research_platform" value="{{ platform }}"
         {% if platform in research_options.selected_platforms %}checked{% endif %}>
-        {{ 'Bing (nieuws en reviews)' if platform == 'Bing' else platform }}</label>
+        {{ platform }}</label>
       {% endfor %}
-      <small>Google en sociale media openen een handmatige zoekopdracht. Selecteer Productcatalogi voor producten en leveranciers.</small>
+      <small>Productcatalogi en Publicaties vullen de resultaten in dit dashboard. Google en sociale media bieden handmatige zoeklinks.</small>
     </fieldset>
   </form>
   {% if product_discovery %}
@@ -273,14 +286,11 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% if product_discovery.source_unavailable %}
         <p class="notice">Een of meer onderzoeksbronnen zijn tijdelijk onbereikbaar.</p>
       {% endif %}
-      {% if research_options.mode == 'suppliers' and not product_discovery.suppliers %}
-        <p class="notice">{{ research_options.empty_message }}</p>
-      {% endif %}
       <nav class="nv-research-tabs" aria-label="Onderzoeksresultaten">
         <a href="#nv-research-products">Productresultaten ({{ product_discovery.products|length }})</a>
         <a href="#nv-research-trends">Trends &amp; inzichten</a>
         <a href="#nv-research-suppliers">Leveranciers ({{ product_discovery.suppliers|length }})</a>
-        <a href="#nv-research-news">Nieuws &amp; reviews</a>
+        <a href="#nv-research-news">Nieuws &amp; reviews ({{ product_discovery.news|length }})</a>
       </nav>
       <div id="nv-research-products">
         {% if product_discovery.products %}
@@ -293,41 +303,97 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           </li>
           {% endfor %}
         </ul>
-        {% elif research_options.mode == 'suppliers' %}<p>Dit zoektype toont matches onder Leveranciers.</p>
+        {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
         {% else %}<p>{{ research_options.empty_message }}</p>{% endif %}
       </div>
+      {% macro publications(items) %}
+        <ul class="nv-research-articles">
+        {% for item in items %}
+          <li>
+            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+            <small>{{ item.source }} · {{ item.date_label }} {{ item.date }} · {{ item.kind }} · {{ item.scope }}</small>
+          </li>
+        {% endfor %}
+        </ul>
+      {% endmacro %}
       <div id="nv-research-trends">
         {% if product_discovery.trends %}
-        <p>Trendvermeldingen uit publicaties. Verkoopvolume en trendgroei zijn onbekend.</p>
-        <ul class="nv-research-articles">
-          {% for item in product_discovery.trends %}
-          <li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> · {{ item.source }}</li>
+        <p>Recente lanceringen, markt- en veiligheidssignalen uit publicaties. Marktvraag en verkoopvolume zijn onbekend.</p>
+        {{ publications(product_discovery.trends) }}
+        {% else %}
+        <p>Voor deze zoekopdracht is onvoldoende recente informatie over marktontwikkelingen of productlanceringen gevonden.</p>
+        {% endif %}
+        {% if product_discovery.topic %}
+        <form action="{{ url_for('control') }}" method="get" class="nv-research-followup">
+          <input type="hidden" name="section" value="onderzoek">
+          <input type="hidden" name="research_run" value="1">
+          <input type="hidden" name="research_mode" value="news">
+          <input type="hidden" name="research_country" value="{{ research_options.country }}">
+          <input type="hidden" name="research_category" value="{{ research_options.category }}">
+          <input type="hidden" name="research_supplier_filter" value="{{ research_options.supplier_filter }}">
+          <input type="hidden" name="research_term" value="{{ product_discovery.topic }}">
+          <input type="hidden" name="research_platform" value="Publicaties">
+          {% for platform in research_options.selected_platforms if platform != "Publicaties" %}
+          <input type="hidden" name="research_platform" value="{{ platform }}">
           {% endfor %}
-        </ul>
-        {% else %}<p>Geen relevante trendvermeldingen gevonden.</p>{% endif %}
+          <button class="nv-blue-action" type="submit">Zoek publicaties over {{ product_discovery.topic }}</button>
+        </form>
+        {% endif %}
       </div>
       <div id="nv-research-suppliers">
         {% if product_discovery.suppliers %}
-        <p>De aanbieder heeft een zakelijk verkoopkanaal en vermeldt dit product in zijn catalogus. Vraag de inkoopprijs, voorraad, levering en voorwaarden per product op.</p>
-        <ul class="nv-research-cards">
-          {% for item in product_discovery.suppliers %}
-          <li>
-            <strong>{{ item.source }}</strong>
-            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
-            <a href="{{ item.trade_url }}" target="_blank" rel="noopener noreferrer">Zakelijk inkopen bij {{ item.source }}</a>
-          </li>
+        <p>{{ product_discovery.suppliers|length }} unieke aanbieders · {{ product_discovery.supplier_products }} productvermeldingen · {{ research_options.supplier_filters[research_options.supplier_filter] }}</p>
+        <p>Controleer de zakelijke voorwaarden per product. Producten waarvan de bron verzending naar het doelland uitsluit, zijn weggelaten.</p>
+        {% set direct = product_discovery.suppliers|rejectattr('dropshipping', 'equalto', true)|list %}
+        {% set groups = [
+          ('Binnen EU', direct|selectattr('region', 'equalto', 'eu')|list),
+          ('Buiten EU', direct|selectattr('region', 'equalto', 'international')|list),
+          ('Dropshippingpartners', product_discovery.suppliers|selectattr('dropshipping', 'equalto', true)|list),
+          ('Vestiging niet bevestigd', direct|selectattr('region', 'equalto', 'unknown')|list),
+        ] %}
+        {% for group, suppliers in groups if suppliers %}
+        <h4>{{ group }} ({{ suppliers|length }})</h4>
+        <div class="nv-research-supplier-grid">
+          {% for company in suppliers %}
+          <article class="nv-supplier-card">
+            <h4><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a></h4>
+            <p>{{ company.kind }} · {{ company.origin_name }}</p>
+            <div><strong>Dropshipping</strong> {{ 'Geverifieerd' if company.dropshipping else 'Niet bevestigd' }}</div>
+            <div><strong>Verzending naar {{ product_discovery.country_name }}</strong> {{ company.shipping }}</div>
+            <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
+            <details>
+              <summary>Voorwaarden en {{ company.product_count }} productvermelding{{ 'en' if company.product_count != 1 }}</summary>
+              <dl>
+                {% for label, key in [
+                  ('Magazijn', 'warehouse'), ('Inkoopprijs', 'purchase_price'), ('Voorraad', 'stock'),
+                  ('Levertijd', 'lead_time'), ('Verzendkosten', 'shipping_cost'), ('Minimumafname', 'minimum'),
+                  ('Orderverwerking', 'orders'), ('Koppeling en updates', 'integration'), ('Retourvoorwaarden', 'returns'),
+                ] %}
+                <dt>{{ label }}</dt><dd>{{ company[key] }}</dd>
+                {% endfor %}
+              </dl>
+              <ul class="nv-research-articles">
+              {% for item in company.products %}
+                <li>
+                  <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+                  <small>{{ research_options.categories[item.category] }}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}</small>
+                </li>
+              {% endfor %}
+              </ul>
+              {% for label, url in company.evidence %}
+              <a class="nv-supplier-source" href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a>
+              {% endfor %}
+            </details>
+          </article>
           {% endfor %}
-        </ul>
-        {% else %}<p>Geen betrouwbare, relevante leveranciers gevonden.</p>{% endif %}
+        </div>
+        {% endfor %}
+        {% else %}<p>Geen betrouwbare, relevante leveranciers gevonden voor deze selectie.</p>{% endif %}
       </div>
       <div id="nv-research-news">
         {% if product_discovery.news %}
-        <ul class="nv-research-articles">
-          {% for item in product_discovery.news %}
-          <li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> · {{ item.source }}</li>
-          {% endfor %}
-        </ul>
-        {% else %}<p>Geen relevante nieuwsartikelen of reviews gevonden.</p>{% endif %}
+        {{ publications(product_discovery.news) }}
+        {% else %}<p>Geen relevante publicaties gevonden. Vink Publicaties aan of zoek op een kortere productnaam.</p>{% endif %}
       </div>
       {% if product_discovery.links %}
       <details class="nv-research-links">
@@ -347,7 +413,20 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 .nv-research-search{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;grid-column:1/-1}
 .nv-research-search input{min-height:52px}
 .nv-research-search button{min-height:52px}
-.nv-research-platforms{min-width:0}
+.nv-research-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:10px;align-self:start}
+.nv-research-filters select{padding:8px;font-size:14px}
+.nv-research-platforms{min-width:0;margin:0;align-self:start}
+.nv-research-supplier-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.nv-supplier-card{padding:14px;border:1px solid #d9e7f4;border-radius:12px;background:#f8fbff;overflow-wrap:anywhere}
+.nv-supplier-card h4,.nv-supplier-card p{margin:0 0 8px}
+.nv-supplier-card details{margin-top:.7rem}
+.nv-supplier-card summary{cursor:pointer;color:#0757bd;font-weight:700}
+.nv-supplier-card dl{display:grid;grid-template-columns:minmax(85px,1fr) minmax(0,2fr);gap:.3rem}
+.nv-supplier-card dt{font-weight:700}
+.nv-supplier-card dd{margin:0}
+.nv-supplier-source{display:inline-block;margin:.3rem .6rem 0 0}
+.nv-research-articles small{display:block}
+.nv-research-followup button{text-align:left;white-space:normal}
 .nv-research-platforms label{display:inline-flex;align-items:center;gap:.35rem;margin:.25rem .65rem .25rem 0}
 .nv-research-platforms input[type=checkbox]{width:18px;height:18px;margin:0}
 .nv-research-platforms small{display:block}
@@ -363,7 +442,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 .nv-research-links{margin:1rem 0 0}
 .nv-research-links summary{cursor:pointer}
 @media(max-width:1000px){.nv-research-cards,.nv-research-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.nv-research-search{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.nv-research-search,.nv-research-supplier-grid{grid-template-columns:minmax(0,1fr)}}
 </style>
 {% if product_discovery and not product_discovery.error %}
 <script>
@@ -404,7 +483,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       activate(tabs[selected], true);
     });
   });
-  activate(tabs.find(tab => tab.hash === location.hash) || tabs[{{ 2 if research_options.mode == 'suppliers' else 0 }}]);
+  const preferred = "#nv-research-" + {{ product_discovery.preferred_tab|tojson }};
+  activate(tabs.find(tab => tab.hash === location.hash) || tabs.find(tab => tab.hash === preferred));
 })();
 </script>
 {% endif %}

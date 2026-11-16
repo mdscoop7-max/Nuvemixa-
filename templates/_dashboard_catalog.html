@@ -61,7 +61,7 @@
 {% endif %}
 {% if section == "afbeeldingen" or allowed("product_view", "product_edit") %}
 {% for product in filtered_products %}
-<details class="panel-after"><summary><strong>{{ product.name }}</strong> · {{ product.category }} · {{ format_eur(product.price) }}</summary>
+<details class="panel-after"{% if search %} open{% endif %}><summary><strong>{{ product.name }}</strong> · {{ product.category }} · {{ format_eur(product.price) }}</summary>
 <p><a href="{{ product.product_url }}?dashboard_from={{ section }}">Bekijk productpagina</a> · Voorraadstatus {{ stock_labels.get(product.stock_status, 'Onbekend') }}{% if product.stock_quantity is not none %} · {{ product.stock_quantity }} stuks{% endif %}</p>
 {% if section == "afbeeldingen" %}
 {% for image in product.images %}
