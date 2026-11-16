@@ -76,6 +76,29 @@ def research_links(term, platforms):
     return [(platform, urls[platform]) for platform in platforms if platform in urls]
 
 
+
+def _public_rss_search(query, fetch, limit=6):
+    """Read public Bing RSS search results. No scraping or inferred metrics."""
+    from urllib.parse import urlparse
+    url = "https://www.bing.com/search?" + urlencode({"q": query, "format": "rss"})
+    try:
+        response = fetch(url, timeout=5, headers={"User-Agent": "Mozilla/5.0 NUVEMIXA-Research"})
+        response.raise_for_status()
+        if len(response.content) > 500_000:
+            return []
+        root = ET.fromstring(response.content)
+        output = []
+        for item in root.findall("./channel/item")[:limit]:
+            title = (item.findtext("title") or "").strip()[:240]
+            link = (item.findtext("link") or "").strip()
+            host = urlparse(link).hostname or ""
+            if title and link.startswith("https://") and host and not host.endswith(".local"):
+                output.append({"title": title, "url": link, "source": host})
+        return output
+    except (requests.RequestException, ET.ParseError, ValueError, OSError):
+        return []
+
+
 def discover(term, country="NL", mode="trends", platforms=None, fetch=None):
     """Fetch real Google News RSS items; never claim they are platform metrics.
 
@@ -95,7 +118,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None):
     result = {
         "term": term, "country": country, "country_name": name, "mode": mode,
         "platforms": platforms, "links": research_links(term, platforms),
-        "items": [], "error": None, "checked_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "items": [], "web_items": [], "supplier_items": [], "error": None, "checked_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "supplier_directories": SUPPLIER_DIRECTORIES if country in EU_COUNTRIES else (),
     }
     try:
@@ -116,4 +139,10 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None):
             })
     except (requests.RequestException, ET.ParseError, ValueError, OSError):
         result["error"] = "Live nieuwsbronnen zijn tijdelijk niet bereikbaar. Probeer later opnieuw."
+    fetcher = fetch or requests.get
+    # Separate public web searches; a failed source never fabricates results.
+    result["web_items"] = _public_rss_search(term + " " + name + " product review", fetcher)
+    result["supplier_items"] = _public_rss_search(
+        term + " supplier wholesale dropshipping EU warehouse", fetcher
+    )
     return result
