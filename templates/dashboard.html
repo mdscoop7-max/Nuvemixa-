@@ -283,6 +283,12 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       <p class="notice" role="alert">{{ product_discovery.error }}</p>
     {% else %}
       <h3>{{ product_discovery.category_name }} · {{ product_discovery.country_name }}{% if product_discovery.term %} · {{ product_discovery.term }}{% endif %}</h3>
+      {% if product_discovery.all_sources_failed %}
+        <p class="notice" role="alert"><strong>Externe bronnen niet bereikbaar.</strong> Er is niets doorzocht dat resultaten kon geven; dit bewijst niet dat het product niet bestaat.</p>
+      {% endif %}
+      {% if product_discovery.interpretation and product_discovery.term %}
+        <p><strong>Zo zoekt NUVEMIXA:</strong> {{ product_discovery.interpretation.queries|join(' · ') }}{% if product_discovery.interpretation.automatic %} — categorie automatisch herkend: {{ product_discovery.interpretation.categories|join(', ') }}{% endif %}</p>
+      {% endif %}
       {% if product_discovery.source_unavailable %}
         <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {{ product_discovery.unavailable_sources|join(', ') }}.</p>
       {% endif %}

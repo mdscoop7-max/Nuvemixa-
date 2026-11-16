@@ -22,6 +22,10 @@ PHRASES = (
     (r"\b(?:tafellamp(?:en)?|table (?:light|lamp)|desk lamp|bureaulamp)\b", "table lamp"),
     (r"\b(?:hydraterend(?:e)?\s+creme|moisturi[sz]ing cream|moisturi[sz]er(?: cream)?|vochtinbrengend(?:e)?\s+creme)\b", "moisturizing cream"),
     (r"\b(?:creme|cream)\b", "cream"),
+    (r"\b(?:kabel[\s-]*(?:organizers?|organiser|beheer|houders?|clips?|management)|cable[\s-]*(?:organi[sz]ers?|management|clips?|holders?))\b", "cable organizer"),
+    (r"\b(?:yoga[\s-]*matten?|yoga mats?)\b", "yoga mat"),
+    (r"\b(?:power[\s-]*banks?|powerbanks?|externe accu)\b", "power bank"),
+    (r"\b(?:beveiligings|bewakings|security|surveillance)[\s-]*(?:camera'?s?|cams?)\b", "security camera"),
 )
 NORMALIZATIONS = tuple((re.compile(pattern), replacement) for pattern, replacement in PHRASES)
 
@@ -35,6 +39,7 @@ PRODUCTS = {
     "moisturizing cream": ("moisturizing cream", "hydraterende crème", "moisturiser"),
     "security camera": ("security camera", "beveiligingscamera", "surveillance camera"),
     "yoga mat": ("yoga mat", "yogamat", "exercise mat"),
+    "cable organizer": ("cable organizer", "kabelorganizer", "cable management", "cable clips"),
     "face serum": ("face serum", "gezichtsserum", "facial serum"),
     "smart doorbell": ("smart doorbell", "slimme deurbel", "video doorbell"),
 }
@@ -223,3 +228,33 @@ def offer_match(term, identity, description="", variant=""):
     if subject == "moisturizing cream" and not re.search(r"\bspf\s*\d*", query) and re.search(r"\bspf\s*\d*", title):
         missing.append("gevraagde standaarduitvoering")
     return ("similar", tuple(missing)) if missing else ("exact", ())
+
+
+# Automatische categorieherkenning (Nederlands en Engels). Deelstrings van samenstellingen tellen mee.
+CATEGORY_TERMS = {
+    "gadgets": ("powerbank", "power bank", "oplader", "charger", "lader", "kabel", "cable", "usb", "bluetooth",
+                "koptelefoon", "headphone", "oordopje", "earbud", "speaker", "telefoon", "phone", "laptop",
+                "magsafe", "adapter", "toetsenbord", "keyboard", "muis", "mouse", "organizer"),
+    "smart-home": ("smart", "slim", "wifi", "zigbee", "matter", "camera", "deurbel", "doorbell", "beveilig",
+                   "security", "bewaking", "sensor", "stekker", "plug", "thermostaat", "gordijn", "robotstof", "robot vacuum"),
+    "beauty-care": ("olie", "oil", "serum", "creme", "cream", "huid", "skin", "haar", "hair", "shampoo", "zeep", "soap",
+                    "parfum", "make-up", "makeup", "gezicht", "face", "facial", "lotion", "scheer", "tandenborstel"),
+    "home-living": ("lamp", "licht", "light", "kussen", "cushion", "vaas", "vase", "tafel", "table", "stoel", "chair",
+                    "kast", "rek", "shelf", "organizer", "opberg", "storage", "decor", "kaars", "candle", "tapijt", "rug", "kabelbeheer"),
+    "lifestyle-sport": ("yoga", "mat", "fitness", "halter", "dumbbell", "weerstand", "resistance", "sport", "hardloop",
+                        "running", "drinkfles", "bottle", "rugzak", "backpack", "training", "gym", "wandel", "hiking"),
+}
+
+
+def infer_categories(term):
+    """Geeft de categorieën terug waarin een zoekterm waarschijnlijk valt. Leeg = onbekend (dan alles doorzoeken)."""
+    text = normalize(term or "")
+    flat = text.replace(" ", "")
+    found = []
+    for category, hints in CATEGORY_TERMS.items():
+        for hint in hints:
+            plain = hint.replace(" ", "")
+            if (len(plain) >= 4 and (plain in flat)) or has_phrase(text, hint):
+                found.append(category)
+                break
+    return tuple(found)

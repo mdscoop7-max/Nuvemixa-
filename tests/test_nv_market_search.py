@@ -118,3 +118,38 @@ def test_top_search_only_on_products(administrator):
     assert "Zoek producten in beheer" in administrator.get("/dashboard?section=producten").get_data(as_text=True)
     for section in ("onderzoek", "viral", "internationaal"):
         assert "Zoek producten in beheer" not in administrator.get(f"/dashboard?section={section}").get_data(as_text=True)
+
+
+@pytest.mark.parametrize("term,expected,absent", [
+    ("Kabelorganizer", {"gadgets", "home-living"}, {"beauty-care"}),
+    ("Draadloze tafellamp", {"home-living"}, {"gadgets", "beauty-care"}),
+    ("Yogamat", {"lifestyle-sport"}, {"gadgets", "smart-home"}),
+    ("Smart-home beveiligingscamera", {"smart-home"}, {"beauty-care", "lifestyle-sport"}),
+    ("Magnetische powerbank 10.000 mAh USB-C", {"gadgets"}, {"home-living", "beauty-care"}),
+])
+def test_category_inference_and_different_sources(term, expected, absent):
+    from nv_research_intent import infer_categories
+    found = set(infer_categories(term))
+    assert expected <= found and not (absent & found)
+    r = discover(term, categories=CATEGORIES, mode="product", platforms=["Productcatalogi"], fetch=store_fetch())
+    assert r["interpretation"]["automatic"] and r["interpretation"]["queries"]
+
+
+def test_different_products_query_different_shops():
+    def hosts(term):
+        calls = []
+        def fetch(url, **options):
+            calls.append(url.split("/")[2])
+            return Response(b"")
+        discover(term, categories=CATEGORIES, mode="product", platforms=["Productcatalogi"], fetch=fetch)
+        return set(calls)
+    assert "eu.manduka.com" in hosts("yogamat") and "eu.manduka.com" not in hosts("tafellamp")
+    assert "eu.ugreen.com" in hosts("powerbank") and "eu.ugreen.com" not in hosts("yogamat")
+
+
+def test_unknown_product_searches_everything_and_reports_failures():
+    def fetch(url, **options):
+        raise OSError("offline")
+    r = discover("zzqx", categories=CATEGORIES, mode="product", platforms=["Productcatalogi"], fetch=fetch)
+    assert not r["products"] and not r["suppliers"]
+    assert r["source_unavailable"] and r["all_failed" if False else "all_sources_failed"]

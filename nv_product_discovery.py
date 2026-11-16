@@ -14,7 +14,8 @@ import requests
 from nv_research_assessment import Fact, assess_offer
 from nv_research_identity import approved_catalogue_identity, company_key, offer_key
 from nv_research_intent import (
-    MEASURE, STOP_WORDS, candidate_queries, index_query, matches, normalize,
+    MEASURE, STOP_WORDS, candidate_queries, index_query, infer_categories,
+    matches, normalize,
     offer_match, power_bank_query, subject_for,
 )
 from nv_research_safety import gtin, recent_alerts
@@ -619,6 +620,9 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     fetch = fetch or requests.get
     name, language, _ = COUNTRIES[country]
     selected = categories if category == ALL_PRODUCTS else {category: categories[category]}
+    inferred = tuple(slug for slug in infer_categories(term) if slug in categories) if category == ALL_PRODUCTS else ()
+    if inferred:
+        selected = {slug: categories[slug] for slug in inferred}
     from_catalogues = "Productcatalogi" in platforms and mode != "news"
     product_mode = mode in PRODUCT_MODES
     trade_mode = from_catalogues and mode != "dropship" and (product_mode or supplier_filter != "dropship")
@@ -726,6 +730,10 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         "products": products, "suppliers": suppliers, "news": news, "trends": trends,
         "supplier_products": sum(company["product_count"] for company in suppliers),
         "topic": topic,
+        "interpretation": {"queries": candidate_queries(term), "categories": [categories[s] for s in selected],
+                           "automatic": bool(inferred)},
+        "all_sources_failed": bool(sources) and bool(unavailable) and not products and not suppliers
+                              and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,
         "sources_checked": sorted(set(names.values())),
