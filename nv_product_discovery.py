@@ -522,6 +522,39 @@ def supplier_role(company):
     return "Leverancier"
 
 
+EU_WAREHOUSES = {
+    "austria", "belgium", "bulgaria", "croatia", "cyprus", "czech republic", "czechia", "denmark", "estonia",
+    "finland", "france", "germany", "greece", "hungary", "ireland", "italy", "latvia", "lithuania", "luxembourg",
+    "malta", "netherlands", "poland", "portugal", "romania", "slovakia", "slovenia", "spain", "sweden",
+}
+
+
+def logistics(company):
+    """Magazijn en aandachtspunten uitsluitend uit bevestigde productgegevens; geen kosten of levertijden verzinnen."""
+    values = {}
+    for item in company["products"].values():
+        value = str(item.get("warehouse") or "").strip()
+        if value and value != UNKNOWN:
+            values.setdefault(value, "eu" if value.casefold() in EU_WAREHOUSES else "international")
+    lead = next((str(item["lead_time"]) for item in company["products"].values()
+                 if item.get("lead_time") and item["lead_time"] != UNKNOWN), None)
+    if not values:
+        return {"warehouse_label": None, "warehouse_region": "unknown", "lead_time_note": lead,
+                "logistics_notes": ["Magazijnland niet bevestigd: levertijd, invoerrechten en btw zijn onbekend en "
+                                    "moeten bij de leverancier worden nagevraagd."]}
+    outside = [name for name, region in values.items() if region == "international"]
+    inside = [name for name, region in values.items() if region == "eu"]
+    notes = []
+    if outside:
+        notes.append("Magazijn buiten de EU (" + ", ".join(outside) + "): invoerrechten, btw-afhandeling en extra "
+                     "levertijd kunnen gelden. Bedragen en termijnen zijn niet bevestigd.")
+    if inside:
+        notes.append("Magazijn binnen de EU (" + ", ".join(inside) + "): controleer levertijd, retourvoorwaarden "
+                     "en btw-afhandeling bij de leverancier. Bedragen en termijnen zijn niet bevestigd.")
+    return {"warehouse_label": ", ".join(values), "warehouse_region": "international" if outside else "eu",
+            "lead_time_note": lead, "logistics_notes": notes}
+
+
 def unique_suppliers(offers, supplier_filter):
     companies = {}
     for profile, item in offers:
@@ -557,6 +590,7 @@ def unique_suppliers(offers, supplier_filter):
         if supplier_filter == "trade" and company["business"] is not True:
             continue
         company["origin_name"] = ORIGINS.get(company["origin"], UNKNOWN)
+        company.update(logistics(company))
         company["role"] = supplier_role(company)
         company["product_count"] = len(company["products"])
         company["products"] = sorted(company["products"].values(),
@@ -608,6 +642,25 @@ def source_error(error):
     if isinstance(error, requests.RequestException):
         return "verbindingsfout"
     return "onverwacht of onbruikbaar bronantwoord"
+
+
+SYNCEE_BACKGROUND = 28  # seconden eigen budget van de Syncee-taak; de pagina wacht daar niet op
+SOURCE_WINDOW = 12  # seconden die een zoekopdracht maximaal op bronnen wacht
+_SYNCEE_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="syncee")
+
+
+def run_syncee(fetch, query, country, selected, term, alternates, budget):
+    attempts = []
+    results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, category_matches,
+                              term=term, product_matches=product_matches, attempts=attempts,
+                              alternates=alternates, deadline=monotonic() + budget)
+    return results, attempts
+
+
+def start_syncee(fetch, query, country, selected, term, alternates):
+    key = ("syncee", query, country, tuple(sorted(selected)), tuple(alternates), term)
+    return nv_source_guard.job(key, lambda: _SYNCEE_POOL.submit(
+        run_syncee, fetch, query, country, selected, term, alternates, SYNCEE_BACKGROUND))
 
 
 def collect(future, errors, source):
@@ -663,10 +716,10 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         dropship_mode = False
     sources = catalogue_sources(selected, country, product_mode) if trade_mode else []
     topic = article_query(term) if term else SEEDS.get(category, "")
-    errors, attempts, names = [], [], {}
+    errors, attempts, names, pending = [], [], {}, []
     pool = ThreadPoolExecutor(max_workers=32)
     started = monotonic()
-    source_deadline = started + 12
+    source_deadline = started + SOURCE_WINDOW
 
     def submit(name, function, *args, **kwargs):
         task = pool.submit(function, *args, **kwargs)
@@ -682,11 +735,11 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         hurtel_task = (submit("Hurtel", hurtel_products, fetch, term, country, selected, SEEDS, read_source,
                                    index_query, product_matches, category_matches)
                        if trade_mode and selected.keys() & {"gadgets", "smart-home"} else None)
-        dropship_task = (submit("Syncee", syncee_products, fetch, index_query(term) if term else SEEDS[category],
-                                     country, selected, SEEDS, read_source, matches, category_matches,
-                                     term=term, product_matches=product_matches,
-                                     attempts=attempts, alternates=candidate_queries(term), deadline=source_deadline)
+        dropship_task = (start_syncee(fetch, index_query(term) if term else SEEDS[category], country, selected,
+                                      term, candidate_queries(term))
                          if dropship_mode else None)
+        if dropship_task:
+            names[dropship_task] = "Syncee"
         readers = [("TechRadar", publication_candidates)]
         if selected.keys() & {"gadgets", "smart-home"}:
             readers.extend((("9to5Mac", rss_publications), ("Android Central", android_publications)))
@@ -714,8 +767,16 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                 listings = collect(task, errors, names[task])
                 offers.extend(listings)
                 products.extend({**item, "source": profile["name"], "image": ""} for profile, item in listings)
+
         if dropship_task:
-            offers.extend(collect(dropship_task, errors, names[dropship_task]))
+            if dropship_task.done():
+                found = collect(dropship_task, errors, "Syncee")
+                if found:
+                    offers.extend(found[0])
+                    attempts.extend(found[1])
+            else:
+                # Syncee loopt door op de achtergrond; de pagina wacht er niet langer op en ververst zichzelf.
+                pending.append("Syncee")
             offers.extend(cj_reference(term, selected, matches))
         articles = [item for task in news_tasks for item in collect(task, errors, names[task])]
         codes = {item["gtin"] for item in products if item.get("gtin")} | {
@@ -771,6 +832,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         "all_sources_failed": bool(sources) and bool(unavailable) and not products and not suppliers
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
+        "pending_sources": pending,
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,
         "unavailable_reasons": reasons,
         "sources_checked": sorted(set(names.values())),

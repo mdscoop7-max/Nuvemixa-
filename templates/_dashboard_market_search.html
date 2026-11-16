@@ -1,3 +1,4 @@
+{% from '_supplier_logistics.html' import logistics, pending_notice %}
 {% set m = market_search %}
 {% set viral_page = m.kind == 'viral' %}
 {% macro dropship_badge(value) %}<span class="nv-badge {{ 'ok' if value == 'Bevestigd' else '' }}">Dropshipping: {{ value }}</span>{% endmacro %}
@@ -11,7 +12,7 @@
   <div><strong>Verzending naar {{ m.country_name }}</strong> {{ company.shipping }}</div>
   {% if m.form.country != 'NL' %}<div><strong>Verzending naar Nederland</strong> {{ company.shipping_nl or 'Niet bevestigd' }}</div>{% endif %}
   <div><strong>Minimumafname</strong> {{ company.minimum }} · <strong>Inkoopprijs</strong> {{ company.purchase_price }}</div>
-  {% if company.region == 'international' %}<p class="nv-supplier-context">Controleer vertrekmagazijn, invoerrechten, btw en levertijd.</p>{% endif %}
+  {{ logistics(company) }}
   <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
   <details><summary>{{ company.product_count }} product{{ 'en' if company.product_count != 1 }} en bronnen</summary>
     <ul class="nv-research-articles">
@@ -82,7 +83,8 @@
   <div id="nv-market-results" aria-live="polite">
     <h3>{{ m.form.q }} · {{ m.country_name }}</h3>
     {% if m.all_failed %}<p class="notice" role="alert"><strong>Externe bronnen niet bereikbaar.</strong> Er is niets doorzocht dat resultaten kon geven; dit is geen bewijs dat het product niet bestaat. Probeer het later opnieuw.</p>{% endif %}
-    {% if m.interpretation %}<p class="nv-market-note"><strong>Zo zoekt NUVEMIXA:</strong> {{ m.interpretation.queries|join(' · ') }}{% if m.interpretation.categories %} — categorie{{ 'ën' if m.interpretation.categories|length > 1 }}: {{ m.interpretation.categories|join(', ') }}{% if m.interpretation.automatic %} (automatisch herkend){% endif %}{% endif %}</p>{% endif %}
+    {{ pending_notice(m.pending_sources) }}
+{% if m.interpretation %}<p class="nv-market-note"><strong>Zo zoekt NUVEMIXA:</strong> {{ m.interpretation.queries|join(' · ') }}{% if m.interpretation.categories %} — categorie{{ 'ën' if m.interpretation.categories|length > 1 }}: {{ m.interpretation.categories|join(', ') }}{% if m.interpretation.automatic %} (automatisch herkend){% endif %}{% endif %}</p>{% endif %}
     {% if m.unavailable %}<p class="notice">Niet volledig beschikbaar: {% for name in m.unavailable %}{{ name }}{% if m.unavailable_reasons.get(name) %} ({{ m.unavailable_reasons[name] }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
     {% if m.sources_checked %}<p><small>Geraadpleegd: {{ m.sources_checked|join(', ') }}.</small></p>{% endif %}
     {% if viral_page %}
