@@ -155,11 +155,12 @@ def test_unknown_product_searches_everything_and_reports_failures():
     assert r["source_unavailable"] and r["all_failed" if False else "all_sources_failed"]
 
 
-def _http_error(code):
+def _http_error(code, retry_after=None):
     import requests
     class Bad(Response):
         def __init__(self):
             super().__init__(b"", code)
+            self.headers = {"Retry-After": str(retry_after)} if retry_after is not None else {}
         def raise_for_status(self):
             error = requests.HTTPError(f"{code}")
             error.response = self
@@ -167,20 +168,101 @@ def _http_error(code):
     return Bad()
 
 
-def test_read_source_retries_once_on_429_then_succeeds():
-    from nv_product_discovery import read_source, USER_AGENT
-    answers = [_http_error(429), Response(b"ok")]
+def test_read_source_retries_once_on_short_retry_after_then_succeeds(monkeypatch):
+    import nv_product_discovery as npd
+    monkeypatch.setattr(npd.time, "sleep", lambda s: None)
+    answers = [_http_error(429, 1), Response(b"ok")]
     fetch = Mock(side_effect=lambda *a, **k: answers.pop(0))
-    assert read_source(fetch, "https://x.example/a", {}, retry_pause=0) == b"ok"
-    assert fetch.call_count == 2 and fetch.call_args.kwargs["headers"]["User-Agent"] == USER_AGENT
-    assert "NUVEMIXA" in USER_AGENT and "+https://" in USER_AGENT
+    assert npd.read_source(fetch, "https://x.example/a", {}) == b"ok"
+    assert fetch.call_count == 2 and fetch.call_args.kwargs["headers"]["User-Agent"] == npd.USER_AGENT
+    assert "NUVEMIXA" in npd.USER_AGENT and "+https://" in npd.USER_AGENT
 
 
-def test_read_source_gives_up_after_second_429_and_explains():
+def test_429_without_retry_after_pauses_source_and_sends_no_more_requests():
     import requests
     from nv_product_discovery import read_source, source_error
     fetch = Mock(side_effect=lambda *a, **k: _http_error(429))
     with pytest.raises(requests.HTTPError) as caught:
-        read_source(fetch, "https://x.example/a", {}, retry_pause=0)
-    assert fetch.call_count == 2
-    assert "HTTP 429" in source_error(caught.value) and "blokkeert" in source_error(caught.value)
+        read_source(fetch, "https://x.example/a", {})
+    assert fetch.call_count == 1
+    assert "HTTP 429" in source_error(caught.value)
+    with pytest.raises(requests.RequestException) as paused:
+        read_source(fetch, "https://x.example/b", {})
+    assert fetch.call_count == 1  # geen nieuw verzoek tijdens de pauze
+    assert "gepauzeerd" in source_error(paused.value) and "HTTP 429" in source_error(paused.value)
+
+
+def test_403_pauses_source_without_retry():
+    import requests
+    from nv_product_discovery import read_source
+    fetch = Mock(side_effect=lambda *a, **k: _http_error(403))
+    with pytest.raises(requests.HTTPError):
+        read_source(fetch, "https://blocked.example/a", {})
+    with pytest.raises(requests.RequestException):
+        read_source(fetch, "https://blocked.example/b", {})
+    assert fetch.call_count == 1
+    # een andere bron wordt niet geraakt
+    other = Mock(side_effect=lambda *a, **k: Response(b"ok"))
+    assert read_source(other, "https://other.example/a", {}) == b"ok"
+
+
+def test_same_request_is_cached_across_modules():
+    from nv_product_discovery import read_source
+    fetch = Mock(side_effect=lambda *a, **k: Response(b"data"))
+    assert read_source(fetch, "https://c.example/a", {"q": "x"}) == b"data"
+    assert read_source(fetch, "https://c.example/a", {"q": "x"}) == b"data"
+    assert fetch.call_count == 1
+
+
+def test_concurrent_identical_requests_share_one_fetch():
+    import threading, time
+    from nv_product_discovery import read_source
+    calls = []
+    def fetch(*a, **k):
+        calls.append(1)
+        time.sleep(0.2)
+        return Response(b"data")
+    out = []
+    threads = [threading.Thread(target=lambda: out.append(read_source(fetch, "https://s.example/a", {}))) for _ in range(6)]
+    [t.start() for t in threads]; [t.join() for t in threads]
+    assert out == [b"data"] * 6 and len(calls) == 1
+
+
+def test_per_host_concurrency_is_limited():
+    import threading, time
+    from nv_product_discovery import read_source
+    active, peak, lock = [0], [0], threading.Lock()
+    def fetch(*a, **k):
+        with lock:
+            active[0] += 1; peak[0] = max(peak[0], active[0])
+        time.sleep(0.05)
+        with lock:
+            active[0] -= 1
+        return Response(b"x")
+    threads = [threading.Thread(target=lambda i=i: read_source(fetch, f"https://h.example/{i}", {})) for i in range(10)]
+    [t.start() for t in threads]; [t.join() for t in threads]
+    assert peak[0] <= 2
+
+
+def test_failed_responses_are_not_cached():
+    from nv_product_discovery import read_source
+    answers = [OSError("boom"), Response(b"ok")]
+    def fetch(*a, **k):
+        a = answers.pop(0)
+        if isinstance(a, Exception):
+            raise a
+        return a
+    with pytest.raises(OSError):
+        read_source(fetch, "https://f.example/a", {})
+    assert read_source(fetch, "https://f.example/a", {}) == b"ok"
+
+
+def test_same_product_gives_same_products_in_all_three_modules():
+    """AI Productonderzoek, Viral en Internationaal gebruiken één zoekmotor en één gedeelde bronlaag."""
+    fetch = store_fetch(*POWERBANK)
+    direct = discover("Magnetic Power Bank 10000mAh USB-C", categories=CATEGORIES, mode="product",
+                      platforms=["Productcatalogi"], fetch=fetch, category="gadgets")
+    viral = view("viral", fetch, mq="Magnetic Power Bank 10000mAh USB-C", mcat="gadgets", mbron="products")
+    intl = view("internationaal", fetch, mq="Magnetic Power Bank 10000mAh USB-C", mcat="gadgets")
+    names = lambda r: sorted({p.get("title") or p.get("name") for p in r["products"]})
+    assert names(direct) and names(direct) == names(viral) == names(intl)

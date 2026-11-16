@@ -1,5 +1,6 @@
 """Public research adapters. Each result retains the source that supports it."""
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
+from functools import partial
 from datetime import date
 from email.utils import parsedate_to_datetime
 from html import unescape
@@ -227,7 +228,7 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
             break
         attempt = {"source": "Syncee", "query": variant, "raw": None}
         result = syncee_search(fetch, variant, country, categories, seeds, read, matches, relevant,
-                               term, product_matches, attempt)
+                               term, product_matches, attempt, deadline=deadline)
         if attempts is not None:
             attempts.append(attempt)
         if result:
@@ -236,8 +237,11 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
 
 
 def syncee_search(fetch, query, country, categories, seeds, read, matches, relevant,
-                  term, product_matches, attempt):
+                  term, product_matches, attempt, deadline=None):
     candidates = {}
+    if deadline is not None:
+        # De bron mag nooit langer duren dan de zoekopdracht zelf: lees binnen dezelfde tijdslimiet.
+        read = partial(read, deadline=deadline)
 
     # Syncee canonicalizes spaces to %20 and drops unrecognized shipping parameters.
     # The public listing does not establish shipping for an individual product.
@@ -282,9 +286,17 @@ def syncee_search(fetch, query, country, categories, seeds, read, matches, relev
     if not selected:
         attempt["exact"] = 0
         return results
-    with ThreadPoolExecutor(max_workers=8) as pool:
-        details = pool.map(lambda offer: syncee_product_details(fetch, offer[1]["url"], country, read,
-                                                                 include_description=True), selected)
+    # Maximaal 4 gelijktijdige detailverzoeken (sluit aan op de limiet per bron); wat niet op tijd
+    # binnen is, blijft "onbevestigd" in plaats van de zoekopdracht te vertragen.
+    pool = ThreadPoolExecutor(max_workers=4)
+    try:
+        futures = [pool.submit(syncee_product_details, fetch, offer[1]["url"], country, read,
+                               include_description=True) for offer in selected]
+        wait(futures, timeout=None if deadline is None else max(0.5, deadline - monotonic()))
+        details = [future.result() if future.done() and not future.exception() else {} for future in futures]
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+    if True:
         for (profile, product), data in zip(selected, details):
             description = data.pop("_description", "")
             if (data.get("shipping") != "Niet beschikbaar voor dit doelland"

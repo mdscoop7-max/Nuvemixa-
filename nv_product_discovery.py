@@ -7,6 +7,8 @@ import json
 import re
 import time
 from time import monotonic
+
+import nv_source_guard
 from urllib.parse import quote, unquote, urlsplit
 import xml.etree.ElementTree as ET
 
@@ -219,26 +221,35 @@ def research_links(term, platforms, country, language):
 
 
 USER_AGENT = "Mozilla/5.0 (compatible; NUVEMIXA-Research/1.0; +https://trendmix.onrender.com)"
+MAX_RETRY_WAIT = 3.0
 
 
-def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadline=None, retry_pause=1.5):
+def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadline=None, limit=7):
     """Bound untrusted responses and prevent a provider redirect from changing host.
 
-    Bij HTTP 429 of 503 wordt één keer opnieuw geprobeerd (korte pauze, binnen de tijdslimiet).
+    Antwoorden worden 10 minuten gedeeld (nv_source_guard). Bij HTTP 429/503 wordt alleen opnieuw
+    geprobeerd als de bron een korte Retry-After meegeeft; bij 403/429 wordt de bron gepauzeerd.
     """
+    host = urlsplit(url).netloc
+    key = (url, tuple(sorted((params or {}).items())), language, max_bytes)
+    return nv_source_guard.shared(key, lambda: _download(fetch, url, params, host, max_bytes, language, deadline, limit))
+
+
+def _download(fetch, url, params, host, max_bytes, language, deadline, limit):
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json, text/html;q=0.9, */*;q=0.5"}
     if language:
         headers["Accept-Language"] = language
     for attempt in (1, 2):
+        nv_source_guard.check(host)
         now = monotonic()
-        expires = min(now + 7, deadline) if deadline is not None else now + 7
+        expires = min(now + limit, deadline) if deadline is not None else now + limit
         budget = expires - now
         if budget <= 0:
             raise requests.Timeout("Research deadline reached")
-        timeout = (min(3, budget * .4), min(5, budget * .6)) if deadline is not None else (3, 5)
+        timeout = (min(3, budget * .4), min(5, budget * .6)) if deadline is not None else (3, min(5, budget))
         try:
-            with fetch(url, params=params, timeout=timeout, allow_redirects=False, stream=True,
-                       headers=headers) as response:
+            with nv_source_guard.slot(host), fetch(url, params=params, timeout=timeout, allow_redirects=False,
+                                                    stream=True, headers=headers) as response:
                 response.raise_for_status()
                 if response.status_code != 200:
                     raise ValueError("Unexpected source status")
@@ -252,9 +263,13 @@ def read_source(fetch, url, params, *, max_bytes=768_000, language=None, deadlin
                 return bytes(content)
         except requests.HTTPError as error:
             status = getattr(error.response, "status_code", None)
-            if attempt == 2 or status not in (429, 503) or budget < retry_pause + 2:
-                raise
-            time.sleep(retry_pause)
+            wait_for = nv_source_guard.retry_after(error)
+            if (attempt == 1 and status in (429, 503) and wait_for is not None and wait_for <= MAX_RETRY_WAIT
+                    and budget > wait_for + 2):
+                time.sleep(wait_for)
+                continue
+            nv_source_guard.block(host, status, wait_for)
+            raise
 
 
 def catalogue_items(source, term, mode, fetch, attempts, deadline):
@@ -582,6 +597,8 @@ SOURCE_ERRORS = (requests.RequestException, ET.ParseError, ValueError, KeyError,
 
 
 def source_error(error):
+    if isinstance(error, nv_source_guard.SourceBlocked):
+        return str(error)
     response = getattr(error, "response", None)
     if response is not None:
         code = response.status_code

@@ -11,6 +11,8 @@ on:
       - 'nv_product_margin.py'
       - 'app.py'
       - 'nv_market_search.py'
+      - 'nv_source_guard.py'
+      - 'tests/conftest.py'
       - 'nv_webshop_visits.py'
       - 'nv_dashboard_postgres.sql'
       - 'static/nv-webshop-visit.js'
@@ -33,6 +35,8 @@ on:
       - 'nv_product_margin.py'
       - 'app.py'
       - 'nv_market_search.py'
+      - 'nv_source_guard.py'
+      - 'tests/conftest.py'
       - 'nv_webshop_visits.py'
       - 'nv_dashboard_postgres.sql'
       - 'static/nv-webshop-visit.js'
@@ -64,7 +68,7 @@ jobs:
       - name: Install runtime dependencies
         run: python -m pip install -r requirements.txt pytest
       - name: Check Python syntax
-        run: python -m compileall -q app.py nv_market_search.py nv_webshop_visits.py nv_product_discovery.py nv_research_sources.py nv_research_assessment.py nv_research_identity.py nv_research_intent.py nv_research_safety.py nv_product_margin.py
+        run: python -m compileall -q app.py nv_source_guard.py nv_market_search.py nv_webshop_visits.py nv_product_discovery.py nv_research_sources.py nv_research_assessment.py nv_research_identity.py nv_research_intent.py nv_research_safety.py nv_product_margin.py
       - name: Dashboard and Productonderzoek regression tests
         env:
           NUVEMIXA_TEST_POSTGRES_DSN: postgresql://postgres:fixture-only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?sslmode=disable
