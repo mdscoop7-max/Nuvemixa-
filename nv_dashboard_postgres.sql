@@ -10,6 +10,16 @@ CREATE TABLE IF NOT EXISTS nuvemixa_dashboard.storefront_visits (
     PRIMARY KEY (traffic, day, marker)
 );
 
+CREATE TABLE IF NOT EXISTS nuvemixa_dashboard.webshop_daily_visitors (
+    day text NOT NULL,
+    visitor text NOT NULL,
+    first_seen text NOT NULL,
+    pageviews integer NOT NULL DEFAULT 0,
+    last_path text NOT NULL DEFAULT '',
+    last_at text NOT NULL DEFAULT '',
+    PRIMARY KEY (day, visitor)
+);
+
 CREATE TABLE IF NOT EXISTS nuvemixa_dashboard.product_dossier_offers (
     candidate_id bigint NOT NULL, market text NOT NULL, payload text NOT NULL,
     PRIMARY KEY (candidate_id, market)

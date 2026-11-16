@@ -761,7 +761,7 @@ def verify_form_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
 
-    if request.endpoint == "trendmix_assistant":
+    if request.endpoint in ("trendmix_assistant", "webshop_visits.webshop_visit"):
         return
 
     origin = request.headers.get("Origin")
@@ -1194,13 +1194,16 @@ from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_c
 from nv_seo_scan import last_scan
 from nv_permissions import RIGHTS, SECTIONS, account_rights, allowed
 from nv_visits import record_visit, visit_summary
+from nv_webshop_visits import bp as webshop_visits_bp, summary as webshop_visit_summary
 from nv_system_check import check_customers, scan as run_system_scan
 from nv_merchant_audit import audit as merchant_audit
 from nv_international import dashboard_market
 from nv_supplier_finder import directories as supplier_directories
 from nv_viral_research import viral_dashboard
+from nv_market_search import search_view as market_search_view
 
 app.after_request(record_visit)
+app.register_blueprint(webshop_visits_bp)
 
 app.register_blueprint(management_blueprint)
 
@@ -2253,7 +2256,7 @@ def control():
 
         research_categories = {slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}
         research_category = request.args.get("research_category", ALL_PRODUCTS)
-        research_mode = request.args.get("research_mode", "trends")
+        research_mode = request.args.get("research_mode", "products")
         research_country = request.args.get("research_country", "NL")
         research_platforms = [
             "Publicaties" if value == "Bing" else value for value in request.args.getlist("research_platform")
@@ -2333,6 +2336,10 @@ def control():
         view_template,
         market_research=dashboard_market() if section == "internationaal" else None,
         viral=viral_dashboard() if section == "viral" else None,
+        market_search=(market_search_view(
+            "viral" if section == "viral" else "internationaal",
+            {slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}, request.args,
+        ) if section in {"viral", "internationaal"} else None),
 
         products=featured_products,
 
@@ -2403,6 +2410,7 @@ def control():
         monitoring_probes=("WooCommerce", "Betalingen") if section == "monitoring" and read_configuration_present()
                           else ("Betalingen",),
         visitor_stats=visit_summary() if section in {"statistieken", "monitoring"} else None,
+        webshop_stats=webshop_visit_summary() if section in {"statistieken", "monitoring"} else None,
         allowed=allowed,
         rights_labels=RIGHTS,
         account_rights=account_rights,

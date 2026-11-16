@@ -1,4 +1,6 @@
 {% set r = market_research %}
+{% if market_search %}{% include "_dashboard_market_search.html" %}{% endif %}
+<details class="panel nv-manual-block"><summary><strong>Handmatig onderzoek met voorbeeldproducten</strong></summary>
 {% set country, currency, locale, phase = r.markets[r.market] %}
 {% set planned_domain = 'NUVEMIXA.nl' if r.market in ('NL','BE','DE','FR','ES') else 'NUVEMIXA.com' %}
 <p>Gepland verkoopdomein voor {{ country }} · {{ planned_domain }}</p>
@@ -72,3 +74,5 @@
   </form>
   {% endif %}
 </section>
+
+</details>
