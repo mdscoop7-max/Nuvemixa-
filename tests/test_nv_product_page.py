@@ -17,6 +17,8 @@ class ProductResearchPageTests(unittest.TestCase):
 
     def test_form_choices_and_rendered_results(self):
         def fetch(url, **kwargs):
+            if url.startswith("https://syncee.com/collections/"):
+                return Response()
             self.assertIn(url, {
                 "https://eu.switch-bot.com/search/suggest.json", "https://eu.eufy.com/search/suggest.json",
             })
@@ -25,7 +27,7 @@ class ProductResearchPageTests(unittest.TestCase):
         query = {
             "section": "onderzoek", "research_run": "1", "research_category": "smart-home",
             "research_mode": "niche", "research_country": "BE", "research_term": "lamp",
-            "research_platform": "Productcatalogi",
+            "research_platform": "Productcatalogi", "research_supplier_filter": "international",
         }
         with patch("app.admin_is_authenticated", return_value=True), patch("nv_product_discovery.requests.get", fetch):
             client = app.test_client()
@@ -39,7 +41,10 @@ class ProductResearchPageTests(unittest.TestCase):
         self.assertIn('value="smart-home" selected', form)
         self.assertIn('value="BE" selected', html)
         self.assertIn('value="niche" selected', html)
-        for label in ("Trends en nichekansen", "Direct nicheproducten zoeken", "Specifiek product zoeken", "Leveranciers zoeken"):
+        self.assertIn('value="international" selected', html)
+        for label in ("Producten zoeken", "Trends en nichekansen", "Direct nicheproducten zoeken", "Specifiek product zoeken",
+                      "Leveranciers zoeken", "Dropshippingpartners zoeken", "Groothandels en fabrikanten zoeken",
+                      "Nieuws en productreviews zoeken"):
             self.assertIn(label, html)
         for label in ("Productresultaten", "Trends &amp; inzichten", "Leveranciers", "Nieuws &amp; reviews"):
             self.assertIn(label, html)
@@ -55,6 +60,26 @@ class ProductResearchPageTests(unittest.TestCase):
             margin = client.get("/dashboard?section=onderzoek&margin_run=1&purchase_cost=12.50")
             self.assertEqual(margin.status_code, 200)
             self.assertIn("Adviesverkoopprijs incl. btw", margin.get_data(as_text=True))
+
+
+    def test_topbar_search_routes_to_existing_management_catalogue(self):
+        from app import load_all_products
+
+        name = load_all_products()[0]["name"]
+        with patch("app.admin_is_authenticated", return_value=True), patch("app.allowed", return_value=True), patch(
+            "nv_product_discovery.requests.get"
+        ) as fetch:
+            client = app.test_client()
+            research = client.get("/dashboard?section=onderzoek").get_data(as_text=True)
+            search = client.get("/dashboard", query_string={"section": "producten", "q": name})
+        topbar = research.split('class="top-search"', 1)[1].split("</form>", 1)[0]
+        self.assertIn('name="section" value="producten"', topbar)
+        self.assertIn('type="submit"', topbar)
+        self.assertNotIn("research_term", topbar)
+        self.assertEqual(search.status_code, 200)
+        self.assertIn("Bekijk productpagina", search.get_data(as_text=True))
+        self.assertIn('<details class="panel-after" open>', search.get_data(as_text=True))
+        fetch.assert_not_called()
 
 
 if __name__ == "__main__":

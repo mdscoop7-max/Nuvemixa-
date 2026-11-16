@@ -2249,13 +2249,16 @@ def control():
     product_discovery = None
     research_options = {}
     if section == "onderzoek":
-        from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, MODES, PLATFORMS, discover
+        from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, discover
 
         research_categories = {slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}
         research_category = request.args.get("research_category", ALL_PRODUCTS)
         research_mode = request.args.get("research_mode", "trends")
         research_country = request.args.get("research_country", "NL")
-        research_platforms = request.args.getlist("research_platform")
+        research_platforms = [
+            "Publicaties" if value == "Bing" else value for value in request.args.getlist("research_platform")
+        ]
+        research_filter = request.args.get("research_supplier_filter", "all")
         research_options = {
             "categories": {**research_categories, ALL_PRODUCTS: "All products"},
             "countries": COUNTRIES,
@@ -2266,11 +2269,14 @@ def control():
             "country": research_country,
             "mode": research_mode,
             "empty_message": EMPTY_RESULTS,
+            "supplier_filters": FILTERS,
+            "supplier_filter": research_filter,
         }
         if request.args.get("research_run") == "1":
             product_discovery = discover(
                 request.args.get("research_term", ""), country=research_country, mode=research_mode,
                 platforms=research_platforms, category=research_category, categories=research_categories,
+                supplier_filter=research_filter,
             )
 
 
