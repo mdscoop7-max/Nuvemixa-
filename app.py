@@ -2348,6 +2348,7 @@ def control():
 
         research_error=research_error,
         product_discovery=product_discovery,
+        product_research_countries=__import__("nv_product_discovery").COUNTRIES if section == "onderzoek" else {},
 
         order_rows=order_rows,
 
