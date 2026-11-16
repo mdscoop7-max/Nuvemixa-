@@ -19,20 +19,21 @@ class StoragePathTests(unittest.TestCase):
             self.assertEqual(nv_storage_paths.two_fa_directory(), nv_storage_paths.BASE_DIR)
 
     def test_data_directory_sets_independent_defaults(self):
-        with patch.dict(os.environ, {"NUVEMIXA_DATA_DIR": r"C:\test-data"}, clear=True):
+        data_dir = Path.cwd() / "test-data"
+        with patch.dict(os.environ, {"NUVEMIXA_DATA_DIR": str(data_dir)}, clear=True):
             self.assertEqual(
                 nv_storage_paths.database_path("CUSTOMER_DB", "nuvemixa_customers.sqlite3"),
-                Path(r"C:\test-data") / "nuvemixa_customers.sqlite3",
+                data_dir / "nuvemixa_customers.sqlite3",
             )
             self.assertEqual(
                 nv_storage_paths.database_path("DASHBOARD_DB", "nuvemixa_dashboard.sqlite3"),
-                Path(r"C:\test-data") / "nuvemixa_dashboard.sqlite3",
+                data_dir / "nuvemixa_dashboard.sqlite3",
             )
             self.assertEqual(
                 nv_storage_paths.database_path("ADMIN_DB", "nuvemixa_admin.sqlite3"),
-                Path(r"C:\test-data") / "nuvemixa_admin.sqlite3",
+                data_dir / "nuvemixa_admin.sqlite3",
             )
-            self.assertEqual(nv_storage_paths.two_fa_directory(), Path(r"C:\test-data"))
+            self.assertEqual(nv_storage_paths.two_fa_directory(), data_dir)
 
     def test_explicit_and_legacy_database_paths_are_honored(self):
         with patch.dict(
