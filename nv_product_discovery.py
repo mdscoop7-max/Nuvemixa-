@@ -53,7 +53,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None):
     if not term:
         return {"error": "Vul een product, niche of zoekterm in.", "items": []}
     country = country if country in COUNTRIES else "NL"
-    platforms = [p for p in (platforms or PLATFORMS) if p in PLATFORMS]
+    platforms = [p for p in (PLATFORMS if platforms is None else platforms) if p in PLATFORMS]
     if not platforms:
         return {"error": "Selecteer minimaal één platform.", "items": []}
     name, language, region = COUNTRIES[country]
