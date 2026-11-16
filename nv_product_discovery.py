@@ -1,10 +1,10 @@
-"""Live, source-linked product discovery signals for the existing NUVEMIXA dashboard.
-
-A news mention is NOT a verified trend, sales volume, profit estimate or supplier.
-No social-network scraping and no invented numbers.
-"""
-from datetime import datetime, timezone
-from urllib.parse import urlencode
+"""Product and editorial research using first-party catalogues and screened RSS."""
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+import json
+import re
+import unicodedata
+from urllib.parse import quote, unquote, urlsplit
 import xml.etree.ElementTree as ET
 
 import requests
@@ -54,95 +54,247 @@ COUNTRIES = {
     "AE": ("Verenigde Arabische Emiraten", "en", "AE"),
     "TR": ("Turkije", "tr", "TR"),
 }
-PLATFORMS = ("Google", "TikTok", "Instagram", "Facebook")
-EU_COUNTRIES = {"NL", "BE", "DE", "FR", "ES", "IT", "PL", "AT", "PT", "IE", "SE", "DK", "FI", "CZ", "SK", "HU", "RO", "BG", "GR", "HR", "SI", "LT", "LV", "EE", "LU", "MT", "CY"}
-# Discovery destinations, not verified supplier matches or inventory.
-SUPPLIER_DIRECTORIES = (
-    ("BigBuy", "https://www.bigbuy.eu/"),
-    ("Syncee", "https://syncee.com/"),
-    ("Spocket", "https://www.spocket.co/"),
+
+PLATFORMS = ("Productcatalogi", "Bing", "Google", "TikTok", "Instagram", "Facebook")
+MODES = {
+    "trends": "Trends en nichekansen",
+    "niche": "Direct nicheproducten zoeken",
+    "product": "Specifiek product zoeken",
+    "suppliers": "Leveranciers zoeken",
+}
+ALL_PRODUCTS = "shop"
+EMPTY_RESULTS = "Geen betrouwbare, relevante productresultaten gevonden."
+EU = frozenset("NL BE DE FR ES IT PL AT PT IE SE DK FI CZ SK HU RO BG GR HR SI LT LV EE LU MT CY".split())
+
+
+@dataclass(frozen=True)
+class Catalogue:
+    name: str
+    host: str
+    category: str
+    countries: frozenset
+    seed: str
+    # Terms from product names/types or URLs that establish the webshop category.
+    category_terms: str
+    trade_url: str = ""
+
+
+CATALOGUES = (
+    # Market coverage follows each provider's shipping policy. Item-level shipping
+    # and trade availability still depend on the supplier's terms.
+    Catalogue("UGREEN", "eu.ugreen.com", "gadgets", EU - {"CY", "LT", "MT"}, "power bank",
+              r"power ?bank|charger|oplader|usb|laptop stand|charging",
+              "https://www.ugreen.com/pages/wholesale-program"),
+    Catalogue("UGREEN", "us.ugreen.com", "gadgets", frozenset({"US"}), "power bank",
+              r"power ?bank|charger|usb|laptop stand|charging",
+              "https://www.ugreen.com/pages/wholesale-program"),
+    Catalogue("SwitchBot", "eu.switch-bot.com", "smart-home", frozenset("NL BE DE FR ES IT AT".split()),
+              "smart home", r"smart|wifi|zigbee|matter|curtain|gordijn|hub|sensor|lighting|rgbicww|door lock"),
+    Catalogue("eufy", "eu.eufy.com", "smart-home", frozenset("NL BE DE FR ES IT AT".split()),
+              "camera", r"camera|eufycam|doorbell|deurbel|robot vacuum|robovac|homebase",
+              "https://www.eufy.com/eu-en/partner-program"),
+    Catalogue("eufy", "us.eufy.com", "smart-home", frozenset({"US"}), "camera",
+              r"camera|eufycam|doorbell|robot vacuum|robovac|homebase",
+              "https://www.eufy.com/business"),
+    Catalogue("Cocunat", "www.cocunat.com", "beauty-care", EU | {"GB", "NO", "CH", "TR"},
+              "serum", r"serum|cream|crème|skincare|shampoo|retinal|mask|face|hair|body|skin"),
+    Catalogue("Ferm Living", "fermliving.com", "home-living",
+              EU | frozenset("AU CA CH IN JP KR NO NZ SG TR ZA AE".split()), "lamp",
+              r"lamp|chair|stoel|sofa|cushion|kussen|vase|vaas|table|tafel|rug|carpet|shelf|lighting",
+              "https://fermliving.com/pages/contact"),
+    Catalogue("Manduka", "eu.manduka.com", "lifestyle-sport", EU | {"NO", "CH"},
+              "yoga mat", r"yoga|mat|bolster|block|towel|handdoek|legging",
+              "https://eu.manduka.com/pages/wholesale-application"),
 )
+# Only editorial paths. Forum posts, internal search, redirects and login paths
+# never qualify as article links.
+PUBLISHERS = {
+    "tweakers.net": r"/(?:nieuws|reviews)/[0-9]+/[a-z0-9-]+\.html",
+    "www.bright.nl": r"/(?:nieuws|reviews)/[0-9]+/[a-z0-9-]+\.html",
+    "www.rtings.com": r"/[a-z0-9-]+/reviews/(?:[a-z0-9-]+/)*[a-z0-9-]+/?",
+    "www.theverge.com": r"/(?:tech|reviews|news)/[0-9]+/[a-z0-9-]+/?",
+}
+UNSAFE = re.compile(
+    r"\b(?:porno?\w*|xxx|nsfw|adult\s+(?:content|video|toy)|sex\s+toy|escort|"
+    r"casino|gambling|sign[ -]?in|log[ -]?in|inloggen|aanmelden|oauth|"
+    r"gift card|cadeaubon|vip membership|shipping protection)\b", re.IGNORECASE,
+)
+ALIASES = {
+    "magnetische": "magnetic", "magnetisch": "magnetic", "draadloze": "wireless",
+    "draadloos": "wireless", "oplader": "charger", "slimme": "smart", "slim": "smart",
+    "gordijn": "curtain", "gordijnen": "curtain", "deurbel": "doorbell",
+    "beveiligingscamera": "security camera", "vloerlamp": "floor lamp",
+    "tafellamp": "table lamp", "stoel": "chair", "kussen": "cushion", "tafel": "table",
+    "vaas": "vase", "yogamat": "yoga mat", "yogamatten": "yoga mat",
+    "rgbicww": "rgbicww smart", "eufycam": "eufycam camera",
+}
+STOP_WORDS = {"a", "de", "een", "en", "for", "het", "in", "met", "the", "van", "voor", "with"}
 
 
-def research_links(term, platforms):
-    from urllib.parse import quote
+def normalize(value):
+    value = unicodedata.normalize("NFKC", value).casefold()
+    value = re.sub(r"(?<=\d)[., ](?=\d{3}\b)", "", value)
+    value = re.sub(r"\bpower[ -]?banks?\b", "power bank", value)
+    value = re.sub(r"(?<=\d)(?=mah\b)", " ", value)
+    words = re.findall(r"[^\W_]+", value)
+    return " ".join(ALIASES.get(word, word) for word in words)
+
+
+def matches(search, evidence):
+    required = set(normalize(search).split()) - STOP_WORDS
+    return bool(required) and required.issubset(normalize(evidence).split())
+
+
+def editorial_match(search, evidence, categories):
+    return matches(search, evidence) and any(
+        re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence))
+        for source in CATALOGUES if source.category in categories
+    )
+
+
+def research_links(term, platforms, country, language):
     q = quote(term, safe="")
     urls = {
-        "Google": "https://www.google.com/search?q=" + q,
+        "Google": f"https://www.google.com/search?safe=active&gl={country}&hl={language}&q={q}",
         "TikTok": "https://www.tiktok.com/search?q=" + q,
-        "Instagram": "https://www.instagram.com/explore/tags/" + quote(term.replace(" ", ""), safe="") + "/",
+        "Instagram": "https://www.instagram.com/explore/tags/" + quote("".join(normalize(term).split()), safe="") + "/",
         "Facebook": "https://www.facebook.com/search/top?q=" + q,
     }
     return [(platform, urls[platform]) for platform in platforms if platform in urls]
 
 
-
-def _public_rss_search(query, fetch, limit=6):
-    """Read public Bing RSS search results. No scraping or inferred metrics."""
-    from urllib.parse import urlparse
-    url = "https://www.bing.com/search?" + urlencode({"q": query, "format": "rss"})
-    try:
-        response = fetch(url, timeout=5, headers={"User-Agent": "Mozilla/5.0 NUVEMIXA-Research"})
+def read_source(fetch, url, params):
+    """Bound untrusted responses and prevent a provider redirect from changing host."""
+    with fetch(url, params=params, timeout=(3, 4), allow_redirects=False, stream=True,
+               headers={"User-Agent": "NUVEMIXA-Research/1.0"}) as response:
         response.raise_for_status()
-        if len(response.content) > 500_000:
-            return []
-        root = ET.fromstring(response.content)
-        output = []
-        for item in root.findall("./channel/item")[:limit]:
-            title = (item.findtext("title") or "").strip()[:240]
-            link = (item.findtext("link") or "").strip()
-            host = urlparse(link).hostname or ""
-            if title and link.startswith("https://") and host and not host.endswith(".local"):
-                output.append({"title": title, "url": link, "source": host})
-        return output
-    except (requests.RequestException, ET.ParseError, ValueError, OSError):
+        if response.status_code != 200:
+            raise ValueError("Unexpected source status")
+        content = bytearray()
+        for chunk in response.iter_content(chunk_size=16384):
+            content.extend(chunk)
+            if len(content) > 768_000:
+                raise ValueError("Source response is too large")
+        return bytes(content)
+
+
+def catalogue_items(source, term, mode, fetch):
+    query = normalize(term) if term else source.seed
+    fields = "title,variants.sku,product_type" if mode == "product" else "title,product_type,tag,variants.sku"
+    body = read_source(fetch, f"https://{source.host}/search/suggest.json", {
+        "q": query, "resources[type]": "product", "resources[limit]": 10,
+        "resources[options][fields]": fields,
+    })
+    products = json.loads(body)["resources"]["results"]["products"]
+    if not isinstance(products, list):
+        raise ValueError("Unexpected catalogue format")
+    results = []
+    for product in products[:10]:
+        if not isinstance(product, dict) or type(product.get("id")) is not int or product["id"] <= 0:
+            continue
+        title, handle, kind = (product.get(key) for key in ("title", "handle", "type"))
+        if not all(isinstance(value, str) for value in (title, handle, kind)):
+            continue
+        if not title.strip() or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", handle):
+            continue
+        path = f"/products/{handle}"
+        raw_url = product.get("url")
+        if not isinstance(raw_url, str) or raw_url.split("?")[0] != path:
+            continue
+        evidence = f"{title} {kind} {handle.replace('-', ' ')}"
+        if (UNSAFE.search(evidence) or not re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence))
+                or (term and not matches(term, evidence))):
+            continue
+        image = product.get("image")
+        if not isinstance(image, str) or not re.fullmatch(
+            r"https://cdn\.shopify\.com/s/files/[a-zA-Z0-9_./%-]+\.(?:jpe?g|png|webp)(?:\?v=\d+)?", image,
+        ) or ".." in unquote(image):
+            image = ""
+        results.append({
+            "title": title.strip()[:240], "url": f"https://{source.host}{path}", "source": source.name,
+            "category": source.category, "image": image, "trade_url": source.trade_url,
+        })
+    return results
+
+
+def editorial_items(term, country, language, categories, mode, fetch):
+    hosts = tuple(PUBLISHERS)[:2] if country in {"NL", "BE"} else tuple(PUBLISHERS)[2:] if country in {"US", "CA"} else ()
+    if not term or not hosts:
+        return []
+    sites = " OR ".join(f"site:{host}" for host in hosts)
+    intent = "trend" if mode == "trends" else "review"
+    query = f'{normalize(term)} {intent} ({sites})'
+    body = read_source(fetch, "https://www.bing.com/search", {
+        "q": query, "format": "rss", "adlt": "strict", "cc": country, "mkt": f"{language}-{country}",
+    })
+    if re.search(br"<!\s*(?:DOCTYPE|ENTITY)", body, re.IGNORECASE):
+        raise ValueError("Unexpected RSS declaration")
+    items = []
+    for item in ET.fromstring(body).findall("./channel/item")[:20]:
+        title = (item.findtext("title") or "").strip()[:240]
+        url = (item.findtext("link") or "").strip()
+        try:
+            parts = urlsplit(url)
+            host = parts.hostname
+        except ValueError:
+            continue
+        if (parts.scheme != "https" or host not in hosts or parts.netloc != host
+                or not re.fullmatch(PUBLISHERS[host], parts.path) or parts.query
+                or UNSAFE.search(f"{title} {unquote(parts.path)}")
+                or not editorial_match(term, title, categories)):
+            continue
+        items.append({"title": title, "source": host, "url": f"https://{host}{parts.path}"})
+    return items
+
+
+def collect(future, errors):
+    try:
+        return future.result()
+    except (requests.RequestException, ET.ParseError, ValueError, KeyError, TypeError, OSError):
+        errors.append(True)
         return []
 
 
-def discover(term, country="NL", mode="trends", platforms=None, fetch=None):
-    """Fetch real Google News RSS items; never claim they are platform metrics.
-
-    Fetcher injection supports deterministic tests without outbound requests.
-    """
+def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
+             category=ALL_PRODUCTS, categories):
     term = (term or "").strip()[:100]
-    if not term:
-        return {"error": "Vul een product, niche of zoekterm in.", "items": []}
-    country = country if country in COUNTRIES else "NL"
-    platforms = [p for p in (PLATFORMS if platforms is None else platforms) if p in PLATFORMS]
+    if ((category != ALL_PRODUCTS and category not in categories)
+            or mode not in MODES or country not in COUNTRIES):
+        return {"error": "Kies een geldige webshopcategorie, zoektype en doelland."}
+    if term and (not (set(normalize(term).split()) - STOP_WORDS) or UNSAFE.search(term)):
+        return {"error": EMPTY_RESULTS}
+    if not term and (mode == "product" or category == ALL_PRODUCTS):
+        return {"error": "Vul een product of niche in, of kies een specifieke webshopcategorie."}
+    platforms = tuple(dict.fromkeys(p for p in (PLATFORMS if platforms is None else platforms) if p in PLATFORMS))
     if not platforms:
-        return {"error": "Selecteer minimaal één platform.", "items": []}
-    name, language, region = COUNTRIES[country]
-    search_phrase = term + (" product trend" if mode == "trends" else "")
-    params = urlencode({"q": search_phrase, "hl": language + "-" + region, "gl": region, "ceid": region + ":" + language})
-    feed_url = "https://news.google.com/rss/search?" + params
-    result = {
-        "term": term, "country": country, "country_name": name, "mode": mode,
-        "platforms": platforms, "links": research_links(term, platforms),
-        "items": [], "web_items": [], "supplier_items": [], "error": None, "checked_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "supplier_directories": SUPPLIER_DIRECTORIES if country in EU_COUNTRIES else (),
+        return {"error": "Selecteer minimaal één onderzoeksplatform."}
+    fetch = fetch or requests.get
+    name, language, _ = COUNTRIES[country]
+    selected = categories if category == ALL_PRODUCTS else {category: categories[category]}
+    sources = [
+        source for source in CATALOGUES
+        if "Productcatalogi" in platforms and source.category in selected and country in source.countries
+        and (mode != "suppliers" or source.trade_url)
+    ]
+    errors = []
+    with ThreadPoolExecutor(max_workers=7) as pool:
+        product_tasks = [pool.submit(catalogue_items, source, term, mode, fetch) for source in sources]
+        news_task = (pool.submit(editorial_items, term, country, language, selected, mode, fetch)
+                     if "Bing" in platforms and mode != "suppliers" else None)
+        products = [item for task in product_tasks for item in collect(task, errors)]
+        news = collect(news_task, errors) if news_task else []
+    products = list({item["url"]: item for item in products}.values())
+    news = list({item["url"]: item for item in news}.values())
+    suppliers = [item for item in products if item["trade_url"]]
+    return {
+        "term": term, "country_name": name, "category_name": categories.get(category, "All products"),
+        "links": research_links(" ".join(part for part in (term, categories.get(category)) if part),
+                                platforms, country, language),
+        "products": products if mode != "suppliers" else [],
+        "suppliers": suppliers,
+        "news": news,
+        "trends": [item for item in news if re.search(r"\btrends?\b", item["title"], re.IGNORECASE)]
+        if mode == "trends" else [],
+        "source_unavailable": bool(errors),
+        "error": None,
     }
-    try:
-        response = (fetch or requests.get)(feed_url, timeout=7, headers={"User-Agent": "NUVEMIXA-Research/1.0"})
-        response.raise_for_status()
-        if len(response.content) > 500_000:
-            raise ValueError("Feed te groot")
-        root = ET.fromstring(response.content)
-        for item in root.findall("./channel/item")[:10]:
-            title = (item.findtext("title") or "").strip()[:240]
-            url = (item.findtext("link") or "").strip()
-            if not title or not url.startswith("https://"):
-                continue
-            result["items"].append({
-                "title": title, "url": url,
-                "published": (item.findtext("pubDate") or "").strip()[:80],
-                "source": (item.findtext("source") or "Google Nieuws").strip()[:100],
-            })
-    except (requests.RequestException, ET.ParseError, ValueError, OSError):
-        result["error"] = "Live nieuwsbronnen zijn tijdelijk niet bereikbaar. Probeer later opnieuw."
-    fetcher = fetch or requests.get
-    # Separate public web searches; a failed source never fabricates results.
-    result["web_items"] = _public_rss_search(term + " " + name + " product review", fetcher)
-    result["supplier_items"] = _public_rss_search(
-        term + " supplier wholesale dropshipping EU warehouse", fetcher
-    )
-    return result
