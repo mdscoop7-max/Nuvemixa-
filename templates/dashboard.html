@@ -290,7 +290,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         <p><strong>Zo zoekt NUVEMIXA:</strong> {{ product_discovery.interpretation.queries|join(' · ') }}{% if product_discovery.interpretation.automatic %} — categorie automatisch herkend: {{ product_discovery.interpretation.categories|join(', ') }}{% endif %}</p>
       {% endif %}
       {% if product_discovery.source_unavailable %}
-        <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {{ product_discovery.unavailable_sources|join(', ') }}.</p>
+        <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</p>
       {% endif %}
       {% if product_discovery.sources_checked %}
         <details>

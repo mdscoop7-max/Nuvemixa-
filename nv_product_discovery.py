@@ -184,11 +184,11 @@ TRADE_PROFILES = {
 }
 ORIGINS = {**{code: details[0] for code, details in COUNTRIES.items()}, "CN": "China"}
 CATEGORY_HINTS = {
-    "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|bluetooth speaker",
+    "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|bluetooth speaker|tracker|airtag|key finder|cable|armband|phone holder",
     "smart-home": r"smart|wifi|zigbee|matter|curtain|hub|sensor|lighting|rgbicww|door lock|camera|doorbell|robot vacuum|robovac|homebase",
-    "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty",
-    "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture",
-    "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training",
+    "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty|trimmer|straightener|curling|nail|massager|massage|mirror|flosser|toothbrush|shaver|epilator|jewelry|brush|scalp|soap dispenser|dryer",
+    "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk",
+    "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale",
 }
 SEEDS = {"gadgets": "power bank", "smart-home": "security camera", "beauty-care": "serum",
          "home-living": "table lamp", "lifestyle-sport": "yoga mat"}
@@ -647,7 +647,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     sources = catalogue_sources(selected, country, product_mode) if trade_mode else []
     topic = article_query(term) if term else SEEDS.get(category, "")
     errors, attempts, names = [], [], {}
-    pool = ThreadPoolExecutor(max_workers=16)
+    pool = ThreadPoolExecutor(max_workers=32)
     started = monotonic()
     source_deadline = started + 12
 
@@ -731,8 +731,12 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     by_url = {item["url"]: profile for profile, item in offers}
     products = [assess_listing(item, by_url.get(item["url"]), country, news, alerts, safety_weeks) for item in products]
     attempts = tuple(attempts)
-    unavailable = sorted({entry["source"] for entry in (*errors, *attempts)
-                          if entry.get("error") or entry.get("detail_errors")})
+    reasons = {}
+    for entry in (*errors, *attempts):
+        reason = entry.get("error") or ", ".join(entry.get("detail_errors") or ())
+        if reason:
+            reasons.setdefault(entry["source"], reason)
+    unavailable = sorted(reasons)
     for company in suppliers:
         company["products"] = [
             assess_listing(item, by_url.get(item["url"], company), country, news, alerts, safety_weeks)
@@ -751,6 +755,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,
+        "unavailable_reasons": reasons,
         "sources_checked": sorted(set(names.values())),
         "search_attempts": attempts, "source_errors": errors, "alternatives": alternatives, "error": None,
     }

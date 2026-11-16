@@ -24,6 +24,15 @@ PHRASES = (
     (r"\b(?:creme|cream)\b", "cream"),
     (r"\b(?:kabel[\s-]*(?:organizers?|organiser|beheer|houders?|clips?|management)|cable[\s-]*(?:organi[sz]ers?|management|clips?|holders?))\b", "cable organizer"),
     (r"\b(?:yoga[\s-]*matten?|yoga mats?)\b", "yoga mat"),
+    (r"\bmake[\s-]*up[\s-]*spiegels?\b", "makeup mirror"),
+    (r"\bmake[\s-]*up\b", "makeup"),
+    (r"\bmet (?:led[\s-]*)?verlichting\b", " "),
+    (r"\bhardloop[\s-]*telefoon[\s-]*houders?\b", "running phone holder"),
+    (r"\b(?:voor|aan) de arm\b", "armband"),
+    (r"\b(?:fitness[\s-]*)?weerstands[\s-]*banden\b", "resistance band"),
+    (r"\bwater[\s-]*flossers?\b", "water flosser"),
+    (r"\banti[\s-]*slip\b|\bnon[\s-]*slip\b", "nonslip"),
+    (r"\bbluetooth[\s-]*trackers?\b", "bluetooth tracker"),
     (r"\b(?:power[\s-]*banks?|powerbanks?|externe accu)\b", "power bank"),
     (r"\b(?:beveiligings|bewakings|security|surveillance)[\s-]*(?:camera'?s?|cams?)\b", "security camera"),
 )
@@ -69,6 +78,66 @@ ALIASES = {
     "magsafe": "magsafe magnetic", "smartlife": "smartlife smart",
 }
 
+ALIASES.update({
+    "antislip": "nonslip", "zelfklevende": "self adhesive", "zelfklevend": "self adhesive", "binnen": "indoor",
+    "buiten": "outdoor", "bureau": "desk", "snellader": "fast charger", "sleutels": "keys", "sleutel": "key",
+    "rvs": "stainless steel", "drinkfles": "water bottle", "drinkflessen": "water bottle", "opbergbox": "storage box",
+    "opbergboxen": "storage box", "opvouwbare": "foldable", "opvouwbaar": "foldable", "verstelbare": "adjustable",
+    "verstelbaar": "adjustable", "haartrimmer": "hair trimmer", "stijltang": "hair straightener",
+    "krultang": "curling iron", "föhn": "hair dryer", "haardroger": "hair dryer", "nagelvijlset": "nail file set",
+    "nagelvijl": "nail file", "zeepdispenser": "soap dispenser", "automatische": "automatic", "ultrasone": "ultrasonic",
+    "sieradenreiniger": "jewelry cleaner", "mondverzorging": "oral care", "gezichtsmassager": "facial massager",
+    "hoofdhuidmassageborstel": "scalp massager brush", "hoofdhuidmassager": "scalp massager",
+    "springtouwteller": "jump rope counter", "springtouw": "jump rope", "halters": "dumbbells", "halter": "dumbbell",
+    "sporttas": "sports bag", "massagegun": "massage gun", "spiermassage": "muscle massage",
+    "bagageweegschaal": "luggage scale", "digitale": "digital", "telefoonhouder": "phone holder",
+    "fitnessmat": "fitness mat", "draagriem": "carrying strap", "spiegel": "mirror", "tandenborstel": "toothbrush",
+    "scheerapparaat": "shaver", "epilator": "epilator", "weegschaal": "scale", "waterfles": "water bottle",
+    "kabelbinder": "cable tie", "oordopjes": "earbuds", "koptelefoon": "headphones", "bureaulamp": "desk lamp",
+    "nachtlamp": "night lamp", "sfeerlamp": "mood lamp", "stekkerdoos": "power strip", "laadkabel": "charging cable",
+    "telefoonstandaard": "phone stand", "laptopstandaard": "laptop stand", "muismat": "mouse pad",
+    "reisadapter": "travel adapter", "gezichtsmasker": "face mask", "massageapparaat": "massager",
+    "voetmassage": "foot massage", "nekmassage": "neck massage", "rugzak": "backpack", "heupzak": "hip bag",
+    "loopband": "treadmill", "springtouwen": "jump rope", "foamroller": "foam roller", "kettlebell": "kettlebell",
+})
+
+# Beschrijvende eigenschappen: geen merk of model. Ontbreken ze in de bron, dan is de match 'vergelijkbaar'.
+MODIFIERS = {
+    "nonslip": ("antislip", ("nonslip", "non slip", "anti slip", "antislip", "slip resistant", "grip", "grippy")),
+    "self adhesive": ("zelfklevend", ("self adhesive", "adhesive", "sticky", "stick on", "peel and stick")),
+    "indoor": ("binnen", ("indoor", "inside", "interior")),
+    "outdoor": ("buiten", ("outdoor", "exterior", "weatherproof")),
+    "desk": ("bureau", ("desk", "desktop", "office", "bureau")),
+    "foldable": ("opvouwbaar", ("foldable", "folding", "collapsible", "fold", "folds")),
+    "stainless steel": ("RVS", ("stainless steel", "stainless", "inox", "steel")),
+    "adjustable": ("verstelbaar", ("adjustable", "adjust", "variable")),
+    "automatic": ("automatisch", ("automatic", "auto", "touchless", "sensor")),
+    "digital": ("digitaal", ("digital", "smart", "lcd")),
+    "ultrasonic": ("ultrasoon", ("ultrasonic", "ultrasound")),
+    "electric": ("elektrisch", ("electric", "electrical", "powered", "rechargeable", "battery", "usbc", "motor")),
+    "gan": ("GaN", ("gan", "gallium nitride")),
+}
+WATTS = re.compile(r"\b(\d{1,4}) ?w\b")
+
+def strip_modifiers(text, keep=()):
+    for canon in MODIFIERS:
+        if canon not in keep:
+            text = re.sub(r"\b" + re.escape(canon) + r"\b", " ", text)
+    return " ".join(WATTS.sub(" ", text).split())
+
+def unverified_modifiers(query, evidence, keep=()):
+    """Gevraagde eigenschappen die de bron niet bevestigt, als Nederlandse labels."""
+    missing = []
+    for canon, (label, synonyms) in MODIFIERS.items():
+        if canon in keep or not has_phrase(query, canon):
+            continue
+        if not any(has_phrase(evidence, synonym) for synonym in synonyms):
+            missing.append(label)
+    for number in WATTS.findall(query):
+        if not re.search(r"\b" + number + r" ?w\b", evidence):
+            missing.append(f"{number} W")
+    return missing
+
 STOP_WORDS = frozenset("a de een en for het in is met of the van voor with and by via".split())
 MEASURE = re.compile(r"\b(\d+)\s+(mah|ml|amp)\b")
 CAPACITY = re.compile(r"\b([0-9]+) mah\b")
@@ -108,7 +177,8 @@ def subject_for(normalized):
 
 def english_query(term):
     value = normalize(term)
-    return re.sub(r"(?<=\d) (?=(?:mah|ml)\b)", "", value).replace("usbc", "USB-C").replace(" amp", "A")
+    value = re.sub(r"\b(?:voor|met|aan|op|bij|de|het|een)\b", " ", value)
+    return " ".join(re.sub(r"(?<=\d) (?=(?:mah|ml)\b)", "", value).replace("usbc", "USB-C").replace(" amp", "A").split())
 
 def candidate_queries(term):
     if not term:
@@ -143,12 +213,17 @@ def index_query(term):
     subject = subject_for(normalized)
     if subject and not identity_words(normalized, subject):
         return PRODUCTS[subject][0]
+    if not subject and normalized:
+        english = re.sub(r"(?<=\d) (?=(?:mah|ml)\b)", "", normalized)
+        english = re.sub(r"\b(?:voor|met|aan|op|bij|de|het|een)\b", " ", english)
+        core = strip_modifiers(english).replace("usbc", "USB-C")
+        return core if len(core.split()) >= 2 else english_query(term)
     variants = candidate_queries(term)
     return variants[0] if variants else ""
 
 
 def identity_words(normalized, subject):
-    base = MEASURE.sub("", normalized)
+    base = strip_modifiers(MEASURE.sub("", normalized), keep=FACETS.get(subject, ()))
     if subject:
         for phrase in (subject, *FACETS.get(subject, ())):
             base = re.sub(r"\b" + re.escape(phrase) + r"\b", " ", base)
@@ -183,7 +258,11 @@ def offer_match(term, identity, description="", variant=""):
         if required and sizes and not required.issubset(sizes):
             return "", ()
     if not subject:
-        return ("exact", ()) if matches(term, f"{identity} {description} {variant}") else ("", ())
+        core = strip_modifiers(query) or query
+        if not matches(core, f"{identity} {description} {variant}"):
+            return "", ()
+        missing = unverified_modifiers(query, evidence)
+        return ("similar", tuple(missing)) if missing else ("exact", ())
 
     subject_in_title = has_phrase(title, subject)
     if subject == "moisturizing cream":
@@ -225,6 +304,8 @@ def offer_match(term, identity, description="", variant=""):
                 or not has_phrase(evidence, f"{amount} {unit}")):
             label = {"amp": "A", "ml": "ml", "mah": "mAh"}[unit]
             missing.append(f"{amount} {label}")
+    missing.extend(label for label in unverified_modifiers(query, evidence, keep=FACETS.get(subject, ()))
+                   if label not in missing)
     if subject == "moisturizing cream" and not re.search(r"\bspf\s*\d*", query) and re.search(r"\bspf\s*\d*", title):
         missing.append("gevraagde standaarduitvoering")
     return ("similar", tuple(missing)) if missing else ("exact", ())
@@ -234,15 +315,20 @@ def offer_match(term, identity, description="", variant=""):
 CATEGORY_TERMS = {
     "gadgets": ("powerbank", "power bank", "oplader", "charger", "lader", "kabel", "cable", "usb", "bluetooth",
                 "koptelefoon", "headphone", "oordopje", "earbud", "speaker", "telefoon", "phone", "laptop",
-                "magsafe", "adapter", "toetsenbord", "keyboard", "muis", "mouse", "organizer"),
+                "magsafe", "adapter", "toetsenbord", "keyboard", "muis", "mouse", "organizer", "tracker", "armband", "stekkerdoos"),
     "smart-home": ("smart", "slim", "wifi", "zigbee", "matter", "camera", "deurbel", "doorbell", "beveilig",
                    "security", "bewaking", "sensor", "stekker", "plug", "thermostaat", "gordijn", "robotstof", "robot vacuum"),
     "beauty-care": ("olie", "oil", "serum", "creme", "cream", "huid", "skin", "haar", "hair", "shampoo", "zeep", "soap",
-                    "parfum", "make-up", "makeup", "gezicht", "face", "facial", "lotion", "scheer", "tandenborstel"),
+                    "parfum", "make-up", "makeup", "gezicht", "face", "facial", "lotion", "scheer", "tandenborstel",
+                    "nagel", "nail", "stijltang", "krultang", "straightener", "curling", "trimmer", "massager", "massage",
+                    "spiegel", "mirror", "flosser", "mondverzorging", "oral", "tooth", "tand", "shaver", "epilat",
+                    "haardroger", "hair dryer", "sieradenreiniger", "jewelry", "borstel", "brush", "hoofdhuid", "scalp"),
     "home-living": ("lamp", "licht", "light", "kussen", "cushion", "vaas", "vase", "tafel", "table", "stoel", "chair",
                     "kast", "rek", "shelf", "organizer", "opberg", "storage", "decor", "kaars", "candle", "tapijt", "rug", "kabelbeheer"),
     "lifestyle-sport": ("yoga", "mat", "fitness", "halter", "dumbbell", "weerstand", "resistance", "sport", "hardloop",
-                        "running", "drinkfles", "bottle", "rugzak", "backpack", "training", "gym", "wandel", "hiking"),
+                        "running", "drinkfles", "bottle", "rugzak", "backpack", "training", "gym", "wandel", "hiking",
+                        "springtouw", "jump rope", "kettlebell", "sporttas", "sports bag", "massagegun", "massage gun",
+                        "spiermassage", "bagage", "luggage", "foam roller", "foamroller", "fles", "armband", "hardloop"),
 }
 
 
