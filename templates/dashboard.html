@@ -292,6 +292,51 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         <a href="#nv-research-suppliers">Leveranciers ({{ product_discovery.suppliers|length }})</a>
         <a href="#nv-research-news">Nieuws &amp; reviews ({{ product_discovery.news|length }})</a>
       </nav>
+      {% macro offer_assessment(item) %}
+        {% set review = item.assessment %}
+        <div class="nv-offer-assessment">
+          <strong>{{ review.status }}</strong>
+          <p>{{ review.reason }}</p>
+          <details>
+            <summary>Onderbouwing</summary>
+            <p>Categorie en productmatch gecontroleerd in de <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">productbron</a>.</p>
+            {% if review.facts %}
+            <ul>
+              {% for label, fact in review.facts %}
+              <li>{{ label }} · {{ 'Bevestigd' if fact.value is sameas true else 'Niet beschikbaar' if fact.value is sameas false else fact.value }}{% if fact.unit %} {{ fact.unit }}{% endif %}
+                (<a href="{{ fact.source }}" target="_blank" rel="noopener noreferrer">bron</a>, <time datetime="{{ fact.observed }}">{{ fact.observed }}</time>)</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            {% if review.missing %}
+              <p><strong>Onbekend of openstaand</strong> {{ review.missing|join(', ') }}.</p>
+            {% endif %}
+            {% if review.scenario %}
+              <p><strong>Berekend scenario</strong> € {{ review.scenario.profit }} winst bij de vergelijkingsprijs,
+                {{ review.scenario.margin_pct }}% marge op omzet excl. btw.</p>
+            {% elif review.indicative %}
+              <p><strong>Berekend scenario</strong> Verkoopadvies € {{ review.indicative.selling }} incl. btw en geschatte winst € {{ review.indicative.profit }}.
+                {{ review.indicative.assumptions }}</p>
+            {% endif %}
+            {% if review.alert %}
+              <p><a href="{{ review.alert.url }}" target="_blank" rel="noopener noreferrer">Safety Gate {{ review.alert.number }}</a>
+                · <time datetime="{{ review.alert.date }}">{{ review.alert.date }}</time> · {{ review.alert.risk }}</p>
+            {% elif review.safety_weeks %}
+              <p>Geen exacte barcodevermelding gevonden in {{ review.safety_weeks }} recente weekrapporten.
+                <a href="{{ review.safety_portal }}" target="_blank" rel="noopener noreferrer">Controleer eerdere meldingen en documentatie</a>.</p>
+            {% else %}
+              <p>Veiligheidscontrole voor dit aanbod is onvolledig.
+                <a href="{{ review.safety_portal }}" target="_blank" rel="noopener noreferrer">Zoeken in Safety Gate</a>.</p>
+            {% endif %}
+            {% if review.market_context %}
+              <p><strong>Marktcontext</strong> Publicaties in deze categorie.</p>
+              <ul>{% for article in review.market_context %}
+                <li><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a> · {{ article.source }} · {{ article.date }}</li>
+              {% endfor %}</ul>
+            {% endif %}
+          </details>
+        </div>
+      {% endmacro %}
       <div id="nv-research-products">
         {% if product_discovery.products %}
         <ul class="nv-research-cards">
@@ -300,6 +345,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             {% if item.image %}<img src="{{ item.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
             <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
             <small>{{ item.source }} · {{ research_options.categories[item.category] }}</small>
+            {{ offer_assessment(item) }}
           </li>
           {% endfor %}
         </ul>
@@ -344,12 +390,10 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% if product_discovery.suppliers %}
         <p>{% set supplier_count = product_discovery.suppliers|length %}{{ supplier_count }} unieke leverancier{{ 's' if supplier_count != 1 }} · {{ product_discovery.supplier_products }} productvermeldingen · {{ research_options.supplier_filters[research_options.supplier_filter] }}</p>
         <p>Controleer de zakelijke voorwaarden per product. Producten waarvan de bron verzending naar het doelland uitsluit, zijn weggelaten.</p>
-        {% set direct = product_discovery.suppliers|rejectattr('dropshipping', 'equalto', true)|list %}
         {% set groups = [
-          ('Binnen EU', direct|selectattr('region', 'equalto', 'eu')|list),
-          ('Buiten EU', direct|selectattr('region', 'equalto', 'international')|list),
-          ('Dropshippingpartners', product_discovery.suppliers|selectattr('dropshipping', 'equalto', true)|list),
-          ('Vestiging niet bevestigd', direct|selectattr('region', 'equalto', 'unknown')|list),
+          ('Binnen EU', product_discovery.suppliers|selectattr('region', 'equalto', 'eu')|list),
+          ('Buiten EU', product_discovery.suppliers|selectattr('region', 'equalto', 'international')|list),
+          ('Vestiging niet bevestigd', product_discovery.suppliers|selectattr('region', 'equalto', 'unknown')|list),
         ] %}
         {% for group, suppliers in groups if suppliers %}
         <h4>{{ group }} ({{ suppliers|length }})</h4>
@@ -358,11 +402,18 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           <article class="nv-supplier-card">
             <h4><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a></h4>
             <p>{{ company.kind }} · {{ company.origin_name }}</p>
-            <div><strong>Dropshipping</strong> {{ 'Geverifieerd' if company.dropshipping is sameas true else 'Niet beschikbaar' if company.dropshipping is sameas false else 'Niet bevestigd' }}</div>
+            <div><strong>Dropshipping</strong> {{ 'Bevestigd' if company.dropshipping is sameas true else 'Niet beschikbaar' if company.dropshipping is sameas false else 'Niet bevestigd' }}
+              {% if company.dropshipping_source %}<a href="{{ company.dropshipping_source }}" target="_blank" rel="noopener noreferrer">Bron</a>{% endif %}
+            </div>
+            <div><strong>Zakelijke samenwerking</strong> {% if company.business is sameas true %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">Bevestigd</a>{% else %}Niet bevestigd{% endif %}</div>
             <div><strong>Verzending naar {{ product_discovery.country_name }}</strong> {{ company.shipping }}</div>
+            {% if research_options.country != 'NL' %}<div><strong>Verzending naar Nederland</strong> {{ company.shipping_nl or 'Niet bevestigd' }}</div>{% endif %}
+            {% if company.region == 'international' %}
+            <p class="nv-supplier-context">Controleer vanuit welk magazijn het product vertrekt. Bij invoer van buiten de EU kunnen invoerkosten, btw en extra levertijd gelden. Vraag de conformiteitsdocumentatie op voor het gekozen model.</p>
+            {% endif %}
             <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
             <details>
-              <summary>Voorwaarden en {{ company.product_count }} productvermelding{{ 'en' if company.product_count != 1 }}</summary>
+              <summary>Bekijk {{ company.product_count }} product{{ 'en' if company.product_count != 1 }} en voorwaarden</summary>
               <dl>
                 {% for label, key in [
                   ('Magazijn', 'warehouse'), ('Inkoopprijs', 'purchase_price'), ('Voorraad', 'stock'),
@@ -377,6 +428,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
                 <li>
                   <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
                   <small>{{ research_options.categories[item.category] }}{% if item.match_detail %} · {{ item.match_detail }}{% endif %}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}</small>
+                  {{ offer_assessment(item) }}
                 </li>
               {% endfor %}
               </ul>
@@ -416,6 +468,11 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 .nv-research-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:10px;align-self:start}
 .nv-research-filters select{padding:8px;font-size:14px}
 .nv-research-platforms{min-width:0;margin:0;align-self:start}
+.nv-offer-assessment{margin-top:.45rem;min-width:0;overflow-wrap:anywhere}
+.nv-offer-assessment p{margin:.25rem 0}
+.nv-offer-assessment summary{color:#0757bd;cursor:pointer}
+.nv-offer-assessment ul{padding-left:1rem}
+.nv-supplier-context{margin:.55rem 0!important;font-size:.9rem}
 .nv-research-supplier-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .nv-supplier-card{padding:14px;border:1px solid #d9e7f4;border-radius:12px;background:#f8fbff;overflow-wrap:anywhere}
 .nv-supplier-card h4,.nv-supplier-card p{margin:0 0 8px}

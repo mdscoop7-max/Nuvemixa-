@@ -10,6 +10,9 @@ import xml.etree.ElementTree as ET
 
 import requests
 
+from nv_research_assessment import Fact
+from nv_research_safety import gtin
+
 UNKNOWN = "Niet bevestigd"
 FILTERS = {
     "all": "Alle leveranciers",
@@ -52,12 +55,15 @@ def visible_text(html):
 
 
 def supplier(name, origin, kind, website, *, dropshipping=None, shipping=UNKNOWN, checked=None,
-             integration=UNKNOWN, orders=UNKNOWN, returns=UNKNOWN, evidence=()):
+             integration=UNKNOWN, orders=UNKNOWN, returns=UNKNOWN, evidence=(), identity=None,
+             identity_source=None, registration=None, business=None, dropshipping_source=None, minimum=UNKNOWN):
     return {
         "name": name, "origin": origin, "kind": kind, "website": website,
+        "identity": identity, "identity_source": identity_source, "registration": registration,
+        "business": business, "dropshipping_source": dropshipping_source,
         "dropshipping": dropshipping, "shipping": shipping, "checked": checked or date.today().isoformat(),
         "warehouse": UNKNOWN, "purchase_price": UNKNOWN, "stock": UNKNOWN, "lead_time": UNKNOWN,
-        "shipping_cost": UNKNOWN, "minimum": UNKNOWN, "integration": integration,
+        "shipping_cost": UNKNOWN, "minimum": minimum, "integration": integration,
         "orders": orders, "returns": returns, "evidence": evidence,
     }
 
@@ -69,7 +75,8 @@ def hama_products(fetch, term, country, read, matches, relevant, product_matches
         "DE": "https://business.de.hama.com/neu-jetzt-registrieren/als-neukunde-registrieren",
     }[country]
     name = "Hama B.V." if country == "NL" else "Hama"
-    profile = supplier(name, country, "Distributeur", business,
+    profile = supplier(name, country, "Distributeur", business, business=True,
+                       identity=f"hama:{country}", identity_source=business,
                        evidence=(("Vestiging en verkoopkantoren", "https://company.hama.com/about-us/worldwide"),))
     root = "https://www.hama.com"
     search = term or "powerbank"
@@ -120,21 +127,28 @@ def hurtel_products(fetch, term, country, categories, seeds, read, index_query, 
     query = index_query(term) if term else seeds[eligible[0]]
     body = read(fetch, HURTEL + "/en/search", {"text": query}, max_bytes=2_000_000).decode("utf-8")
     profile = supplier("Hurtel", "PL", "Groothandel / distributeur", HURTEL_BUSINESS,
-                       dropshipping=False, integration="CSV/XML-catalogus na zakelijke aanmelding",
+                       dropshipping=False, dropshipping_source=HURTEL_FAQ, business=True,
+                       identity="hurtel:pl", identity_source=HURTEL_BUSINESS,
+                       integration="CSV/XML-catalogus na zakelijke aanmelding",
                        evidence=(("Zakelijke voorwaarden en dropshippingstatus", HURTEL_FAQ),))
     rows = {}
-    for href, title in re.findall(
-        r'<a class="search_top__name" href="([^"]+)"><span class="search_top__name_text">([^<]{1,300})',
-        body,
-    )[:45]:
-        url = unescape(href).split("?", 1)[0]
+    listing = re.compile(
+        r'<a class="search_top__name" href="([^"]+)"><span class="search_top__name_text">([^<]{1,300})'
+    )
+    hits = list(listing.finditer(body))
+    for index, hit in enumerate(hits[:45]):
+        url = unescape(hit[1]).split("?", 1)[0]
         if not re.fullmatch(r"https://hurtel\.com/en/products/[a-z0-9-]+-[0-9]+", url):
             continue
-        title = visible_text(title)
+        title = visible_text(hit[2])
         category = next((cid for cid in eligible if relevant(cid, title)
                          and product_matches(term or seeds[cid], title)), None)
         if category and url not in rows:
-            rows[url] = {"title": title, "url": url, "category": category}
+            end = min(hit.end() + 1800, hits[index + 1].start()) if index + 1 < len(hits) else hit.end() + 1800
+            code = re.search(r'EAN:\s*</span>\s*<span class="searchList__param_value">([0-9]+)</span>',
+                             body[hit.end():end])
+            rows[url] = {"title": title, "url": url, "category": category,
+                         "gtin": gtin(code[1]) if code else None}
     return [(profile, item) for item in list(rows.values())[:10]]
 
 
@@ -160,6 +174,23 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
     warehouse = settings.get("warehouseLocation") if isinstance(settings, dict) else None
     warehouse = warehouse[:80] if isinstance(warehouse, str) and warehouse.strip() else UNKNOWN
     result = {"warehouse": warehouse}
+    if include_description:
+        # The platform's explicit listing label is product evidence. Generic
+        # marketing elsewhere on the site is not a confirmation for this SKU.
+        title = re.search(r"<title>\s*Dropship\s+([^<]+)</title>", html, re.I)
+        product_title = product.get("TITLE")
+        listing_title = visible_text(title[1]).removesuffix(" - Syncee") if title else ""
+        if listing_title and isinstance(product_title, str):
+            public_name = re.sub(r"[^\w]+", " ", listing_title.casefold()).strip()
+            record_name = re.sub(r"[^\w]+", " ", visible_text(product_title).casefold()).strip()
+        else:
+            public_name, record_name = "", ""
+        if public_name and (record_name == public_name or record_name.startswith(public_name + " ")):
+            result["dropshipping"] = True
+            result["dropshipping_source"] = url
+            result["facts"] = {"dropshipping": Fact(True, url, date.today().isoformat())}
+        result["shipping_nl"] = delivery_status(destinations, "NL")
+        result["catalogue_id"] = ("syncee", product_id)
     description = product.get("DESCRIPTION")
     if include_description and isinstance(description, str):
         result["_description"] = visible_text(description[:35_000])
@@ -168,12 +199,23 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
         days = (row.get("minShippingDays"), row.get("maxShippingDays"))
         time = (f"{days[0]}–{days[1]} werkdagen (geschat door aanbieder)"
                 if all(type(value) is int and 0 < value <= 365 for value in days) else UNKNOWN)
+        if include_description and result.get("dropshipping") is True:
+            observed = date.today().isoformat()
+            result["facts"]["direct_delivery"] = Fact(True, url, observed)
         return {**result, "shipping": "Geverifieerd in deze productvermelding", "lead_time": time}
     # A list of destination countries excludes the selected country. An empty
     # list or unrecognized region must stay unconfirmed.
-    if destinations and all(re.fullmatch(r"[A-Z]{2}", code) and code != "EU" for code in destinations):
+    if delivery_status(destinations, country) == "Niet beschikbaar":
         return {"shipping": "Niet beschikbaar voor dit doelland"}
     return result
+
+
+def delivery_status(destinations, country):
+    if country in destinations:
+        return "Bevestigd"
+    if destinations and all(re.fullmatch(r"[A-Z]{2}", code) and code not in {"EU", "WW"} for code in destinations):
+        return "Niet beschikbaar"
+    return UNKNOWN
 
 
 def syncee_products(fetch, query, country, categories, seeds, read, matches, relevant, *, term, product_matches):
@@ -196,12 +238,14 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
             continue
         seller_url = "https://syncee.com" + seller[1]
         # Only assign a country when supported by the supplier's public profile.
-        origin, location_source = SYNCEE_SUPPLIER_ORIGINS.get(seller[1].split("/")[2], (None, None))
+        seller_id = seller[1].split("/")[2]
+        origin, location_source = SYNCEE_SUPPLIER_ORIGINS.get(seller_id, (None, None))
         evidence = (("Dropshipping en verzending", SYNCEE_HELP), ("WooCommerce", SYNCEE_INTEGRATION))
         if location_source:
             evidence += (("Vestigingsland", location_source),)
         profile = supplier(visible_text(seller[2]), origin, "Dropshippingpartner via Syncee", seller_url,
-                           dropshipping=True, orders="Platformfunctie; activering per leverancier controleren",
+                           identity=f"syncee:{seller_id}", identity_source=seller_url,
+                           orders="Platformfunctie; activering per leverancier controleren",
                            integration="WooCommerce-koppeling via Syncee; aansluiting en voorwaarden controleren",
                            evidence=evidence)
         entries = candidates.setdefault(seller_url, {})
@@ -210,7 +254,7 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
     # Limit public item lookups. A listing without a confirmed route remains
     # visible as a lead, unless the route is expressly unavailable.
     results = []
-    selected = [offer for seller in list(candidates.values())[:4] for offer in list(seller.values())[:2]]
+    selected = [offer for seller in list(candidates.values())[:6] for offer in list(seller.values())[:2]]
     if not selected:
         return results
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -233,12 +277,14 @@ def cj_reference(query, categories, matches):
     if "gadgets" not in categories or not query or not matches(query, title):
         return []
     profile = supplier("CJdropshipping", "CN", "Dropshippingpartner", "https://cjdropshipping.com/",
-                       dropshipping=True, checked="2026-11-16",
+                       dropshipping=True, dropshipping_source=CJ_PRODUCT, checked="2026-11-16",
+                       identity="cj:cn", identity_source=CJ_TERMS, business=True,
                        orders="Product- en orderverwerking via CJ API beschikbaar",
                        integration="Publieke CJ-documentatie; account en koppeling vereist",
                        evidence=(("Dropshippingvoorwaarden", CJ_TERMS),
                                  ("Product- en orderverwerking", "https://developers.cjdropshipping.com/en/api/start/standardOperationProcessing.html")))
-    return [(profile, {"title": title, "url": CJ_PRODUCT, "category": "gadgets"})]
+    return [(profile, {"title": title, "url": CJ_PRODUCT, "category": "gadgets",
+                       "facts": {"dropshipping": Fact(True, CJ_PRODUCT, profile["checked"])}})]
 
 
 def publication_kind(text):

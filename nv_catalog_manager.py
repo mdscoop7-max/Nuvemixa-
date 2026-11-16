@@ -15,7 +15,7 @@ from nv_permissions import allowed
 
 
 def catalog_changes():
-    if not DB.is_file():
+    if not nv_dashboard_postgres.runtime_enabled() and not DB.is_file():
         return [], []
     try:
         with nv_dashboard_postgres.read_db(DB, timeout=2) as db:

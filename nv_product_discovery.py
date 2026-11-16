@@ -1,14 +1,19 @@
 """Product and editorial research using first-party catalogues and screened RSS."""
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import date, timedelta
 import json
 import re
 import unicodedata
+from time import monotonic
 from urllib.parse import quote, unquote, urlsplit
 import xml.etree.ElementTree as ET
 
 import requests
+
+from nv_research_assessment import Fact, assess_offer
+from nv_research_identity import approved_catalogue_identity, company_key, offer_key
+from nv_research_safety import gtin, recent_alerts
 
 from nv_research_sources import (
     FILTERS, UNKNOWN, cj_reference, hama_products, hurtel_products, publication_candidates,
@@ -161,6 +166,8 @@ ALIASES = {
     "tafellamp": "table lamp", "stoel": "chair", "kussen": "cushion", "tafel": "table",
     "vaas": "vase", "yogamat": "yoga mat", "yogamatten": "yoga mat",
     "rgbicww": "rgbicww smart", "eufycam": "eufycam camera",
+    "bewakingscamera": "security camera",
+    "surveillance": "security", "desklamp": "table lamp", "gezichtsserum": "face serum",
     "magsafe": "magsafe magnetic", "smartlife": "smartlife smart", "wifi": "wifi smart",
 }
 STOP_WORDS = {"a", "de", "een", "en", "for", "het", "in", "met", "the", "van", "voor", "with"}
@@ -198,7 +205,17 @@ def candidate_queries(term):
         return ()
     normalized = normalize(term)
     if not (power_bank_query(term) and "magnetic" in normalized.split()):
-        return (english_query(term),)
+        primary = english_query(term)
+        language_variants = (
+            ("security camera", ("beveiligingscamera", "surveillance camera")),
+            ("table lamp", ("tafellamp", "desk lamp")),
+            ("yoga mat", ("yogamat", "exercise mat")),
+            ("face serum", ("gezichtsserum", "facial serum")),
+            ("smart doorbell", ("slimme deurbel", "video doorbell")),
+        )
+        alternatives = (primary.replace(subject, alias) for subject, aliases in language_variants
+                        if subject in primary for alias in aliases)
+        return tuple(dict.fromkeys((primary, *alternatives)))
     capacity = CAPACITY.search(normalized)
     suffix = f" {capacity[1]}mAh" if capacity else ""
     return (f"magnetic power bank{suffix}", f"MagSafe power bank{suffix}", "Qi2 magnetic charger")
@@ -213,6 +230,15 @@ def product_matches(term, identity, description=""):
     if not term:
         return True
     normalized = normalize(term)
+    title = normalize(identity)
+    accessories = r"cable|kabel|spray|cover|case|houder|mount|bracket|strap|hoes"
+    if not re.search(r"\b(?:" + accessories + r")\b", normalized):
+        for product in ("table lamp", "yoga mat", "security camera", "power bank"):
+            if product in normalized and (
+                re.search(r"\b(?:" + accessories + r") (?:for|voor|compatible with) " + product + r"\b", title)
+                or re.search(r"\b" + product + r" (?:cleaning )?(?:" + accessories + r")\b", title)
+            ):
+                return False
     if power_bank_query(term):
         # Confirm the product itself is a power bank. Chargers and cases for power
         # banks are candidate hits for Qi2 and MagSafe searches, but are not matches.
@@ -247,6 +273,7 @@ def read_source(fetch, url, params, *, max_bytes=768_000, language=None):
     headers = {"User-Agent": "NUVEMIXA-Research/1.0"}
     if language:
         headers["Accept-Language"] = language
+    expires = monotonic() + 7
     with fetch(url, params=params, timeout=(3, 5), allow_redirects=False, stream=True,
                headers=headers) as response:
         response.raise_for_status()
@@ -255,6 +282,8 @@ def read_source(fetch, url, params, *, max_bytes=768_000, language=None):
         content = bytearray()
         for chunk in response.iter_content(chunk_size=16384):
             content.extend(chunk)
+            if monotonic() > expires:
+                raise requests.Timeout("Research source exceeded request deadline")
             if len(content) > max_bytes:
                 raise ValueError("Source response is too large")
         return bytes(content)
@@ -307,7 +336,12 @@ def catalogue_candidates(source, term, mode, fetch, query):
             r"https://cdn\.shopify\.com/s/files/[a-zA-Z0-9_./%-]+\.(?:jpe?g|png|webp)(?:\?v=\d+)?", image,
         ) or ".." in unquote(image):
             image = ""
+        variants = product.get("variants")
+        records = [variant for variant in variants if isinstance(variant, dict)] if isinstance(variants, list) else []
+        codes = {gtin(variant.get("barcode")) for variant in records}
+        barcode = next(iter(codes)) if len(codes) == 1 and len(variants) == len(records) else None
         results.append({
+            "gtin": barcode, "catalogue_id": (source.host, product["id"]),
             "title": title.strip()[:240], "url": f"https://{source.host}{path}", "source": source.name,
             "category": source.category, "image": image, "trade_url": source.trade_url,
             "match_detail": "Specificaties in catalogus gecontroleerd" if term and not matches(term, identity) else "",
@@ -367,23 +401,38 @@ def catalogue_suppliers(products):
                 evidence = (("Zakelijke afdeling en vestiging", "https://www.telco-acc.com/en/"),)
             elif item["source"] == "Nedis":
                 evidence = (("Nedis B.V. en vestiging", "https://nedis-shop.nl/en/policies/contact-information"),)
-            profile = supplier(item["source"], origin, kind, item["trade_url"], evidence=evidence)
+            identity = approved_catalogue_identity(item["source"])
+            profile = supplier(item["source"], origin, kind, item["trade_url"], evidence=evidence,
+                               identity=identity, identity_source=evidence[0][1] if evidence else item["trade_url"],
+                               registration=("NL", "11028854") if item["source"] == "Nedis" else None,
+                               business=True)
             yield profile, item
 
 
 def unique_suppliers(offers, supplier_filter):
     companies = {}
     for profile, item in offers:
-        name_key = re.sub(r"[^a-z0-9]+", "", profile["name"].casefold())
-        if not name_key:
-            continue
-        # Multiple regional storefronts and multiple SKUs are a single company.
-        company = companies.setdefault(name_key, {**profile, "products": {}, "region": (
+        key = company_key(profile)
+        company = companies.setdefault(key, {**profile, "products": {}, "region": (
             "unknown" if not profile["origin"] else "eu" if profile["origin"] in EU else "international"
         )})
-        company["products"][item["url"]] = item
+        item_key = offer_key(item)
+        previous = company["products"].get(item_key)
+        if previous is None or (item.get("shipping", "").startswith("Geverifieerd") and
+                                not previous.get("shipping", "").startswith("Geverifieerd")):
+            company["products"][item_key] = item
         if profile["shipping"].startswith("Geverifieerd"):
-            company["shipping"] = "Geverifieerd voor minstens één getoond product"
+            company["shipping"] = "Bevestigd voor minstens één getoond product"
+        netherlands = profile.get("shipping_nl", UNKNOWN)
+        current = company.get("shipping_nl", netherlands)
+        if netherlands == "Bevestigd" or current == "Niet beschikbaar":
+            current = netherlands
+        company["shipping_nl"] = current
+        if profile.get("dropshipping") is True and profile.get("dropshipping_source"):
+            company["dropshipping"] = True
+            company["dropshipping_source"] = profile["dropshipping_source"]
+        company["evidence"] = tuple(dict.fromkeys((*company["evidence"], *profile["evidence"])))
+
     filtered = []
     for company in companies.values():
         if supplier_filter == "eu" and company["region"] != "eu":
@@ -392,7 +441,7 @@ def unique_suppliers(offers, supplier_filter):
             continue
         if supplier_filter == "dropship" and company["dropshipping"] is not True:
             continue
-        if supplier_filter == "trade" and company["dropshipping"] is True:
+        if supplier_filter == "trade" and company["business"] is not True:
             continue
         company["origin_name"] = ORIGINS.get(company["origin"], UNKNOWN)
         company["product_count"] = len(company["products"])
@@ -402,7 +451,39 @@ def unique_suppliers(offers, supplier_filter):
     return filtered
 
 
+def catalogue_sources(categories, country, product_mode):
+    # Choose the source for the target market first. If a provider has no local
+    # storefront, its catalogue can still identify products. The offer stays
+    # unconfirmed until destination-level evidence is available.
+    selected = {}
+    for source in CATALOGUES:
+        if source.category not in categories or not (product_mode or source.trade_url):
+            continue
+        key = (source.name, source.category)
+        if key not in selected or (country in source.countries and country not in selected[key].countries):
+            selected[key] = source
+    return list(selected.values())
+
+
+def assess_listing(item, company, country, news, alerts, safety_weeks):
+    code = item.get("gtin")
+    related = [article for article in news if category_matches(item["category"], article["title"] + " " + article["summary"])]
+    if code:
+        for article in related:
+            if code in {gtin(raw) for raw in re.findall(r"\b[0-9]{8,14}\b", article["title"] + " " + article["summary"])}:
+                item = {**item, "facts": {**item.get("facts", {}),
+                                          "market_signal": Fact(True, article["url"], article["date"])}}
+                break
+    alert = alerts.get(code)
+    return {**item, "assessment": assess_offer(item, company, country, related, alert,
+                                               safety_weeks if code else 0)}
+
+
 def collect(future, errors):
+    if not future.done():
+        errors.append(True)
+        future.cancel()
+        return []
     try:
         return future.result()
     except (requests.RequestException, ET.ParseError, ValueError, KeyError, TypeError, OSError):
@@ -435,21 +516,19 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     dropship_mode = from_catalogues and mode in {"suppliers", "dropship", "trends", "niche", "products", "product"}
     if supplier_filter == "trade":
         dropship_mode = False
-    sources = [
-        source for source in CATALOGUES
-        if trade_mode and source.category in selected and country in source.countries
-        and (product_mode or source.trade_url)
-    ]
+    sources = catalogue_sources(selected, country, product_mode) if trade_mode else []
     topic = article_query(term) if term else SEEDS.get(category, "")
     errors = []
-    with ThreadPoolExecutor(max_workers=10) as pool:
+    pool = ThreadPoolExecutor(max_workers=10)
+    started = monotonic()
+    try:
         product_tasks = [pool.submit(catalogue_items, source, term, mode, fetch) for source in sources]
         hama_task = (pool.submit(hama_products, fetch, term, country, read_source, matches, category_matches,
                                  product_matches)
                      if trade_mode and country in {"NL", "DE"} and "gadgets" in selected else None)
         hurtel_task = (pool.submit(hurtel_products, fetch, term, country, selected, SEEDS, read_source,
                                    index_query, product_matches, category_matches)
-                       if trade_mode and country in EU and selected.keys() & {"gadgets", "smart-home"} else None)
+                       if trade_mode and selected.keys() & {"gadgets", "smart-home"} else None)
         dropship_task = (pool.submit(syncee_products, fetch, index_query(term) if term else SEEDS[category],
                                      country, selected, SEEDS, read_source, matches, category_matches,
                                      term=term, product_matches=product_matches)
@@ -460,6 +539,8 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         news_tasks = [pool.submit(publications, reader, fetch, topic, term, country, language, selected)
                       for reader in readers if topic and "Publicaties" in platforms and mode not in SUPPLIER_MODES]
 
+        all_tasks = product_tasks + news_tasks + [task for task in (hama_task, hurtel_task, dropship_task) if task]
+        wait(all_tasks, timeout=12)
         products = [item for task in product_tasks for item in collect(task, errors)]
         offers = list(catalogue_suppliers(products))
         for task in (hama_task, hurtel_task):
@@ -471,7 +552,24 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
             offers.extend(collect(dropship_task, errors))
             offers.extend(cj_reference(term, selected, matches))
         articles = [item for task in news_tasks for item in collect(task, errors)]
+        codes = {item["gtin"] for item in products if item.get("gtin")} | {
+            item["gtin"] for _, item in offers if item.get("gtin")
+        }
+        alerts, safety_weeks = {}, 0
+        remaining = 17 - (monotonic() - started)
+        if codes and country in EU and remaining > 1:
+            task = pool.submit(recent_alerts, fetch, read_source, codes)
+            wait([task], timeout=remaining)
+            outcome = collect(task, [])
+            if outcome:
+                alerts, safety_weeks = outcome
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
 
+    if product_mode:
+        catalogue_urls = {item["url"] for item in products}
+        products.extend({**item, "source": profile["name"], "image": item.get("image", "")}
+                        for profile, item in offers if item["url"] not in catalogue_urls)
     products = list({item["url"]: item for item in products}.values()) if product_mode else []
     news = sorted({item["url"]: item for item in articles}.values(), key=lambda item: item["date"], reverse=True)
     recent = (date.today() - timedelta(days=365)).isoformat()
@@ -480,6 +578,13 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         "Lanceringen en varianten", "Markt en niche", "Veiligheid en terugroepacties", "Reviews en vergelijkingen",
     }][:8]
     suppliers = unique_suppliers(offers, supplier_filter)
+    by_url = {item["url"]: profile for profile, item in offers}
+    products = [assess_listing(item, by_url.get(item["url"]), country, news, alerts, safety_weeks) for item in products]
+    for company in suppliers:
+        company["products"] = [
+            assess_listing(item, by_url.get(item["url"], company), country, news, alerts, safety_weeks)
+            for item in company["products"]
+        ]
     return {
         "term": term, "country_name": name, "category_name": categories.get(category, "All products"),
         "links": research_links(" ".join(part for part in (term, categories.get(category)) if part),
