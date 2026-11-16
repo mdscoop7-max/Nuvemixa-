@@ -35,5 +35,30 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(result["links"][0][0], "TikTok")
 
 
+    def test_all_43_countries_and_eu_membership(self):
+        from nv_product_discovery import COUNTRIES, EU_COUNTRIES
+        self.assertEqual(len(COUNTRIES), 43)
+        self.assertEqual(len(EU_COUNTRIES), 27)
+        self.assertTrue(EU_COUNTRIES.issubset(COUNTRIES))
+        self.assertFalse({"GB", "NO", "CH", "US"} & EU_COUNTRIES)
+        for country in COUNTRIES:
+            with self.subTest(country=country):
+                result = discover("lamp", country=country, platforms=["Google"], fetch=lambda *a, **k: Response())
+                self.assertIsNone(result["error"])
+                self.assertEqual(len(result["items"]), 1)
+                self.assertEqual(bool(result["supplier_directories"]), country in EU_COUNTRIES)
+
+    def test_feed_unavailable_has_no_fake_results(self):
+        import requests
+        def offline(*args, **kwargs):
+            raise requests.Timeout("offline")
+        result = discover("lamp", fetch=offline)
+        self.assertTrue(result["error"])
+        self.assertEqual(result["items"], [])
+
+    def test_invalid_country_falls_back_safely(self):
+        result = discover("lamp", country="INVALID", fetch=lambda *a, **k: Response())
+        self.assertEqual(result["country"], "NL")
+
 if __name__ == "__main__":
     unittest.main()
