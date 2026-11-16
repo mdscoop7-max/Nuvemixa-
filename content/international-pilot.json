@@ -2,20 +2,6 @@
   "observed_on": "14 november 2026",
   "benchmarks": {
     "NL": {
-      "bureau": [
-        [
-          "IKEA DRÖNJÖNS",
-          "€ 12,99",
-          "https://www.ikea.com/nl/nl/p/dronjons-bureauhouder-wit-00428827/"
-        ]
-      ],
-      "kabels": [
-        [
-          "IKEA SIGNUM · 70 cm",
-          "€ 14,99",
-          "https://www.ikea.com/nl/nl/cat/kabelmanagement-kabelgoten-kabelorganizers-16195/"
-        ]
-      ],
       "reis": [
         [
           "Decathlon FORCLAZ · 3 stuks",
@@ -24,30 +10,8 @@
         ]
       ]
     },
-    "BE": {
-      "kabels": [
-        [
-          "IKEA SIGNUM · 70 cm",
-          "€ 14,99",
-          "https://www.ikea.com/be/fr/p/signum-range-cables-couleur-argent-30200253/"
-        ]
-      ]
-    },
+    "BE": {},
     "DE": {
-      "bureau": [
-        [
-          "IKEA DRÖNJÖNS",
-          "€ 14,99",
-          "https://www.ikea.com/de/de/cat/droenjoens-serie-54963/"
-        ]
-      ],
-      "kabels": [
-        [
-          "IKEA SIGNUM · 70 cm",
-          "€ 19,99",
-          "https://www.ikea.com/de/de/p/signum-kabelkanal-waagerecht-silberfarben-30200253/"
-        ]
-      ],
       "reis": [
         [
           "Decathlon · 3 stuks",
@@ -57,20 +21,6 @@
       ]
     },
     "FR": {
-      "bureau": [
-        [
-          "IKEA DRÖNJÖNS",
-          "",
-          "https://www.ikea.com/fr/fr/p/droenjoens-organiseur-bureau-blanc-00428827/"
-        ]
-      ],
-      "kabels": [
-        [
-          "IKEA SIGNUM · 70 cm",
-          "€ 14,99",
-          "https://www.ikea.com/fr/fr/p/signum-range-cables-couleur-argent-30200253/"
-        ]
-      ],
       "reis": [
         [
           "Decathlon · 3 stuks",
@@ -79,32 +29,9 @@
         ]
       ]
     },
-    "GB": {
-      "kabels": [
-        [
-          "IKEA SIGNUM · 70 cm",
-          "£ 10,00",
-          "https://www.ikea.com/gb/en/p/signum-cable-trunking-horizontal-silver-colour-30200253/"
-        ]
-      ]
-    },
-    "US": {
-      "kabels": [
-        [
-          "IKEA FÖRSÄSONG · 38 cm",
-          "USD 12,99",
-          "https://www.ikea.com/us/en/p/foersaesong-cable-management-tray-white-00573188/"
-        ]
-      ]
-    },
+    "GB": {},
+    "US": {},
     "CA": {
-      "kabels": [
-        [
-          "IKEA FÖRSÄSONG · 38 cm",
-          "CAD 9,99",
-          "https://www.ikea.com/ca/en/p/foersaesong-cable-management-tray-white-00573188/"
-        ]
-      ],
       "reis": [
         [
           "Decathlon · 3 stuks",
