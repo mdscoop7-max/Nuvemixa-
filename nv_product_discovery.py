@@ -11,8 +11,8 @@ import xml.etree.ElementTree as ET
 import requests
 
 from nv_research_sources import (
-    FILTERS, UNKNOWN, cj_reference, hama_products, publication_candidates,
-    publication_kind, rss_publications, supplier, syncee_products,
+    FILTERS, UNKNOWN, cj_reference, hama_products, hurtel_products, publication_candidates,
+    android_publications, publication_kind, rss_publications, supplier, syncee_products, visible_text,
 )
 
 COUNTRIES = {
@@ -105,6 +105,12 @@ CATALOGUES = (
               r"power ?bank|charger|usb|laptop stand|charging", "https://eu.baseus.com/pages/wholesale-program"),
     Catalogue("Baseus", "www.baseus.com", "gadgets", frozenset({"US"}), "power bank",
               r"power ?bank|charger|usb|laptop stand|charging", "https://www.baseus.com/pages/wholesale-program"),
+    Catalogue("Xtorm", "www.xtorm.eu", "gadgets", EU, "power bank",
+              r"power ?bank|charger|usb|charging", "https://www.xtorm.eu/pages/contact"),
+    Catalogue("Nedis", "nedis-shop.nl", "gadgets", frozenset({"NL", "BE", "DE"}), "powerbank",
+              r"power ?bank|charger|usb|headphones|bluetooth speaker", "https://nedis.com/"),
+    Catalogue("Nedis", "nedis-shop.nl", "smart-home", frozenset({"NL", "BE", "DE"}), "slimme camera",
+              r"smartlife|smart|wifi|zigbee|camera|doorbell|sensor", "https://nedis.com/"),
     Catalogue("SwitchBot", "eu.switch-bot.com", "smart-home", frozenset("NL BE DE FR ES IT AT".split()),
               "smart home", r"smart|wifi|zigbee|matter|curtain|gordijn|hub|sensor|lighting|rgbicww|door lock"),
     Catalogue("eufy", "eu.eufy.com", "smart-home", frozenset("NL BE DE FR ES IT AT".split()),
@@ -126,6 +132,8 @@ CATALOGUES = (
 TRADE_PROFILES = {
     "UGREEN": ("CN", "Fabrikant / groothandel"),
     "Baseus": ("CN", "Fabrikant"),
+    "Xtorm": ("NL", "Merk / zakelijke leverancier"),
+    "Nedis": ("NL", "Merk / distributeur"),
     "eufy": ("CN", "Fabrikant"),
     "Ferm Living": ("DK", "Fabrikant / groothandel"),
     "Manduka": ("NL", "Groothandel"),
@@ -153,14 +161,22 @@ ALIASES = {
     "tafellamp": "table lamp", "stoel": "chair", "kussen": "cushion", "tafel": "table",
     "vaas": "vase", "yogamat": "yoga mat", "yogamatten": "yoga mat",
     "rgbicww": "rgbicww smart", "eufycam": "eufycam camera",
+    "magsafe": "magsafe magnetic", "smartlife": "smartlife smart", "wifi": "wifi smart",
 }
 STOP_WORDS = {"a", "de", "een", "en", "for", "het", "in", "met", "the", "van", "voor", "with"}
+CAPACITY = re.compile(r"\b([0-9]+) mah\b")
+CONNECTOR = re.compile(r"\b(?:usb[\s‐‑–—-]*(?:type[\s‐‑–—-]*)?c|type[\s‐‑–—-]*c)\b")
 
 
 def normalize(value):
     value = unicodedata.normalize("NFKC", value).casefold()
     value = re.sub(r"(?<=\d)[., ](?=\d{3}\b)", "", value)
     value = re.sub(r"\bpower[ -]?(?:banks?|packs?)\b", "power bank", value)
+    value = CONNECTOR.sub("usbc", value)
+    value = re.sub(r"\bqi[ -]?2\b", "qi2", value)
+    value = re.sub(r"\bmagsafe[- ]+(?:compatible|compatibel)\b|\bcompatible with magsafe\b", "magsafe", value)
+    if "power bank" in value:
+        value = re.sub(r"\b([1-9][0-9]?)k\b", r"\g<1>000 mah", value)
     value = re.sub(r"(?<=\d)(?=mah\b)", " ", value)
     words = re.findall(r"[^\W_]+", value)
     return " ".join(ALIASES.get(word, word) for word in words)
@@ -169,6 +185,44 @@ def normalize(value):
 def matches(search, evidence):
     required = set(normalize(search).split()) - STOP_WORDS
     return bool(required) and required.issubset(normalize(evidence).split())
+
+
+def power_bank_query(term):
+    words = set(normalize(term).split())
+    return {"power", "bank"}.issubset(words)
+
+
+def candidate_queries(term):
+    """Generate index queries without treating synonyms as proof of a specification."""
+    if not term:
+        return ()
+    normalized = normalize(term)
+    if not (power_bank_query(term) and "magnetic" in normalized.split()):
+        return (english_query(term),)
+    capacity = CAPACITY.search(normalized)
+    suffix = f" {capacity[1]}mAh" if capacity else ""
+    return (f"magnetic power bank{suffix}", f"MagSafe power bank{suffix}", "Qi2 magnetic charger")
+
+
+def index_query(term):
+    variants = candidate_queries(term)
+    return variants[0] if variants else ""
+
+
+def product_matches(term, identity, description=""):
+    if not term:
+        return True
+    normalized = normalize(term)
+    if power_bank_query(term):
+        # Confirm the product itself is a power bank. Chargers and cases for power
+        # banks are candidate hits for Qi2 and MagSafe searches, but are not matches.
+        if not power_bank_query(identity):
+            return False
+        required_capacity = set(CAPACITY.findall(normalized))
+        title_capacity = set(CAPACITY.findall(normalize(identity)))
+        if required_capacity and title_capacity and not required_capacity.issubset(title_capacity):
+            return False
+    return matches(term, f"{identity} {description}")
 
 
 def category_matches(category, evidence):
@@ -207,7 +261,19 @@ def read_source(fetch, url, params, *, max_bytes=768_000, language=None):
 
 
 def catalogue_items(source, term, mode, fetch):
-    query = english_query(term) if term else source.seed
+    queries = candidate_queries(term) or (source.seed,)
+    if len(queries) > 1 and source.host == "nedis-shop.nl":
+        queries = ("magnetische powerbank", *queries)
+    # A tight initial search and up to two alternate terms only when the source
+    # yields no confirmed result. The full user requirements apply in each pass.
+    for query in queries[:3]:
+        items = catalogue_candidates(source, term, mode, fetch, query)
+        if items:
+            return items
+    return []
+
+
+def catalogue_candidates(source, term, mode, fetch, query):
     fields = "title,variants.sku,product_type" if mode == "product" else "title,product_type,tag,variants.sku"
     body = read_source(fetch, f"https://{source.host}/search/suggest.json", {
         "q": query, "resources[type]": "product", "resources[limit]": 10,
@@ -229,9 +295,12 @@ def catalogue_items(source, term, mode, fetch):
         raw_url = product.get("url")
         if not isinstance(raw_url, str) or raw_url.split("?")[0] != path:
             continue
-        evidence = f"{title} {kind} {handle.replace('-', ' ')}"
+        identity = f"{title} {kind}"
+        evidence = f"{identity} {handle.replace('-', ' ')}"
+        description = product.get("body")
+        facts = visible_text(description[:35_000]) if isinstance(description, str) else ""
         if (UNSAFE.search(evidence) or not re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence))
-                or (term and not matches(term, evidence)) or UNSAFE.search(normalize(evidence))):
+                or not product_matches(term, identity, facts) or UNSAFE.search(normalize(evidence))):
             continue
         image = product.get("image")
         if not isinstance(image, str) or not re.fullmatch(
@@ -241,6 +310,7 @@ def catalogue_items(source, term, mode, fetch):
         results.append({
             "title": title.strip()[:240], "url": f"https://{source.host}{path}", "source": source.name,
             "category": source.category, "image": image, "trade_url": source.trade_url,
+            "match_detail": "Specificaties in catalogus gecontroleerd" if term and not matches(term, identity) else "",
         })
     return results
 
@@ -251,7 +321,9 @@ def english_query(term):
 
 
 def article_query(term):
-    subject = re.sub(r"\b\d+\s+(?:mah|w|gb|ml|mm)\b", "", normalize(term))
+    if power_bank_query(term) and "magnetic" in normalize(term).split():
+        return "magnetic power bank"
+    subject = re.sub(r"\b(?:usbc|\d+\s+(?:mah|w|gb|ml|mm))\b", "", normalize(term))
     subject = " ".join(subject.split())
     return subject if len(set(subject.split()) - STOP_WORDS) >= 2 else normalize(term)
 
@@ -291,6 +363,10 @@ def catalogue_suppliers(products):
             evidence = ()
             if item["source"] == "Baseus":
                 evidence = (("Wederverkoop via apart distributeursprogramma", item["trade_url"]),)
+            elif item["source"] == "Xtorm":
+                evidence = (("Zakelijke afdeling en vestiging", "https://www.telco-acc.com/en/"),)
+            elif item["source"] == "Nedis":
+                evidence = (("Nedis B.V. en vestiging", "https://nedis-shop.nl/en/policies/contact-information"),)
             profile = supplier(item["source"], origin, kind, item["trade_url"], evidence=evidence)
             yield profile, item
 
@@ -368,22 +444,29 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     errors = []
     with ThreadPoolExecutor(max_workers=10) as pool:
         product_tasks = [pool.submit(catalogue_items, source, term, mode, fetch) for source in sources]
-        hama_task = (pool.submit(hama_products, fetch, term, country, read_source, matches, category_matches)
+        hama_task = (pool.submit(hama_products, fetch, term, country, read_source, matches, category_matches,
+                                 product_matches)
                      if trade_mode and country in {"NL", "DE"} and "gadgets" in selected else None)
-        dropship_task = (pool.submit(syncee_products, fetch, english_query(term) if term else SEEDS[category],
-                                     country, selected, SEEDS, read_source, matches, category_matches)
+        hurtel_task = (pool.submit(hurtel_products, fetch, term, country, selected, SEEDS, read_source,
+                                   index_query, product_matches, category_matches)
+                       if trade_mode and country in EU and selected.keys() & {"gadgets", "smart-home"} else None)
+        dropship_task = (pool.submit(syncee_products, fetch, index_query(term) if term else SEEDS[category],
+                                     country, selected, SEEDS, read_source, matches, category_matches,
+                                     term=term, product_matches=product_matches)
                          if dropship_mode else None)
         readers = [publication_candidates]
         if selected.keys() & {"gadgets", "smart-home"}:
-            readers.append(rss_publications)
+            readers.extend((rss_publications, android_publications))
         news_tasks = [pool.submit(publications, reader, fetch, topic, term, country, language, selected)
                       for reader in readers if topic and "Publicaties" in platforms and mode not in SUPPLIER_MODES]
 
         products = [item for task in product_tasks for item in collect(task, errors)]
         offers = list(catalogue_suppliers(products))
-        hama = collect(hama_task, errors) if hama_task else []
-        offers.extend(hama)
-        products.extend({**item, "source": profile["name"], "image": ""} for profile, item in hama)
+        for task in (hama_task, hurtel_task):
+            if task:
+                listings = collect(task, errors)
+                offers.extend(listings)
+                products.extend({**item, "source": profile["name"], "image": ""} for profile, item in listings)
         if dropship_task:
             offers.extend(collect(dropship_task, errors))
             offers.extend(cj_reference(term, selected, matches))
@@ -392,8 +475,9 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     products = list({item["url"]: item for item in products}.values()) if product_mode else []
     news = sorted({item["url"]: item for item in articles}.values(), key=lambda item: item["date"], reverse=True)
     recent = (date.today() - timedelta(days=365)).isoformat()
-    trends = [item for item in news if item["date"] >= recent and item["kind"] in {
-        "Lanceringen en varianten", "Markt en niche", "Veiligheid en terugroepacties",
+    trends = [item for item in news if item["date"] >= recent and item["date_label"] == "Publicatie"
+              and item["kind"] in {
+        "Lanceringen en varianten", "Markt en niche", "Veiligheid en terugroepacties", "Reviews en vergelijkingen",
     }][:8]
     suppliers = unique_suppliers(offers, supplier_filter)
     return {

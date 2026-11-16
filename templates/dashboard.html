@@ -135,7 +135,7 @@
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar">{% if allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<header class="topbar">{% if section != "onderzoek" and allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin">
 {% if staff and section == "dashboard" %}
 <section class="panel">
@@ -318,7 +318,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% endmacro %}
       <div id="nv-research-trends">
         {% if product_discovery.trends %}
-        <p>Recente lanceringen, markt- en veiligheidssignalen uit publicaties. Marktvraag en verkoopvolume zijn onbekend.</p>
+        <p>Recente lanceringen, tests en markt- of veiligheidssignalen uit publicaties. Marktvraag en verkoopvolume zijn onbekend.</p>
         {{ publications(product_discovery.trends) }}
         {% else %}
         <p>Voor deze zoekopdracht is onvoldoende recente informatie over marktontwikkelingen of productlanceringen gevonden.</p>
@@ -342,7 +342,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       </div>
       <div id="nv-research-suppliers">
         {% if product_discovery.suppliers %}
-        <p>{{ product_discovery.suppliers|length }} unieke aanbieders · {{ product_discovery.supplier_products }} productvermeldingen · {{ research_options.supplier_filters[research_options.supplier_filter] }}</p>
+        <p>{% set supplier_count = product_discovery.suppliers|length %}{{ supplier_count }} unieke leverancier{{ 's' if supplier_count != 1 }} · {{ product_discovery.supplier_products }} productvermeldingen · {{ research_options.supplier_filters[research_options.supplier_filter] }}</p>
         <p>Controleer de zakelijke voorwaarden per product. Producten waarvan de bron verzending naar het doelland uitsluit, zijn weggelaten.</p>
         {% set direct = product_discovery.suppliers|rejectattr('dropshipping', 'equalto', true)|list %}
         {% set groups = [
@@ -358,7 +358,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           <article class="nv-supplier-card">
             <h4><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a></h4>
             <p>{{ company.kind }} · {{ company.origin_name }}</p>
-            <div><strong>Dropshipping</strong> {{ 'Geverifieerd' if company.dropshipping else 'Niet bevestigd' }}</div>
+            <div><strong>Dropshipping</strong> {{ 'Geverifieerd' if company.dropshipping is sameas true else 'Niet beschikbaar' if company.dropshipping is sameas false else 'Niet bevestigd' }}</div>
             <div><strong>Verzending naar {{ product_discovery.country_name }}</strong> {{ company.shipping }}</div>
             <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
             <details>
@@ -376,7 +376,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
               {% for item in company.products %}
                 <li>
                   <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
-                  <small>{{ research_options.categories[item.category] }}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}</small>
+                  <small>{{ research_options.categories[item.category] }}{% if item.match_detail %} · {{ item.match_detail }}{% endif %}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}</small>
                 </li>
               {% endfor %}
               </ul>
