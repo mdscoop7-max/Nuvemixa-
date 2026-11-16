@@ -1,0 +1,164 @@
+{% set m = market_search %}
+{% set viral_page = m.kind == 'viral' %}
+{% macro dropship_badge(value) %}<span class="nv-badge {{ 'ok' if value == 'Bevestigd' else '' }}">Dropshipping: {{ value }}</span>{% endmacro %}
+{% macro supplier_card(company, country) %}
+<article class="nv-supplier-card">
+  <h4><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a></h4>
+  <p><span class="nv-badge">{{ company.role }}</span> {{ company.origin_name }} · {{ company.kind }}</p>
+  <div>{{ dropship_badge('Bevestigd' if company.dropshipping is sameas true else 'Niet beschikbaar' if company.dropshipping is sameas false else 'Niet bevestigd') }}
+    {% if company.dropshipping_source %}<a href="{{ company.dropshipping_source }}" target="_blank" rel="noopener noreferrer">Bron</a>{% endif %}</div>
+  <div><strong>Zakelijke samenwerking</strong> {{ 'Bevestigd' if company.business is sameas true else 'Niet bevestigd' }}</div>
+  <div><strong>Verzending naar {{ m.country_name }}</strong> {{ company.shipping }}</div>
+  {% if m.form.country != 'NL' %}<div><strong>Verzending naar Nederland</strong> {{ company.shipping_nl or 'Niet bevestigd' }}</div>{% endif %}
+  <div><strong>Minimumafname</strong> {{ company.minimum }} · <strong>Inkoopprijs</strong> {{ company.purchase_price }}</div>
+  {% if company.region == 'international' %}<p class="nv-supplier-context">Controleer vertrekmagazijn, invoerrechten, btw en levertijd.</p>{% endif %}
+  <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
+  <details><summary>{{ company.product_count }} product{{ 'en' if company.product_count != 1 }} en bronnen</summary>
+    <ul class="nv-research-articles">
+      {% for item in company.products %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></li>{% endfor %}
+      {% for label, url in company.evidence %}<li><a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a></li>{% endfor %}
+    </ul>
+  </details>
+</article>
+{% endmacro %}
+{% macro supplier_groups(suppliers) %}
+  {% for group, key in [('Binnen EU', 'eu'), ('Buiten EU', 'international'), ('Vestiging niet bevestigd', 'unknown')] %}
+    {% set rows = suppliers|selectattr('region', 'equalto', key)|list %}
+    {% if rows %}<h4>{{ group }} ({{ rows|length }})</h4>
+    <div class="nv-research-supplier-grid">{% for company in rows %}{{ supplier_card(company, m.form.country) }}{% endfor %}</div>{% endif %}
+  {% endfor %}
+{% endmacro %}
+{% macro publication_list(items) %}
+  <ul class="nv-research-articles">
+  {% for item in items %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+    <small>{{ item.source }} · {{ item.date }} · {{ item.kind }}</small></li>{% endfor %}
+  </ul>
+{% endmacro %}
+{% macro product_card(item) %}
+<li class="nv-market-card">
+  {% if item.image %}<img src="{{ item.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
+  <h4><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></h4>
+  <small>{{ item.source }} · {{ m.categories.get(item.category, item.category) }}</small>
+  <p><strong>Signalen:</strong> {{ item.signal_count }} recente publicatie{{ 's' if item.signal_count != 1 }} in deze categorie{% if not item.signal_count %} (geen gevonden){% endif %}.</p>
+  {% if item.assessment.market_context %}<ul class="nv-research-articles">{% for article in item.assessment.market_context %}<li><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a> <small>{{ article.source }} · {{ article.date }}</small></li>{% endfor %}</ul>{% endif %}
+  <p><strong>Potentiële leveranciers:</strong>
+  {% if item.supplier_refs %}</p><ul>
+    {% for ref in item.supplier_refs %}<li><a href="{{ ref.website }}" target="_blank" rel="noopener noreferrer">{{ ref.name }}</a> · {{ ref.role }} · {{ dropship_badge(ref.dropshipping) }}</li>{% endfor %}
+  </ul>{% else %}Nog geen leverancier gevonden.</p>{% endif %}
+  <p class="nv-market-status"><strong>{{ item.assessment.status }}</strong> · {{ item.assessment.reason }}</p>
+  <a class="nv-blue-action" href="{{ url_for('control', section='internationaal', mq=item.title, mland=m.form.country, mcat=m.form.category, mrun=1) }}">Verder onderzoeken</a>
+</li>
+{% endmacro %}
+
+<section class="panel nv-market-panel">
+  <h2>{{ 'Viral Product Finder' if viral_page else 'Internationaal marktonderzoek' }}</h2>
+  <form method="get" action="{{ url_for('control') }}" class="nv-market-form" role="search">
+    <input type="hidden" name="section" value="{{ 'viral' if viral_page else 'internationaal' }}">
+    <input type="hidden" name="mrun" value="1">
+    <div class="nv-market-searchbar">
+      <input type="search" name="mq" maxlength="100" required value="{{ m.form.q }}"
+        placeholder="{{ 'Zoek een viral product, productcategorie, niche of trend...' if viral_page else 'Zoek een product, niche, markt of leverancier wereldwijd...' }}"
+        aria-label="{{ 'Zoek viral producten' if viral_page else 'Zoek internationaal' }}">
+      <button type="submit" class="nv-blue-action">{{ 'Zoek viral producten' if viral_page else 'Start internationaal onderzoek' }}</button>
+    </div>
+    <div class="nv-market-filters">
+      <label>{{ 'Verkoopmarkt' if viral_page else 'Verkoopland' }}<select name="mland">{% for code, details in m.countries.items() %}<option value="{{ code }}"{% if m.form.country == code %} selected{% endif %}>{{ details[0] }}</option>{% endfor %}</select></label>
+      <label>Productcategorie<select name="mcat"><option value="shop">Alle categorieën</option>{% for slug, name in m.categories.items() %}<option value="{{ slug }}"{% if m.form.category == slug %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Leverancier<select name="mregio">{% for key, name in m.regions.items() %}<option value="{{ key }}"{% if m.form.region == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Soort leverancier<select name="mtype">{% for key, name in m.supplier_types.items() %}<option value="{{ key }}"{% if m.form.supplier_type == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      {% if viral_page %}
+      <label>Bron<select name="mbron">{% for key, name in m.sources.items() %}<option value="{{ key }}"{% if m.form.source == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Periode<select name="mperiode">{% for key, name in m.periods.items() %}<option value="{{ key }}"{% if m.form.period == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      {% endif %}
+      <label class="nv-checkbox"><input type="checkbox" name="mnl" value="1"{% if m.form.ships_nl %} checked{% endif %}> Verzending naar Nederland bevestigd</label>
+      <label class="nv-checkbox"><input type="checkbox" name="mdrop" value="1"{% if m.form.dropship_only %} checked{% endif %}> Alleen dropshipping bevestigd</label>
+    </div>
+  </form>
+
+  {% if m.error %}<p class="notice" role="alert">{{ m.error }}</p>
+  {% elif not m.ran %}
+  <p class="nv-market-hint">Voer een product of niche in. De zoekopdracht raadpleegt productcatalogi en openbare publicaties en toont alleen wat een bron aantoont.</p>
+  {% else %}
+  <div id="nv-market-results" aria-live="polite">
+    <h3>{{ m.form.q }} · {{ m.country_name }}</h3>
+    {% if m.unavailable %}<p class="notice">Niet volledig beschikbaar: {{ m.unavailable|join(', ') }}.</p>{% endif %}
+    {% if m.sources_checked %}<p><small>Geraadpleegd: {{ m.sources_checked|join(', ') }}.</small></p>{% endif %}
+    {% if viral_page %}
+      <p class="nv-market-note">{{ m.trend_note }}</p>
+      {% if m.products %}<ul class="nv-market-grid-cards">{% for item in m.products %}{{ product_card(item) }}{% endfor %}</ul>
+      {% else %}<p>{{ m.empty_message }}</p>
+        {% if m.alternatives %}<h4>Vergelijkbare producten (niet exact)</h4><ul class="nv-research-articles">
+          {% for item in m.alternatives %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> <small>{{ item.source }} · Afwijkend of onbevestigd: {{ item.match_missing|join(', ') }}</small></li>{% endfor %}</ul>{% endif %}
+      {% endif %}
+      <h3>Publicatiesignalen</h3>
+      {% if m.trends or m.publications %}{{ publication_list(m.trends or m.publications) }}{% else %}<p>Geen recente publicaties gevonden voor deze selectie.</p>{% endif %}
+    {% else %}
+      <div class="nv-tabs">
+        {% set tabs = [('products', 'Producten (' ~ m.products|length ~ ')'), ('suppliers', 'Leveranciers (' ~ m.suppliers|length ~ ')'),
+          ('dropship', 'Dropshipping'), ('competition', 'Concurrenten &amp; prijzen'), ('trends', 'Trends &amp; publicaties'), ('insights', 'Kansen &amp; risico’s')] %}
+        {% for key, label in tabs %}<input type="radio" name="nv-tab" id="nv-tab-{{ key }}"{% if loop.first %} checked{% endif %}><label for="nv-tab-{{ key }}">{{ label|safe }}</label>{% endfor %}
+        <div class="nv-tab-panels">
+          <div class="nv-tab-panel" data-tab="products">
+            {% if m.products %}<ul class="nv-market-grid-cards">{% for item in m.products %}{{ product_card(item) }}{% endfor %}</ul>
+            {% else %}<p>{{ m.empty_message }}</p>
+              {% if m.alternatives %}<h4>Vergelijkbare producten (niet exact)</h4><ul class="nv-research-articles">
+                {% for item in m.alternatives %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> <small>{{ item.source }} · Afwijkend of onbevestigd: {{ item.match_missing|join(', ') }}</small></li>{% endfor %}</ul>{% endif %}
+            {% endif %}
+          </div>
+          <div class="nv-tab-panel" data-tab="suppliers">
+            {% if m.suppliers %}<p>{{ m.suppliers|length }} unieke leverancier{{ 's' if m.suppliers|length != 1 }}. Leveranciers met label <em>Niet bevestigd</em> zijn webwinkels waarvan de zakelijke voorwaarden nog onderzocht moeten worden.</p>{{ supplier_groups(m.suppliers) }}
+            {% else %}<p>Geen betrouwbare leveranciers gevonden voor deze selectie.</p>{% endif %}
+          </div>
+          <div class="nv-tab-panel" data-tab="dropship">
+            {% set drop = m.suppliers|selectattr('dropshipping', 'sameas', true)|list %}
+            {% if drop %}<p>Dropshipping bevestigd door de bron bij {{ drop|length }} leverancier{{ 's' if drop|length != 1 }}.</p>{{ supplier_groups(drop) }}
+            {% else %}<p>Bij geen enkele gevonden leverancier is dropshipping bevestigd. Leveranciers hieronder zijn nog niet onderzocht op dropshipping; vraag dit na bij de leverancier.</p>
+              {% for company in m.suppliers[:6] %}<p><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a> · {{ company.role }} · Dropshipping niet bevestigd</p>{% endfor %}{% endif %}
+          </div>
+          <div class="nv-tab-panel" data-tab="competition">
+            <p>{{ m.price_note }}</p>
+            {% if m.competitors %}<h4>Aanbieders met een vergelijkbaar product</h4><ul class="nv-research-articles">
+              {% for row in m.competitors %}<li><strong>{{ row.source }}</strong> · {{ row.count }} vermelding{{ 'en' if row.count != 1 }}
+                {% for item in row.links %} · <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>{% endfor %}</li>{% endfor %}</ul>
+            {% else %}<p>Geen vergelijkbare aanbieders gevonden.</p>{% endif %}
+            {% if m.links %}<div class="nv-action-row">{% for platform, link in m.links %}<a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ platform }} →</a>{% endfor %}</div>{% endif %}
+          </div>
+          <div class="nv-tab-panel" data-tab="trends">
+            <p>{{ m.trend_note }}</p>
+            {% if m.publications %}{{ publication_list(m.publications) }}{% else %}<p>Geen relevante publicaties gevonden.</p>{% endif %}
+          </div>
+          <div class="nv-tab-panel" data-tab="insights">
+            <h4>Kansen</h4>{% if m.opportunities %}<ul>{% for text in m.opportunities %}<li>{{ text }}</li>{% endfor %}</ul>{% else %}<p>Geen kansen met brononderbouwing gevonden.</p>{% endif %}
+            <h4>Risico’s en onbekenden</h4><ul>{% for text in m.risks %}<li>{{ text }}</li>{% endfor %}</ul>
+            <p><small>Dit zijn waarnemingen uit de gevonden bronnen, geen voorspellingen of schattingen.</small></p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if viral_page and m.links %}<details class="nv-research-links"><summary>Handmatig zoeken op andere platforms</summary><div class="nv-action-row">
+      {% for platform, link in m.links %}<a class="nv-blue-action" href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ platform }} →</a>{% endfor %}</div></details>{% endif %}
+  </div>
+  {% endif %}
+</section>
+<style>
+.nv-market-searchbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin:.6rem 0}
+.nv-market-searchbar input{min-height:54px;font-size:1.05rem;width:100%;box-sizing:border-box}
+.nv-market-searchbar button{min-height:54px;padding:0 1.4rem}
+.nv-market-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.nv-market-filters select{width:100%;padding:8px;font-size:14px}
+.nv-market-grid-cards{list-style:none;margin:1rem 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.nv-market-card{border:1px solid #d6e0ee;border-radius:12px;padding:12px;min-width:0;overflow-wrap:anywhere;background:#fff}
+.nv-market-card img{max-width:100%;max-height:150px;object-fit:contain;display:block;margin:0 auto 8px}
+.nv-market-card h4{margin:.2rem 0}
+.nv-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2f8;font-size:.82rem}
+.nv-badge.ok{background:#dff3e4}
+.nv-market-note,.nv-market-hint{background:#f4f7fc;border-radius:8px;padding:.6rem .8rem}
+.nv-tabs>input{position:absolute;opacity:0;pointer-events:none}
+.nv-tabs>label{display:inline-block;padding:8px 12px;margin:0 4px 6px 0;border:1px solid #c9d6ea;border-radius:8px;cursor:pointer;background:#fff}
+.nv-tabs>input:checked+label{background:#0757bd;border-color:#0757bd;color:#fff}
+.nv-tabs>input:focus-visible+label{outline:2px solid #0757bd;outline-offset:2px}
+.nv-tab-panel{display:none;padding-top:.5rem}
+{% for key in ['products','suppliers','dropship','competition','trends','insights'] %}#nv-tab-{{ key }}:checked~.nv-tab-panels [data-tab="{{ key }}"]{display:block}
+{% endfor %}
+@media (max-width:640px){.nv-market-searchbar{grid-template-columns:1fr}}
+</style>

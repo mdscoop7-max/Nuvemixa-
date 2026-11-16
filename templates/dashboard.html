@@ -135,7 +135,7 @@
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar">{% if section != "onderzoek" and allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<header class="topbar">{% if section == "producten" and allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin">
 {% if staff and section == "dashboard" %}
 <section class="panel">
@@ -753,7 +753,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </td></tr>
 {% endfor %}
 <tr><td>Merchant-preview</td><td>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }} intern goedgekeurd</td></tr>
-<tr><td>Bezoekersteller</td><td>{{ "Lokale registratie actief" if visitor_stats.enabled else "Lokale registratie uitgeschakeld" }}</td></tr>
+<tr><td>Bezoekersteller webshop</td><td>{{ ("Actief" + ("" if webshop_stats.has_data else ", nog geen bezoek ontvangen")) if webshop_stats.enabled else "Niet geactiveerd" }}</td></tr>
 </tbody></table></div>
 {% if is_admin %}<p><a class="integration-status" href="{{ url_for('admin_integrations') }}" target="_blank" rel="noopener">Technische configuratiestatus (JSON) →</a></p>{% endif %}
 <div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>Lokale systeemcontrole uitvoeren →</a><span role="status" data-scan-progress></span></div>

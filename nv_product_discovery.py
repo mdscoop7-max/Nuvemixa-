@@ -456,6 +456,42 @@ def catalogue_suppliers(products):
             yield profile, item
 
 
+def catalogue_leads(products, offers):
+    """Webshops met een gevonden product maar zonder zakelijk bewijs: leads, nadrukkelijk onbevestigd.
+
+    Land en voorwaarden blijven onbekend. Ze verschijnen niet bij de filters EU, buiten EU,
+    dropshipping of groothandel, omdat daarvoor bewijs nodig is.
+    """
+    covered = {item["url"] for _, item in offers}
+    sources = {source.name: source for source in CATALOGUES}
+    for item in products:
+        source = sources.get(item.get("source"))
+        if not source or item["url"] in covered or item.get("trade_url"):
+            continue
+        home = f"https://{source.host}"
+        profile = supplier(source.name, None, "Webwinkel (zakelijke voorwaarden niet bevestigd)", home,
+                           identity=f"lead:{source.host}", identity_source=home)
+        yield profile, item
+
+
+def supplier_role(company):
+    """Eén duidelijke rol per bedrijf. Een fabrikant is niet automatisch een dropshippingleverancier."""
+    kind = company.get("kind", "").casefold()
+    if company.get("name") == "CJdropshipping":
+        return "Marktplaats of platform"
+    if company.get("dropshipping") is True and company.get("dropshipping_source"):
+        return "Dropshippingleverancier"
+    if "via syncee" in kind:
+        return "Leverancier via marktplaats"
+    if kind.startswith("fabrikant") or kind.startswith("merk"):
+        return "Fabrikant of merk"
+    if "groothandel" in kind:
+        return "Groothandel"
+    if "webwinkel" in kind:
+        return "Webwinkel (niet bevestigd)"
+    return "Leverancier"
+
+
 def unique_suppliers(offers, supplier_filter):
     companies = {}
     for profile, item in offers:
@@ -491,6 +527,7 @@ def unique_suppliers(offers, supplier_filter):
         if supplier_filter == "trade" and company["business"] is not True:
             continue
         company["origin_name"] = ORIGINS.get(company["origin"], UNKNOWN)
+        company["role"] = supplier_role(company)
         company["product_count"] = len(company["products"])
         company["products"] = sorted(company["products"].values(),
                                      key=lambda product: not product.get("shipping", "").startswith("Geverifieerd"))
@@ -635,6 +672,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         alternatives = [item for item in products if item.get("match_missing")]
         products = [item for item in products if not item.get("match_missing")]
         offers = list(catalogue_suppliers(products))
+        offers.extend(catalogue_leads(products, offers))
         for task in (hama_task, hurtel_task):
             if task:
                 listings = collect(task, errors, names[task])

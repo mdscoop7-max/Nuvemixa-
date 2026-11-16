@@ -1,3 +1,49 @@
+{% set w = webshop_stats %}
+<section class="panel panel-after" id="nv-webshop-visits">
+<h2>Webshopbezoekers</h2>
+{% if not w.enabled %}
+<p class="notice" role="status"><strong>Tracking nog niet geactiveerd.</strong> Zet op de dashboardhost <code>NUVEMIXA_WEBSHOP_TRACKING=true</code> en plaats daarna het meetscript op de webshop. Zonder die twee stappen worden geen bezoeken geteld. Er worden geen voorbeeldcijfers getoond.</p>
+{% elif w.error %}
+<p class="notice" role="alert">De bezoekmeting kan tijdelijk niet worden gelezen of opgeslagen. Controleer de databaseverbinding en of de tabel <code>webshop_daily_visitors</code> bestaat (zie <code>nv_dashboard_postgres.sql</code>).</p>
+{% elif not w.has_data %}
+<p class="notice" role="status"><strong>Tracking actief, maar er is nog geen bezoek van de webshop ontvangen.</strong> Plaats het meetscript op de webshop en open die in een gewone browser (geen Do Not Track).</p>
+{% endif %}
+{% if w.enabled and not w.persistent %}
+<p class="notice" role="alert">Opslag is SQLite op de dashboardhost. Op Render verdwijnen die gegevens bij een herstart of nieuwe deployment. Stel <code>NUVEMIXA_DASHBOARD_DATABASE_URL</code> in voor permanente opslag.</p>
+{% endif %}
+{% if w.periods %}
+<div class="nv-visit-totals">
+  {% for label, visitors, views in w.periods %}
+  <div><span>{{ label }}</span><strong>{{ visitors }}</strong><small>{{ views }} paginaweergaven</small></div>
+  {% endfor %}
+</div>
+{% if w.last_seen %}<p>Laatste bezoek ontvangen: <time datetime="{{ w.last_seen }}Z">{{ w.last_seen }} UTC</time>.</p>{% endif %}
+{% if w.has_data %}
+{% set maximum = [1] + (w.chart | map(attribute=1) | list) %}
+<details class="panel-after" open>
+  <summary>Dagelijkse bezoekers, laatste 30 dagen</summary>
+  <ul class="nv-visit-chart">
+    {% for day, visitors, views in w.chart %}
+    <li><span>{{ day }}</span><meter min="0" max="{{ maximum | max }}" value="{{ visitors }}" aria-label="{{ day }}"></meter><strong>{{ visitors }}</strong></li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endif %}
+<details class="panel-after">
+  <summary>Telregels, privacy en koppeling</summary>
+  <ul>
+    <li><strong>Bezoeker</strong> = unieke browser per Nederlandse kalenderdag. <strong>Paginaweergave</strong> = geladen pagina; herladen van dezelfde pagina binnen 30 minuten telt niet opnieuw.</li>
+    <li>Week (vanaf maandag), maand en totaal tellen bezoekersdagen op. Een terugkerende bezoeker telt dus per dag één keer.</li>
+    <li>Cookievrij: er wordt niets op het apparaat van de bezoeker opgeslagen. Het IP-adres en de browser worden alleen gebruikt voor een dagelijks wisselende hash en worden niet bewaard. Do Not Track en Global Privacy Control worden gerespecteerd. Bots, healthchecks en dashboardpagina's worden niet geteld.</li>
+    <li>Controleer zelf of de privacyverklaring van de webshop deze anonieme meting vermeldt en of dit past bij jouw situatie. Dit is geen juridisch advies.</li>
+    <li>Toegestane webshopherkomst: {% for origin in w.origins %}<code>{{ origin }}</code>{% if not loop.last %}, {% endif %}{% endfor %}. Extra domeinen via <code>NUVEMIXA_WEBSHOP_ORIGINS</code>.</li>
+    <li>Plaats op de webshop: <code>&lt;script src="{{ w.script_url }}" defer&gt;&lt;/script&gt;</code></li>
+  </ul>
+</details>
+</section>
+{% if visitor_stats.enabled or visitor_stats.groups %}
+<details class="panel panel-after"><summary>Oudere meting van de dashboardhost-storefront</summary>
 <section class="panel panel-after">
 <h2>Webshopbezoeken</h2>
 <p>Per browsersessie telt maximaal één bevestigd bezoek per Nederlandse kalenderdag. Telling begint zodra de meetcookie terugkomt. Week, maand en totaal tellen sessiedagen op.</p>
@@ -32,3 +78,6 @@
 <p>Er zijn nog geen metingen beschikbaar.</p>
 {% endif %}
 </section>
+
+</details>
+{% endif %}
