@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - 'feature/ai-productonderzoek-20261116'
+      - 'integration/nuvemixa-dashboard-20261114'
     paths:
       - 'nv_product_discovery.py'
       - 'nv_product_margin.py'
