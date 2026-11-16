@@ -280,6 +280,29 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     {% endif %}
   {% endif %}
 </section>
+<section class="panel">
+<h2>Prijs- en margescenario voor dit product</h2>
+<p>Vul uitsluitend je eigen controleerbare bedragen in. Dit is een rekenhulp, geen AI-schatting of bevestigde leveranciersprijs. Alle bedragen in euro.</p>
+<form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
+<input type="hidden" name="section" value="onderzoek">
+<input type="hidden" name="margin_run" value="1">
+{% for key, label in [('selling_price','Verkoopprijs incl. btw (€)'),('purchase_cost','Inkoopprijs excl. btw (€)'),('shipping_cost','Verzendkosten excl. btw (€)'),('advertising_cost','Advertentiekosten excl. btw (€)'),('platform_fee','Platform- en transactiekosten excl. btw (€)'),('returns_reserve','Retourreserve excl. btw (€)'),('other_cost','Overige kosten excl. btw (€)'),('vat_rate','Btw-percentage (%)')] %}
+<label>{{ label }}<input type="number" name="{{ key }}" min="0" max="{{ '100' if key == 'vat_rate' else '1000000' }}" step="0.01" required inputmode="decimal" value="{{ request.args.get(key,'')|e }}"></label>
+{% endfor %}
+<button type="submit">Bereken scenario</button>
+</form>
+{% if product_margin_error %}<div class="notice" role="alert">{{ product_margin_error }}</div>{% endif %}
+{% if product_margin %}
+<div class="admin-table-wrap"><table class="admin-table"><tbody>
+<tr><th>Omzet excl. btw</th><td>€ {{ product_margin.revenue_ex_vat }}</td></tr>
+<tr><th>Btw uit verkoopprijs</th><td>€ {{ product_margin.vat_amount }}</td></tr>
+<tr><th>Totale ingevoerde kosten</th><td>€ {{ product_margin.total_cost }}</td></tr>
+<tr><th>Resultaat per verkoop</th><td>€ {{ product_margin.profit }}</td></tr>
+<tr><th>Marge op omzet excl. btw</th><td>{{ product_margin.margin_pct }}%</td></tr>
+</tbody></table></div>
+<p>{{ product_margin.assumptions }}</p>
+{% endif %}
+</section>
 <section class="panel"><h2>Productdossier — eigen onderzoeksnotities</h2>
 <p>Bewaar je onderzoek met een controleerbare bron. Bestaande dossiers blijven beschikbaar.</p>
 {% if research_error %}<div class="notice" role="status">{{ research_error }}</div>{% endif %}
