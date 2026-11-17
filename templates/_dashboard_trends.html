@@ -1,0 +1,46 @@
+{% set v = trend_view %}
+<section class="panel nv-trends" aria-labelledby="nv-trends-h">
+  <h2 id="nv-trends-h">Trendbronnen en nichevergelijking</h2>
+  <p class="nv-honest-note" role="note"><strong>Eerlijk overzicht:</strong> NUVEMIXA haalt nu van {{ v.sources|length }} bronnen er {{ v.live_count }} automatisch op (productcatalogi en publicaties). Voor Google Trends, TikTok, Instagram, YouTube, Pinterest en Reddit is <strong>geen live trendfeed aangesloten</strong>: die vragen API-toegang, goedkeuring of een abonnement, en scrapen doen we niet. Hieronder staan alleen zoeklinks voor handmatig onderzoek. Er worden geen trendscores, volumes, verkoopcijfers of winstmarges getoond of geschat.</p>
+
+  <form method="get" class="nv-admin-form" role="search">
+    <input type="hidden" name="section" value="trends">
+    <label>Niche A <select name="a">{% for k, n in v.categories.items() %}<option value="{{ k }}" {{ 'selected' if v.form.a == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Niche B <select name="b">{% for k, n in v.categories.items() %}<option value="{{ k }}" {{ 'selected' if v.form.b == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Land <select name="land">{% for c, n in v.countries.items() %}<option value="{{ c }}" {{ 'selected' if v.form.land == c }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Periode <select name="periode">{% for k, n in v.periods.items() %}<option value="{{ k }}" {{ 'selected' if v.form.periode == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <button class="nv-blue-action" type="submit">Niches vergelijken</button>
+  </form>
+
+  <h3>Vergelijking {{ v.niches[0].label }} ↔ {{ v.niches[1].label }} · {{ v.countries[v.form.land] }} · {{ v.periods[v.form.periode] }}</h3>
+  <div class="nv-partner-compare" style="overflow-x:auto">
+  <table>
+    <caption>Trendgegevens: onbekend tot je ze zelf vastlegt met bron en datum. Geen score berekend.</caption>
+    <thead><tr><th>Gegeven</th>{% for n in v.niches %}<th>{{ n.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      <tr><th scope="row">Zoekterm voor onderzoek</th>{% for n in v.niches %}<td>{{ n.term }}</td>{% endfor %}</tr>
+      <tr><th scope="row">Relatieve zoekinteresse en verandering</th>{% for n in v.niches %}<td>Onbekend: geen bron aangesloten. Bekijk handmatig op Google Trends.</td>{% endfor %}</tr>
+      <tr><th scope="row">Hashtag-/interactiecijfers</th>{% for n in v.niches %}<td>Onbekend: geen API aangesloten.</td>{% endfor %}</tr>
+      <tr><th scope="row">Trendscore</th>{% for n in v.niches %}<td>Niet berekend (geen controleerbare data).</td>{% endfor %}</tr>
+      <tr><th scope="row">Handmatig onderzoeken</th>{% for n in v.niches %}<td>{% for l in n.links %}<a href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.source }}{{ '' if l.period or l.source != 'Google Trends' else '' }}</a>{{ ' · ' if not loop.last }}{% endfor %}</td>{% endfor %}</tr>
+      <tr><th scope="row">Doorgaan</th>{% for n in v.niches %}<td>
+        <a href="{{ n.next.products }}">1 · Producten zoeken</a><br>
+        <a href="{{ n.next.suppliers }}">2 · Leveranciers (dropshipping)</a><br>
+        <a href="{{ n.next.partners }}">3 · Partners en affiliate</a><br>
+        <a href="{{ n.next.candidates }}">4 · Kandidaten en concepten</a> · <a href="{{ n.next.viral }}">trendsignaal vastleggen</a></td>{% endfor %}</tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Bronstatus</h3>
+  <div class="nv-partner-compare" style="overflow-x:auto">
+  <table>
+    <thead><tr><th>Bron</th><th>Status</th><th>Toegang</th><th>Zou leveren</th><th>Kosten / voorwaarden</th></tr></thead>
+    <tbody>{% for s in v.sources %}<tr>
+      <td>{{ s.name }}</td>
+      <td><span class="nv-badge {{ 'fact' if s.status in ('live','cache') else ('hint' if s.status == 'handmatig' else 'unk') }}">{{ s.status_label }}</span></td>
+      <td>{{ s.access }} {% if s.official.startswith('http') %}<a href="{{ s.official }}" target="_blank" rel="noopener noreferrer">officiële info ↗</a>{% else %}{{ s.official }}{% endif %}</td>
+      <td>{{ s.delivers }}</td><td>{{ s.cost }}</td></tr>{% endfor %}</tbody>
+  </table>
+  </div>
+</section>

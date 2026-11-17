@@ -1194,6 +1194,7 @@ from nv_woo_bridge import (
 COUNTRY_CODES_FALLBACK = frozenset(('NL','BE','DE','FR','ES','IT','PL','AT','PT','IE','GB','US','SE','DK','FI'))
 import nv_supplier_sources
 import nv_partners
+import nv_trendbronnen
 import nv_concepts
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
 
@@ -2119,6 +2120,7 @@ def control():
     section_names = {
         "internationaal": "Internationaal marktonderzoek",
         "partners": "Partners zoeken",
+        "trends": "Trendbronnen & niches",
         "concepten": "Kandidaten en concepten",
         "viral": "Viral Product Finder",
 
@@ -2157,6 +2159,7 @@ def control():
     section_descriptions = {
         "internationaal": "Vergelijk vraag, leveranciers en marge per verkoopmarkt.",
         "partners": "Zoek dropshipping-, reseller- en affiliatepartners. Niets wordt automatisch aangevraagd.",
+        "trends": "Vergelijk niches en zie welke trendbronnen echt zijn aangesloten. Geen verzonnen cijfers.",
         "concepten": "Bewaar gevonden producten, beoordeel ze en bereid conceptproducten voor. Er wordt niets gepubliceerd.",
         "viral": "Leg trendsignalen vast en beoordeel commerciële kansen per land.",
 
@@ -2409,6 +2412,7 @@ def control():
         product_discovery=product_discovery,
         concept_view=nv_concepts.view() if section == 'concepten' and is_admin else None,
         partner_view=nv_partners.view(request.args) if section == 'partners' else None,
+        trend_view=nv_trendbronnen.view(request.args) if section == 'trends' else None,
         source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
         source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
