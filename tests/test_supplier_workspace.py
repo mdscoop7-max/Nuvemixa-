@@ -90,6 +90,7 @@ def test_ai_supplier_search_accepts_only_cited_approved_organisations(monkeypatc
 
 
 def test_postgres_runtime_keeps_route_data_and_staff_login(databases, administrator, monkeypatch, tmp_path):
+    monkeypatch.setenv("NUVEMIXA_STAFF_LOGIN", "on")
     import psycopg
     target = databases()
     from uuid import uuid4

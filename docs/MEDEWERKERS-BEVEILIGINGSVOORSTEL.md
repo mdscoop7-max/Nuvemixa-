@@ -33,3 +33,17 @@ Geen accounts blokkeren of verwijderen, geen omgevingsvariabelen in Render wijzi
 - Test: met de schakelaar uit kan een bestaand medewerkersaccount niet meer inloggen en geldt een oude medewerkerssessie niet meer.
 - Test: eigenaarslogin en 2FA-pad blijven ongewijzigd.
 - Test: alle 24 menuonderdelen blijven laden voor de eigenaar.
+
+## Uitvoering op de ontwikkelbranch (17 november 2026)
+
+- `NUVEMIXA_STAFF_LOGIN` (standaard `off`): zonder deze variabele kan geen enkel medewerkersaccount inloggen en wordt een bestaande medewerkerssessie genegeerd. Accounts blijven in de tabel bewaard; uitschakelen blijft mogelijk, aanmaken, bewerken, resetten en inschakelen niet.
+- 2FA-omzeiling gedicht: een medewerker met rol `admin` wordt nooit meer als eigenaar gezien (`admin_is_authenticated()`), ook niet als de schakelaar aan staat.
+- Eigenaarslogin en 2FA zijn niet gewijzigd en getest (`tests/test_staff_access.py`).
+
+## Productierisico (onderzoek, niets gewijzigd)
+
+Het probleem is **gereproduceerd op de huidige Live-code** (commit `41fad63`) in een tijdelijke kopie met testdatabase: een medewerkersaccount met rol `admin` logt met alleen e-mailadres en wachtwoord in, gaat direct naar `/dashboard` en krijgt Accountbeheer, Instellingen en Monitoring te zien. Er is geen 2FA-stap.
+
+- Voorwaarde: er moet een medewerkersaccount met rol `admin` bestaan. Die kan alleen door de ingelogde eigenaar worden aangemaakt; er is geen openbare registratie. Of zo'n account in productie bestaat, is niet gecontroleerd (productiegegevens niet gelezen).
+- Ernst: **hoog als zo'n account bestaat** (volledige beheerderstoegang met alleen een wachtwoord, en die toegang kan nieuwe accounts maken). **Laag als er geen is** (niet te misbruiken zonder bestaand account). Tegen wachtwoord raden geldt de bestaande poging-beperking per IP-adres.
+- Voorgestelde hotfix (apart, niet toegepast): een kleine branch vanaf `41fad63` met alleen de twee wijzigingen in `nv_dashboard_manager.py` en `app.py` plus de tests. Zolang die niet live staat is het directe, tijdelijke alternatief in Accountbeheer alle medewerkersaccounts uit te schakelen (dat verwijdert niets).

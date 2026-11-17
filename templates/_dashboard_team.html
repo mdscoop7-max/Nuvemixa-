@@ -1,5 +1,6 @@
 <section class="panel">
 <h2>Dashboardgebruikers</h2>
+{% if not staff_login_enabled %}<p class="notice" role="status"><strong>Medewerkerstoegang staat uit.</strong> Alleen de vaste eigenaar met 2FA kan inloggen. Bestaande accounts blijven bewaard maar kunnen niet inloggen. Aanzetten kan alleen via de omgevingsvariabele NUVEMIXA_STAFF_LOGIN=on.</p>{% endif %}
 {% for category, message in get_flashed_messages(with_categories=true) %}
 <p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
 {% endfor %}

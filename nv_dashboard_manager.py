@@ -54,6 +54,14 @@ def _migrate_staff(db):
     db.commit()
 
 
+STAFF_SWITCH = "NUVEMIXA_STAFF_LOGIN"
+
+
+def staff_login_enabled():
+    """Medewerkerstoegang staat standaard UIT: alleen de vaste eigenaar (met 2FA) heeft toegang."""
+    return os.getenv(STAFF_SWITCH, "off").strip().lower() in {"on", "1", "true", "yes"}
+
+
 def admin():
     return current_app.extensions["nuvemixa_admin_checker"]()
 
@@ -68,6 +76,8 @@ def require_admin(view):
 
 
 def staff_auth(identity, password):
+    if not staff_login_enabled():
+        return None
     with connect() as db:
         row = db.execute(
             """SELECT id,password_hash,session_version FROM staff
@@ -83,6 +93,8 @@ def staff_auth(identity, password):
 def staff_current():
     if "nv_staff" not in g:
         g.nv_staff = None
+        if not staff_login_enabled():
+            return None
         ident = session.get("nv_staff_id")
         version = session.get("nv_staff_version")
         if type(ident) is int and isinstance(version, str):
@@ -119,6 +131,8 @@ def team():
         abort(400)
     account_id = request.form.get("id", type=int)
     password = request.form.get("password", "")
+    if operation != "disable" and not staff_login_enabled():
+        return management_result("accountbeheer", "Medewerkerstoegang staat uit. Alleen het uitschakelen van accounts is mogelijk.")
     if operation in {"create", "reset"} and not 12 <= len(password) <= 128:
         return management_result("accountbeheer", "Gebruik een wachtwoord van 12 tot 128 tekens.")
     if operation in {"create", "edit"}:
