@@ -41,7 +41,7 @@
   {% endfor %}
   {% if visible.items %}
   <details class="nv-nav-group nv-g-{{ loop.index }}"{% if section in visible.items|map(attribute=0)|list %} open{% endif %}>
-    <summary>{{ group }}</summary>
+    <summary><span class="nv-gi"><svg class="ic"><use href="#i-{{ {'Winkel':'cart','Onderzoek':'search','Vindbaarheid':'trend','Beheer':'sliders'}[group] }}"/></svg></span><span class="nv-gt">{{ group }}</span><span class="nv-gc" aria-hidden="true"></span></summary>
     {% for key, label in visible.items %}
     <a href="/dashboard?section={{ key }}"{% if section == key %} class="active" aria-current="page"{% endif %}><svg class="ic"><use href="#i-{{ nv_icons.get(key,'grid') }}"/></svg>{{ label }}</a>
     {% endfor %}
@@ -66,4 +66,22 @@
 @media(max-width:760px){.nv-nav-group{border-left:0;border-top:3px solid var(--accent);margin:4px 6px}}
 .side-links a svg.ic{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-right:8px;vertical-align:-.2em;opacity:.85}
 .side-links .nv-nav-group>a{display:flex;align-items:center}
+
+.nv-nav-group{border-left:0!important;background:#ffffff0d;border:1px solid #ffffff1a;border-radius:14px;margin:10px 0;padding:4px}
+.nv-nav-group[open]{background:#ffffff14}
+.nv-nav-group>summary{display:flex;align-items:center;gap:10px;list-style:none;color:#fff!important;padding:8px 10px;border-radius:10px;min-height:44px}
+.nv-nav-group>summary::-webkit-details-marker{display:none}
+.nv-nav-group>summary .nv-gi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--accent);color:#fff;flex:none}
+.nv-nav-group>summary .nv-gi svg.ic{margin:0;width:18px;height:18px;opacity:1;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nv-nav-group>summary .nv-gt{flex:1;font-size:1rem}
+.nv-nav-group>summary .nv-gc{width:8px;height:8px;border-right:2px solid #cfe0fb;border-bottom:2px solid #cfe0fb;transform:rotate(-45deg);transition:transform .15s}
+.nv-nav-group[open]>summary .nv-gc{transform:rotate(45deg)}
+.nv-nav-group>summary:hover{background:#ffffff14}
+.nv-nav-group>a{color:#dce8fb;border-radius:9px;padding:8px 10px;font-weight:700}
+.nv-nav-group>a svg.ic{color:var(--accent);filter:brightness(1.5)}
+.side-links .nv-nav-group>a:hover{background:#ffffff1a;color:#fff}
+.nv-nav-group.nv-g-1{--accent:#1b8de0}.nv-nav-group.nv-g-2{--accent:#7a5ff0}.nv-nav-group.nv-g-3{--accent:#14b8a0}.nv-nav-group.nv-g-4{--accent:#e8a020}
+.side-links .nv-nav-group>a.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px #0006}
+.side-links .nv-nav-group>a.active svg.ic{color:#fff;filter:none}
+@media(max-width:760px){.nv-nav-group{border:1px solid #ffffff1a!important;margin:6px}}
 </style>
