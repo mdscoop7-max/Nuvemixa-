@@ -167,9 +167,19 @@ def publish(candidate, existing, secret, token, sender=None):
     return sender(payload(candidate))
 
 
-def existing_products():
-    """Bestaande WooCommerce-producten (alleen lezen). Zonder leesverbinding worden TESTDATA-producten gebruikt."""
+def existing_products(live=False):
+    """Bestaande WooCommerce-producten (alleen lezen).
+
+    Standaard (pagina openen) GEEN aanroep: de momentopname van 'Gegevens vernieuwen' of TESTDATA.
+    Alleen bij een bewuste actie (goedkeuren/publiceren, live=True) wordt eenmalig alleen-lezen opgehaald.
+    """
+    import nv_woo_bridge
     from nv_woo_bridge import CommerceConnectionError, _config, _fetch
+    if not live:
+        snap = nv_woo_bridge._SNAPSHOT
+        if snap["at"] and snap["products"]:
+            return [{"id": r["id"], "sku": "" if r["sku"] == "—" else r["sku"], "name": r["name"]} for r in snap["products"]], "echt", None
+        return TEST_EXISTING, "test", None
     try:
         config = _config()
         if config:

@@ -256,7 +256,7 @@ def _publicatie_kandidaat(sku):
 @require_admin
 def publicatie_goedkeuren():
     pub, candidate = _publicatie_kandidaat(request.form.get("sku", ""))
-    existing, _bron, _fout = pub.existing_products()
+    existing, _bron, _fout = pub.existing_products(live=True)
     rows = pub.check(candidate, existing)
     if pub.blocking(rows):
         flash("Goedkeuren kan pas als alle controles op fouten zijn opgelost.", "error")
@@ -272,7 +272,7 @@ def publicatie_goedkeuren():
 @require_admin
 def publicatie_publiceren():
     pub, candidate = _publicatie_kandidaat(request.form.get("sku", ""))
-    existing, _bron, _fout = pub.existing_products()
+    existing, _bron, _fout = pub.existing_products(live=True)
     token = session.get("nv_pub_goedkeuringen", {}).get(candidate["sku"], "")
     try:
         pub.publish(candidate, existing, current_app.secret_key, token, sender=None)

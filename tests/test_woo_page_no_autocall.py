@@ -120,3 +120,38 @@ def test_er_zijn_geen_schrijfroutes_naar_woocommerce():
     import inspect
     broncode = inspect.getsource(bridge)
     assert "requests.post" not in broncode and "requests.put" not in broncode and "requests.delete" not in broncode
+
+
+SECTIES = ["dashboard", "producten", "publicatie", "categorieen", "afbeeldingen", "bestellingen", "klanten",
+           "klantenservice", "kortingen", "onderzoek", "internationaal", "viral", "calculator", "statistieken", "seo",
+           "rankfix", "google-shopping", "google-ads", "marketing", "leveranciers", "woocommerce", "administratie",
+           "accountbeheer", "monitoring", "instellingen"]
+
+
+@pytest.mark.parametrize("sectie", SECTIES)
+def test_geen_enkele_dashboardpagina_doet_een_externe_aanroep(administrator, monkeypatch, omgeving, sectie):
+    """Ook mét volledige (fictieve) Woo-configuratie en de oude WOOCOMMERCE_*-variabelen."""
+    import urllib.request
+    monkeypatch.setenv("WOOCOMMERCE_URL", "https://oud.example.invalid")
+    monkeypatch.setenv("WOOCOMMERCE_KEY", "ck_oud")
+    monkeypatch.setenv("WOOCOMMERCE_SECRET", "cs_oud")
+
+    def verboden(*a, **k):
+        omgeving.append("verboden")
+        raise AssertionError("externe aanroep bij het openen van een pagina")
+
+    monkeypatch.setattr(bridge, "_fetch", verboden)
+    monkeypatch.setattr(dashboard, "woo_request", verboden, raising=False)
+    monkeypatch.setattr(urllib.request, "urlopen", verboden)
+    assert administrator.get("/dashboard?section=" + sectie).status_code == 200
+    assert omgeving == []
+
+
+def test_bestellingen_tonen_de_momentopname_van_de_knop(administrator, monkeypatch):
+    nep_fetch(monkeypatch, antwoord=lambda path: [{"id": 4711, "status": "processing", "date_created": "2026-11-16T10:00:00",
+                                                    "total": "19.95", "billing": {"email": "geheim@klant.invalid"}}]
+              if path.startswith("orders") else [{"id": 1, "name": "Testproduct", "sku": "T-1", "price": "9.95"}])
+    assert "Nog niet opgehaald" in administrator.get("/dashboard?section=bestellingen").get_data(as_text=True)
+    post(administrator, "/admin/commerce/refresh")
+    page = administrator.get("/dashboard?section=bestellingen").get_data(as_text=True)
+    assert "#4711" in page and "processing" in page and "geheim@klant.invalid" not in page

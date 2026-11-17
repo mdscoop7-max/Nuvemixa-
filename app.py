@@ -1949,53 +1949,20 @@ def admin_add_research_note():
 
 
 def recent_woo_orders():
+    """Toont alleen de momentopname van een bewuste klik op 'Gegevens vernieuwen'.
 
-    """Read WooCommerce orders only if already configured. Never fabricate orders."""
-
-    try:
-        if read_configuration_present():
-            result = read_recent_orders()
-        elif woo_configured():
-            result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
-        else:
+    Het openen van een pagina doet NOOIT een WooCommerce-aanroep. Er worden geen bestellingen verzonnen.
+    """
+    import nv_woo_bridge
+    snapshot = nv_woo_bridge._SNAPSHOT
+    if not snapshot["at"]:
+        if nv_woo_bridge.connection_status()["state"] == "not_configured":
             return None, "WooCommerce niet gekoppeld."
-    except CommerceConnectionError:
-        return None, "WooCommerce-leesverbinding mislukt. Controleer de verbinding bij Monitoring."
-
-    if not isinstance(result, list):
-
-        return None, "WooCommerce niet bereikbaar of antwoord ongeldig."
-
-    # Only display operational fields; no addresses, phone or customer details.
-
-    filtered = []
-
-    for item in result:
-
-        if not isinstance(item, dict):
-
-            continue
-
-        filtered.append({
-
-            "id": str(item.get("id", ""))[:40],
-
-            "status": str(item.get("status", "onbekend"))[:45],
-
-            "date": str(item.get("date_created", ""))[:25],
-
-            "total": str(item.get("total", ""))[:40],
-
-            "currency": str(item.get("currency", "EUR"))[:10],
-
-        })
-
-    return filtered, None
-
-
-
-
-
+        return None, "Nog niet opgehaald. Gebruik 'Gegevens vernieuwen' bij WooCommerce; deze pagina doet zelf geen aanroep."
+    # Alleen operationele velden; geen adressen, telefoonnummers of klantgegevens.
+    return [{"id": str(o.get("id", ""))[:40], "status": str(o.get("status", "onbekend"))[:45],
+             "date": str(o.get("date", ""))[:25], "total": str(o.get("total", ""))[:40], "currency": "EUR"}
+            for o in snapshot["orders"]], None
 
 
 # Optional integrations are restricted to a logged-in administrator.
