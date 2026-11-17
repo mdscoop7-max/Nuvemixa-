@@ -169,7 +169,7 @@ def test_postgres_visits_and_verified_snapshot_import(databases, monkeypatch, tm
                 numbers = {"id": 7, "candidate": 7, "candidate_id": 7, "supplier_id": 7, "customer_id": 7,
                            "used": 2, "active": 1, "usage_limit": 9, "amount": 4.35, "views": 3, "window": 7,
                            "value": 40, "estimate": 0, "purchase_cost_cents": 9, "shipping_cost_cents": 8,
-                           "selling_price_cents": 20}
+                           "selling_price_cents": 20, "pageviews": 3}
                 record = tuple(numbers.get(col, f"{table}-{col}") for col in columns)
                 if table == "storefront_visits":
                     record = ("test", datetime.now(nv_visits.TIMEZONE).date().isoformat(), "historic", "measured-fixture")
@@ -194,7 +194,7 @@ def test_postgres_visits_and_verified_snapshot_import(databases, monkeypatch, tm
     monkeypatch.setattr(nv_dashboard_postgres, "connect", test_connection)
     monkeypatch.setenv("NUVEMIXA_DASHBOARD_DATABASE_URL", dsn)
     summary = nv_visits.visit_summary()
-    assert len(data) == 15
+    assert len(data) == 16
     assert summary["backend"] == "PostgreSQL" and summary["groups"][0][1] == 1
     monkeypatch.setenv("NUVEMIXA_VISIT_COUNTER", "true")
     monkeypatch.setenv("NUVEMIXA_VISIT_TRAFFIC", "test")

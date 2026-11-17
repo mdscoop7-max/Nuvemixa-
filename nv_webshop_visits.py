@@ -23,6 +23,7 @@ import psycopg
 from flask import Blueprint, Response, current_app, request
 
 import nv_dashboard_postgres
+import nv_freeze
 from nv_dashboard_manager import DB
 
 TIMEZONE = ZoneInfo("Europe/Amsterdam")
@@ -129,7 +130,7 @@ def webshop_visit():
     response = Response(status=204)
     cors_headers(response, origin)
     response.headers["Cache-Control"] = "no-store"
-    if request.method == "OPTIONS" or not tracking_enabled():
+    if request.method == "OPTIONS" or not tracking_enabled() or nv_freeze.frozen():
         return response
     agent = request.headers.get("User-Agent", "")
     if (not agent or BOTS.search(agent) or request.headers.get("Sec-GPC") == "1"

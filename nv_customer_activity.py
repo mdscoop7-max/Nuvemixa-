@@ -2,6 +2,7 @@
 from contextlib import closing, contextmanager
 import sqlite3
 import nv_dashboard_postgres
+import nv_freeze
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,8 @@ def record_customer_activity(database_path, customer_id, event_type):
     """Best effort: mag de klantlogin nooit tegenhouden."""
     if event_type not in ("registered", "logged_in") or not isinstance(customer_id, int):
         return
+    if nv_freeze.frozen():
+        return  # bevroren: inloggen werkt, maar er wordt niets geschreven
     try:
         with activity_db(database_path) as conn:
             if not nv_dashboard_postgres.runtime_enabled():
