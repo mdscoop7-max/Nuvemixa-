@@ -12,3 +12,9 @@ main button[type=submit]:not(.danger):not(.nv-danger){border-radius:10px}
 main table{border-collapse:collapse}
 main th{color:var(--nvm-mute);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Statusmelding "niet gekoppeld" = waarschuwing (oranje), geen succes (groen) */
+main .notice[role=status]{background:#fff3de!important;border:1px solid #f0cf94!important;border-left:4px solid #e8a020!important;color:#6b4500!important;border-radius:10px;padding:10px 14px;margin:10px 0}
+main .panel .integration-status{margin-top:8px}
+/* Dubbele paginatitel in de binnenste paneelkop verbergen; de h1 bovenaan blijft de enige titel */
+.nv26-panel>.nv26-panel-head .nv26-eyebrow,.nv26-panel>.nv26-panel-head h2{display:none}
+.nv26-panel>.nv26-panel-head{align-items:center}

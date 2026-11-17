@@ -784,7 +784,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </section>
 {% elif section == 'woocommerce' %}
 <section class="nv26-panel" aria-label="WooCommerce binnen dashboard">
-  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">WEBSHOP &amp; LEVERANCIERS</div><h2>WooCommerce &amp; leveranciers</h2><p>Eén beheeromgeving. {{ 'WooCommerce-configuratie aanwezig.' if integration_status.woo else 'WooCommerce is nog niet ingesteld.' }}</p></div><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div>
+  <div class="nv26-panel-head"><div><p>Eén beheeromgeving. {{ 'WooCommerce-configuratie aanwezig.' if integration_status.woo else 'WooCommerce is nog niet ingesteld.' }}</p></div><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div>
   <div class="nv26-card nv26-woo-box">
     <p>WooCommerce en leveranciers binnen je bestaande dashboard, zonder een tweede dashboardmenu. De koppeling blijft alleen-lezen zolang die niet is ingericht.</p>
     <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
