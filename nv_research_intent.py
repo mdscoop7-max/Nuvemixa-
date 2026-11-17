@@ -101,6 +101,17 @@ ALIASES.update({
     "loopband": "treadmill", "springtouwen": "jump rope", "foamroller": "foam roller", "kettlebell": "kettlebell",
 })
 
+ALIASES.update({
+    "gezichtsreiniger": "facial cleanser", "gezichtsreinigers": "facial cleanser", "gezichtsreiniging": "facial cleanser",
+    "keukenorganizer": "kitchen organizer", "keukenorganizers": "kitchen organizer", "keukenorganiser": "kitchen organizer",
+    "opbergrek": "storage rack", "opbergrekken": "storage rack", "opbergrekje": "storage rack",
+    "elastieken": "resistance band", "elastiek": "resistance band", "fitnesselastieken": "resistance band",
+    "kattenvoerbak": "cat feeder", "kattenvoerbakken": "cat feeder", "kattenvoederbak": "cat feeder",
+    "drinkfontein": "water fountain", "drinkfonteinen": "water fountain",
+    "kat": "cat", "katten": "cat", "luidspreker": "speaker", "luidsprekers": "speaker",
+    "gezichtsborstel": "facial brush"
+})
+
 # Beschrijvende eigenschappen: geen merk of model. Ontbreken ze in de bron, dan is de match 'vergelijkbaar'.
 MODIFIERS = {
     "nonslip": ("antislip", ("nonslip", "non slip", "anti slip", "antislip", "slip resistant", "grip", "grippy")),
@@ -142,7 +153,7 @@ STOP_WORDS = frozenset("a de een en for het in is met of the van voor with and b
 MEASURE = re.compile(r"\b(\d+)\s+(mah|ml|amp)\b")
 CAPACITY = re.compile(r"\b([0-9]+) mah\b")
 CONNECTOR = re.compile(r"\b(?:usb[\s‐‑–—-]*(?:type[\s‐‑–—-]*)?c|type[\s‐‑–—-]*c)\b")
-ACCESSORIES = r"cable|kabel|spray|cover|case|houder|mount|bracket|strap|hoes|replacement head|opzetborstel"
+ACCESSORIES = r"cable|kabel|spray|cover|case|houder|mount|bracket|strap|hoes|replacement head|opzetborstel|cleanser|cleaner|reiniger|dock|refill|navulling"
 
 def normalize(value):
     value = "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if not unicodedata.combining(c))
@@ -165,9 +176,24 @@ def words(value):
 def has_phrase(text, phrase):
     return f" {phrase} " in f" {text} "
 
+def stem(word):
+    return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
+
+
 def matches(search, evidence):
-    required = words(normalize(search))
-    return bool(required) and required.issubset(words(normalize(evidence)))
+    required = {stem(w) for w in words(normalize(search))}
+    return bool(required) and required.issubset({stem(w) for w in words(normalize(evidence))})
+
+
+GENERIC_HEADS = {"verlichting", "lighting", "light", "licht", "lamp", "product", "producten", "accessoire", "accessoires", "set"}
+COLOURS = {"zwart", "wit", "black", "white", "blue", "red", "green", "grey", "gray", "pink", "silver", "gold", "blauw", "rood", "groen", "grijs", "roze"}
+
+
+def head_noun(core):
+    """Laatste inhoudswoord van de zoekterm (kleuren tellen niet): dat hoort in de titel te staan."""
+    candidates = [w for w in core.split() if w not in COLOURS and w not in STOP_WORDS]
+    head = stem(candidates[-1]) if len(candidates) >= 2 else ""
+    return "" if head in GENERIC_HEADS else head
 
 def power_bank_query(term):
     return {"power", "bank"}.issubset(words(normalize(term)))
@@ -260,6 +286,14 @@ def offer_match(term, identity, description="", variant=""):
     if not subject:
         core = strip_modifiers(query) or query
         if not matches(core, f"{identity} {description} {variant}"):
+            return "", ()
+        head = "" if core == "power bank" or MEASURE.search(query) or "usbc" in query.split() else head_noun(core)
+        title_stems = {stem(w) for w in title.split()}
+        if head and head not in title_stems:
+            return "", ()  # het hoofdwoord (bijv. speaker, oordopjes) moet in de titel staan, niet alleen in de beschrijving
+        if head and not re.search(r"\b(?:" + ACCESSORIES + r")\b", query) and (
+                re.search(r"\b(?:" + ACCESSORIES + r") (?:for|voor|compatible with) ", title)
+                or re.search(r"\b" + re.escape(head) + r"s? (?:cleaning )?(?:" + ACCESSORIES + r")\b", title)):
             return "", ()
         missing = unverified_modifiers(query, evidence)
         return ("similar", tuple(missing)) if missing else ("exact", ())

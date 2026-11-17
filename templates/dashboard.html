@@ -153,7 +153,7 @@
 
 {% else %}
 <a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
-{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'partners':2,'concepten':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
+{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'partners':2,'trends':2,'concepten':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
 <header class="section-header nv-sg nv-sg-{{ nv_grp }}"><div><span class="section-kicker">{{ ['NUVEMIXA · OVERZICHT','WINKEL','ONDERZOEK','VINDBAARHEID','BEHEER'][nv_grp] }}</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
@@ -211,6 +211,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% include "_dashboard_concepten.html" %}
 {% elif section == "partners" %}
 {% include "_dashboard_partners.html" %}
+{% elif section == "trends" %}
+{% include "_dashboard_trends.html" %}
 {% elif section == "internationaal" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
@@ -421,6 +423,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
         {% else %}
           <p>{{ research_options.empty_message }}</p>
+          {% if product_discovery.coverage_note %}<p class="nv-honest-note" role="note"><strong>Dekking:</strong> {{ product_discovery.coverage_note }}</p>{% endif %}
           <p><small>Tip: zoek op producttype of merk apart (bijvoorbeeld "hydraterende crème"), kies een andere categorie of open het tabblad Leveranciers voor bronnen om zelf te onderzoeken.</small></p>
           {% if product_discovery.alternatives %}
           <h4>Vergelijkbare producten</h4>
@@ -600,7 +603,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 .nv-research-links{margin:1rem 0 0}
 .nv-research-links summary{cursor:pointer}
 @media(max-width:1000px){.nv-research-cards,.nv-research-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.nv-research-search,.nv-research-supplier-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.nv-research-search,.nv-research-supplier-grid,.nv-research-cards{grid-template-columns:minmax(0,1fr)}.nv-research-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 {% if product_discovery and not product_discovery.error %}
 <script>
@@ -877,4 +880,4 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 
 
 
-<script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script></body></html>
+<script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script><script src="{{ url_for('static',filename='nv-zoekindicator.js') }}" defer></script></body></html>

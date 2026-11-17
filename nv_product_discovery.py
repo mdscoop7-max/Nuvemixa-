@@ -574,6 +574,18 @@ def logistics(company):
             "lead_time_note": lead, "logistics_notes": notes}
 
 
+PET_TERMS = {"cat", "cats", "kat", "katten", "dog", "dogs", "hond", "honden", "pet", "pets", "huisdier", "huisdieren", "kitten", "puppy"}
+
+
+def coverage_note(term):
+    """Eerlijke dekkingsmelding: voor sommige productgroepen is er (nog) geen bron in het register."""
+    words_in = set(normalize(term or "").split()) | set((term or "").casefold().split())
+    if words_in & PET_TERMS or {"kattenvoerbak", "drinkfontein", "kattenbak"} & words_in:
+        return ("Huisdierproducten: er zijn nog geen geraadpleegde bronnen voor deze productgroep. "
+                "Een lege uitkomst betekent dus niet dat het product niet bestaat; zoek handmatig bij leveranciers.")
+    return ""
+
+
 def unique_suppliers(offers, supplier_filter):
     companies = {}
     for profile, item in offers:
@@ -852,6 +864,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
         "pending_sources": pending,
+        "coverage_note": coverage_note(term),
         "fetched_at": __import__("datetime").datetime.now(__import__("zoneinfo").ZoneInfo("Europe/Amsterdam")).strftime("%d-%m-%Y %H:%M"),
         "next_steps": __import__("nv_supplier_sources").sources_for(selected, country, term),
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,

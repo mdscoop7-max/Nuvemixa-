@@ -30,6 +30,7 @@ SECTIONS = {
     "internationaal": ("research",),
     "partners": ("research",),
     "viral": ("research",),
+    "trends": ("research",),
     "calculator": ("calculator",),
     "statistieken": ("stats",),
     "seo": ("seo_view",),

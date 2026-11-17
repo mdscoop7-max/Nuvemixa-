@@ -297,9 +297,59 @@ def covers(p, country):
     return country in p["ships"] or ("EU" in p["ships"] and country in EU)
 
 
+SOORT = {"dropshipping": "Alleen dropshipping", "affiliate": "Alleen affiliate", "b2b": "Groothandel / B2B",
+         "hybride": "Combinatie affiliate + dropshipping"}
+BEREIK = {"nl": "Nederland", "europa": "Europa", "internationaal": "Internationaal"}
+
+
+def _soort(p, kind):
+    m = set(p["models"])
+    if kind == "hybride":
+        return {"A", "C"} <= m
+    if kind == "dropshipping":
+        return "A" in m and "C" not in m
+    if kind == "affiliate":
+        return "C" in m and "A" not in m
+    if kind == "b2b":
+        return p["type"] in ("groothandel", "merk") or "B" in m
+    return True
+
+
+def _bereik(p, scope):
+    ships = p["ships"] or set()
+    if scope == "nl":
+        return p["country"] == "NL" or "NL" in ships
+    if scope == "europa":
+        return p["country"] in EU or "EU" in ships or bool(ships & EU)
+    if scope == "internationaal":
+        return bool(ships - EU - {"EU"}) or (p["country"] not in EU and p["country"] != "?")
+    return True
+
+
+def woo_status(p):
+    """WooCommerce-compatibel: alleen 'bevestigd' als een gelezen feit WooCommerce noemt; plugin zonder vermelding is slechts een aanwijzing."""
+    for fact in p["facts"].values():
+        if "woocommerce" in fact["text"].lower():
+            return "bevestigd" if fact["status"] == FACT else "aanwijzing"
+    return "onbekend"
+
+
+_EN = {"stekker": "plug", "verlichting": "lighting", "luidspreker": "speaker", "oordopjes": "earbuds", "gezichtsreiniger": "cleanser",
+       "keukenorganizer": "organizer", "opbergrek": "rack", "yogamat": "yoga", "parfum": "perfume", "kat": "cat", "katten": "cat",
+       "huisdieren": "pet", "slimme": "smart", "draadloze": "wireless", "huis": "home", "sport": "fitness"}
+
+
+def _alts(word):
+    alts = {word}
+    if word in _EN:
+        alts.add(_EN[word])
+    alts |= {k for k, v in _EN.items() if v == word}
+    return alts
+
+
 def search(args):
     q = (args.get("q") or "").strip().lower()[:80]
-    want = {k: (args.get(k) or "").strip() for k in ("cat", "land", "type", "model", "kosten", "integratie", "status")}
+    want = {k: (args.get(k) or "").strip() for k in ("cat", "land", "type", "model", "kosten", "integratie", "status", "soort", "bereik", "woo", "eu")}
     rows = []
     for p in all_partners():
         if want["cat"] and want["cat"] not in p["categories"]:
@@ -311,6 +361,14 @@ def search(args):
         if want["model"] and want["model"] not in p["models"]:
             continue
         if want["status"] and p["status"] != want["status"]:
+            continue
+        if want["soort"] and not _soort(p, want["soort"]):
+            continue
+        if want["bereik"] and not _bereik(p, want["bereik"]):
+            continue
+        if want["woo"] and woo_status(p) not in (("bevestigd",) if want["woo"] == "bevestigd" else ("bevestigd", "aanwijzing")):
+            continue
+        if want["eu"] and p["country"] not in EU:
             continue
         if want["kosten"]:
             cost = p["cost"]
@@ -328,10 +386,13 @@ def search(args):
                 continue
         if q:
             hay = " ".join((p["name"], p["note"], " ".join(p["products"]), " ".join(CATEGORIES.get(c, c) for c in p["categories"]))).lower()
-            if not all(word in hay for word in q.split()):
+            if not all(any(alt in hay for alt in _alts(word)) for word in q.split()):
                 continue
         rows.append({**p, "score": score(p), "model_labels": [MODELS[m] for m in p["models"]], "type_label": TYPES[p["type"]],
-                     "status_label": STATUS[p["status"]], "cat_labels": [CATEGORIES.get(c, c) for c in p["categories"]]})
+                     "status_label": STATUS[p["status"]], "cat_labels": [CATEGORIES.get(c, c) for c in p["categories"]],
+                     "woo": woo_status(p), "eu_seat": p["country"] in EU, "scope_labels": [n for k, n in BEREIK.items() if _bereik(p, k)],
+                     "affiliate_text": p["facts"]["affiliate"]["text"], "affiliate_status": p["facts"]["affiliate"]["status"],
+                     "dropship_status": p["facts"]["ondersteuning"]["status"], "hybrid": "A" in p["models"] and "C" in p["models"]})
     order = {"aantoonbaar": 0, "mogelijk": 1, "affiliate": 2, "ongeschikt": 3}
     rows.sort(key=lambda r: (order[r["status"]], -r["score"]["fit"], r["name"].lower()))
     return rows
@@ -368,10 +429,10 @@ def candidates():
 def view(args):
     rows = search(args)
     return {"rows": rows, "total": len(all_partners()), "form": {k: (args.get(k) or "") for k in
-            ("q", "cat", "land", "type", "model", "kosten", "integratie", "status")},
+            ("q", "cat", "land", "type", "model", "kosten", "integratie", "status", "soort", "bereik", "woo", "eu")},
             "discovery": discovery_links((args.get("q") or "").strip()[:80], args.get("cat", ""), args.get("land", "")),
             "candidates": candidates(), "criteria": CRITERIA, "checked": CHECKED, "models": MODELS, "types": TYPES,
-            "categories": CATEGORIES, "statuses": STATUS,
+            "categories": CATEGORIES, "statuses": STATUS, "soorten": SOORT, "bereiken": BEREIK,
             "permanent": nv_dashboard_postgres.runtime_enabled()}
 
 
