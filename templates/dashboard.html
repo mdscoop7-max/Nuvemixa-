@@ -736,7 +736,15 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "accountbeheer" %}
 {% include "_dashboard_team.html" %}
 {% elif section == "monitoring" %}
-<section class="panel integration"><h2>Monitoring en koppelingen</h2>
+{% set mon = namespace(works=0, attention=0, off=0) %}
+{% for name, (status, result, follow_up) in monitoring_connections.items() %}{% if status == "works" %}{% set mon.works = mon.works + 1 %}{% elif status in ("attention", "error", "failed") %}{% set mon.attention = mon.attention + 1 %}{% else %}{% set mon.off = mon.off + 1 %}{% endif %}{% endfor %}
+<nav class="nvm-tabs" aria-label="Monitoring onderdelen"><a class="t1" href="#nv-mon-koppelingen">Koppelingen</a><a class="t2" href="#nv-webshop-visits">Webshopbezoekers</a><a class="t3" href="#nv-mon-controle">Systeemcontrole</a></nav>
+<div class="nvm-kpis" aria-label="Samenvatting koppelingen">
+<div class="k-ok"><span>Werkt</span><strong>{{ mon.works }}</strong><small>Verbinding bevestigd</small></div>
+<div class="k-off"><span>Niet gekoppeld</span><strong>{{ mon.off }}</strong><small>Nog niet ingesteld of getest</small></div>
+<div class="k-bad"><span>Aandacht nodig</span><strong>{{ mon.attention }}</strong><small>Fout of mislukte verbinding</small></div>
+</div>
+<section class="panel integration" id="nv-mon-koppelingen"><h2>Monitoring en koppelingen</h2>
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Status</th></tr></thead><tbody>
 {% for name, (status, result, follow_up) in monitoring_connections.items() %}
 <tr><td>{{ name }}</td><td>{{ scan_labels[status] }} · {{ result }}
@@ -752,7 +760,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <tr><td>Bezoekersteller webshop</td><td>{{ ("Actief" + ("" if webshop_stats.has_data else ", nog geen bezoek ontvangen")) if webshop_stats.enabled else "Niet geactiveerd" }}</td></tr>
 </tbody></table></div>
 {% if is_admin %}<p><a class="integration-status" href="{{ url_for('admin_integrations') }}" target="_blank" rel="noopener">Technische configuratiestatus (JSON) →</a></p>{% endif %}
-<div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>Lokale systeemcontrole uitvoeren →</a><span role="status" data-scan-progress></span></div>
+<div class="nv-action-row" id="nv-mon-controle"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>Lokale systeemcontrole uitvoeren →</a><span role="status" data-scan-progress></span></div>
 </section>
 {% block monitoring_report %}{% endblock %}
 {% include "_dashboard_visits.html" %}
