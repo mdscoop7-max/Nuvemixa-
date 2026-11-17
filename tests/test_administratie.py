@@ -52,15 +52,18 @@ def test_administration_requires_owner_login():
 
 
 def test_all_menu_sections_and_single_home(administrator):
-    for section in MENU + ["administratie"]:
+    for section in MENU + ["administratie", "publicatie"]:
         assert administrator.get(f"/dashboard?section={section}").status_code == 200, section
     home = administrator.get("/dashboard?section=dashboard").get_data(as_text=True)
     assert home.count('aria-label="NUVEMIXA hoofdscherm"') == 1 and "nv26-home" not in home
-    for label in ("Producten", "Productonderzoek", "Niches", "Leveranciers", "WooCommerce", "Bestellingen", "Klantberichten", "Administratie"):
+    for label in ("Producten", "Productonderzoek", "Niches", "Leveranciers", "WooCommerce", "Bestellingen", "Klantberichten", "Administratie", "Productpublicatie"):
         assert label in home
     assert re.search(r"€\s?\d[\d.,]*\s*</strong><small>Geen verkoopcijfer", home)
     menu = home[home.index('id="tmAdminNavigation"'):]
     for section in MENU:
+        if section == "talen":   # bewust uit het menu verborgen; pagina en taalbestanden blijven bestaan
+            assert "section=talen" not in menu
+            continue
         assert f"section={section}" in menu, section
 
 

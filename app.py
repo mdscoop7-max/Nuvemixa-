@@ -2168,6 +2168,8 @@ def control():
 
         "administratie": "Administratie",
 
+        "publicatie": "Productpublicatie",
+
     }
 
     section_descriptions = {
@@ -2213,7 +2215,9 @@ def control():
 
         "monitoring": "Koppelingen, beschikbaarheid en controles.",
 
-        "administratie": "Omzet, kosten, marges en overzichten voor de boekhouding. Testdata is duidelijk gescheiden van echte gegevens.",
+        "publicatie": "Producten controleren, goedkeuren en voorbereiden voor WooCommerce. Er wordt niets verzonden zonder schrijfkoppeling.",
+
+        "administratie": "Omzet, kosten, marges en overzichten voor de boekhouding.",
 
     }
 
@@ -2296,6 +2300,17 @@ def control():
 
     order_rows, order_error = (recent_woo_orders() if section in ("bestellingen", "administratie") else (None, None))
     admin_overview = None
+    publicatie = None
+    if section == "publicatie" and is_admin:
+        import nv_publicatie, json as _json
+        chosen = nv_publicatie.TEST_CANDIDATES.get(request.args.get("kandidaat", ""), None) or next(iter(nv_publicatie.TEST_CANDIDATES.values()))
+        existing, bron, fout = nv_publicatie.existing_products()
+        rows = nv_publicatie.check(chosen, existing)
+        publicatie = {"kandidaten": list(nv_publicatie.TEST_CANDIDATES.values()), "gekozen": chosen, "rijen": rows,
+                      "fouten": bool(nv_publicatie.blocking(rows)), "marge": nv_publicatie.margin(chosen),
+                      "voorbeeld": _json.dumps(nv_publicatie.payload(chosen), indent=2, ensure_ascii=False),
+                      "bron": bron, "bron_fout": fout, "goedgekeurd": nv_publicatie.approval_valid(app.secret_key, chosen, session.get("nv_pub_goedkeuringen", {}).get(chosen["sku"], "")),
+                      "schrijven_klaar": nv_publicatie.write_connection_ready(), "min_marge": nv_publicatie.MIN_MARGE}
     if section == "administratie" and is_admin:
         import nv_administratie
         admin_overview = {"test": nv_administratie.test_overview(),
@@ -2409,6 +2424,7 @@ def control():
 
         order_rows=order_rows,
         admin_overview=admin_overview,
+        publicatie=publicatie,
         staff_login_enabled=__import__('nv_dashboard_manager').staff_login_enabled(),
         talen=(__import__('nv_talen').winkel_talen() if section == 'talen' else []),
         talen_niet_gekoppeld=__import__('nv_talen').NIET_GEKOPPELD,

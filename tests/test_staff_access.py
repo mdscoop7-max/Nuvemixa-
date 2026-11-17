@@ -102,7 +102,7 @@ def test_route_audit_anonymous_and_every_kind_of_staff(staffdb, monkeypatch):
                 for method in sorted(rule.methods & {"GET", "POST"}):
                     data = {"_csrf_token": CSRF_TOKEN} if method == "POST" else None
                     response = client.open(rule.rule, method=method, data=data)
-                    owner_only = rule.rule.startswith(("/admin/nv/team", "/admin/integrations", "/admin/suppliers",
+                    owner_only = rule.rule.startswith(("/admin/nv/team", "/admin/nv/publicatie", "/admin/integrations", "/admin/suppliers",
                                                         "/admin/research", "/admin/monitoring", "/admin/mollie", "/admin/rankfix",
                                                         "/admin/customers", "/admin/supplier-feed", "/admin/nv/db-diagnose",
                                                         "/admin/commerce", "/admin/merchant-feed"))
