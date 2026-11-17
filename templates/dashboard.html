@@ -148,23 +148,7 @@
 </form></details></section>
 {% endif %}
 {% if section == "dashboard" %}
-<div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
-{% if allowed("stats", "product_view", "order_view", "customer_view") %}<section class="metrics" aria-label="Kerncijfers">
-{% if allowed("stats", "product_view") %}<div class="metric"><div class="metric-label"><span class="metric-icon">▣</span>Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong><span class="metric-note">Producten in huidige testcatalogus</span></div>
-<div class="metric"><div class="metric-label"><span class="metric-icon">▦</span>Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong><span class="metric-note">Actieve hoofdcollecties</span></div>{% endif %}
-{% if allowed("order_view") %}<div class="metric" id="bestellingen"><div class="metric-label"><span class="metric-icon">🛒</span>Bestellingen</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde ordergegevens</span></div>{% endif %}
-{% if is_admin %}<div class="metric" id="klanten"><div class="metric-label"><span class="metric-icon">♙</span>Klanten</div><strong class="metric-value">{{ nv_customer_count if nv_customer_count is not none else "—" }}</strong><span class="metric-note">Aantal in lokale klantdatabase; geen verkoopstatistiek</span></div>{% endif %}
-</section>{% endif %}
-{% if allowed("stats") %}<div class="details">
-<section class="panel" id="statistieken"><h2>Catalogusoverzicht</h2><p>Aantal producten per categorie · dit zijn geen verkoopcijfers.</p>
-<div class="chart" role="img" aria-label="Staafdiagram met aantallen producten per categorie">
-{% for name,count in category_counts %}<div class="bar-wrap"><strong>{{ count }}</strong><div class="bar" style="--height:{{ ((count / stats.max_category_count) * 100)|round|int if stats.max_category_count else 0 }}%"></div><span>{{ name|replace(' & ',' & ') }}</span></div>{% endfor %}
-</div></section>
-<section class="panel"><h2>Webshopstatus</h2><p>Wat er op dit moment echt beschikbaar is.</p>
-<div class="category-list"><div class="category-row"><span>Catalogusproducten</span><b>{{ stats.total_products }}</b></div><div class="category-row"><span>Categorieën</span><b>{{ stats.total_categories }}</b></div><div class="category-row"><span>Gemarkeerde aanbiedingen</span><b>{{ stats.offers }}</b></div><div class="category-row"><span>Gemiddelde testprijs</span><b>{{ format_eur(stats.avg_price) }}</b></div></div>
-<div class="notice">Omzet, bestellingen, klantgegevens en voorraadstatus zijn nog niet aangesloten. Daarom worden er geen fictieve bedragen, trends of klantnamen getoond.</div></section>
-</div>{% endif %}
-{% if is_admin %}<nav class="quick" aria-label="Snelle acties"><a href="/dashboard?section=producten"><span class="bubble">＋</span><span><b>Producten beheren</b><small>Controleer de catalogus</small></span></a><a href="/dashboard?section=categorieen"><span class="bubble">▦</span><span><b>Beheer categorieën</b><small>Productgroepen</small></span></a><a href="/dashboard?section=kortingen"><span class="bubble">◇</span><span><b>Kortingsacties</b><small>Bekijk actiegegevens</small></span></a><a href="/dashboard?section=statistieken"><span class="bubble">▥</span><span><b>Bekijk rapporten</b><small>Catalogusstatistieken</small></span></a></nav>{% endif %}
+{% include "_dashboard_home.html" %}
 
 {% else %}
 <a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
@@ -803,31 +787,6 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
   <div class="nv26-card nv26-woo-box">
     <p>WooCommerce en leveranciers binnen je bestaande dashboard, zonder een tweede dashboardmenu. De koppeling blijft alleen-lezen zolang die niet is ingericht.</p>
     <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
-  </div>
-</section>
-{% elif section == 'dashboard' and is_admin %}
-<section class="nv26-panel nv26-home" aria-label="NUVEMIXA Control dashboard">
-  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">NUVEMIXA · BEHEEROMGEVING</div><h2>Dashboard</h2><p>Overzicht, prestaties en snelle toegang tot alle beheerfuncties.</p></div><span class="nv26-chip">Lokale testomgeving</span></div>
-  <div class="nv26-kpis">
-    <div class="nv26-kpi nv26-blue"><span>▣ &nbsp;Producten</span><strong>{{ stats.total_products }}</strong></div>
-    <div class="nv26-kpi nv26-purple"><span>▦ &nbsp;Categorieën</span><strong>{{ stats.total_categories }}</strong></div>
-    <div class="nv26-kpi nv26-green"><span>▤ &nbsp;Aanbiedingen</span><strong>{{ stats.offers }}</strong></div>
-    <div class="nv26-kpi nv26-orange"><span>◈ &nbsp;Gem. catalogusprijs</span><strong>€{{ '%.2f'|format(stats.avg_price)|replace('.', ',') }}</strong></div>
-  </div>
-  <div class="nv26-home-grid">
-    <article class="nv26-card"><h3>⚡ Snelle acties</h3><div class="nv26-actions">
-      <a href="/dashboard?section=producten">▣<span>Producten</span></a>
-      <a href="/dashboard?section=categorieen">▦<span>Categorieën</span></a>
-      <a href="/dashboard?section=bestellingen">▤<span>Bestellingen</span></a>
-      <a href="/dashboard?section=klanten">♙<span>Klanten</span></a><a href="/dashboard?section=accountbeheer">♧<span>Accountbeheer</span></a>
-      <a href="/dashboard?section=leveranciers">▧<span>Leveranciers</span></a>
-      <a href="/dashboard?section=instellingen">⚙<span>Instellingen</span></a>
-    </div></article>
-    <article class="nv26-card"><div class="nv26-between"><h3>WooCommerce</h3><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div><p class="nv26-muted">De bestelpagina en beheermodule tonen hun eigen verbindingsstatus.</p><a class="nv26-primary" href="/dashboard?section=woocommerce">WooCommerce beheren →</a></article>
-    <article class="nv26-card"><h3>Recente bestellingen</h3><p class="nv26-muted">Alleen werkelijke gegevens na koppeling met een gecontroleerde orderbron.</p><a class="nv26-link" href="/dashboard?section=bestellingen">Bestellingen bekijken →</a></article>
-    <article class="nv26-card"><h3>Producten per categorie</h3><div class="nv26-categories">{% for name, amount in category_counts %}<div><span>{{ name }}</span><strong>{{ amount }}</strong></div>{% endfor %}</div></article>
-    <article class="nv26-card"><h3>Systeemstatus</h3><p><span class="nv26-chip">Beheerderslogin actief</span> <span class="nv26-chip nv26-chip-warn">{{ 'WooCommerce ingesteld' if integration_status.woo else 'WooCommerce niet ingesteld' }}</span></p><p class="nv26-muted">Gmail, leveranciers en betaalproviders tonen pas ‘Verbonden’ na een geslaagde koppeling.</p></article>
-    <article class="nv26-card"><h3>Snelkoppelingen</h3><div class="nv26-actions"><a href="/dashboard?section=klantenservice">✉<span>Klantenservice</span></a><a href="/dashboard?section=onderzoek">⌕<span>Onderzoek</span></a><a href="/dashboard?section=statistieken">◫<span>Statistieken</span></a></div></article>
   </div>
 </section>
 {% elif section == 'klantenservice' %}

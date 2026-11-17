@@ -1,0 +1,68 @@
+{# Eén hoofdscherm: toont alleen echt beschikbare cijfers (geen omzet, orders of winst zonder koppeling). #}
+{% set woo_on = integration_status.woo %}
+<section class="nv27-home" aria-label="NUVEMIXA hoofdscherm">
+<style>
+.nv27-home{display:grid;gap:18px}
+.nv27-hero{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.nv27-hero h1{margin:0;font-size:1.7rem}.nv27-hero p{margin:.2rem 0 0;color:#5a6b82}
+.nv27-chip{display:inline-block;border-radius:999px;padding:4px 11px;font-size:.78rem;font-weight:800;background:#e3f6f2;color:#0a6b5d}
+.nv27-chip.warn{background:#fff3de;color:#8a5a00}
+.nv27-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.nv27-kpi{background:#fff;border:1px solid #dbe5f2;border-radius:14px;padding:14px 16px;box-shadow:0 3px 10px #123e6b12}
+.nv27-kpi span{display:block;font-size:.82rem;color:#5a6b82;font-weight:700}
+.nv27-kpi strong{display:block;font-size:1.6rem;margin-top:4px;color:#10233f}
+.nv27-kpi small{color:#6b7a90}
+.nv27-modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.nv27-card{background:#fff;border:1px solid #dbe5f2;border-top:4px solid var(--c,#0757bd);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 3px 10px #123e6b12}
+.nv27-card header{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.nv27-card h2{margin:0;font-size:1.05rem}.nv27-card p{margin:0;color:#5a6b82;font-size:.92rem;flex:1}
+.nv27-card a.go{align-self:flex-start;display:inline-flex;align-items:center;min-height:42px;padding:9px 14px;border-radius:11px;background:#0757bd;color:#fff;font-weight:800;text-decoration:none}
+.nv27-card a.go:hover{background:#06458f}.nv27-card a.go:focus-visible{outline:3px solid #f4a62a;outline-offset:2px}
+.nv27-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.nv27-cats div{display:flex;justify-content:space-between;background:#f3f7fd;border-radius:10px;padding:8px 12px}
+.nv27-note{background:#f3f7fd;border-left:4px solid #0757bd;border-radius:8px;padding:10px 14px;color:#34475f;font-size:.9rem}
+@media(max-width:520px){.nv27-card a.go{align-self:stretch;justify-content:center}.nv27-hero h1{font-size:1.4rem}}
+</style>
+<div class="nv27-hero"><div><h1>Dashboard</h1><p>Welkom terug. Alles voor je dropshippingbedrijf op één plek.</p></div><span class="nv27-chip warn">● Webshop in ontwikkeling</span></div>
+
+{% if allowed("stats", "product_view", "order_view", "customer_view") %}
+<div class="nv27-kpis" aria-label="Kerncijfers">
+  {% if allowed("stats", "product_view") %}
+  <div class="nv27-kpi"><span>▣ Catalogusproducten</span><strong>{{ stats.total_products }}</strong><small>Huidige testcatalogus</small></div>
+  <div class="nv27-kpi"><span>▦ Categorieën</span><strong>{{ stats.total_categories }}</strong><small>Actieve hoofdcollecties</small></div>
+  <div class="nv27-kpi"><span>▤ Aanbiedingen</span><strong>{{ stats.offers }}</strong><small>Gemarkeerd in catalogus</small></div>
+  <div class="nv27-kpi"><span>◈ Gem. catalogusprijs</span><strong>€{{ '%.2f'|format(stats.avg_price)|replace('.', ',') }}</strong><small>Geen verkoopcijfer</small></div>
+  {% endif %}
+  {% if is_admin %}<div class="nv27-kpi"><span>♙ Klanten</span><strong>{{ nv_customer_count if nv_customer_count is not none else "—" }}</strong><small>Lokale klantdatabase</small></div>{% endif %}
+</div>
+{% endif %}
+
+{% if is_admin %}
+<div class="nv27-modules">
+  <article class="nv27-card" style="--c:#0b7fd6"><header><h2>▣ Producten</h2><span class="nv27-chip">Beschikbaar</span></header><p>Catalogus, categorieën, afbeeldingen en kortingen beheren.</p><a class="go" href="/dashboard?section=producten">Producten beheren →</a></article>
+  <article class="nv27-card" style="--c:#6a4fd6"><header><h2>⌕ Productonderzoek</h2><span class="nv27-chip">Beschikbaar</span></header><p>Kansrijke producten zoeken, vergelijken en de marge berekenen.</p><a class="go" href="/dashboard?section=onderzoek">Onderzoek starten →</a></article>
+  <article class="nv27-card" style="--c:#6a4fd6"><header><h2>◎ Niches &amp; trends</h2><span class="nv27-chip">Beschikbaar</span></header><p>Viral Product Finder en internationaal marktonderzoek.</p><a class="go" href="/dashboard?section=viral">Trends bekijken →</a></article>
+  <article class="nv27-card" style="--c:#d98a14"><header><h2>▧ Leveranciers</h2><span class="nv27-chip">Beschikbaar</span></header><p>Leveranciers zoeken en vergelijken, inclusief AI-zoekbalk (sleutel nog niet ingesteld).</p><a class="go" href="/dashboard?section=leveranciers">Leveranciers zoeken →</a></article>
+  <article class="nv27-card" style="--c:#0f9d8a"><header><h2>⛓ WooCommerce</h2><span class="nv27-chip{% if not woo_on %} warn{% endif %}">{{ 'Ingesteld · status controleren' if woo_on else 'Niet ingesteld' }}</span></header><p>Producten voorbereiden en na jouw goedkeuring publiceren naar de webshop.</p><a class="go" href="/dashboard?section=woocommerce">WooCommerce beheren →</a></article>
+  <article class="nv27-card" style="--c:#0f9d8a"><header><h2>🛒 Bestellingen</h2><span class="nv27-chip warn">{{ 'Alleen-lezen koppeling' if woo_on else 'Niet gekoppeld' }}</span></header><p>Orders en betaalstatus verschijnen hier zodra de orderbron gekoppeld is. Geen verzonnen aantallen.</p><a class="go" href="/dashboard?section=bestellingen">Bestellingen bekijken →</a></article>
+  <article class="nv27-card" style="--c:#0757bd"><header><h2>✉ Klantberichten</h2><span class="nv27-chip warn">Gmail niet gekoppeld</span></header><p>Klantvragen lezen en beantwoorden. Er wordt nooit automatisch iets verzonden.</p><a class="go" href="/dashboard?section=klantenservice">Klantenservice openen →</a></article>
+  <article class="nv27-card" style="--c:#d98a14"><header><h2>€ Administratie</h2><span class="nv27-chip warn">Testdata</span></header><p>Omzet, kosten, marges en overzichten voor de boekhouding.</p><a class="go" href="/dashboard?section=administratie">Administratie openen →</a></article>
+</div>
+{% endif %}
+
+{% if allowed("stats") %}
+<article class="nv27-card" style="--c:#0757bd"><header><h2>Producten per categorie</h2></header>
+  <div class="nv27-cats">{% for name, amount in category_counts %}<div><span>{{ name }}</span><strong>{{ amount }}</strong></div>{% endfor %}</div>
+  <p class="nv27-note">Dit zijn catalogusaantallen, geen verkoopcijfers. Omzet, bestellingen en winst worden pas getoond na een geverifieerde koppeling.</p>
+</article>
+{% endif %}
+
+{% if is_admin %}
+<nav class="nv27-kpis" aria-label="Snelle acties">
+  <a class="nv27-kpi" href="/dashboard?section=calculator"><span>Snel</span><strong>Marge berekenen</strong></a>
+  <a class="nv27-kpi" href="/dashboard?section=monitoring"><span>Snel</span><strong>Systeemstatus</strong></a>
+  <a class="nv27-kpi" href="/dashboard?section=statistieken"><span>Snel</span><strong>Rapportages</strong></a>
+  <a class="nv27-kpi" href="/dashboard?section=instellingen"><span>Snel</span><strong>Instellingen</strong></a>
+</nav>
+{% endif %}
+</section>
