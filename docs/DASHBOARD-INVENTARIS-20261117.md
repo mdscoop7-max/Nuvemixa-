@@ -51,3 +51,4 @@ WooCommerce (orders/publicatie), Gmail (klantberichten), Google Ads, boekhouding
 - Gedeelde stijllaag `static/nv-dashboard-modern-20261117.css` (titels, Terug-knop, focusrand, formulieren, tabellen) voor alle secties; geen functies gewijzigd.
 - Controle: 25 secties x mobiel/tablet/desktop zonder overflow en zonder JS/console-fouten (Playwright, lokale testserver, testdata).
 - Tests: 316 geslaagd, 42 overgeslagen (Postgres-tests, niet als geslaagd geteld).
+- Ronde 3: paginakop met groepskleur (Winkel blauw, Onderzoek paars, Vindbaarheid turquoise, Beheer oranje), statuslabels (`static/nv-dashboard-modern-20261117.js`, alleen presentatie), formulier- en tabelstijl voor alle 25 secties.

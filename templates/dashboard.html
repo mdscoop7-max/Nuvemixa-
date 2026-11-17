@@ -128,7 +128,7 @@
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=1"></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=2"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
 <body class="nv-admin-ui"><div class="layout">
 <aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
@@ -153,7 +153,8 @@
 
 {% else %}
 <a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
-<header class="section-header"><div><span class="section-kicker">NUVEMIXA · BEHEEROMGEVING</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
+{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
+<header class="section-header nv-sg nv-sg-{{ nv_grp }}"><div><span class="section-kicker">{{ ['NUVEMIXA · OVERZICHT','WINKEL','ONDERZOEK','VINDBAARHEID','BEHEER'][nv_grp] }}</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
 {% elif section == "calculator" %}

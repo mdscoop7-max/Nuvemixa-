@@ -22,3 +22,16 @@ main .panel .integration-status{margin-top:8px}
 main :is(.panel,.card,.nv26-card){box-shadow:0 2px 10px #123e6b12;border:1px solid var(--nvm-line)}
 main a.integration-status,main .nv-blue-action:not(.nv-back){background:var(--nvm-blue);border-radius:10px;box-shadow:none;transition:background-color .15s,transform .15s}
 main a.integration-status:hover,main .nv-blue-action:not(.nv-back):hover{background:#06458f;transform:translateY(-1px)}
+/* Paginakop met kleur van de menugroep */
+.nv-sg{--g:#0757bd;border-left:5px solid var(--g);padding-left:16px!important;border-radius:4px}
+.nv-sg-1{--g:#1b8de0}.nv-sg-2{--g:#7a5ff0}.nv-sg-3{--g:#14b8a0}.nv-sg-4{--g:#e8a020}
+.nv-sg .section-kicker{color:var(--g)!important;letter-spacing:.08em}
+/* Kleurlabels voor status */
+.nvm-chip{display:inline-block;border-radius:999px;padding:3px 11px;font-size:.82rem;font-weight:700;border:1px solid transparent}
+.nvm-chip-warn{background:#fff0d1;color:#7a4e00;border-color:#f2d08c}
+.nvm-chip-ok{background:#e3f6f2;color:#0a6b5d;border-color:#bfe6dd}
+/* Formulieren */
+main input[type=checkbox],main input[type=radio]{accent-color:var(--nvm-blue);width:1.1em;height:1.1em}
+main label{font-weight:700;color:#1e3354}
+main :is(input:not([type=checkbox]):not([type=radio]),select,textarea){border:1px solid #c4d3e8;border-radius:10px;background:#fff}
+main tbody tr:nth-child(even){background:#f6f9fe}
