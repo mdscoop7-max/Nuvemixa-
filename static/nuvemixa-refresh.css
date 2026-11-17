@@ -23,3 +23,14 @@
 .tm-global-language{z-index:1500!important}
 
 .nv-more{max-width:780px!important;margin:auto}.nv-more-grid{display:grid;gap:10px}.nv-more-grid a{display:flex;align-items:center;gap:15px;padding:16px 20px;border:1px solid #c9dbf6;border-radius:16px;background:#fff;color:#173965;text-decoration:none;font-weight:750;box-shadow:0 5px 15px #153c6a0d}.nv-more-grid a span:first-child{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#e8f1ff;color:#0962e9;font-size:25px}.nv-more-grid a b{margin-left:auto;font-size:24px;color:#0562e6}
+
+/* Mobiel 20261118: AI-knop en vaste balken overlappen de inhoud niet meer.
+   Oorzaak: .mobile-sticky-cart zat op bottom:10px onder de hogere dock (z-index 1200 > 1000), de AI-knop was een brede pil
+   (180 px) midden in de inhoud en body-padding (82px) telde de dock niet mee. */
+@media(max-width:760px){
+ .mobile-sticky-cart{bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+ body:has(.mobile-sticky-cart){padding-bottom:calc(168px + env(safe-area-inset-bottom,0px))!important}
+ .tm-assist-fab{width:52px!important;height:52px!important;min-width:0!important;padding:0!important;border-radius:50%!important;justify-content:center!important;right:14px!important;bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
+ body:has(.mobile-sticky-cart) .tm-assist-fab{bottom:calc(158px + env(safe-area-inset-bottom,0px))!important}
+ .tm-assist-fab>span,.tm-assist-fab .tm-ai-brand{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+}

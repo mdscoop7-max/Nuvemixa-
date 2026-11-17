@@ -1,4 +1,4 @@
-"""TrendMix productillustraties.
+"""NUVEMIXA productillustraties.
 
 Genereert per product een strakke, merkvaste SVG-afbeelding (geen externe
 afbeeldingsdienst nodig). Elke categorie heeft een eigen kleurenpalet en elk
@@ -150,7 +150,7 @@ def render_product_svg(name, category_slug):
     by = 90 + (seed >> 8) % 80
     rot = (seed >> 16) % 30 - 15
     uid = f"p{seed:x}"
-    title = escape(str(name or "TrendMix product"))
+    title = escape(str(name or "NUVEMIXA product"))
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="{title}">
 <title>{title}</title>
 <defs>

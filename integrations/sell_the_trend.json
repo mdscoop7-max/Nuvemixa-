@@ -2,7 +2,7 @@
   "integration": "sell_the_trend",
   "status": "platform_connection_required",
   "store_platform": null,
-  "customer_checkout": "TrendMix",
+  "customer_checkout": "NUVEMIXA",
   "affiliate_redirects": false,
   "order_flow": [
     "customer_orders_on_trendmix",
@@ -18,6 +18,6 @@
   "notes": [
     "Sell The Trend currently documents direct integrations with ecommerce platforms rather than a public direct API for a custom Flask store.",
     "Do not add affiliate URLs or external checkout links.",
-    "Connect TrendMix to WooCommerce or Shopify before enabling live payment and automated fulfillment."
+    "Connect NUVEMIXA to WooCommerce or Shopify before enabling live payment and automated fulfillment."
   ]
 }
