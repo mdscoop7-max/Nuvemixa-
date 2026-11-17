@@ -53,6 +53,7 @@
 
 <section class="panel nv-market-panel">
   <h2>{{ 'Viral Product Finder' if viral_page else 'Internationaal marktonderzoek' }}</h2>
+  <p class="nv-honest-note" role="note"><strong>Geen live trendmeting.</strong> {{ 'Hier wordt niet gemeten wat viraal gaat.' if viral_page else 'Hier staan geen marktprijzen of verkoopcijfers.' }} NUVEMIXA zoekt in aangesloten catalogi en openbare publicaties wanneer je op Zoeken klikt; de zoekresultaten zijn live opgehaald of komen uit een tijdelijke cache (10 minuten). Trendsignalen en prijzen controleer je zelf via de bronlinks.</p>
   <form method="get" action="{{ url_for('control') }}" class="nv-market-form" role="search">
     <input type="hidden" name="section" value="{{ 'viral' if viral_page else 'internationaal' }}">
     <input type="hidden" name="mrun" value="1">

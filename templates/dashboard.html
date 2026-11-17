@@ -213,7 +213,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
 <section class="panel nv-research-panel">
-  <h2>AI Productonderzoek</h2>
+  <h2>Productonderzoek</h2>
+  <p class="nv-honest-note" role="note"><strong>Geen AI en geen verkoopcijfers.</strong> Dit zoekt in aangesloten catalogi en publicaties wanneer je op Zoeken klikt. Resultaten zijn live opgehaald bronnen of een tijdelijke cache (10 minuten); er zijn hier geen demonstratiegegevens. "Zoeken met AI" staat bij Leveranciers en is niet geactiveerd.</p>
   <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form">
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
@@ -574,6 +575,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 .nv-research-platforms input[type=checkbox]{width:18px;height:18px;margin:0}
 .nv-research-platforms small{display:block}
 .nv-research-results{margin-top:1.5rem;scroll-margin-top:1rem}
+.nv-honest-note{background:#fff7e0;border:1px solid #e8c766;border-radius:10px;padding:10px 12px;margin:.6rem 0}
 .nv-research-tabs,.nv-research-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:1rem 0}
 .nv-research-tabs a{padding:12px;background:#eef5ff;border-radius:10px;text-align:center;color:#12355d;font-weight:750}
 .nv-research-tabs a[aria-selected=true]{background:#0757bd;color:#fff}

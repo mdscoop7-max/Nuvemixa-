@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from flask import abort, flash, redirect, request, url_for
 
-from nv_dashboard_manager import bp
+from nv_dashboard_manager import admin, bp
 from nv_permissions import allowed
 
 CATEGORIES = ("gadgets", "beauty-care", "lifestyle-sport", "home-living", "smart-home")
@@ -249,7 +249,7 @@ def run_source_test(fetch=None):
 
 @bp.post("/dashboard/onderzoek/bronnen-testen")
 def sources_test():
-    if not allowed("research"):
+    if not admin():  # doet uitgaande aanroepen: alleen de eigenaar
         abort(403)
     run_source_test()
     flash("Bronnentest uitgevoerd (alleen lezen). Resultaat staat onder 'Bronnen en dekking'.", "success")

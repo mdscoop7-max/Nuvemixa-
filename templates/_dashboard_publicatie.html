@@ -15,10 +15,11 @@
 
 <section class="panel"><h2>Zo werkt het</h2>
 <ol class="steps">
-<li><a href="/dashboard?section=onderzoek">Kansrijke producten zoeken</a> — werkt</li>
-<li><a href="/dashboard?section=viral">Niches en trends onderzoeken</a> — werkt</li>
-<li><a href="/dashboard?section=leveranciers">Leveranciers zoeken en vergelijken</a> — werkt</li>
-<li>Een product selecteren — hieronder, nu met testproducten (koppeling met onderzoeksresultaten volgt)</li>
+<li><a href="/dashboard?section=onderzoek">Producten zoeken</a> — <strong>werkt deels</strong>: doorzoekt aangesloten catalogi (geen AI, geen verkoopcijfers). Of de bronnen vanaf Render bereikbaar zijn, is nog niet bewezen: gebruik "Bronnen testen".</li>
+<li><a href="/dashboard?section=viral">Niches en trends onderzoeken</a> — <strong>werkt deels</strong>: handmatig register plus catalogus- en publicatiezoeker. Er is <strong>geen live trendfeed</strong> en er zijn geen verkoopcijfers.</li>
+<li><a href="/dashboard?section=leveranciers">Leveranciers zoeken en vergelijken</a> — <strong>werkt deels</strong>: onderzocht register en handmatige links; "Zoeken met AI" is niet geactiveerd.</li>
+<li><a href="/dashboard?section=partners">Partners zoeken</a> en bewaren op de kandidatenlijst — werkt als <strong>onderzocht register</strong>; de lijst is op Render Free tijdelijk en niet gekoppeld aan productpublicatie.</li>
+<li>Een product selecteren — hieronder, <strong>nog niet gekoppeld</strong> aan onderzoeksresultaten of kandidaten: alleen testproducten</li>
 <li>Inkoop, verkoop en marge controleren — werkt</li>
 <li>Productgegevens en afbeeldingen controleren — werkt (alleen de gegevens; afbeeldingslinks worden niet opgehaald)</li>
 <li>Bestaat het product al in WooCommerce? — werkt met {{ 'de echte leesverbinding' if publicatie.bron == 'echt' else 'TESTDATA (geen leesverbinding ingesteld)' }}</li>
