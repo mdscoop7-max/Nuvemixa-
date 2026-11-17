@@ -663,6 +663,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <p>Google beoordeelt ook het account, de winkel, bereikbaarheid en voorwaarden per markt. Deze lokale controle heeft geen Google-beoordeling opgevraagd.</p>
 <p><a href="https://support.google.com/merchants/answer/7052112?hl=nl" rel="noopener noreferrer">Productspecificatie van Google</a></p></section>
 {% elif section == "leveranciers" %}
+{% include "_dashboard_supplier_ai.html" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
 <form method="post" action="{{ url_for('admin_supplier_feed_preview') }}" enctype="multipart/form-data" class="nv-admin-feed-form">

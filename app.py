@@ -1201,6 +1201,7 @@ from nv_system_check import check_customers, scan as run_system_scan
 from nv_merchant_audit import audit as merchant_audit
 from nv_international import dashboard_market
 from nv_supplier_finder import directories as supplier_directories
+import nv_supplier_ai
 from nv_viral_research import viral_dashboard
 from nv_market_search import search_view as market_search_view
 
@@ -2384,6 +2385,7 @@ def control():
 
         supplier_rows=supplier_rows,
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
+        supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
 
         supplier_error=supplier_error,
 
