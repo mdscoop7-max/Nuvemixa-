@@ -14,3 +14,13 @@ body.nv-embedded{background:transparent}body.nv-embedded .shell{display:block;mi
 .tiles .tile{border-top:3px solid #0b7fd6;border-radius:14px}.tiles .tile:nth-child(2){border-top-color:#0f9d8a}.tiles .tile:nth-child(3){border-top-color:#d98a14}.tiles .tile:nth-child(4){border-top-color:#6a4fd6}
 .status:not(.connected):not(.error){background:#fff0d1;border-color:#f2d08c;color:#7a4e00}
 @media(max-width:600px){.nv-woo-subnav a{flex:1 1 calc(50% - 8px);justify-content:center}}
+
+.woo-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:0 0 16px}
+.woo-actions form{margin:0}
+.woo-btn{min-height:44px;padding:0 20px;border-radius:12px;border:1px solid #b9cdec;background:#fff;color:#0b4ba8;font:inherit;font-weight:800;cursor:pointer}
+.woo-btn.primary{background:#0b66e6;border-color:#0b66e6;color:#fff}
+.woo-btn:hover:not([disabled]){background:#e8f1ff;color:#0b3f8c}.woo-btn.primary:hover:not([disabled]){background:#0a5bd0;color:#fff}
+.woo-btn:focus-visible{outline:3px solid #0b66e6;outline-offset:2px}
+.woo-btn[disabled]{background:#eef2f8;border-color:#d4dce8;color:#4a5d7a;cursor:not-allowed}
+.woo-note{flex:1 1 280px;margin:0;color:#3b4f6e;font-size:.92rem}
+@media(max-width:560px){.woo-actions form,.woo-btn{width:100%}}

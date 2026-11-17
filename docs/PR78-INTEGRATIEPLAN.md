@@ -33,3 +33,16 @@ Resultaat van de proef: **337 geslaagd, 42 overgeslagen (Postgres), 0 mislukt.**
 7. **Moderniseringsbranch aansluiten [AKKOORD]:** `integration` in `dev/nuvemixa-dashboard-modern-20261117` samenvoegen; conflicten volgens de tabel hierboven oplossen.
 8. **Alle beveiligingstests opnieuw:** volledige suite plus `tests/test_staff_access.py` (17 tests) en routeaudit; 42 Postgres-tests blijven apart gerapporteerd tot er een goedgekeurde, geïsoleerde testdatabase is.
 9. **Pas daarna** de modernisering ter goedkeuring voorleggen.
+
+## Render-voorbereiding (alleen lezen, 17-11-2026 20:3x)
+- Wat ik kon controleren: GitHub-branch `integration/nuvemixa-dashboard-20261114` staat op `41fad63`; check-run `test` op die commit is geslaagd.
+- Wat ik **niet** kon controleren: de actuele Render-deployment, de deploygeschiedenis en of de Rollback-knop bij jouw (Free) dienst bestaat. Ik heb geen toegang tot het Render-dashboard en de Live-URL is voor mij niet bereikbaar. Dit moet jij in Render → Deploys bevestigen: (1) laatste geslaagde deploy = `41fad63`; (2) de vorige geslaagde deploy heeft een Rollback-knop; (3) auto-deploy staat op de integratiebranch.
+- Waarneming: op `41fad63` melden vier oude Vercel-koppelingen op GitHub "failure". Dat staat los van Render en van deze wijzigingen, maar kijk of die koppelingen nog nodig zijn.
+- De workflow `deploy-nuvemixa.yml` deployt alleen de webshop naar Alwaysdata en alleen handmatig; hij wordt niet gebruikt voor het dashboard.
+
+### Checklist vlak vóór een latere uitrol
+1. Render → Deploys: noteer commit en tijdstip van de huidige deploy.
+2. Noteer (niet delen) welke omgevingsvariabelen er staan; geen wijziging nodig voor PR #78.
+3. Zeg expliciet "merge PR #78" en later "deploy modernisering"; dat zijn twee aparte akkoorden.
+4. Na de deploy: eigenaarslogin met Google Authenticator, medewerker geblokkeerd, alle 26 menulinks.
+5. Bij een fout: Rollback naar de genoteerde deploy, auto-deploy weer aanzetten, of GitHub-revert.

@@ -51,6 +51,8 @@ ALLOWED_ENDPOINTS = frozenset({
     "contact",
     "customer_login",
     "customer_logout",
+    "nuvemixa_woo.commerce_refresh",      # alleen-lezen WooCommerce, schrijft niets in de database
+    "nuvemixa_woo.commerce_test",         # idem: één alleen-lezen aanroep
     "nv_manage.publicatie_goedkeuren",   # schrijft alleen in de sessie, niet in de database
     "nv_manage.publicatie_publiceren",   # verzendt nooit zonder schrijfkoppeling
     "trendmix_assistant",
