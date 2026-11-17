@@ -119,7 +119,8 @@
       const original=node.__tmLocaleOriginal;
       const trimmed=original.trim();
       if(!trimmed||trimmed.length>800)continue;
-      let english=mapping[trimmed];
+      let english=mapping[trimmed]||mapping[trimmed.replace(/\s+/g,' ')];
+      if(!english&&/^Winkelwagen \(\d+\)$/.test(trimmed))english=trimmed.replace('Winkelwagen','Cart');
       if(!english&&/^\d+ producten$/.test(trimmed))english=trimmed.replace('producten','products');
       if(!english&&/^\d+ resultaten$/.test(trimmed))english=trimmed.replace('resultaten','results');
       if(!english&&/^\d+ producten in /.test(trimmed))english=trimmed.replace('producten in','products in');

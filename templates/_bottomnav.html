@@ -325,5 +325,7 @@ main .tm-campaign::before{background:linear-gradient(180deg,rgba(4,13,30,.92) 0%
 @media(prefers-reduced-motion:reduce){.tm-dock *{transition:none!important}}
 </style>
 {% include '_tm_mobile_extras.html' %}
-<script defer src="{{ url_for('static',filename='trendmix-english-labels.js',v='20261019-3') }}"></script>
-<script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261114-storefront-controls') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-mobile-fix.css',v='20261118-1') }}">
+<script defer src="{{ url_for('static',filename='trendmix-english-labels.js',v='20261118-vertalingen') }}"></script>
+<script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261118-vertalingen') }}"></script>
+<script defer src="{{ url_for('static',filename='nv-winkelwagen.js',v='20261118-1') }}"></script>

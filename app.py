@@ -24,6 +24,7 @@ from nv_catalog_manager import catalog_changes
 from nuvemixa_integrations import mollie_readonly_check
 from nv_storage_paths import CUSTOMER_DB
 import nv_dashboard_postgres
+import nv_checkout
 
 from datetime import datetime, timezone
 
@@ -459,6 +460,18 @@ def cart_items():
 def cart_count():
 
     return sum(max(1, int(item.get("qty", 1))) for item in cart_items())
+
+
+
+
+
+def cart_dropped_count():
+
+    """Aantal items in de sessie dat niet meer in de catalogus staat (voor een duidelijke melding)."""
+
+    stored = [i for i in session.get("trendmix_cart", []) if isinstance(i, dict)]
+
+    return max(0, len(stored) - len(cart_items()))
 
 
 
@@ -2788,6 +2801,23 @@ def winkelwagen():
 
     cart = [dict(item) for item in cart_items()]
 
+    notice = None
+
+    if request.method == "GET":
+
+        dropped = cart_dropped_count()
+
+        if dropped:
+
+            notice = ("Een product in je winkelwagen is niet meer beschikbaar en is verwijderd." if dropped == 1
+                      else "Producten in je winkelwagen zijn niet meer beschikbaar en zijn verwijderd.")
+
+            session["trendmix_cart"] = [{"id": item["id"], "qty": item["qty"]} for item in cart]
+
+            session.modified = True
+
+        notice = notice or session.pop("trendmix_cart_notice", None)
+
 
 
     if request.method == "POST":
@@ -2799,6 +2829,10 @@ def winkelwagen():
         if action == "add":
 
             product = find_product(request.form.get("product_id", "").strip())
+
+            if not product:
+
+                session["trendmix_cart_notice"] = "Dit product is niet beschikbaar en is niet aan je winkelwagen toegevoegd."
 
             if product:
 
@@ -2900,6 +2934,8 @@ def winkelwagen():
 
         cart_total=total,
 
+        notice=notice,
+
     )
 
 
@@ -2939,6 +2975,8 @@ def afrekenen():
 
     error = None
 
+    field_errors = {}
+
     if request.method == "POST":
 
         customer = {
@@ -2965,21 +3003,13 @@ def afrekenen():
             pass
         elif coupon_error:
             error = coupon_error
-        elif not all(customer.values()):
+        elif (field_errors := nv_checkout.validate_customer(customer)):
 
-            error = "Vul alle verplichte gegevens in."
-
-        elif not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", customer["email"]):
-
-            error = "Vul een geldig e-mailadres in."
+            error = "Controleer de gemarkeerde velden."
 
         elif not consent:
 
             error = "Controleer en bevestig je gegevens voordat je doorgaat."
-
-        elif len(customer["country"]) > 100 or len(customer["country"]) < 2 or any(ord(char) < 32 for char in customer["country"]):
-
-            error = "Vul een geldige landnaam in."
 
         elif live_orders_enabled():
 
@@ -3027,7 +3057,7 @@ def afrekenen():
 
             return render_template("checkout.html", categories=CATEGORIES, cart=cart, cart_count=cart_count(), cart_total=total, test_mode=True, order={"id": "TEST"}, error=None, discount=discount)
 
-    return render_template("checkout.html", categories=CATEGORIES, cart=cart, cart_count=cart_count(), cart_total=total, test_mode=test_mode, order=order, error=error, discount=discount, coupon_code=coupon_code, coupon_error=coupon_error, customer=(customer if request.method == "POST" else {}))
+    return render_template("checkout.html", categories=CATEGORIES, cart=cart, cart_count=cart_count(), cart_total=total, test_mode=test_mode, order=order, error=error, discount=discount, coupon_code=coupon_code, coupon_error=coupon_error, customer=(customer if request.method == "POST" else {}), field_errors=field_errors)
 
 
 
