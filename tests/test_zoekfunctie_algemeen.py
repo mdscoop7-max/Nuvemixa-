@@ -96,7 +96,7 @@ def test_lege_zoekopdracht_toont_verder_zoeken_zonder_nephits(administrator, mon
     pagina = administrator.get("/dashboard?section=onderzoek&research_run=1&research_term=Apple+AirTag+4-pack"
                                "&research_category=gadgets&research_mode=products&research_country=NL"
                                "&research_platform=Productcatalogi").get_data(as_text=True)
-    assert "Geen bevestigde match" in pagina
+    assert "Geen bevestigd product en geen bevestigde leverancier" in pagina
     assert "Verder zoeken (niet bevestigd)" in pagina and "dropXL" in pagina
 
 
@@ -108,3 +108,40 @@ def test_generiek_eenwoordig_zoekwoord_houdt_de_categoriepoort():
     product = {"id": 5, "title": "Table Lamp", "handle": "table-lamp", "type": "Lamp", "url": "/products/table-lamp"}
     resultaat, reden = catalogue_product(bron, "lamp", maak_fetch(), product, {}, None)
     assert resultaat is None and reden == "categorie buiten selectie"
+
+
+# Meerwoordige zoekopdrachten die inhoudelijk NIET overeenkomen met het (nagebootste) bronproduct:
+# ze mogen nooit als bevestigde match getoond worden.
+AFWIJKEND = [
+    ("beauty-care", "NIVEA Soft Hydraterende Crème 400 ml"),       # andere inhoud
+    ("beauty-care", "NIVEA Soft body lotion 200 ml"),              # ander producttype
+    ("beauty-care", "NIVEA Men gezichtscrème 200 ml"),             # andere productlijn
+    ("beauty-care", "Philips OneBlade 360 Pro scheerapparaat"),    # ander model
+    ("gadgets", "Sony WH-1000XM4 koptelefoon"),                    # ander model
+    ("gadgets", "Sony WH-1000XM5 oordopjes"),                      # ander producttype
+    ("gadgets", "Bose QuietComfort speaker"),                      # ander merk
+    ("smart-home", "Ring Video Doorbell Pro 2"),                   # ander model
+    ("smart-home", "TP-Link Tapo C210 camera"),                    # ander model
+    ("smart-home", "Ring Video Doorbell Wired"),                   # andere uitvoering
+    ("lifestyle-sport", "Nike Dri-FIT hardloopbroek"),             # ander kledingstuk
+    ("lifestyle-sport", "Bidon 500 ml roestvrij staal"),           # andere inhoud
+    ("lifestyle-sport", "Adidas yogamat 8 mm"),                    # ander merk
+    ("home-living", "Velvet sierkussen 60x60"),                    # andere afmeting
+    ("home-living", "Philips Hue woonkamer vloerlamp"),            # ander producttype
+]
+
+
+@pytest.mark.parametrize("categorie,term", AFWIJKEND)
+def test_afwijkend_product_wordt_nooit_bevestigd(categorie, term):
+    r = discover(term, "NL", "products", ["Productcatalogi"], maak_fetch(), category=categorie, categories=CATS)
+    assert r["products"] == [], [p["title"] for p in r["products"]]
+    assert r["suppliers"] == []
+
+
+def test_relevantie_bij_specifieke_zoekopdracht_laat_andere_gadgets_toe():
+    from nv_product_discovery import category_matches, relevance_for
+    assert relevance_for("Xiaomi Mi Band smartwatch")("gadgets", "Xiaomi Smart Band 9")
+    assert not relevance_for("Xiaomi Mi Band smartwatch")("gadgets", "xxx porno gift card")  # onveilig blijft geweerd
+    assert relevance_for("lamp") is category_matches  # generiek: categorielijst blijft bewaken
+    assert category_matches("gadgets", "Smartwatch Pro")
+    assert category_matches("gadgets", "Portable projector Full HD")

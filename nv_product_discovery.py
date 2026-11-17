@@ -89,8 +89,8 @@ ALL_PRODUCTS = "shop"
 SUPPLIER_MODES = {"suppliers", "dropship", "wholesale"}
 PRODUCT_MODES = {"products", "trends", "niche", "product"}
 DEFAULT_TABS = {**dict.fromkeys(SUPPLIER_MODES, "suppliers"), "trends": "trends", "news": "news"}
-EMPTY_RESULTS = ("Geen bevestigde match in de geraadpleegde bronnen. Dat betekent niet dat het product niet bestaat: "
-                 "NUVEMIXA kan alleen zoeken in de aangesloten catalogi.")
+EMPTY_RESULTS = ("Geen bevestigd product en geen bevestigde leverancier gevonden in de geraadpleegde bronnen. "
+                 "Dat betekent niet dat het product niet bestaat: NUVEMIXA kan alleen zoeken in de aangesloten catalogi.")
 EU = frozenset("NL BE DE FR ES IT PL AT PT IE SE DK FI CZ SK HU RO BG GR HR SI LT LV EE LU MT CY".split())
 
 
@@ -187,7 +187,7 @@ TRADE_PROFILES = {
 }
 ORIGINS = {**{code: details[0] for code, details in COUNTRIES.items()}, "CN": "China"}
 CATEGORY_HINTS = {
-    "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|bluetooth speaker|tracker|airtag|key finder|cable|armband|phone holder",
+    "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|earphones|headset|bluetooth speaker|speaker|tracker|airtag|key finder|cable|armband|phone holder|smartwatch|smart watch|projector|ssd|webcam|drone|keyboard|mouse|tripod|gimbal|ring light|adapter|hub|action camera|dash ?cam",
     "smart-home": r"smart|wifi|zigbee|matter|curtain|hub|sensor|lighting|rgbicww|door lock|camera|doorbell|robot vacuum|robovac|homebase",
     "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty|trimmer|straightener|curling|nail|massager|massage|mirror|flosser|toothbrush|shaver|epilator|jewelry|brush|scalp|soap dispenser|dryer",
     "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk",
@@ -208,6 +208,14 @@ def category_matches(category, evidence):
     return not UNSAFE.search(evidence) and bool(
         re.search(r"\b(?:" + CATEGORY_HINTS[category] + r")\b", normalize(evidence))
     )
+
+
+def relevance_for(term):
+    """Bij een specifieke zoekopdracht beslist de productmatch (merk/type/model); de categorielijst
+    CATEGORY_HINTS bewaakt alleen leeg of generiek zoeken. Onveilige vermeldingen blijven altijd geweerd."""
+    if specific_term(term):
+        return lambda category, evidence: not UNSAFE.search(evidence)
+    return category_matches
 
 
 def research_links(term, platforms, country, language):
@@ -662,7 +670,7 @@ _SYNCEE_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="syncee")
 
 def run_syncee(fetch, query, country, selected, term, alternates, budget):
     attempts = []
-    results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, category_matches,
+    results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, relevance_for(term),
                               term=term, product_matches=product_matches, attempts=attempts,
                               alternates=alternates, deadline=monotonic() + budget)
     return results, attempts
@@ -740,11 +748,11 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     try:
         product_tasks = [submit(source.name, catalogue_items, source, term, mode, fetch, attempts, started + 7)
                          for source in sources]
-        hama_task = (submit("Hama", hama_products, fetch, term, country, read_source, matches, category_matches,
+        hama_task = (submit("Hama", hama_products, fetch, term, country, read_source, matches, relevance_for(term),
                                  product_matches)
                      if trade_mode and country in {"NL", "DE"} and "gadgets" in selected else None)
         hurtel_task = (submit("Hurtel", hurtel_products, fetch, term, country, selected, SEEDS, read_source,
-                                   index_query, product_matches, category_matches)
+                                   index_query, product_matches, relevance_for(term))
                        if trade_mode and selected.keys() & {"gadgets", "smart-home"} else None)
         dropship_task = (start_syncee(fetch, index_query(term) if term else SEEDS[category], country, selected,
                                       term, candidate_queries(term))
