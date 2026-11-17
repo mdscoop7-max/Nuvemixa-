@@ -115,3 +115,50 @@ def test_geen_enkele_aanvraag_functie_bestaat():
     import inspect
     source = inspect.getsource(np_)
     assert "smtplib" not in source and "requests." not in source and "send_mail" not in source
+
+
+def test_score_wordt_als_voorlopige_indicatie_gepresenteerd(administrator):
+    html = administrator.get("/dashboard?section=partners").get_data(as_text=True)
+    assert "Voorlopige indicatie" in html and "Geschiktheid" not in html
+    assert "geen</strong> oordeel over betrouwbaarheid" in html and "geen</strong> overeenkomst" in html
+    assert "marge en inkoopprijs onbekend" in html
+
+
+def test_interface_is_eerlijk_over_register_en_tijdelijke_opslag(administrator):
+    html = administrator.get("/dashboard?section=partners").get_data(as_text=True)
+    assert "onderzocht register" in html and "handmatige ontdekkingslinks" in html
+    assert "geen live, automatische internetzoekmachine" in html
+    assert "Op Render Free" in html and "tijdelijk" in html and "geen goedgekeurde leverancier" in html
+
+
+def test_kandidaat_bewaren_alleen_door_eigenaar(administrator, monkeypatch):
+    saved = []
+    import nuvemixa_admin_store as store
+    monkeypatch.setattr(store, "add_supplier", lambda *a, **k: saved.append(a))
+    monkeypatch.setattr(np_, "admin", lambda: False)
+    r = administrator.post("/dashboard/partners/kandidaat", data={"_csrf_token": CSRF_TOKEN, "name": "Beautinow"})
+    assert r.status_code == 403 and saved == []
+
+
+def test_kandidaat_invoer_wordt_gevalideerd(administrator, monkeypatch):
+    import nuvemixa_admin_store as store
+    saved = []
+    monkeypatch.setattr(store, "add_supplier", lambda *a, **k: (saved.append(a), store_validate(*a))[1])
+
+    def store_validate(name, email="", website="", notes=""):
+        if website and not website.startswith(("https://", "http://")):
+            raise ValueError("Website moet beginnen met https:// of http://.")
+        return None
+    post = lambda **d: administrator.post("/dashboard/partners/kandidaat", data={"_csrf_token": CSRF_TOKEN, **d})
+    post(name="Kleine Shop", url="javascript:alert(1)", model="AB", notes="x")
+    assert saved[0][3].startswith("[Kandidaat · model B ·")  # ongeldig model wordt B
+    r = post(name="x", url="javascript:alert(1)")
+    assert r.status_code == 303
+    html = administrator.get("/dashboard?section=partners").get_data(as_text=True)
+    assert 'href="javascript:' not in html
+
+
+def test_kandidaat_wordt_nooit_goedgekeurd_opgeslagen():
+    import inspect
+    source = inspect.getsource(np_.save_candidate)
+    assert "goedgekeurd" not in source and "status" not in source.replace("match[\"status\"]", "")

@@ -2,6 +2,9 @@
 <section class="panel nv-partners">
   <h2>Partners zoeken</h2>
   <p class="nv-partner-lead">Drie gescheiden modellen: <strong>A</strong> directe dropshipping, <strong>B</strong> potentiële partner (nog te vragen), <strong>C</strong> affiliate (commissie; NUVEMIXA is dan niet de verkoper). Niets hier is een bestaande overeenkomst; NUVEMIXA stuurt geen aanvragen of berichten. Onderzocht op {{ v.checked }} en niet live bijgewerkt.</p>
+  <div class="nv-partner-honest" role="note">
+    <strong>Wat dit is, en wat niet.</strong> "Partners zoeken" is een <strong>onderzocht register</strong> (handmatig samengesteld op {{ v.checked }}) met <strong>handmatige ontdekkingslinks</strong>. Het is <strong>geen live, automatische internetzoekmachine</strong>: er wordt niets op internet opgehaald, niemand benaderd en de gegevens verversen niet vanzelf. De score is een voorlopige indicatie, geen keurmerk. Een bewaarde kandidaat is <strong>geen goedgekeurde leverancier</strong>.
+  </div>
   <form method="get" class="nv-partner-form" role="search">
     <input type="hidden" name="section" value="partners">
     <label>Productnaam of zoekwoord <input name="q" value="{{ v.form.q }}" maxlength="80" placeholder="bijvoorbeeld parfum, slimme sloten, kamerplanten"></label>
@@ -25,7 +28,7 @@
       <p><span class="nv-model">{{ r.model_labels|join(' + ') }}</span> <strong>{{ r.status_label }}</strong>
         · {{ r.cat_labels|join(', ') or 'buiten onze categorieën' }}
         · kosten: {{ r.cost }}{% if r.integration %} · integratie: {{ r.integration|join(', ') }}{% endif %}</p>
-      <p>Geschiktheid <strong>{{ r.score.fit }}/100</strong> (alleen uit bekende gegevens) · {{ r.score.label }}: {{ r.score.facts }} feit, {{ r.score.hints }} aanwijzing, {{ r.score.unknown }} onbekend</p>
+      <p>Voorlopige indicatie <strong>{{ r.score.fit }}/100</strong> <small>(alleen een eerste vingerwijzing uit wat nu bekend is: <strong>geen</strong> oordeel over betrouwbaarheid, <strong>geen</strong> overeenkomst, marge en inkoopprijs onbekend tenzij hieronder als feit vermeld)</small><br>{{ r.score.label }}: {{ r.score.facts }} feit, {{ r.score.hints }} aanwijzing, {{ r.score.unknown }} onbekend</p>
     </header>
     {% if r.note %}<p class="nv-partner-note">{{ r.note }}</p>{% endif %}
     <details>
@@ -71,12 +74,13 @@
 
   <section class="nv-partner-candidates">
     <h3>Kandidatenlijst</h3>
+    <p class="nv-partner-warn"><strong>Let op: tijdelijk.</strong> Op Render Free staat de kandidatenlijst in SQLite en verdwijnt bij een herstart of nieuwe deployment. Noteer belangrijke kandidaten ook elders. Kandidaten zijn geen goedgekeurde leveranciers en er is geen contact gelegd.</p>
     {% if v.candidates is none %}<p>De opslag is nu niet beschikbaar.</p>
     {% elif v.candidates %}
     <table><thead><tr><th>Bedrijf</th><th>Website</th><th>Notitie</th></tr></thead><tbody>
-      {% for c in v.candidates %}<tr><td>{{ c.name }}</td><td>{% if c.website %}<a href="{{ c.website }}" target="_blank" rel="noopener noreferrer">{{ c.website }}</a>{% endif %}</td><td>{{ c.notes }}</td></tr>{% endfor %}
+      {% for c in v.candidates %}<tr><td>{{ c.name }}</td><td>{% if c.website and (c.website.startswith('https://') or c.website.startswith('http://')) %}<a href="{{ c.website }}" target="_blank" rel="noopener noreferrer">{{ c.website }}</a>{% elif c.website %}{{ c.website }}{% endif %}</td><td>{{ c.notes }}</td></tr>{% endfor %}
     </tbody></table>
-    <p><small>De lijst staat in de leveranciersopslag. Op Render Free is die tijdelijk (SQLite) en kan bij herstart leeg zijn.</small></p>
+    
     {% else %}<p>Nog geen kandidaten bewaard.</p>{% endif %}
   </section>
 </section>
@@ -91,7 +95,7 @@
 .nv-badge{white-space:nowrap;display:inline-block;padding:2px 8px;border-radius:99px;font-size:.78rem;font-weight:700}
 .nv-badge.fact{background:#d9f3e6;color:#0b5b3f}.nv-badge.hint{background:#fff1cc;color:#7a5200}.nv-badge.unk{background:#e8ecf2;color:#46526a}
 .nv-model{background:#eef5ff;color:#12355d;padding:2px 8px;border-radius:8px;font-weight:700}
-.nv-partner-note{font-style:italic}.nv-partner table,.nv-partner-candidates table{width:100%;border-collapse:collapse}
+.nv-partner-honest,.nv-partner-warn{background:#fff7e0;border:1px solid #e8c766;border-radius:10px;padding:10px 12px;margin:.8rem 0}.nv-partner-note{font-style:italic}.nv-partner table,.nv-partner-candidates table{width:100%;border-collapse:collapse}
 .nv-partner td,.nv-partner th,.nv-partner-candidates td,.nv-partner-candidates th{padding:6px;border-bottom:1px solid #e3eaf4;text-align:left;vertical-align:top;overflow-wrap:anywhere}
 .nv-partner summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
 .nv-partner button{min-height:44px;margin-top:8px}

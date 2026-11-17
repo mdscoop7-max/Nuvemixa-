@@ -13,7 +13,7 @@ from urllib.parse import quote
 
 from flask import abort, flash, redirect, request, url_for
 
-from nv_dashboard_manager import bp
+from nv_dashboard_manager import admin, bp
 from nv_permissions import allowed
 
 CHECKED = "17-11-2026"
@@ -366,22 +366,26 @@ def view(args):
 @bp.post("/dashboard/partners/kandidaat")
 def save_candidate():
     """Bewaart een bedrijf op de kandidatenlijst. Stuurt niets naar het bedrijf en publiceert niets."""
-    if not allowed("research"):
+    if not admin():  # alleen de eigenaar; medewerkers met onderzoeksrecht mogen niet schrijven
         abort(403)
     from nuvemixa_admin_store import add_supplier
-    name = (request.form.get("name") or "").strip()
+    name = " ".join((request.form.get("name") or "").split())[:120]
     match = next((p for p in all_partners() if p["name"] == name), None)
     try:
         if match:
             add_supplier(match["name"], "", match["url"], candidate_note("/".join(match["models"]), match["status"], name))
         else:  # eigen vondst, bijvoorbeeld een kleinere webshop
             model = request.form.get("model", "B")
+            model = model if model in ("A", "B", "C") else "B"
             add_supplier(name, "", (request.form.get("url") or "").strip(),
-                         ("[Kandidaat · model %s · eigen vondst, ongecontroleerd] " % (model if model in "ABC" else "B"))
-                         + (request.form.get("notes") or "").strip()[:900])
+                         ("[Kandidaat · model %s · eigen vondst, ongecontroleerd] " % model)
+                         + " ".join((request.form.get("notes") or "").split())[:900])
         flash("Bedrijf bewaard op de kandidatenlijst. Er is niets verstuurd.", "success")
     except ValueError as error:
         flash(str(error), "error")
-    except Exception:
+    except Exception as error:
+        if "UNIQUE" in str(error).upper() or "duplicate" in str(error).lower():
+            flash("Dit bedrijf staat al in de leverancierslijst; er is niets overschreven.", "error")
+            return redirect(url_for("control", section="partners"), code=303)
         flash("Opslaan is nu niet gelukt; probeer het later opnieuw.", "error")
     return redirect(url_for("control", section="partners"), code=303)
