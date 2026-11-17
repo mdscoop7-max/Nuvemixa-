@@ -180,3 +180,59 @@ Bron: Render-documentatie "Rollbacks" (render.com/docs/rollbacks). Niets is uitg
 5. **Controle**: inloggen als eigenaar met Google Authenticator, startpagina, Accountbeheer.
 6. **Gegevens**: indien een database is gebruikt, herstellen via een database-herstel naar een nieuwe database; nooit aannemen dat de coderollback gegevens terugbrengt.
 7. **Noodtoegang**: bewaar de herstelcodes van de eigenaar buiten het systeem (bestaande herstelprocedure blijft ongewijzigd).
+
+
+---
+
+# Aanvulling ronde 2 (17-11-2026, na jouw beslissingen)
+
+## 3b. Landenoverzicht: uitgewerkt onderzoek (nog niets geactiveerd)
+
+**Betrouwbaarheid van de landbepaling.** Land is de meest betrouwbare laag van IP-opzoeking; aanbieders noemen ruim 99 procent, maar ik heb dat niet onafhankelijk gemeten. Afwijkingen: VPN en proxy (bezoeker lijkt uit een ander land), mobiele providers en bedrijfsnetwerken, en ontbrekende gegevens (we tonen dan `ZZ` = onbekend). Het overzicht is dus een goede indicatie, geen boekhouding. Het wordt als "geschat op basis van IP-land" gelabeld.
+
+**Herkomst van de gegevens.** Alleen het meetscript op de webshop (`nv-webshop-visit.js`) stuurt een bezoek naar het dashboard, en alleen vanaf de toegestane oorsprong. Het land zou bij ontvangst worden bepaald en het IP-adres direct worden vergeten. De bestaande filters (bots, monitoring, DNT/GPC-signalen, prefetch, dashboard-/admin-paden) blijven gelden.
+
+**Dubbele tellingen.** Bestaand: per dag één bezoeker per dagelijks pseudoniem, herladen binnen het venster telt niet. Voor het land: de landteller wordt alleen opgehoogd wanneer de eerste hit van die bezoeker op die dag wordt geschreven (dezelfde transactie, `ON CONFLICT DO NOTHING`), zodat een herlaadactie of tweede pagina het land niet opnieuw telt.
+
+**Testverkeer onderscheiden.** (1) Alleen de toegestane oorsprong wordt geteld. (2) Een apart label per rij (`bron = 'webshop'`) voorkomt menging met eventueel later toegevoegde testbronnen. (3) Testen en demo's lopen nooit tegen de echte tabel. (4) Het dashboard toont het startmoment van de landmeting, zodat duidelijk is welke periode echt is. Het demonstratievoorbeeld (`docs/voorbeeld-landenoverzicht.html`) blijft ongewijzigd behouden en is duidelijk gemarkeerd.
+
+**Databasewijziging (later, na toestemming).** Eén nieuwe tabel `webshop_daily_countries(day, country, visitors, pageviews, PRIMARY KEY(day,country))`, zoals eerder beschreven. Er komt geen kolom bij individuele bezoekers en geen nieuwe persoonsgegevens. De tabel hoort in het dashboardschema, niet in het 2FA-schema.
+
+**Opslag en bewaartermijn.** De tabel is zeer klein (maximaal enkele honderden landrijen per dag, in de praktijk tientallen; een jaar blijft ruim onder 10 MB). Voorstel: aggregaten 26 maanden bewaren. De bestaande dagpseudoniemen (`webshop_daily_visitors`) hebben na het vullen van de aggregaten geen waarde meer en kunnen na 90 dagen worden verwijderd. Dat vraagt een DELETE-recht, dat de applicatierol bewust niet heeft; het opruimen loopt dus via de migratierol als aparte, handmatig goed te keuren taak.
+
+**Privacy.** Alleen land + aantallen worden bewaard. Het IP-adres wordt kort in het geheugen gebruikt voor de opzoeking; dat moet in de privacyverklaring staan. Geen cookies, geen koppeling met accounts of bestellingen, de drempel "Overig" (<5) beperkt herleidbaarheid. Dit is geen juridisch advies; laat de privacytekst en de grondslag controleren.
+
+**Externe diensten.** Voor de opzoeking is een landtabel nodig. Een lokaal bestand (bijvoorbeeld DB-IP Lite met bronvermelding, of GeoLite2 met MaxMind-account en voorwaarden) is een externe bron; dat activeer ik niet zonder jouw akkoord. De andere route is een CDN-landheader, wat een DNS-wijziging voor de webshop vraagt.
+
+Niets hiervan is geïmplementeerd of geactiveerd.
+
+## 4b. Permanente database: concreet voorstel
+
+**Gekozen oplossing:** een **nieuwe, aparte Render Postgres-instantie** alleen voor het dashboard, naast de bestaande 2FA-opslag. Reden: de code ondersteunt dit al (`NUVEMIXA_DASHBOARD_DATABASE_URL`, schema `nuvemixa_dashboard`), er is geen nieuwe code nodig om de bezoekerscijfers te bewaren, en een eigen instantie houdt de 2FA-gegevens volledig gescheiden (andere host, andere rol, ander wachtwoord, andere sleutel).
+
+**Maandelijkse kosten** (Render-prijzenpagina, opgezocht op 17-11-2026; controleer vóór afsluiten, ook op eventuele workspacekosten):
+| Plan | Geheugen | Per maand |
+|---|---|---|
+| Gratis | 256 MB | $0, niet geschikt: verloopt |
+| Kleinste betaald | 256 MB | circa $6 |
+| Volgende | 1 GB | circa $19 |
+Opslag is uitbreidbaar tegen $0,30 per GB per maand. Aanbeveling: het kleinste betaalde plan; opschalen kan later.
+
+**Verwachte opslag.** Bezoekersdata is klein: ongeveer 150 bytes per bezoeker per dag, dus 1.000 bezoekers per dag is circa 55 MB per jaar. Dashboardgegevens (producten, leveranciers, accounts) zijn eveneens klein. 1 GB is voor jaren ruim voldoende.
+
+**Back-up.** Render biedt point-in-time herstel (venster hangt af van het plan, 3 of 7 dagen volgens de prijzenpagina) en logische exports voor betaalde instanties. Aanvullend voorstel: een wekelijkse export van alleen schema `nuvemixa_dashboard`, bewaard buiten Render.
+
+**Herstelprocedure.** (1) Foutvaststelling; (2) herstel naar een nieuwe instantie of tijdstip; (3) tellingen vergelijken met de laatste export; (4) pas dan de `NUVEMIXA_DASHBOARD_DATABASE_URL` omzetten; (5) controle in Monitoring. Een code-rollback herstelt nooit gegevens, en er is geen stille terugval naar SQLite.
+
+**Veilige migratieaanpak.** Volgens `DASHBOARD-POSTGRES.md`: (1) lege, geïsoleerde testinstantie met fictieve gegevens, nooit productiegegevens; (2) schema `nv_dashboard_postgres.sql`; (3) proefimport zonder `--apply`, dan met; (4) tellen en vergelijken; (5) pas daarna, na jouw toestemming, de echte instantie. De import weigert bestaande rijen en onbekende kolommen, en draait terug bij een fout.
+
+**Benodigde tests.** De 42 overgeslagen Postgres-tests uitvoeren tegen de geïsoleerde testinstantie; bovendien: bezoekerstelling naar Postgres en terug lezen, geen dubbele tellingen bij herladen/gelijktijdige hits, rollenscheiding (applicatierol kan niet DELETE/DDL en kan niet bij het 2FA-schema), herstart zonder verlies, database offline geeft een duidelijke fout en geen SQLite-terugval, en een herstelproef vanuit een export.
+
+**Gevolgen voor het dashboard.** (1) Bezoekercijfers blijven bewaard na herstart. (2) Elke pagina die de database gebruikt wordt iets afhankelijker van de verbinding en afstand (regio kiezen dicht bij de Render-dienst; PR #75 heeft hiervoor een optionele verbindingspool die nog niet gemerged is). (3) Bij een databasestoring toont het dashboard een foutmelding in plaats van oude of lege cijfers. (4) Overige onderdelen (teamaccounts, klanten) schakelen alleen om met `NUVEMIXA_DASHBOARD_BACKEND=postgres`, een aparte keuze.
+
+Er is geen database aangemaakt, geen migratie uitgevoerd en geen abonnement afgesloten.
+
+## 5b. WooCommerce: wat nu in de code zit (ontwikkelbranch)
+De vier statussen zijn ingebouwd (`nv_woo_bridge.connection_status()`): Niet ingesteld, Geconfigureerd nog niet getest, Verbonden en gecontroleerd, Verbindingsfout. "Verbonden" verschijnt alleen na een geslaagde alleen-lezen test en geldt maximaal een uur (alleen in het geheugen). Onvolledige instellingen noemen alleen de namen van ontbrekende variabelen. De bestaande testknop bij Monitoring (alleen eigenaar, alleen als de vier variabelen aanwezig zijn) legt het resultaat vast; er is geen automatische aanroep toegevoegd en er is geen echte API-aanroep gedaan. Nieuwe tests: `tests/test_woo_status.py` (9 tests, zonder netwerk).
+
+Waarneming: de pagina WooCommerce (`/admin/commerce`) leest bij openen al producten en bestellingen zodra alle variabelen zijn gezet. Dat is bestaand gedrag en gebeurt dus automatisch na activering; als je dat liever alleen op een knop wilt, kan ik dat voorstellen.
