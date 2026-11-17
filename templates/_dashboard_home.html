@@ -1,70 +1,137 @@
-{# Eén hoofdscherm: toont alleen echt beschikbare cijfers (geen omzet, orders of winst zonder koppeling). #}
+{# Eén hoofdscherm. Toont alleen echt beschikbare cijfers; omzet, orders en winst staan er niet zolang er geen koppeling is. #}
 {% set woo_on = integration_status.woo %}
 <section class="nv27-home" aria-label="NUVEMIXA hoofdscherm">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7.6L12 12.6l8.7-5M12 22V12.6"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.5a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.3M16 4.2a3.5 3.5 0 0 1 0 6.6"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-truck" viewBox="0 0 24 24"><path d="M2 6h11v10H2zM13 9h4l3 3v4h-7"/><circle cx="6" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+<symbol id="i-euro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2a4 4 0 1 0 0 5.6M7.5 11h5M7.5 13h5"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+</defs></svg>
 <style>
-.nv27-home{display:grid;gap:18px}
+.nv27-home{--navy:#0b2a55;--blue:#0757bd;--teal:#0f9d8a;--purple:#6a4fd6;--orange:#c77d0a;--green:#1f8f4e;--line:#dbe5f2;--ink:#10233f;--mute:#5a6b82;--soft:#f3f7fd;display:grid;gap:18px;color:var(--ink)}
+.nv27-home svg.ic{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .nv27-hero{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-.nv27-hero h1{margin:0;font-size:1.7rem}.nv27-hero p{margin:.2rem 0 0;color:#5a6b82}
-.nv27-chip{display:inline-block;border-radius:999px;padding:4px 11px;font-size:.78rem;font-weight:800;background:#e3f6f2;color:#0a6b5d}
-.nv27-chip.warn{background:#fff3de;color:#8a5a00}
+.nv27-hero h1{margin:0;font-size:1.7rem;color:var(--navy)}.nv27-hero p{margin:.2rem 0 0;color:var(--mute)}
+.nv27-chips{display:flex;flex-wrap:wrap;gap:8px}
+.nv27-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:.78rem;font-weight:800;background:#e3f6f2;color:#0a6b5d}
+.nv27-chip.warn{background:#fff3de;color:#8a5a00}.nv27-chip.info{background:#e8f0fc;color:#0b4a9e}
+.nv27-sec{margin:0;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:800}
 .nv27-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px}
-.nv27-kpi{min-width:0;background:#fff;border:1px solid #dbe5f2;border-radius:14px;padding:14px 16px;box-shadow:0 3px 10px #123e6b12}
-.nv27-kpi span{display:block;font-size:.82rem;color:#5a6b82;font-weight:700}
-.nv27-kpi strong{display:block;font-size:1.6rem;margin-top:4px;color:#10233f}
-.nv27-kpi small{color:#6b7a90}
-.nv27-quick .nv27-kpi{text-decoration:none;min-width:0}.nv27-quick .nv27-kpi strong{font-size:1.05rem;overflow-wrap:anywhere}
-.nv27-modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px}
-.nv27-card{min-width:0;background:#fff;border:1px solid #dbe5f2;border-top:4px solid var(--c,#0757bd);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 3px 10px #123e6b12}
-.nv27-card header{flex-wrap:wrap;display:flex;justify-content:space-between;gap:8px;align-items:center}
-.nv27-card h2{margin:0;font-size:1.05rem}.nv27-card p{margin:0;color:#5a6b82;font-size:.92rem;flex:1}
-.nv27-card a.go{align-self:flex-start;display:inline-flex;align-items:center;min-height:42px;padding:9px 14px;border-radius:11px;background:#0757bd;color:#fff;font-weight:800;text-decoration:none}
-.nv27-card a.go:hover{background:#06458f}.nv27-card a.go:focus-visible{outline:3px solid #f4a62a;outline-offset:2px}
-.nv27-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px}
-.nv27-cats div{display:flex;justify-content:space-between;background:#f3f7fd;border-radius:10px;padding:8px 12px}
-.nv27-note{background:#f3f7fd;border-left:4px solid #0757bd;border-radius:8px;padding:10px 14px;color:#34475f;font-size:.9rem}
-@media(max-width:520px){.nv27-card a.go{align-self:stretch;justify-content:center}.nv27-hero h1{font-size:1.4rem}}
+.nv27-kpi{min-width:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px #123e6b10}
+.nv27-kpi .badge{grid-row:span 3;width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--soft);color:var(--blue)}
+.nv27-kpi.t .badge{background:#e3f6f2;color:var(--teal)}.nv27-kpi.p .badge{background:#efeaff;color:var(--purple)}.nv27-kpi.o .badge{background:#fff3de;color:var(--orange)}
+.nv27-kpi span{font-size:.8rem;color:var(--mute);font-weight:700}.nv27-kpi strong{font-size:1.45rem;line-height:1.1}.nv27-kpi small{color:#6b7a90;font-size:.76rem}
+.nv27-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:10px;counter-reset:s;margin:0;padding:0;list-style:none}
+.nv27-flow li{counter-increment:s;min-width:0}
+.nv27-flow a{display:flex;align-items:center;gap:10px;min-height:56px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--c,#6a4fd6);color:var(--ink);text-decoration:none;font-weight:800}
+.nv27-flow a::before{content:counter(s);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--c,#6a4fd6);color:#fff;font-size:.78rem;flex:none}
+.nv27-flow a small{display:block;font-weight:600;color:var(--mute)}
+.nv27-flow a:hover{background:var(--soft)}
+.nv27-quick{display:flex;flex-wrap:wrap;gap:8px}
+.nv27-quick a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:11px;background:#fff;border:1px solid var(--line);color:var(--navy);font-weight:800;text-decoration:none}
+.nv27-quick a svg{color:var(--blue)}.nv27-quick a:hover{background:var(--blue);color:#fff;border-color:var(--blue)}.nv27-quick a:hover svg{color:#fff}
+.nv27-home a:focus-visible{outline:3px solid #f4a62a;outline-offset:2px}
+.nv27-modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:14px}
+.nv27-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 8px #123e6b10}
+.nv27-card header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}
+.nv27-card h2,.nv27-card h3{margin:0;font-size:1.02rem;display:flex;align-items:center;gap:8px;color:var(--navy)}
+.nv27-card h2 svg,.nv27-card h3 svg{color:var(--c,var(--blue))}
+.nv27-card p{margin:0;color:var(--mute);font-size:.9rem;flex:1}
+.nv27-card a.go{align-self:flex-start;display:inline-flex;align-items:center;min-height:42px;padding:9px 14px;border-radius:11px;background:var(--blue);color:#fff;font-weight:800;text-decoration:none}
+.nv27-card a.go:hover{background:#06458f}
+.nv27-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px}
+.nv27-bars{display:grid;gap:9px}
+.nv27-bars div{display:grid;grid-template-columns:minmax(90px,1.1fr) 3fr auto;gap:10px;align-items:center;font-size:.88rem}
+.nv27-bars i{display:block;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--blue),#37a8e8);width:var(--w)}
+.nv27-bars b{text-align:right}.nv27-bars .track{background:var(--soft);border-radius:999px;height:10px}
+.nv27-status{display:flex;flex-wrap:wrap;gap:8px}
+.nv27-note{background:var(--soft);border-left:4px solid var(--blue);border-radius:8px;padding:10px 14px;color:#34475f;font-size:.88rem}
+@media(max-width:520px){.nv27-card a.go{align-self:stretch;justify-content:center}.nv27-hero h1{font-size:1.4rem}.nv27-bars div{grid-template-columns:1fr 2fr auto}}
 </style>
-<div class="nv27-hero"><div><h1>Dashboard</h1><p>Welkom terug. Alles voor je dropshippingbedrijf op één plek.</p></div><span class="nv27-chip warn">● Webshop in ontwikkeling</span></div>
+
+<div class="nv27-hero"><div><h1>Dashboard</h1><p>Welkom terug. Je dropshippingbedrijf op één plek.</p></div>
+  <div class="nv27-chips"><span class="nv27-chip warn">Webshop in ontwikkeling</span><span class="nv27-chip info">Testcatalogus</span></div></div>
 
 {% if allowed("stats", "product_view", "order_view", "customer_view") %}
-<div class="nv27-kpis" aria-label="Kerncijfers">
+<h2 class="nv27-sec">Kerncijfers</h2>
+<div class="nv27-kpis">
   {% if allowed("stats", "product_view") %}
-  <div class="nv27-kpi"><span>▣ Catalogusproducten</span><strong>{{ stats.total_products }}</strong><small>Huidige testcatalogus</small></div>
-  <div class="nv27-kpi"><span>▦ Categorieën</span><strong>{{ stats.total_categories }}</strong><small>Actieve hoofdcollecties</small></div>
-  <div class="nv27-kpi"><span>▤ Aanbiedingen</span><strong>{{ stats.offers }}</strong><small>Gemarkeerd in catalogus</small></div>
-  <div class="nv27-kpi"><span>◈ Gem. catalogusprijs</span><strong>€{{ '%.2f'|format(stats.avg_price)|replace('.', ',') }}</strong><small>Geen verkoopcijfer</small></div>
+  <div class="nv27-kpi"><span class="badge"><svg class="ic"><use href="#i-box"/></svg></span><span>Catalogusproducten</span><strong>{{ stats.total_products }}</strong><small>Niet automatisch live in WooCommerce</small></div>
+  <div class="nv27-kpi p"><span class="badge"><svg class="ic"><use href="#i-grid"/></svg></span><span>Categorieën</span><strong>{{ stats.total_categories }}</strong><small>Actieve hoofdcollecties</small></div>
+  <div class="nv27-kpi t"><span class="badge"><svg class="ic"><use href="#i-tag"/></svg></span><span>Aanbiedingen</span><strong>{{ stats.offers }}</strong><small>Gemarkeerd in catalogus</small></div>
+  <div class="nv27-kpi o"><span class="badge"><svg class="ic"><use href="#i-euro"/></svg></span><span>Gem. catalogusprijs</span><strong>€{{ '%.2f'|format(stats.avg_price)|replace('.', ',') }}</strong><small>Geen verkoopcijfer</small></div>
   {% endif %}
-  {% if is_admin %}<div class="nv27-kpi"><span>♙ Klanten</span><strong>{{ nv_customer_count if nv_customer_count is not none else "—" }}</strong><small>Lokale klantdatabase</small></div>{% endif %}
+  {% if is_admin %}<div class="nv27-kpi"><span class="badge"><svg class="ic"><use href="#i-users"/></svg></span><span>Klanten</span><strong>{{ nv_customer_count if nv_customer_count is not none else "—" }}</strong><small>Lokale klantdatabase</small></div>{% endif %}
 </div>
 {% endif %}
 
 {% if is_admin %}
+<h2 class="nv27-sec">Werkplek dropshipping</h2>
+<ol class="nv27-flow" aria-label="Van idee tot webshop">
+  <li><a href="/dashboard?section=onderzoek" style="--c:#6a4fd6"><span>Producten zoeken<small>Kansen en marge</small></span></a></li>
+  <li><a href="/dashboard?section=viral" style="--c:#6a4fd6"><span>Niches &amp; trends<small>Viral Product Finder</small></span></a></li>
+  <li><a href="/dashboard?section=leveranciers" style="--c:#0b7fd6"><span>Leveranciers<small>Zoeken en vergelijken</small></span></a></li>
+  <li><a href="/dashboard?section=publicatie" style="--c:#0f9d8a"><span>Controleren<small>Prijs, marge, dubbel</small></span></a></li>
+  <li><a href="/dashboard?section=publicatie" style="--c:#0f9d8a"><span>Goedkeuren<small>Door jou, voor WooCommerce</small></span></a></li>
+</ol>
+
+<h2 class="nv27-sec">Snelle acties</h2>
+<nav class="nv27-quick" aria-label="Snelle acties">
+  <a href="/dashboard?section=producten"><svg class="ic"><use href="#i-box"/></svg>Producten</a>
+  <a href="/dashboard?section=categorieen"><svg class="ic"><use href="#i-grid"/></svg>Categorieën</a>
+  <a href="/dashboard?section=bestellingen"><svg class="ic"><use href="#i-cart"/></svg>Bestellingen</a>
+  <a href="/dashboard?section=klanten"><svg class="ic"><use href="#i-users"/></svg>Klanten</a>
+  <a href="/dashboard?section=leveranciers"><svg class="ic"><use href="#i-truck"/></svg>Leveranciers</a>
+  <a href="/dashboard?section=accountbeheer"><svg class="ic"><use href="#i-shield"/></svg>Accountbeheer</a>
+  <a href="/dashboard?section=instellingen"><svg class="ic"><use href="#i-sliders"/></svg>Instellingen</a>
+</nav>
+
+<h2 class="nv27-sec">Onderdelen</h2>
 <div class="nv27-modules">
-  <article class="nv27-card" style="--c:#0b7fd6"><header><h2>▣ Producten</h2><span class="nv27-chip">Beschikbaar</span></header><p>Catalogus, categorieën, afbeeldingen en kortingen beheren.</p><a class="go" href="/dashboard?section=producten">Producten beheren →</a></article>
-  <article class="nv27-card" style="--c:#6a4fd6"><header><h2>⌕ Productonderzoek</h2><span class="nv27-chip">Beschikbaar</span></header><p>Kansrijke producten zoeken, vergelijken en de marge berekenen.</p><a class="go" href="/dashboard?section=onderzoek">Onderzoek starten →</a></article>
-  <article class="nv27-card" style="--c:#6a4fd6"><header><h2>◎ Niches &amp; trends</h2><span class="nv27-chip">Beschikbaar</span></header><p>Viral Product Finder en internationaal marktonderzoek.</p><a class="go" href="/dashboard?section=viral">Trends bekijken →</a></article>
-  <article class="nv27-card" style="--c:#d98a14"><header><h2>▧ Leveranciers</h2><span class="nv27-chip">Beschikbaar</span></header><p>Leveranciers zoeken en vergelijken, inclusief AI-zoekbalk (sleutel nog niet ingesteld).</p><a class="go" href="/dashboard?section=leveranciers">Leveranciers zoeken →</a></article>
-  <article class="nv27-card" style="--c:#0f9d8a"><header><h2>⛓ WooCommerce</h2><span class="nv27-chip{% if not woo_on %} warn{% endif %}">{{ 'Ingesteld · status controleren' if woo_on else 'Niet ingesteld' }}</span></header><p>Producten voorbereiden en na jouw goedkeuring publiceren naar de webshop.</p><a class="go" href="/dashboard?section=woocommerce">WooCommerce beheren →</a></article>
-  <article class="nv27-card" style="--c:#0f9d8a"><header><h2>⇪ Productpublicatie</h2><span class="nv27-chip warn">Voorbereiding · testdata</span></header><p>Marge, gegevens en dubbele producten controleren en zelf goedkeuren. Verzenden naar WooCommerce volgt na een schrijfkoppeling.</p><a class="go" href="/dashboard?section=publicatie">Product voorbereiden →</a></article>
-  <article class="nv27-card" style="--c:#0f9d8a"><header><h2>🛒 Bestellingen</h2><span class="nv27-chip warn">{{ 'Alleen-lezen koppeling' if woo_on else 'Niet gekoppeld' }}</span></header><p>Orders en betaalstatus verschijnen hier zodra de orderbron gekoppeld is. Geen verzonnen aantallen.</p><a class="go" href="/dashboard?section=bestellingen">Bestellingen bekijken →</a></article>
-  <article class="nv27-card" style="--c:#0757bd"><header><h2>✉ Klantberichten</h2><span class="nv27-chip warn">Gmail niet gekoppeld</span></header><p>Klantvragen lezen en beantwoorden. Er wordt nooit automatisch iets verzonden.</p><a class="go" href="/dashboard?section=klantenservice">Klantenservice openen →</a></article>
-  <article class="nv27-card" style="--c:#d98a14"><header><h2>€ Administratie</h2><span class="nv27-chip warn">Testdata</span></header><p>Omzet, kosten, marges en overzichten voor de boekhouding.</p><a class="go" href="/dashboard?section=administratie">Administratie openen →</a></article>
+  <article class="nv27-card" style="--c:#0b7fd6"><header><h2><svg class="ic"><use href="#i-box"/></svg>Producten</h2><span class="nv27-chip">Beschikbaar</span></header><p>Catalogus, categorieën, afbeeldingen en kortingen beheren.</p><a class="go" href="/dashboard?section=producten">Producten beheren →</a></article>
+  <article class="nv27-card" style="--c:#6a4fd6"><header><h2><svg class="ic"><use href="#i-search"/></svg>Productonderzoek</h2><span class="nv27-chip">Beschikbaar</span></header><p>Kansrijke producten zoeken, vergelijken en de marge berekenen.</p><a class="go" href="/dashboard?section=onderzoek">Onderzoek starten →</a></article>
+  <article class="nv27-card" style="--c:#6a4fd6"><header><h2><svg class="ic"><use href="#i-trend"/></svg>Niches &amp; trends</h2><span class="nv27-chip">Beschikbaar</span></header><p>Viral Product Finder en internationaal marktonderzoek.</p><a class="go" href="/dashboard?section=viral">Trends bekijken →</a></article>
+  <article class="nv27-card" style="--c:#0b7fd6"><header><h2><svg class="ic"><use href="#i-truck"/></svg>Leveranciers</h2><span class="nv27-chip">Beschikbaar</span></header><p>Leveranciers zoeken en vergelijken, inclusief AI-zoekbalk (sleutel nog niet ingesteld).</p><a class="go" href="/dashboard?section=leveranciers">Leveranciers zoeken →</a></article>
+  <article class="nv27-card" style="--c:#0f9d8a"><header><h2><svg class="ic"><use href="#i-link"/></svg>WooCommerce</h2><span class="nv27-chip{% if not woo_on %} warn{% endif %}">{{ 'Variabelen aanwezig' if woo_on else 'Niet ingesteld' }}</span></header><p>Verbinding met de webshop (alleen-lezen) en voorbereiding van producten.</p><a class="go" href="/dashboard?section=woocommerce">WooCommerce beheren →</a></article>
+  <article class="nv27-card" style="--c:#0f9d8a"><header><h2><svg class="ic"><use href="#i-upload"/></svg>Productpublicatie</h2><span class="nv27-chip warn">Voorbereiding · testdata</span></header><p>Marge, gegevens en dubbele producten controleren en zelf goedkeuren. Verzenden volgt na een schrijfkoppeling.</p><a class="go" href="/dashboard?section=publicatie">Product voorbereiden →</a></article>
+  <article class="nv27-card" style="--c:#0f9d8a"><header><h2><svg class="ic"><use href="#i-cart"/></svg>Bestellingen</h2><span class="nv27-chip warn">{{ 'Alleen-lezen koppeling' if woo_on else 'Niet gekoppeld' }}</span></header><p>Orders en betaalstatus verschijnen hier zodra de orderbron gekoppeld is. Geen verzonnen aantallen.</p><a class="go" href="/dashboard?section=bestellingen">Bestellingen bekijken →</a></article>
+  <article class="nv27-card" style="--c:#0757bd"><header><h2><svg class="ic"><use href="#i-mail"/></svg>Klantberichten</h2><span class="nv27-chip warn">Gmail niet gekoppeld</span></header><p>Klantvragen lezen en beantwoorden. Er wordt nooit automatisch iets verzonden.</p><a class="go" href="/dashboard?section=klantenservice">Klantenservice openen →</a></article>
+  <article class="nv27-card" style="--c:#c77d0a"><header><h2><svg class="ic"><use href="#i-euro"/></svg>Administratie</h2><span class="nv27-chip warn">Testdata</span></header><p>Omzet, kosten, winst per product en overzichten voor de boekhouding.</p><a class="go" href="/dashboard?section=administratie">Administratie openen →</a></article>
+  <article class="nv27-card" style="--c:#c77d0a"><header><h2><svg class="ic"><use href="#i-chart"/></svg>Rapportages</h2><span class="nv27-chip">Cataloguscijfers</span></header><p>Cataloguscijfers en bezoekers (zodra tracking aanstaat). Geen verzonnen omzet.</p><a class="go" href="/dashboard?section=statistieken">Rapportages openen →</a></article>
 </div>
 {% endif %}
 
+<div class="nv27-two">
 {% if allowed("stats") %}
-<article class="nv27-card" style="--c:#0757bd"><header><h2>Producten per categorie</h2></header>
-  <div class="nv27-cats">{% for name, amount in category_counts %}<div><span>{{ name }}</span><strong>{{ amount }}</strong></div>{% endfor %}</div>
-  <p class="nv27-note">Dit zijn catalogusaantallen, geen verkoopcijfers. Omzet, bestellingen en winst worden pas getoond na een geverifieerde koppeling.</p>
+<article class="nv27-card" style="--c:#0757bd"><header><h3><svg class="ic"><use href="#i-grid"/></svg>Producten per categorie</h3></header>
+  <div class="nv27-bars">{% for name, amount in category_counts %}<div><span>{{ name }}</span><span class="track"><i style="--w:{{ ((amount / stats.max_category_count) * 100)|round|int if stats.max_category_count else 0 }}%"></i></span><b>{{ amount }}</b></div>{% endfor %}</div>
+  <p class="nv27-note">Catalogusaantallen, geen verkoopcijfers.</p>
 </article>
 {% endif %}
-
 {% if is_admin %}
-<nav class="nv27-kpis nv27-quick" aria-label="Snelle acties">
-  <a class="nv27-kpi" href="/dashboard?section=calculator"><span>Snel</span><strong>Marge berekenen</strong></a>
-  <a class="nv27-kpi" href="/dashboard?section=monitoring"><span>Snel</span><strong>Systeemstatus</strong></a>
-  <a class="nv27-kpi" href="/dashboard?section=statistieken"><span>Snel</span><strong>Rapportages</strong></a>
-  <a class="nv27-kpi" href="/dashboard?section=instellingen"><span>Snel</span><strong>Instellingen</strong></a>
-</nav>
+<article class="nv27-card" style="--c:#0f9d8a"><header><h3><svg class="ic"><use href="#i-shield"/></svg>Systeem &amp; beveiliging</h3></header>
+  <div class="nv27-status">
+    <span class="nv27-chip">Eigenaarslogin met 2FA actief</span>
+    <span class="nv27-chip{% if staff_login_enabled %} warn{% endif %}">Medewerkerstoegang: {{ 'aan' if staff_login_enabled else 'uit' }}</span>
+    <span class="nv27-chip{% if not woo_on %} warn{% endif %}">WooCommerce: {{ 'variabelen aanwezig' if woo_on else 'niet ingesteld' }}</span>
+    <span class="nv27-chip{% if not integration_status.payment %} warn{% endif %}">Betalingen: {{ 'variabele aanwezig' if integration_status.payment else 'niet ingesteld' }}</span>
+    <span class="nv27-chip{% if not integration_status.contact %} warn{% endif %}">Contactmail: {{ 'ingesteld' if integration_status.contact else 'niet ingesteld' }}</span>
+  </div>
+  <p class="nv27-note">“Aanwezig” betekent dat de instelling bestaat, niet dat de verbinding is getest. Gmail, leveranciers en betaalproviders tonen pas “Verbonden” na een geslaagde koppeling.</p>
+  <a class="go" href="/dashboard?section=monitoring">Systeemstatus bekijken →</a>
+</article>
 {% endif %}
+</div>
 </section>
