@@ -230,3 +230,23 @@ def test_tampered_session_counter_is_ignored_safely(administrator, configured, m
     with administrator.session_transaction() as saved:
         saved["nv_supplier_ai_usage"] = {"m": "x", "mc": "veel", "d": None, "dc": -5}
     assert post(administrator).status_code == 200
+
+
+def test_route_is_listed_with_the_freeze_ai_endpoints():
+    import nv_freeze
+    assert "nv_manage.supplier_ai_search" in nv_freeze.AI_ENDPOINTS
+
+
+def test_freeze_guard_blocks_the_route_before_it_runs(administrator, configured, monkeypatch):
+    calls = install(monkeypatch, citations("https://sirocco.de/dropshipping/"))
+    monkeypatch.setenv("NUVEMIXA_DASHBOARD_FREEZE", "1")
+    response = post(administrator)
+    assert response.status_code == 503 and response.mimetype == "text/plain" and response.headers["Retry-After"] == "120"
+    assert calls == [] and ai.usage_snapshot()["month_used"] == 0
+
+
+def test_missing_or_wrong_csrf_token_is_refused_for_an_admin_without_any_call(administrator, configured, monkeypatch):
+    calls = install(monkeypatch, citations("https://sirocco.de/dropshipping/"))
+    assert administrator.post(ROUTE, data={"query": "LED-lamp"}).status_code == 403
+    assert administrator.post(ROUTE, data={"query": "LED-lamp", "_csrf_token": "fout"}).status_code == 403
+    assert calls == [] and ai.usage_snapshot()["month_used"] == 0
