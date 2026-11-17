@@ -789,6 +789,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
   </div>
 </section>
+{% elif section == 'administratie' and is_admin %}
+{% include "_dashboard_administratie.html" %}
 {% elif section == 'klantenservice' %}
 <section class="nv26-panel" aria-label="Klantenservice en berichten">
   <div class="nv26-panel-head"><div><div class="nv26-eyebrow">KLANTENSERVICE</div><h2>Klantenservice &amp; berichten</h2><p>Alle klantvragen straks op één plek.</p></div><span class="nv26-chip nv26-chip-warn">Gmail nog niet gekoppeld</span></div>

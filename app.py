@@ -2165,6 +2165,8 @@ def control():
 
         "monitoring": "Monitoring",
 
+        "administratie": "Administratie",
+
     }
 
     section_descriptions = {
@@ -2209,6 +2211,8 @@ def control():
         "klantenservice": "Klantvragen, contact en berichten.",
 
         "monitoring": "Koppelingen, beschikbaarheid en controles.",
+
+        "administratie": "Omzet, kosten, marges en overzichten voor de boekhouding. Testdata is duidelijk gescheiden van echte gegevens.",
 
     }
 
@@ -2289,7 +2293,12 @@ def control():
             )
 
 
-    order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
+    order_rows, order_error = (recent_woo_orders() if section in ("bestellingen", "administratie") else (None, None))
+    admin_overview = None
+    if section == "administratie" and is_admin:
+        import nv_administratie
+        admin_overview = {"test": nv_administratie.test_overview(),
+                          "echt": nv_administratie.real_orders(order_rows), "echt_fout": order_error}
 
     admin_customer_rows = []
     admin_customer_error = None
@@ -2398,6 +2407,8 @@ def control():
         research_options=research_options,
 
         order_rows=order_rows,
+        admin_overview=admin_overview,
+        euro=__import__('nv_administratie').euro,
 
         order_error=order_error,
 
