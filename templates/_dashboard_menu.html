@@ -33,6 +33,7 @@
 <details class="nv-menu-shell" open>
 <summary>Beheermenu</summary>
 <nav class="side-links nv26-menu" aria-label="Beheermenu" id="tmAdminNavigation">
+  <label class="nv-msearch"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><input type="search" id="nvMenuFilter" placeholder="Zoek in menu…" aria-label="Zoek in menu" autocomplete="off"></label>
   <a href="/dashboard?section=dashboard"{% if section == 'dashboard' %} class="active" aria-current="page"{% endif %}><svg class="ic"><use href="#i-home"/></svg>Dashboard</a>
   {% for group, items in groups %}
   {% set visible = namespace(items=[]) %}
@@ -51,6 +52,15 @@
   <a class="shop-exit" href="/?from_dashboard=1" target="_blank" rel="noopener">Winkel bekijken ↗</a>
 </nav>
 </details>
+<script>
+(function(){var nav=document.getElementById('tmAdminNavigation'),f=document.getElementById('nvMenuFilter');if(!nav)return;
+var groups=[].slice.call(nav.querySelectorAll('.nv-nav-group'));
+groups.forEach(function(g){g.addEventListener('toggle',function(){if(g.open&&!(f&&f.value))groups.forEach(function(o){if(o!==g)o.open=false})})});
+if(f)f.addEventListener('input',function(){var q=f.value.trim().toLowerCase();
+ groups.forEach(function(g){var hit=0;[].forEach.call(g.querySelectorAll('a'),function(a){var ok=!q||a.textContent.toLowerCase().indexOf(q)>-1;a.style.display=ok?'':'none';if(ok)hit++});
+  g.style.display=hit?'':'none';if(q&&hit)g.open=true});});
+})();
+</script>
 
 <style>
 .nv-nav-group{--accent:#0757bd;--tint:#eaf2ff;border-left:3px solid var(--accent);border-radius:10px;margin:8px 0;padding-left:4px}
@@ -84,4 +94,9 @@
 .side-links .nv-nav-group>a.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px #0006}
 .side-links .nv-nav-group>a.active svg.ic{color:#fff;filter:none}
 @media(max-width:760px){.nv-nav-group{border:1px solid #ffffff1a!important;margin:6px}}
+.side-links .nv-msearch{box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;margin:4px 0 10px;padding:0 12px;min-height:42px;border-radius:12px;background:#ffffff14;border:1px solid #ffffff22;color:#cfe0fb}
+.nv-msearch svg.ic{margin:0;width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.side-links .nv-msearch input#nvMenuFilter{flex:1;min-width:0;width:auto;background:transparent!important;border:0!important;box-shadow:none!important;color:#fff!important;font:inherit;padding:8px 0!important;margin:0;outline:0;border-radius:0}
+.nv-msearch input::placeholder{color:#a9bddb}
+.nv-msearch:focus-within{border-color:#7fb4ff;box-shadow:0 0 0 3px #3b82f655}
 </style>
