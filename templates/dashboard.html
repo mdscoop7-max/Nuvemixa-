@@ -421,6 +421,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
         {% else %}
           <p>{{ research_options.empty_message }}</p>
+          {% if product_discovery.coverage_note %}<p class="nv-honest-note" role="note"><strong>Dekking:</strong> {{ product_discovery.coverage_note }}</p>{% endif %}
           <p><small>Tip: zoek op producttype of merk apart (bijvoorbeeld "hydraterende crème"), kies een andere categorie of open het tabblad Leveranciers voor bronnen om zelf te onderzoeken.</small></p>
           {% if product_discovery.alternatives %}
           <h4>Vergelijkbare producten</h4>
