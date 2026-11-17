@@ -14,7 +14,9 @@
 {% endmacro %}
 <section class="panel nv-concepts">
   <h2>Kandidaten en concepten</h2>
-  <div class="nv-honest-note" role="note"><strong>Wat dit is.</strong> Een conceptproduct is een product dat <strong>jij</strong> bewaart uit onderzoeksresultaten of handmatig. Prijzen, beschrijving en afbeeldingen worden <strong>nooit automatisch ingevuld of verzonnen</strong>: wat onbekend is blijft leeg en blokkeert de publicatievoorbereiding. Opslaan, selecteren en beoordelen publiceert niets; ook "geselecteerd" betekent alleen dat het in <a href="/dashboard?section=publicatie">Productpublicatie</a> verschijnt voor controle. Concepten staan op Render Free in tijdelijke opslag (SQLite) en verdwijnen bij een herstart of nieuwe deployment.</div>
+  <div class="nv-honest-note" role="note"><strong>Wat dit is.</strong> Een conceptproduct is een product dat <strong>jij</strong> bewaart uit onderzoeksresultaten of handmatig. Prijzen, beschrijving en afbeeldingen worden <strong>nooit automatisch ingevuld of verzonnen</strong>: wat onbekend is blijft leeg en blokkeert de publicatievoorbereiding. Opslaan, selecteren en beoordelen publiceert niets; ook "geselecteerd" betekent alleen dat het in <a href="/dashboard?section=publicatie">Productpublicatie</a> verschijnt voor controle.</div>
+  {% if v.permanent %}<p class="nv-honest-note" role="note"><strong>Opslag: permanent.</strong> Concepten, beoordelingen en statussen staan in de PostgreSQL-dashboardopslag en blijven na een herstart bewaard.</p>
+  {% else %}<p class="nv-partner-warn" role="alert"><strong>Opslag: tijdelijk.</strong> De PostgreSQL-dashboardopslag staat niet aan; concepten staan nu in SQLite op Render Free en verdwijnen bij een herstart of nieuwe deployment.</p>{% endif %}
   {% for category, message in get_flashed_messages(with_categories=true) %}<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>{% endfor %}
 
   <details class="nv-concept-new"><summary><strong>Nieuw concept handmatig toevoegen</strong></summary>

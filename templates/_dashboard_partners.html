@@ -74,7 +74,7 @@
 
   <section class="nv-partner-candidates">
     <h3>Kandidatenlijst</h3>
-    <p class="nv-partner-warn"><strong>Let op: tijdelijk.</strong> Op Render Free staat de kandidatenlijst in SQLite en verdwijnt bij een herstart of nieuwe deployment. Noteer belangrijke kandidaten ook elders. Kandidaten zijn geen goedgekeurde leveranciers en er is geen contact gelegd.</p>
+    <p class="nv-partner-warn">{% if v.permanent %}<strong>Opslag: permanent.</strong> De kandidatenlijst staat in de PostgreSQL-dashboardopslag en blijft na een herstart bewaard.{% else %}<strong>Let op: tijdelijk.</strong> De PostgreSQL-dashboardopslag staat niet aan; de kandidatenlijst staat in SQLite op Render Free en verdwijnt bij een herstart of nieuwe deployment. Noteer belangrijke kandidaten ook elders.{% endif %} Kandidaten zijn geen goedgekeurde leveranciers en er is geen contact gelegd.</p>
     {% if v.candidates is none %}<p>De opslag is nu niet beschikbaar.</p>
     {% elif v.candidates %}
     <table><thead><tr><th>Bedrijf</th><th>Website</th><th>Notitie</th></tr></thead><tbody>

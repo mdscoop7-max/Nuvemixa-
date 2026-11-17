@@ -128,7 +128,7 @@ def test_interface_is_eerlijk_over_register_en_tijdelijke_opslag(administrator):
     html = administrator.get("/dashboard?section=partners").get_data(as_text=True)
     assert "onderzocht register" in html and "handmatige ontdekkingslinks" in html
     assert "geen live, automatische internetzoekmachine" in html
-    assert "Op Render Free" in html and "tijdelijk" in html and "geen goedgekeurde leverancier" in html
+    assert "Render Free" in html and "tijdelijk" in html and "geen goedgekeurde leverancier" in html
 
 
 def test_kandidaat_bewaren_alleen_door_eigenaar(administrator, monkeypatch):

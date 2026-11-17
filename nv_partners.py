@@ -11,6 +11,7 @@ aanvragen of berichten verstuurd. De data is onderzocht op 17-11-2026 en kan ver
 """
 from urllib.parse import quote
 
+import nv_dashboard_postgres
 from flask import abort, flash, redirect, request, url_for
 
 from nv_dashboard_manager import admin, bp
@@ -370,7 +371,8 @@ def view(args):
             ("q", "cat", "land", "type", "model", "kosten", "integratie", "status")},
             "discovery": discovery_links((args.get("q") or "").strip()[:80], args.get("cat", ""), args.get("land", "")),
             "candidates": candidates(), "criteria": CRITERIA, "checked": CHECKED, "models": MODELS, "types": TYPES,
-            "categories": CATEGORIES, "statuses": STATUS}
+            "categories": CATEGORIES, "statuses": STATUS,
+            "permanent": nv_dashboard_postgres.runtime_enabled()}
 
 
 @bp.post("/dashboard/partners/kandidaat")

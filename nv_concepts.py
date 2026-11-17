@@ -13,6 +13,7 @@ import re
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlsplit
 
+import nv_dashboard_postgres
 from flask import abort, flash, redirect, request, url_for
 
 from nv_dashboard_manager import admin, bp
@@ -208,7 +209,8 @@ def view():
                      "controle": steps, "fouten": [s["stap"] for s in nv_publicatie.blocking(steps)],
                      "checks_klaar": sum(1 for k in CHECKS if concept["checks"].get(k))})
     return {"concepten": rows, "statuses": STATUSES, "checks": CHECKS, "categories": CATEGORY_NAMES,
-            "bron": bron, "min_marge": nv_publicatie.MIN_MARGE}
+            "bron": bron, "min_marge": nv_publicatie.MIN_MARGE,
+            "permanent": nv_dashboard_postgres.runtime_enabled()}
 
 
 def _go(**extra):

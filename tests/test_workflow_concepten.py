@@ -57,7 +57,7 @@ def test_concept_zonder_prijzen_blokkeert_publicatievoorbereiding(administrator,
 
 def test_volledige_workflow_tot_en_met_geweigerde_verzending(administrator, storage_tmp, monkeypatch):
     c = maak_concept(administrator)
-    assert "Concepten staan op Render Free" in administrator.get("/dashboard?section=concepten").get_data(as_text=True)
+    assert "Opslag: tijdelijk" in administrator.get("/dashboard?section=concepten").get_data(as_text=True)
     # nog niet geselecteerd: niet beschikbaar in publicatie
     assert administrator.get(f"/dashboard?section=publicatie&kandidaat={c['sku']}").get_data(as_text=True).count(c["sku"]) == 0
     assert POST(administrator, "/admin/nv/publicatie/goedkeuren", sku=c["sku"]).status_code == 404
