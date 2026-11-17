@@ -2448,7 +2448,7 @@ def control():
         monitoring_probes=("WooCommerce", "Betalingen") if section == "monitoring" and read_configuration_present()
                           else ("Betalingen",),
         visitor_stats=visit_summary() if section in {"statistieken", "monitoring"} else None,
-        webshop_stats=webshop_visit_summary() if section in {"statistieken", "monitoring"} else None,
+        webshop_stats=webshop_visit_summary() if section in {"dashboard", "statistieken", "monitoring"} else None,
         allowed=allowed,
         rights_labels=RIGHTS,
         account_rights=account_rights,

@@ -39,6 +39,7 @@
 .nv27-bars i{display:block;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--blue),#37a8e8);width:var(--w)}
 .nv27-bars b{text-align:right}.nv27-bars .track{background:var(--soft);border-radius:999px;height:10px}
 .nv27-status{display:flex;flex-wrap:wrap;gap:8px}
+.nv27-visits{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px}.nv27-visits div{background:var(--soft);border-radius:10px;padding:8px 10px}.nv27-visits span{display:block;font-size:.76rem;color:var(--mute);font-weight:700}.nv27-visits strong{font-size:1.4rem}
 .nv27-note{background:var(--soft);border-left:4px solid var(--blue);border-radius:8px;padding:10px 14px;color:#34475f;font-size:.88rem}
 @media(max-width:520px){.nv27-card a.go{align-self:stretch;justify-content:center}.nv27-hero h1{font-size:1.4rem}.nv27-bars div{grid-template-columns:1fr 2fr auto}}
 </style>
@@ -96,6 +97,13 @@
 {% endif %}
 
 <div class="nv27-two">
+{% if is_admin and webshop_stats %}{% set w = webshop_stats %}
+<article class="nv27-card" style="--c:#0f9d8a"><header><h3><svg class="ic"><use href="#i-users"/></svg>Webshopbezoekers</h3><span class="nv27-chip{% if not w.enabled or w.error %} warn{% endif %}">{{ 'Meting actief' if w.enabled and not w.error else ('Meting fout' if w.error else 'Niet geactiveerd') }}</span></header>
+{% if w.periods %}<div class="nv27-visits">{% for label, visitors, views in w.periods %}<div><span>{{ label }}</span><strong>{{ visitors }}</strong></div>{% endfor %}</div>
+<p class="nv27-note">Alle bezoekers uit elk land, geteld per dag. Echte meting, geen voorbeeldcijfers.</p>
+{% else %}<p>Er zijn nog geen bezoekers geteld. Zet <code>NUVEMIXA_WEBSHOP_TRACKING=true</code> op de dashboardhost en plaats het meetscript op de webshop. Dan verschijnen hier de bezoekers per dag, week, maand en totaal.</p>{% endif %}
+<a class="go" href="/dashboard?section=statistieken">Alle bezoekcijfers →</a></article>
+{% endif %}
 {% if allowed("stats") %}
 <article class="nv27-card" style="--c:#0757bd"><header><h3><svg class="ic"><use href="#i-grid"/></svg>Producten per categorie</h3></header>
   <div class="nv27-bars">{% for name, amount in category_counts %}<div><span>{{ name }}</span><span class="track"><i style="--w:{{ ((amount / stats.max_category_count) * 100)|round|int if stats.max_category_count else 0 }}%"></i></span><b>{{ amount }}</b></div>{% endfor %}</div>
