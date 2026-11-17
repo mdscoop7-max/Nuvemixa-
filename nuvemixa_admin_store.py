@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 from nv_storage_paths import ADMIN_DB
 import nv_dashboard_postgres
+import nv_freeze
 
 
 def database_path():
@@ -24,7 +25,7 @@ def connect():
     path = database_path()
     if not path.parent.is_dir():
         raise RuntimeError("Admin database parent directory does not exist")
-    conn = sqlite3.connect(str(path), timeout=10)
+    conn = nv_freeze.sqlite_connect(path, 10)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA busy_timeout=10000")

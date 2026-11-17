@@ -9,6 +9,7 @@ from flask import Blueprint, request, session, redirect, abort, current_app, g, 
 from nv_permissions import RIGHTS, DEFAULT_RIGHTS, allowed
 from nv_storage_paths import DASHBOARD_DB
 import nv_dashboard_postgres
+import nv_freeze
 from werkzeug.security import generate_password_hash, check_password_hash
 
 bp=Blueprint('nv_manage',__name__)
@@ -19,8 +20,9 @@ def connect():
         with nv_dashboard_postgres.application_db() as db:
             yield db
         return
-    DB.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DB, timeout=8)
+    if not nv_freeze.frozen():
+        DB.parent.mkdir(parents=True, exist_ok=True)
+    db = nv_freeze.sqlite_connect(DB, 8)
     db.row_factory = sqlite3.Row
     try:
         with db:

@@ -906,8 +906,9 @@ def _customer_conn():
         with nv_dashboard_postgres.application_db() as conn:
             yield conn
         return
-    _CUSTOMER_DB.parent.mkdir(parents=True, exist_ok=True)
-    with closing(sqlite3.connect(str(_CUSTOMER_DB), timeout=10)) as conn, conn:
+    if not nv_freeze.frozen():
+        _CUSTOMER_DB.parent.mkdir(parents=True, exist_ok=True)
+    with closing(nv_freeze.sqlite_connect(_CUSTOMER_DB, 10)) as conn, conn:
         conn.row_factory = sqlite3.Row
         conn.execute("CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
         yield conn
@@ -1194,6 +1195,7 @@ from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_c
 from nv_seo_scan import last_scan
 from nv_permissions import RIGHTS, SECTIONS, account_rights, allowed
 from nv_visits import record_visit, visit_summary
+import nv_freeze
 from nv_webshop_visits import bp as webshop_visits_bp, summary as webshop_visit_summary
 from nv_system_check import check_customers, scan as run_system_scan
 from nv_merchant_audit import audit as merchant_audit
@@ -1203,7 +1205,10 @@ from nv_viral_research import viral_dashboard
 from nv_market_search import search_view as market_search_view
 
 app.after_request(record_visit)
+nv_freeze.init_app(app)
 app.register_blueprint(webshop_visits_bp)
+from nv_db_diagnostic import bp as db_diagnostic_bp
+app.register_blueprint(db_diagnostic_bp)
 
 app.register_blueprint(management_blueprint)
 

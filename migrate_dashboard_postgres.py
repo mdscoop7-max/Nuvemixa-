@@ -20,6 +20,7 @@ FILES = {
         "seo_scans": ("id created_at payload", "id"),
         "catalog_edits": ("kind category slug payload", "kind category slug"),
         "storefront_visits": ("traffic day marker measured_at", "traffic day marker"),
+        "webshop_daily_visitors": ("day visitor first_seen pageviews last_path last_at", "day visitor"),
     },
     "nuvemixa_customers.sqlite3": {
         "customers": ("id name email password_hash created_at", "id"),
