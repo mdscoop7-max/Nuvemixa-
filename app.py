@@ -1189,7 +1189,7 @@ def admin_configured():
 # NUVEMIXA Control - WooCommerce
 
 from nv_woo_bridge import (
-    CommerceConnectionError, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders,
+    CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
 
@@ -1721,10 +1721,10 @@ def admin_research_preview():
 
 
 def monitoring_integrations():
-    woo_readonly = read_configuration_present()
+    woo = woo_connection_status()
     integrations = {
-        "WooCommerce": (woo_readonly or woo_configured(),
-                        "" if woo_readonly else "De leestest vereist een WooCommerce-leesconfiguratie met bevestigde host."),
+        "WooCommerce": (woo["state"] != "not_configured" or woo_configured(),
+                        "" if woo["state"] != "not_configured" or woo_configured() else woo["detail"]),
         "Leverancierskoppeling": (False, "CSV-voorcontrole is lokaal. Er is geen externe voorraadbron gekoppeld."),
         "Gmail-inbox": (False, "De Gmail-inbox heeft nog geen geautoriseerde koppeling."),
         "Google Ads": (False, "Er is nog geen geautoriseerde campagnebron."),
@@ -1732,9 +1732,16 @@ def monitoring_integrations():
                     "Het dashboard heeft geen RankFix-API-verbindingstest. De bestaande link is afzonderlijk."),
         "Betalingen": (bool(os.getenv("MOLLIE_API_KEY", "").strip()), "Er is een Mollie-sleutel nodig."),
     }
-    return {name: ("unchecked", "Instellingen aanwezig. Verbinding niet getest.", follow_up)
-            if configured else ("unconfigured", "Geen externe koppeling ingericht.", follow_up)
-            for name, (configured, follow_up) in integrations.items()}
+    result = {name: ("unchecked", "Instellingen aanwezig. Verbinding niet getest.", follow_up)
+              if configured else ("unconfigured", "Geen externe koppeling ingericht.", follow_up)
+              for name, (configured, follow_up) in integrations.items()}
+    if woo["state"] == "connected":
+        result["WooCommerce"] = ("works", woo["label"] + ".", "")
+    elif woo["state"] == "error":
+        result["WooCommerce"] = ("failed", woo["detail"], "Controleer HTTPS, host en leesrechten.")
+    elif woo["state"] == "configured_untested":
+        result["WooCommerce"] = ("unchecked", woo["label"] + ".", woo["detail"])
+    return result
 
 
 def probe_monitoring_connection(name, current):
@@ -1745,9 +1752,11 @@ def probe_monitoring_connection(name, current):
             return current
         try:
             if read_recent_orders() is not None:
+                woo_record_test(True)
                 return "works", "Alleen-lezen orderuitlezing bevestigd.", ""
-        except CommerceConnectionError:
-            pass
+        except CommerceConnectionError as exc:
+            woo_record_test(False, exc)
+            return "failed", "WooCommerce-orderuitlezing mislukt.", str(exc)
         return "failed", "WooCommerce-orderuitlezing mislukt.", "Controleer HTTPS, host en leesrechten."
     result = mollie_readonly_check()
     if result["state"] in ("connected_test", "connected_live_credentials"):
@@ -2444,6 +2453,7 @@ def control():
         scan_labels={"works": "Werkt", "attention": "Aandacht nodig", "error": "Fout",
                      "unchecked": "Niet getest", "unconfigured": "Niet gekoppeld",
                      "failed": "Verbinding mislukt", "disabled": "Uitgeschakeld"},
+        woo_connection=woo_connection_status(),
         monitoring_connections=monitoring_integrations() if section == "monitoring" else {},
         monitoring_probes=("WooCommerce", "Betalingen") if section == "monitoring" and read_configuration_present()
                           else ("Betalingen",),

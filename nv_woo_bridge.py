@@ -57,6 +57,54 @@ def read_configuration_present():
     return all(os.environ.get("NUVEMIXA_WOO_" + key, "").strip() for key in ("URL", "KEY", "SECRET", "HOST"))
 
 
+# --- Verbindingsstatus (vier toestanden) -------------------------------------------------
+# Alleen in het geheugen: een herstart zet de status terug naar "nog niet getest".
+# Er worden nooit sleutels, geheimen of volledige adressen in een melding opgenomen.
+import time as _time
+
+_REQUIRED = ("URL", "KEY", "SECRET", "HOST")
+TEST_VALID_SECONDS = 3600
+_LAST_TEST = {"ok": None, "at": 0.0, "reason": ""}
+
+
+def missing_configuration():
+    """Alleen de NAMEN van ontbrekende variabelen, nooit waarden."""
+    return ["NUVEMIXA_WOO_" + k for k in _REQUIRED if not os.environ.get("NUVEMIXA_WOO_" + k, "").strip()]
+
+
+def record_test(ok, reason=""):
+    _LAST_TEST.update(ok=bool(ok), at=_time.time(), reason=str(reason)[:160] if not ok else "")
+
+
+def reset_test():
+    _LAST_TEST.update(ok=None, at=0.0, reason="")
+
+
+def connection_status(now=None):
+    """Geeft precies een van: not_configured, configured_untested, connected, error."""
+    now = _time.time() if now is None else now
+    missing = missing_configuration()
+    if not missing:
+        fresh = _LAST_TEST["ok"] is not None and now - _LAST_TEST["at"] <= TEST_VALID_SECONDS
+        if fresh and _LAST_TEST["ok"]:
+            return {"state": "connected", "label": "Verbonden en gecontroleerd", "tone": "ok",
+                    "detail": "Laatste alleen-lezen test geslaagd. De test is maximaal een uur geldig.", "missing": []}
+        if fresh:
+            return {"state": "error", "label": "Verbindingsfout", "tone": "bad",
+                    "detail": _LAST_TEST["reason"] or "De alleen-lezen test is mislukt.", "missing": []}
+        return {"state": "configured_untested", "label": "Geconfigureerd, nog niet getest", "tone": "warn",
+                "detail": "Alle vier variabelen zijn aanwezig. Voer de alleen-lezen test uit bij Monitoring.", "missing": []}
+    legacy = all(os.environ.get(k, "").strip() for k in ("WOOCOMMERCE_URL", "WOOCOMMERCE_CONSUMER_KEY", "WOOCOMMERCE_CONSUMER_SECRET"))
+    if legacy and len(missing) == len(_REQUIRED):
+        return {"state": "configured_untested", "label": "Geconfigureerd, nog niet getest", "tone": "warn",
+                "detail": "Alleen de oudere WOOCOMMERCE_*-variabelen zijn aanwezig. Voor de alleen-lezen test van het dashboard zijn de vier NUVEMIXA_WOO_*-variabelen nodig.",
+                "missing": missing}
+    partial = len(missing) < len(_REQUIRED)
+    return {"state": "not_configured", "label": "Niet ingesteld", "tone": "off",
+            "detail": ("Onvolledig. Ontbreekt: " + ", ".join(missing) + ".") if partial
+                      else "Er is nog geen WooCommerce-koppeling ingesteld.", "missing": missing}
+
+
 def read_recent_orders():
     config = _config()
     if config is None:
@@ -138,9 +186,12 @@ def commerce_console():
             context["stats"] = {"visible_products": len(products), "visible_orders": len(orders),
                                 "statuses": dict(Counter(p["status"] for p in context["orders"]))}
             context["state"] = "connected"
+            record_test(True)
     except CommerceConnectionError as exc:
         context["state"] = "error"
         context["error"] = str(exc)
+        record_test(False, exc)
+    context["connection"] = connection_status()
     resp = make_response(render_template("nv_commerce.html", **context))
     resp.headers["Cache-Control"] = "no-store, private, max-age=0"
     resp.headers["X-Content-Type-Options"] = "nosniff"
