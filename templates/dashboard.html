@@ -263,6 +263,31 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       <small>Productcatalogi en Publicaties vullen de resultaten in dit dashboard. Google en sociale media bieden handmatige zoeklinks.</small>
     </fieldset>
   </form>
+      {% if source_coverage %}
+      <details class="nv-coverage" id="nv-source-coverage">
+        <summary>Bronnen en dekking</summary>
+        <p>Onderzocht op 17-11-2026. "Doorzoekbaar" betekent: NUVEMIXA kan de bron bevragen. Dat is niet hetzelfde als live bevestigd; gebruik de bronnentest om te zien wat nu bereikbaar is.</p>
+        <table>
+          <thead><tr><th>Categorie</th><th>Doorzoekbaar in NUVEMIXA</th><th>Alleen handmatige link</th></tr></thead>
+          <tbody>
+          {% for slug, row in source_coverage.items() %}
+            <tr><td>{{ slug }}</td>
+              <td>{% for s in row.connected %}{{ s.name }} <small>({{ s.type_label }}{% if s.fallback %}, reserve{% endif %})</small>{% if not loop.last %}, {% endif %}{% else %}Geen{% endfor %}</td>
+              <td>{% for s in row.links %}{{ s.name }} <small>({{ s.access_label }}{% if not s.onderzocht %}, niet onderzocht{% endif %})</small>{% if not loop.last %}, {% endif %}{% else %}Geen{% endfor %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <form method="post" action="{{ url_for('nv_manage.sources_test') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <button class="nv-blue-action" type="submit">Bronnen testen (alleen lezen)</button>
+        </form>
+        {% if source_test and source_test.at %}
+        <p><strong>Live gemeten op {{ source_test.at }}</strong> (vanuit de server, geen testdata):</p>
+        <ul>{% for r in source_test.rows %}<li>{{ r.name }} · {{ r.status }}{% if r.count %} · {{ r.count }} producten{% endif %}{% if r.detail %} · {{ r.detail }}{% endif %}</li>{% endfor %}</ul>
+        {% else %}<p>Nog niet getest in deze serversessie; er is dus nog niets live bevestigd.</p>{% endif %}
+      </details>
+      {% endif %}
+
   {% if product_discovery %}
   <div id="nv-research-results" class="nv-research-results" aria-live="polite">
     {% if product_discovery.error %}
@@ -485,13 +510,17 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         </div>
         {% endfor %}
         {% else %}<p>Geen bevestigde leveranciers gevonden voor deze selectie.</p>{% endif %}
-        {% if not product_discovery.suppliers and product_discovery.next_steps %}
+        {% if product_discovery.next_steps %}
         <section class="nv-next-steps" aria-label="Verder zoeken naar leveranciers">
-          <h4>Verder zoeken (niet bevestigd)</h4>
-          <p>Dit zijn bekende dropshipping- en groothandelsbronnen om zelf te onderzoeken. Of zij dit product leveren, is niet gecontroleerd; vraag het magazijn, de prijs en de voorwaarden per SKU op.</p>
+          <h4>Verder zoeken: bronnen voor deze categorie en dit land (handmatige links, niet bevestigd)</h4>
+          <p>NUVEMIXA doorzoekt deze bronnen niet zelf. Of zij dit product leveren, is niet gecontroleerd; vraag voorraad, prijs en voorwaarden per SKU op.</p>
           <ul class="nv-research-articles">
           {% for step in product_discovery.next_steps %}
-            <li><a href="{{ step.url }}" target="_blank" rel="noopener noreferrer">{{ step.name }}</a> <small>{{ step.country if step.country != 'INT' else 'Internationaal' }}</small> {{ step.note }}</li>
+            <li><strong>{{ step.name }}</strong> <small>{{ step.type_label }} · {{ step.scope if step.scope != 'INT' else 'Internationaal' }} · {{ step.access_label }}{% if not step.onderzocht %} · niet onderzocht{% endif %}</small><br>
+              {{ step.facts }} {{ step.requirement }} <em>{{ step.cost }}</em><br>
+              <a href="{{ step.url }}" target="_blank" rel="noopener noreferrer">Bronpagina →</a>
+              {% for label, link in step.evidence %}<a href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ label }} ↗</a> {% endfor %}
+              <a href="{{ step.search_link }}" target="_blank" rel="noopener noreferrer">Zoek handmatig (Google site:) →</a></li>
           {% endfor %}
           </ul>
         </section>

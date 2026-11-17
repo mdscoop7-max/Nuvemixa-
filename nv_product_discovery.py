@@ -112,19 +112,19 @@ class Catalogue:
 CATALOGUES = (
     # Market coverage follows each provider's shipping policy. Item-level shipping
     # and trade availability still depend on the supplier's terms.
-    Catalogue("UGREEN", "eu.ugreen.com", "gadgets", EU - {"CY", "LT", "MT"}, "power bank",
+    Catalogue("UGREEN", "eu.ugreen.com", "gadgets", EU - {"CY", "LT", "MT"}, "headphones",
               r"power ?bank|charger|oplader|usb|laptop stand|charging",
               "https://www.ugreen.com/pages/wholesale-program"),
-    Catalogue("UGREEN", "us.ugreen.com", "gadgets", frozenset({"US"}), "power bank",
+    Catalogue("UGREEN", "us.ugreen.com", "gadgets", frozenset({"US"}), "headphones",
               r"power ?bank|charger|usb|laptop stand|charging",
               "https://www.ugreen.com/pages/wholesale-program"),
-    Catalogue("Baseus", "eu.baseus.com", "gadgets", (EU - {"CY", "HR", "MT"}) | {"GB"}, "power bank",
+    Catalogue("Baseus", "eu.baseus.com", "gadgets", (EU - {"CY", "HR", "MT"}) | {"GB"}, "headphones",
               r"power ?bank|charger|usb|laptop stand|charging", "https://eu.baseus.com/pages/wholesale-program"),
-    Catalogue("Baseus", "www.baseus.com", "gadgets", frozenset({"US"}), "power bank",
+    Catalogue("Baseus", "www.baseus.com", "gadgets", frozenset({"US"}), "headphones",
               r"power ?bank|charger|usb|laptop stand|charging", "https://www.baseus.com/pages/wholesale-program"),
-    Catalogue("Xtorm", "www.xtorm.eu", "gadgets", EU, "power bank",
+    Catalogue("Xtorm", "www.xtorm.eu", "gadgets", EU, "headphones",
               r"power ?bank|charger|usb|charging", "https://www.xtorm.eu/pages/contact"),
-    Catalogue("Nedis", "nedis-shop.nl", "gadgets", frozenset({"NL", "BE", "DE"}), "powerbank",
+    Catalogue("Nedis", "nedis-shop.nl", "gadgets", frozenset({"NL", "BE", "DE"}), "headphones",
               r"power ?bank|charger|usb|headphones|bluetooth speaker", "https://nedis.com/"),
     Catalogue("Nedis", "nedis-shop.nl", "smart-home", frozenset({"NL", "BE", "DE"}), "slimme camera",
               r"smartlife|smart|wifi|zigbee|camera|doorbell|sensor|energy monitoring", "https://nedis.com/"),
@@ -193,7 +193,7 @@ CATEGORY_HINTS = {
     "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk",
     "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale",
 }
-SEEDS = {"gadgets": "power bank", "smart-home": "security camera", "beauty-care": "serum",
+SEEDS = {"gadgets": "headphones", "smart-home": "security camera", "beauty-care": "serum",
          "home-living": "table lamp", "lifestyle-sport": "yoga mat"}
 UNSAFE = re.compile(
     r"\b(?:porno?\w*|xxx|nsfw|adult\s+(?:content|video|toy)|sex\s+toy|escort|"
@@ -852,8 +852,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
         "pending_sources": pending,
-        "next_steps": [{"country": row[0], "name": row[1], "url": row[2], "note": row[3]}
-                       for row in __import__("nv_supplier_finder").directories(country)][:6],
+        "next_steps": __import__("nv_supplier_sources").sources_for(selected, country, term),
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,
         "unavailable_reasons": reasons,
         "sources_checked": sorted(set(names.values())),

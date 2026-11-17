@@ -81,7 +81,7 @@ def hama_products(fetch, term, country, read, matches, relevant, product_matches
                        identity=f"hama:{country}", identity_source=business,
                        evidence=(("Vestiging en verkoopkantoren", "https://company.hama.com/about-us/worldwide"),))
     root = "https://www.hama.com"
-    search = term or "powerbank"
+    search = term or "bluetooth speaker"
     # The catalogue uses powerbank as one word and local writing for capacity.
     query = re.sub(r"(?i)\bpower\s+bank\b", "powerbank", search)
     query = re.sub(r"(?<=\d)[. ](?=\d{3})|(?<=\d)\s+(?=mah)", "", query, flags=re.I)
@@ -104,7 +104,7 @@ def hama_products(fetch, term, country, read, matches, relevant, product_matches
     model = "Hama Qi2 magnetische draadloze powerbank 10000mAh 15W"
     # USB-C is a detail-page specification, so allow that model to be examined
     # and let the actual product details decide whether it qualifies.
-    if not term or product_matches(term, model, "USB-C"):
+    if term and product_matches(term, model, "USB-C"):
         product_path = {
             "NL": "qi2-draadloos-power-pack-10000mah-magnetisch-inductief-opladen-15w-ant-00201752",
             "DE": "qi2-kabelloses-power-pack-10000mah-magnetisch-induktiv-laden-15w-anth-00201752",

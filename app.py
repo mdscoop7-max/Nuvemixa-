@@ -1191,6 +1191,8 @@ def admin_configured():
 from nv_woo_bridge import (
     CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
+COUNTRY_CODES_FALLBACK = frozenset(('NL','BE','DE','FR','ES','IT','PL','AT','PT','IE','GB','US','SE','DK','FI'))
+import nv_supplier_sources
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
 
 from nv_seo_scan import last_scan
@@ -2394,6 +2396,8 @@ def control():
 
         research_error=research_error,
         product_discovery=product_discovery,
+        source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
+        source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
         product_margin_error=product_margin_error,
         research_options=research_options,

@@ -97,7 +97,7 @@ def test_lege_zoekopdracht_toont_verder_zoeken_zonder_nephits(administrator, mon
                                "&research_category=gadgets&research_mode=products&research_country=NL"
                                "&research_platform=Productcatalogi").get_data(as_text=True)
     assert "Geen bevestigd product en geen bevestigde leverancier" in pagina
-    assert "Verder zoeken (niet bevestigd)" in pagina and "dropXL" in pagina
+    assert "Verder zoeken" in pagina and "handmatige links" in pagina
 
 
 def test_generiek_eenwoordig_zoekwoord_houdt_de_categoriepoort():
