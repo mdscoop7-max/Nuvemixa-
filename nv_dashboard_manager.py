@@ -58,8 +58,11 @@ STAFF_SWITCH = "NUVEMIXA_STAFF_LOGIN"
 
 
 def staff_login_enabled():
-    """Medewerkerstoegang staat standaard UIT: alleen de vaste eigenaar (met 2FA) heeft toegang."""
-    return os.getenv(STAFF_SWITCH, "off").strip().lower() in {"on", "1", "true", "yes"}
+    """Medewerkerstoegang staat standaard UIT en gaat alleen aan bij de expliciete waarde "on".
+
+    Een ontbrekende of verkeerd geschreven variabele laat de toegang dus dicht (fail-closed).
+    """
+    return os.getenv(STAFF_SWITCH, "").strip().lower() == "on"
 
 
 def admin():
@@ -239,44 +242,6 @@ def password():
         abort(503, "Accountdatabase tijdelijk niet beschikbaar.")
     session.clear()
     return redirect(url_for("admin_login"), code=303)
-
-
-def _publicatie_kandidaat(sku):
-    import nv_publicatie
-    candidate = nv_publicatie.TEST_CANDIDATES.get(str(sku))
-    if candidate is None:
-        abort(404)
-    return nv_publicatie, candidate
-
-
-@bp.post("/admin/nv/publicatie/goedkeuren")
-@require_admin
-def publicatie_goedkeuren():
-    pub, candidate = _publicatie_kandidaat(request.form.get("sku", ""))
-    existing, _bron, _fout = pub.existing_products()
-    rows = pub.check(candidate, existing)
-    if pub.blocking(rows):
-        flash("Goedkeuren kan pas als alle controles op fouten zijn opgelost.", "error")
-    else:
-        approvals = dict(session.get("nv_pub_goedkeuringen", {}))
-        approvals[candidate["sku"]] = pub.sign_approval(current_app.secret_key, candidate)
-        session["nv_pub_goedkeuringen"] = approvals
-        flash("Goedkeuring vastgelegd voor precies deze productgegevens. Er is niets verzonden.", "success")
-    return redirect(url_for("control", section="publicatie", kandidaat=candidate["sku"]), code=303)
-
-
-@bp.post("/admin/nv/publicatie/publiceren")
-@require_admin
-def publicatie_publiceren():
-    pub, candidate = _publicatie_kandidaat(request.form.get("sku", ""))
-    existing, _bron, _fout = pub.existing_products()
-    token = session.get("nv_pub_goedkeuringen", {}).get(candidate["sku"], "")
-    try:
-        pub.publish(candidate, existing, current_app.secret_key, token, sender=None)
-        flash("Verzonden.", "success")  # onbereikbaar zolang er geen zender is
-    except pub.PublishRefused as exc:
-        flash(str(exc), "error")
-    return redirect(url_for("control", section="publicatie", kandidaat=candidate["sku"]), code=303)
 
 
 def coupon_today():

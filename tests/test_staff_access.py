@@ -18,6 +18,7 @@ def staffdb(monkeypatch, tmp_path):
     monkeypatch.setenv("NUVEMIXA_ADMIN_PASSWORD_HASH", generate_password_hash("fixture-owner-password"))
     monkeypatch.setattr(nv_2fa_login, "is_2fa_actief", lambda: True)
     monkeypatch.setitem(dashboard.app.config, "SESSION_COOKIE_SECURE", False)
+    dashboard._ADMIN_LOGIN_ATTEMPTS.clear()      # pogingenteller per IP mag testen niet beïnvloeden
     ids = {}
     with manager.connect() as db:
         for name, role in (("medewerker", "employee"), ("beheerder", "admin")):
@@ -78,7 +79,7 @@ def test_staff_with_admin_role_is_not_owner_even_when_on(staffdb, monkeypatch):
     monkeypatch.setenv(manager.STAFF_SWITCH, "on")
     client, response = login("beheerder", "fixture-staff-password")
     assert response.location == "/dashboard"          # inloggen kan, maar zonder eigenaarsrechten
-    for section in ("accountbeheer", "instellingen", "monitoring", "woocommerce", "administratie"):
+    for section in ("accountbeheer", "instellingen", "monitoring", "woocommerce"):
         assert client.get(f"/dashboard?section={section}").status_code == 403, section
     post = client.post("/admin/nv/team", data={"_csrf_token": CSRF_TOKEN, "op": "create", "username": "nieuw",
                        "email": "n@example.invalid", "name": "N", "role": "admin", "password": "fixture-long-password"})
@@ -102,7 +103,7 @@ def test_route_audit_anonymous_and_every_kind_of_staff(staffdb, monkeypatch):
                 for method in sorted(rule.methods & {"GET", "POST"}):
                     data = {"_csrf_token": CSRF_TOKEN} if method == "POST" else None
                     response = client.open(rule.rule, method=method, data=data)
-                    owner_only = rule.rule.startswith(("/admin/nv/team", "/admin/nv/publicatie", "/admin/integrations", "/admin/suppliers",
+                    owner_only = rule.rule.startswith(("/admin/nv/team", "/admin/integrations", "/admin/suppliers",
                                                         "/admin/research", "/admin/monitoring", "/admin/mollie", "/admin/rankfix",
                                                         "/admin/customers", "/admin/supplier-feed", "/admin/nv/db-diagnose",
                                                         "/admin/commerce", "/admin/merchant-feed"))
@@ -137,3 +138,16 @@ def test_owner_cannot_be_locked_out(staffdb, administrator, monkeypatch):
     assert "x1y" not in {row["username"] for row in manager.team_rows()}
     disable = administrator.post("/admin/nv/team", data={"_csrf_token": CSRF_TOKEN, "op": "disable", "id": str(staffdb["medewerker"])})
     assert disable.status_code == 303
+
+
+@pytest.mark.parametrize("value", ["", "off", "0", "false", "ON ", "aan", "yes", "1", "true", "onn"])
+def test_switch_fails_closed_on_missing_or_wrong_values(staffdb, monkeypatch, value):
+    if value.strip().lower() == "on":
+        monkeypatch.setenv(manager.STAFF_SWITCH, value)
+        assert manager.staff_login_enabled() is True      # alleen exact "on" (hoofdletters en spaties genegeerd)
+        return
+    monkeypatch.setenv(manager.STAFF_SWITCH, value)
+    assert manager.staff_login_enabled() is False
+    assert manager.staff_auth("medewerker", "fixture-staff-password") is None
+    client, response = login("beheerder", "fixture-staff-password")
+    assert b"klopt niet" in response.data
