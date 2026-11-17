@@ -1168,8 +1168,9 @@ def admin_is_authenticated():
             except Exception:
                 request.environ[cache_key] = False
         return request.environ[cache_key]
-    staff = staff_current()
-    return bool(staff and staff["role"] == "admin")
+    # Medewerkers (ook met rol "admin") zijn nooit eigenaar: zij hebben geen 2FA en krijgen
+    # alleen de rechten uit hun eigen rechtenlijst (zie nv_permissions.allowed).
+    return False
 
 
 
@@ -2398,6 +2399,7 @@ def control():
         research_options=research_options,
 
         order_rows=order_rows,
+        staff_login_enabled=__import__('nv_dashboard_manager').staff_login_enabled(),
 
         order_error=order_error,
 
