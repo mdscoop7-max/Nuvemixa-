@@ -13,7 +13,7 @@ ACCEPT = [
     ("Fitness elastieken", "Resistance Bands Set 5 pcs"),
     ("Automatische kattenvoerbak", "Automatic Cat Feeder 4L"),
     ("Drinkfontein voor katten", "Cat Water Fountain 2L"),
-    ("Slimme LED-verlichting", "SmartLife LED Sfeerverlichting Strip Wi-Fi"),
+    ("Slimme LED-verlichting", "Smart LED Verlichting Strip Wi-Fi"),
     ("Elektrische gezichtsborstel", "Sonic Silicone Facial Cleansing Brush"),
 ]
 REJECT = [
