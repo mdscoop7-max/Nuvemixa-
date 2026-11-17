@@ -8,13 +8,13 @@
 .nv27-hero h1{margin:0;font-size:1.7rem;color:var(--navy)}.nv27-hero p{margin:.2rem 0 0;color:var(--mute)}
 .nv27-chips{display:flex;flex-wrap:wrap;gap:8px}
 .nv27-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:.78rem;font-weight:800;background:#e3f6f2;color:#0a6b5d}
-.nv27-chip.warn{background:#fff3de;color:#8a5a00}.nv27-chip.info{background:#e8f0fc;color:#0b4a9e}
+.nv27-chip.warn{background:#fff0d1;color:#7a4e00;border:1px solid #f2d08c}.nv27-chip{border:1px solid #bfe6dd}.nv27-chip.info{border-color:#c5d8f5}.nv27-chip.info{background:#e8f0fc;color:#0b4a9e}
 .nv27-sec{margin:0;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:800}
 .nv27-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px}
-.nv27-kpi{min-width:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px #123e6b10}
+.nv27-kpi{border-top:3px solid #0b7fd6;min-width:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px #123e6b10}
 .nv27-kpi .badge{grid-row:span 3;width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--soft);color:var(--blue)}
-.nv27-kpi.t .badge{background:#e3f6f2;color:var(--teal)}.nv27-kpi.p .badge{background:#efeaff;color:var(--purple)}.nv27-kpi.o .badge{background:#fff3de;color:var(--orange)}
-.nv27-kpi span{font-size:.8rem;color:var(--mute);font-weight:700}.nv27-kpi strong{font-size:1.45rem;line-height:1.1}.nv27-kpi small{color:#6b7a90;font-size:.76rem}
+.nv27-kpi.t{border-top-color:#0f9d8a}.nv27-kpi.p{border-top-color:#6a4fd6}.nv27-kpi.o{border-top-color:#d98a14}.nv27-kpi.t .badge{background:#e3f6f2;color:var(--teal)}.nv27-kpi.p .badge{background:#efeaff;color:var(--purple)}.nv27-kpi.o .badge{background:#fff3de;color:var(--orange)}
+.nv27-kpi span{overflow-wrap:anywhere;font-size:.76rem;color:var(--mute);font-weight:700}.nv27-kpi strong{font-size:1.45rem;line-height:1.1}.nv27-kpi small{color:#6b7a90;font-size:.76rem}
 .nv27-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:10px;counter-reset:s;margin:0;padding:0;list-style:none}
 .nv27-flow li{counter-increment:s;min-width:0}
 .nv27-flow a{display:flex;align-items:center;gap:10px;min-height:56px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--c,#6a4fd6);color:var(--ink);text-decoration:none;font-weight:800}
@@ -23,7 +23,7 @@
 .nv27-flow a:hover{background:var(--soft)}
 .nv27-quick{display:flex;flex-wrap:wrap;gap:8px}
 .nv27-quick a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:11px;background:#fff;border:1px solid var(--line);color:var(--navy);font-weight:800;text-decoration:none}
-.nv27-quick a svg{color:var(--blue)}.nv27-quick a:hover{background:var(--blue);color:#fff;border-color:var(--blue)}.nv27-quick a:hover svg{color:#fff}
+.nv27-quick a{border-left:4px solid var(--c,#0757bd)}.nv27-quick a svg{box-sizing:content-box;padding:6px;border-radius:9px;background:color-mix(in srgb,var(--c,#0757bd) 14%,#fff);color:var(--c,#0757bd)}.nv27-quick a:hover{background:color-mix(in srgb,var(--c,#0757bd) 8%,#fff);border-color:var(--c,#0757bd);box-shadow:0 4px 12px #123e6b18}
 .nv27-home a:focus-visible{outline:3px solid #f4a62a;outline-offset:2px}
 .nv27-modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:14px}
 .nv27-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 8px #123e6b10}
@@ -71,13 +71,13 @@
 
 <h2 class="nv27-sec">Snelle acties</h2>
 <nav class="nv27-quick" aria-label="Snelle acties">
-  <a href="/dashboard?section=producten"><svg class="ic"><use href="#i-box"/></svg>Producten</a>
-  <a href="/dashboard?section=categorieen"><svg class="ic"><use href="#i-grid"/></svg>Categorieën</a>
-  <a href="/dashboard?section=bestellingen"><svg class="ic"><use href="#i-cart"/></svg>Bestellingen</a>
-  <a href="/dashboard?section=klanten"><svg class="ic"><use href="#i-users"/></svg>Klanten</a>
-  <a href="/dashboard?section=leveranciers"><svg class="ic"><use href="#i-truck"/></svg>Leveranciers</a>
-  <a href="/dashboard?section=accountbeheer"><svg class="ic"><use href="#i-shield"/></svg>Accountbeheer</a>
-  <a href="/dashboard?section=instellingen"><svg class="ic"><use href="#i-sliders"/></svg>Instellingen</a>
+  <a href="/dashboard?section=producten" style="--c:#0b7fd6"><svg class="ic"><use href="#i-box"/></svg>Producten</a>
+  <a href="/dashboard?section=categorieen" style="--c:#6a4fd6"><svg class="ic"><use href="#i-grid"/></svg>Categorieën</a>
+  <a href="/dashboard?section=bestellingen" style="--c:#0f9d8a"><svg class="ic"><use href="#i-cart"/></svg>Bestellingen</a>
+  <a href="/dashboard?section=klanten" style="--c:#0b7fd6"><svg class="ic"><use href="#i-users"/></svg>Klanten</a>
+  <a href="/dashboard?section=leveranciers" style="--c:#d98a14"><svg class="ic"><use href="#i-truck"/></svg>Leveranciers</a>
+  <a href="/dashboard?section=accountbeheer" style="--c:#1f8f4e"><svg class="ic"><use href="#i-shield"/></svg>Accountbeheer</a>
+  <a href="/dashboard?section=instellingen" style="--c:#4b5f7d"><svg class="ic"><use href="#i-sliders"/></svg>Instellingen</a>
 </nav>
 
 <h2 class="nv27-sec">Onderdelen</h2>
