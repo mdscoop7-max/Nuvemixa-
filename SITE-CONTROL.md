@@ -1,4 +1,4 @@
-# TrendMix — site control
+# NUVEMIXA — site control
 
 ## Deployment
 - [x] Flask app runs on Render
@@ -12,7 +12,7 @@
 - [x] Product detail pages
 - [x] Winkelwagen
 - [x] Afrekenen
-- [x] Over TrendMix
+- [x] Over NUVEMIXA
 - [x] Bestellen & levering
 - [x] Privacy
 - [x] Cookies & voorkeuren
@@ -39,7 +39,7 @@
 
 ## Product images
 - [x] Product catalog image URLs are loaded from products.json
-- [ ] Replace catalog image URLs when the final TrendMix product photos are supplied/committed
+- [ ] Replace catalog image URLs when the final NUVEMIXA product photos are supplied/committed
 
 ## Final manual QA
 1. Open the Render homepage and hard-refresh with Ctrl+F5.
