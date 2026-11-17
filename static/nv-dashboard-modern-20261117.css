@@ -25,7 +25,8 @@ main a.integration-status:hover,main .nv-blue-action:not(.nv-back):hover{backgro
 /* Paginakop met kleur van de menugroep */
 .nv-sg{--g:#0757bd;border-left:5px solid var(--g);padding-left:16px!important;border-radius:4px}
 .nv-sg-1{--g:#1b8de0}.nv-sg-2{--g:#7a5ff0}.nv-sg-3{--g:#14b8a0}.nv-sg-4{--g:#e8a020}
-.nv-sg .section-kicker{color:var(--g)!important;letter-spacing:.08em}
+.nv-sg .section-kicker{color:var(--gt,var(--g))!important;letter-spacing:.08em;font-weight:800}
+.nv-sg-1{--gt:#0b5f9f}.nv-sg-2{--gt:#5a3fc0}.nv-sg-3{--gt:#0a7a69}.nv-sg-4{--gt:#8a5a00}
 /* Kleurlabels voor status */
 .nvm-chip{display:inline-block;border-radius:999px;padding:3px 11px;font-size:.82rem;font-weight:700;border:1px solid transparent}
 .nvm-chip-warn{background:#fff0d1;color:#7a4e00;border-color:#f2d08c}
@@ -45,7 +46,7 @@ main select:is([name=supplier_kind],[name=mtype],[name=kind]){--f:#14b8a0}
 main select:is([name=mbron],[name=platform],[name=period],[name=mperiode],[name=window]){--f:#1f8f4e}
 main label:has(select[name=country],select[name=market],select[name=mland],select[name=research_country]){color:#0b5f9f}
 main label:has(select[name=category],select[name=mcat],select[name=research_category]){color:#5a3fc0}
-main label:has(select[name=supplier_id],select[name=research_supplier_filter],select[name=mregio]){color:#a86a00}
+main label:has(select[name=supplier_id],select[name=research_supplier_filter],select[name=mregio]){color:#8a5a00}
 main label:has(select[name=supplier_kind],select[name=mtype]){color:#0a7a69}
 main label:has(select[name=mbron],select[name=mperiode],select[name=period]){color:#1a6e3d}
 main label:has(input[type=checkbox]){display:inline-flex;align-items:center;gap:8px;background:#eef4fd;border:1px solid #cfe0f7;border-radius:10px;padding:6px 12px}
@@ -61,3 +62,7 @@ main label:has(input[type=checkbox]:checked){background:#e3f6f2;border-color:#9f
 .nvm-kpis .k-off{border-top-color:#e8a020}.nvm-kpis .k-bad{border-top-color:#d64545}
 .nvm-kpis span{display:block;color:var(--nvm-mute);font-weight:700;font-size:.82rem}.nvm-kpis strong{font-size:1.9rem;color:var(--nvm-navy)}.nvm-kpis small{display:block;color:#6b7a90}
 #nv-mon-koppelingen,#nv-webshop-visits,#nv-mon-controle{scroll-margin-top:16px}
+
+/* Tabelacties: ruimere klikdoelen (minimaal 36px) */
+main table button,main table .button,main table a.button,main td form button{min-height:36px}
+main td>a:not([class]),main td a.nv-tlink{display:inline-block;padding:8px 0}
