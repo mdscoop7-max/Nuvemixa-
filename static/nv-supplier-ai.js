@@ -100,7 +100,7 @@
         return response.text().then(function (text) {
           var data = null;
           try { data = JSON.parse(text); } catch (e) { data = null; }
-          return {status: response.status, data: data};
+          return {status: response.status, data: data, text: text};
         });
       })
       .then(function (reply) {
@@ -108,7 +108,9 @@
         if (!data) {
           step("Antwoord van het dashboard kon niet worden gelezen.");
           finish("Zoekopdracht mislukt");
-          fail("Het dashboard gaf een onleesbaar antwoord (HTTP " + reply.status + "). Vernieuw de pagina en probeer opnieuw.");
+          fail(reply.status === 503 && reply.text && reply.text.length < 400
+            ? reply.text.trim()
+            : "Het dashboard gaf een onleesbaar antwoord (HTTP " + reply.status + "). Vernieuw de pagina en probeer opnieuw.");
           return;
         }
         if (!data.ok) {

@@ -208,8 +208,9 @@ def test_route_is_blocked_during_storage_freeze_without_any_call_or_cost(adminis
     calls = install(monkeypatch, citations("https://sirocco.de/dropshipping/"))
     monkeypatch.setenv("NUVEMIXA_DASHBOARD_FREEZE", "1")
     response = post(administrator)
-    assert response.status_code == 503 and response.json["code"] == "frozen"
-    assert calls == [] and ai.usage_snapshot()["month_used"] == 0
+    assert response.status_code == 503 and calls == [] and ai.usage_snapshot()["month_used"] == 0
+    if response.is_json:  # zonder PR #73 antwoordt de route zelf; met PR #73 de algemene bevriezing (platte tekst)
+        assert response.json["code"] == "frozen"
     monkeypatch.delenv("NUVEMIXA_DASHBOARD_FREEZE")
     assert post(administrator).status_code == 200 and len(calls) == 1
 
