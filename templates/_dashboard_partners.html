@@ -15,11 +15,32 @@
     <label>Status <select name="status"><option value="">Alle</option>{% for k, n in v.statuses.items() %}<option value="{{ k }}" {{ 'selected' if v.form.status == k }}>{{ n }}</option>{% endfor %}</select></label>
     <label>Gratis of betaald <select name="kosten"><option value="">Alle</option>{% for k, n in [('gratis','Gratis (optie)'),('betaald','Betaald (optie)'),('onbekend','Kosten onbekend')] %}<option value="{{ k }}" {{ 'selected' if v.form.kosten == k }}>{{ n }}</option>{% endfor %}</select></label>
     <label>API of feed <select name="integratie"><option value="">Alle</option>{% for k, n in [('api','API'),('feed','Productfeed'),('plugin','Plugin/app'),('geen-bekend','Niets bekend')] %}<option value="{{ k }}" {{ 'selected' if v.form.integratie == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Soort partner <select name="soort"><option value="">Alle</option>{% for k, n in v.soorten.items() %}<option value="{{ k }}" {{ 'selected' if v.form.soort == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Zoekgebied <select name="bereik"><option value="">Alle</option>{% for k, n in v.bereiken.items() %}<option value="{{ k }}" {{ 'selected' if v.form.bereik == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>WooCommerce-compatibel <select name="woo"><option value="">Alle</option><option value="bevestigd" {{ 'selected' if v.form.woo == 'bevestigd' }}>Bevestigd</option><option value="aanwijzing" {{ 'selected' if v.form.woo == 'aanwijzing' }}>Bevestigd of aanwijzing</option></select></label>
+    <label>Gevestigd in de EU <select name="eu"><option value="">Alle</option><option value="1" {{ 'selected' if v.form.eu == '1' }}>Alleen EU-bedrijven</option></select></label>
     <button class="nv-blue-action" type="submit">Zoeken</button>
     <a href="{{ url_for('control', section='partners') }}">Filters wissen</a>
   </form>
 
   <p><strong>{{ v.rows|length }}</strong> van {{ v.total }} bedrijven. Uitleg: <span class="nv-badge fact">Gecontroleerd feit</span> gelezen op de eigen pagina · <span class="nv-badge hint">Aanwijzing</span> derde bron, zoekresultaat of bestaande code · <span class="nv-badge unk">Onbekend</span> niet vastgesteld.</p>
+
+  <p class="nv-honest-note" role="note"><strong>Let op:</strong> een affiliateprogramma betekent niet dat het bedrijf dropshipping aanbiedt. Affiliateproducten worden nooit automatisch als eigen WooCommerce-product gepubliceerd. “Gevestigd in de EU” zegt niets over de magazijnlocatie: die staat als “niet bevestigd” tot de leverancier dit bevestigt.</p>
+  {% if v.form.soort == 'hybride' and not v.rows %}<p class="nv-honest-note" role="note">Er is op dit moment geen bedrijf met bevestigd dropshipping én affiliate in de lijst. Er worden geen bedrijven verzonnen om dit op te vullen; voeg een gecontroleerd bedrijf toe via “Nieuw bedrijf handmatig”.</p>{% endif %}
+  {% if v.rows|length > 1 %}
+  <div class="nv-partner-compare" style="overflow-x:auto">
+    <table>
+      <caption>Vergelijking ({{ v.rows|length }} bedrijven; bron en controledatum: {{ v.checked }}, zie bronlinks per bedrijf)</caption>
+      <thead><tr><th>Bedrijf</th><th>Land</th><th>Samenwerking</th><th>Verzendgebied</th><th>Dropshipping</th><th>Affiliate / commissie</th><th>Kosten</th><th>WooCommerce / API</th></tr></thead>
+      <tbody>{% for r in v.rows %}<tr>
+        <td><a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.name }}</a></td><td>{{ r.country }}</td>
+        <td>{{ r.model_labels|join(' + ') }}</td><td>{{ r.ships|sort|join(', ') if r.ships else 'onbekend' }}</td>
+        <td>{{ 'bevestigd' if r.dropship_status == 'feit' else ('aanwijzing' if r.dropship_status == 'aanwijzing' else 'onbekend') }}</td>
+        <td>{{ 'bevestigd: ' if r.affiliate_status == 'feit' else '' }}{{ r.affiliate_text if r.affiliate_status != 'onbekend' else 'onbekend' }}</td>
+        <td>{{ r.cost }}</td><td>{{ 'Woo ' + r.woo }}{% if r.integration %} · {{ r.integration|join(', ') }}{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
 
   {% for r in v.rows %}
   <article class="nv-partner status-{{ r.status }}">
