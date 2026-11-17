@@ -35,3 +35,19 @@ main input[type=checkbox],main input[type=radio]{accent-color:var(--nvm-blue);wi
 main label{font-weight:700;color:#1e3354}
 main :is(input:not([type=checkbox]):not([type=radio]),select,textarea){border:1px solid #c4d3e8;border-radius:10px;background:#fff}
 main tbody tr:nth-child(even){background:#f6f9fe}
+/* Gekleurde filters: land/markt blauw, categorie paars, leverancier oranje, soort turquoise, bron/periode groen */
+main select{--f:#0757bd;border-left:5px solid var(--f)!important;background-color:color-mix(in srgb,var(--f) 7%,#fff)!important;font-weight:700;color:#10233f}
+main select:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--f) 30%,transparent);outline:0}
+main select:is([name=country],[name=market],[name=mland],[name=research_country],[name=offer_market]){--f:#0b7fd6}
+main select:is([name=category],[name=mcat],[name=research_category],[name=niche]){--f:#7a5ff0}
+main select:is([name=supplier_id],[name=research_supplier_filter],[name=mregio]){--f:#e8a020}
+main select:is([name=supplier_kind],[name=mtype],[name=kind]){--f:#14b8a0}
+main select:is([name=mbron],[name=platform],[name=period],[name=mperiode],[name=window]){--f:#1f8f4e}
+main label:has(select[name=country],select[name=market],select[name=mland],select[name=research_country]){color:#0b5f9f}
+main label:has(select[name=category],select[name=mcat],select[name=research_category]){color:#5a3fc0}
+main label:has(select[name=supplier_id],select[name=research_supplier_filter],select[name=mregio]){color:#a86a00}
+main label:has(select[name=supplier_kind],select[name=mtype]){color:#0a7a69}
+main label:has(select[name=mbron],select[name=mperiode],select[name=period]){color:#1a6e3d}
+main label:has(input[type=checkbox]){display:inline-flex;align-items:center;gap:8px;background:#eef4fd;border:1px solid #cfe0f7;border-radius:10px;padding:6px 12px}
+main label:has(input[type=checkbox]:checked){background:#e3f6f2;border-color:#9fd9cc;color:#0a6b5d}
+@media(min-width:900px){main label:has(input[type=checkbox]){white-space:nowrap;width:auto}}
