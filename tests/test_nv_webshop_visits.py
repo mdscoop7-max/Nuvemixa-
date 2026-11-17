@@ -148,3 +148,27 @@ def test_dashboard_shows_real_numbers_without_invented_data(administrator, monke
     page = administrator.get("/dashboard?section=statistieken").get_data(as_text=True)
     assert "Deze maand" in page and "nog geen bezoek van de webshop ontvangen" not in page
     assert "SQLite op de dashboardhost" in page  # honest warning that this storage is not permanent
+
+
+def test_summary_counts_all_visitors_per_period_and_series(counter):
+    """Bezoekers uit elk land (andere IP-adressen) tellen mee; week-, maand- en totaalreeks kloppen."""
+    zone = ZoneInfo("Europe/Amsterdam")
+    now = datetime.now(zone)
+    for ip in ("203.0.113.7", "198.51.100.9", "192.0.2.44"):  # drie verschillende bezoekers vandaag
+        visits.register_hit("/", ip, BROWSER, "geheim", now=now)
+    earlier = now.replace(day=1) - __import__("datetime").timedelta(days=3)  # vorige maand
+    visits.register_hit("/", "203.0.113.7", BROWSER, "geheim", now=earlier)
+    data = visits.summary(today=now.date())
+    labels = {label: visitors for label, visitors, views in data["periods"]}
+    assert labels["Vandaag"] == 3 and labels["Totaal"] == 4
+    assert labels["Deze maand"] == 3
+    assert len(data["weeks"]) == 12 and len(data["months"]) == 12
+    assert data["months"][-1][1] == 3 and data["months"][-2][1] == 1
+    assert sum(number for _, number in data["weeks"]) >= 3
+
+
+def test_dashboard_home_shows_visitor_card_without_invented_numbers(counter, administrator):
+    page = administrator.get("/dashboard?section=dashboard")
+    assert page.status_code == 200
+    body = page.get_data(as_text=True)
+    assert "Webshopbezoekers" in body

@@ -1,0 +1,67 @@
+{% set c = publicatie.gekozen %}{% set m = publicatie.marge %}
+<style>
+.nv-pub{display:grid;gap:18px}
+.nv-pub .badge{display:inline-block;border-radius:6px;padding:3px 9px;font-size:.75rem;font-weight:900;background:#fff3de;color:#8a5a00;border:1px solid #f0c987}
+.nv-pub .banner{border-left:5px solid #d98a14;background:#fff8ea;padding:10px 14px;border-radius:8px}
+.nv-pub .st-ok{color:#0a6b5d;font-weight:800}.nv-pub .st-let{color:#8a5a00;font-weight:800}.nv-pub .st-fout{color:#b3261e;font-weight:800}
+.nv-pub .pick{display:flex;flex-wrap:wrap;gap:8px}.nv-pub .pick a{padding:9px 14px;border-radius:10px;border:1px solid #c5d3e8;background:#fff;text-decoration:none;font-weight:700;color:#10233f;min-height:42px;display:inline-flex;align-items:center}
+.nv-pub .pick a.on{background:#0757bd;color:#fff;border-color:#0757bd}
+.nv-pub pre{overflow:auto;max-width:100%;background:#0f1b2e;color:#dbe7f7;padding:14px;border-radius:10px;font-size:.82rem}
+.nv-pub .steps li{margin:6px 0}.nv-pub .num{text-align:right;white-space:nowrap}
+.nv-pub form{margin:0}.nv-pub button[disabled]{opacity:.55;cursor:not-allowed}
+</style>
+<div class="nv-pub">
+<div class="banner" role="note"><span class="badge">TESTDATA</span> De producten hieronder zijn testvoorbeelden. Er is geen WooCommerce-schrijfsleutel gebruikt en er wordt <strong>niets naar de echte webshop gestuurd</strong>.</div>
+
+<section class="panel"><h2>Zo werkt het</h2>
+<ol class="steps">
+<li><a href="/dashboard?section=onderzoek">Kansrijke producten zoeken</a> — werkt</li>
+<li><a href="/dashboard?section=viral">Niches en trends onderzoeken</a> — werkt</li>
+<li><a href="/dashboard?section=leveranciers">Leveranciers zoeken en vergelijken</a> — werkt</li>
+<li>Een product selecteren — hieronder, nu met testproducten (koppeling met onderzoeksresultaten volgt)</li>
+<li>Inkoop, verkoop en marge controleren — werkt</li>
+<li>Productgegevens en afbeeldingen controleren — werkt (alleen de gegevens; afbeeldingslinks worden niet opgehaald)</li>
+<li>Bestaat het product al in WooCommerce? — werkt met {{ 'de echte leesverbinding' if publicatie.bron == 'echt' else 'TESTDATA (geen leesverbinding ingesteld)' }}</li>
+<li>Zelf goedkeuren — werkt; de goedkeuring hoort bij precies deze gegevens en vervalt na 1 uur of bij een wijziging</li>
+<li>Publiceren naar WooCommerce — <strong>nog niet gekoppeld</strong>: vereist een schrijfsleutel en jouw aparte toestemming</li>
+</ol></section>
+
+<section class="panel"><h2>Kies een testproduct <span class="badge">TESTDATA</span></h2>
+<div class="pick">{% for k in publicatie.kandidaten %}<a href="/dashboard?section=publicatie&amp;kandidaat={{ k.sku }}"{% if k.sku == c.sku %} class="on" aria-current="true"{% endif %}>{{ k.sku }}</a>{% endfor %}</div>
+<h3>{{ c.titel }}</h3>
+<p>{{ c.beschrijving }}</p>
+<p>Leverancier: {{ c.leverancier }} · Categorie: {{ c.categorie }} · Afbeeldingen: {{ c.afbeeldingen|length }}</p>
+</section>
+
+<section class="panel"><h2>Prijs en marge</h2>
+<div class="admin-table-wrap"><table class="admin-table"><tbody>
+<tr><td>Inkoopprijs</td><td class="num">{{ euro(c.inkoop) }}</td></tr>
+<tr><td>Verzendkosten leverancier</td><td class="num">{{ euro(c.verzend) }}</td></tr>
+<tr><td>Verkoopprijs incl. btw</td><td class="num">{{ euro(c.verkoop) }}</td></tr>
+{% if m %}<tr><td>Verkoopprijs excl. btw (21%)</td><td class="num">{{ euro(m.netto_verkoop) }}</td></tr>
+<tr><td>Kosten (inkoop, verzending, betaalkosten)</td><td class="num">{{ euro(m.kosten) }}</td></tr>
+<tr><td><strong>Winst</strong></td><td class="num"><strong>{{ euro(m.winst) }}</strong></td></tr>
+<tr><td><strong>Netto marge</strong> (minimum {{ publicatie.min_marge }}%)</td><td class="num"><strong>{{ m.procent }}%</strong></td></tr>{% endif %}
+</tbody></table></div></section>
+
+<section class="panel"><h2>Controles</h2>
+{% for category, message in get_flashed_messages(with_categories=true) %}<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>{% endfor %}
+{% if publicatie.bron_fout %}<p class="notice" role="alert">Echte WooCommerce-leesverbinding mislukt ({{ publicatie.bron_fout }}); TESTDATA gebruikt voor de dubbelcontrole.</p>{% endif %}
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Controle</th><th>Uitkomst</th><th>Toelichting</th></tr></thead><tbody>
+{% for r in publicatie.rijen %}<tr><td>{{ r.stap }}</td><td class="{{ 'st-ok' if r.status == 'ok' else ('st-let' if r.status == 'let op' else 'st-fout') }}">{{ {'ok':'In orde','let op':'Let op','fout':'Fout'}[r.status] }}</td><td>{{ r.tekst }}</td></tr>{% endfor %}
+</tbody></table></div></section>
+
+<section class="panel"><h2>Voorbeeld voor WooCommerce <span class="badge">TESTDATA</span></h2>
+<p>Dit zou worden verstuurd, altijd als concept (<code>draft</code>). Niets is verzonden.</p>
+<pre>{{ publicatie.voorbeeld }}</pre></section>
+
+<section class="panel"><h2>Goedkeuren en publiceren</h2>
+{% if publicatie.fouten %}<p class="notice" role="status">Los eerst de fouten hierboven op om te kunnen goedkeuren.</p>{% endif %}
+<form method="post" action="{{ url_for('nv_manage.publicatie_goedkeuren') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="sku" value="{{ c.sku }}">
+<button type="submit" class="nv-blue-action"{% if publicatie.fouten %} disabled{% endif %}>{{ 'Opnieuw goedkeuren' if publicatie.goedgekeurd else 'Ik keur dit product goed' }}</button></form>
+<p>Status goedkeuring: <strong>{{ 'Goedgekeurd door jou (geldig voor deze gegevens)' if publicatie.goedgekeurd else 'Nog niet goedgekeurd' }}</strong></p>
+<form method="post" action="{{ url_for('nv_manage.publicatie_publiceren') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="sku" value="{{ c.sku }}">
+<button type="submit" class="nv-blue-action"{% if not publicatie.schrijven_klaar or not publicatie.goedgekeurd or publicatie.fouten %} disabled{% endif %}>Publiceren naar WooCommerce</button></form>
+<p>{% if not publicatie.schrijven_klaar %}Publiceren is uitgeschakeld: er is nog geen WooCommerce-schrijfkoppeling ingesteld. Dat gebeurt pas na jouw afzonderlijke toestemming.{% else %}Schrijfschakelaar staat aan.{% endif %}</p>
+</section>
+</div>

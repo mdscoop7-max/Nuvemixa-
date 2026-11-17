@@ -1,0 +1,100 @@
+/* Eén gedeelde vormgevingslaag voor alle dashboardpagina's (alleen presentatie, geen functies). */
+:root{--nvm-navy:#0b2a55;--nvm-blue:#0757bd;--nvm-line:#dbe5f2;--nvm-mute:#5a6b82}
+.nv-back{display:inline-flex!important;align-items:center;min-height:40px!important;padding:6px 14px!important;background:#fff!important;color:var(--nvm-blue)!important;border:1px solid var(--nvm-line)!important;border-radius:10px!important;box-shadow:none!important;font-weight:800;text-decoration:none}
+.nv-back:hover{background:#eaf2ff!important}
+main h1{font-size:clamp(1.5rem,2.4vw + .6rem,2.1rem)!important;color:var(--nvm-navy);letter-spacing:-.01em}
+main h2{color:var(--nvm-navy)}
+main :is(.panel,.card,section.nv-card,.nv-panel){border-radius:14px}
+main a:focus-visible,main button:focus-visible,main input:focus-visible,main select:focus-visible,main textarea:focus-visible,.side-links a:focus-visible{outline:3px solid #f4a62a;outline-offset:2px}
+main :is(input,select,textarea){border-color:#c4d3e8}
+main :is(input,select,textarea):focus{border-color:var(--nvm-blue)}
+main button[type=submit]:not(.danger):not(.nv-danger){border-radius:10px}
+main table{border-collapse:collapse}
+main th{color:var(--nvm-mute);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Statusmelding "niet gekoppeld" = waarschuwing (oranje), geen succes (groen) */
+main .notice[role=status]{background:#fff3de!important;border:1px solid #f0cf94!important;border-left:4px solid #e8a020!important;color:#6b4500!important;border-radius:10px;padding:10px 14px;margin:10px 0}
+main .panel .integration-status{margin-top:8px}
+/* Dubbele paginatitel in de binnenste paneelkop verbergen; de h1 bovenaan blijft de enige titel */
+.nv26-panel>.nv26-panel-head .nv26-eyebrow,.nv26-panel>.nv26-panel-head h2{display:none}
+.nv26-panel>.nv26-panel-head{align-items:center}
+/* Zachte diepte en rustige knoppen */
+main :is(.panel,.card,.nv26-card){box-shadow:0 2px 10px #123e6b12;border:1px solid var(--nvm-line)}
+main a.integration-status,main .nv-blue-action:not(.nv-back){background:var(--nvm-blue);border-radius:10px;box-shadow:none;transition:background-color .15s,transform .15s}
+main a.integration-status:hover,main .nv-blue-action:not(.nv-back):hover{background:#06458f;transform:translateY(-1px)}
+/* Paginakop met kleur van de menugroep */
+.nv-sg{--g:#0757bd;border-left:5px solid var(--g);padding-left:16px!important;border-radius:4px}
+.nv-sg-1{--g:#1b8de0}.nv-sg-2{--g:#7a5ff0}.nv-sg-3{--g:#14b8a0}.nv-sg-4{--g:#e8a020}
+.nv-sg .section-kicker{color:var(--gt,var(--g))!important;letter-spacing:.08em;font-weight:800}
+.nv-sg-1{--gt:#0b5f9f}.nv-sg-2{--gt:#5a3fc0}.nv-sg-3{--gt:#0a7a69}.nv-sg-4{--gt:#8a5a00}
+/* Kleurlabels voor status */
+.nvm-chip{display:inline-block;border-radius:999px;padding:3px 11px;font-size:.82rem;font-weight:700;border:1px solid transparent}
+.nvm-chip-warn{background:#fff0d1;color:#7a4e00;border-color:#f2d08c}
+.nvm-chip-ok{background:#e3f6f2;color:#0a6b5d;border-color:#bfe6dd}
+/* Formulieren */
+main input[type=checkbox],main input[type=radio]{accent-color:var(--nvm-blue);width:1.1em;height:1.1em}
+main label{font-weight:700;color:#1e3354}
+main :is(input:not([type=checkbox]):not([type=radio]),select,textarea){border:1px solid #c4d3e8;border-radius:10px;background:#fff}
+main tbody tr:nth-child(even){background:#f6f9fe}
+/* Gekleurde filters: land/markt blauw, categorie paars, leverancier oranje, soort turquoise, bron/periode groen */
+main select{--f:#0757bd;border-left:5px solid var(--f)!important;background-color:color-mix(in srgb,var(--f) 7%,#fff)!important;font-weight:700;color:#10233f}
+main select:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--f) 30%,transparent);outline:0}
+main select:is([name=country],[name=market],[name=mland],[name=research_country],[name=offer_market]){--f:#0b7fd6}
+main select:is([name=category],[name=mcat],[name=research_category],[name=niche]){--f:#7a5ff0}
+main select:is([name=supplier_id],[name=research_supplier_filter],[name=mregio]){--f:#e8a020}
+main select:is([name=supplier_kind],[name=mtype],[name=kind]){--f:#14b8a0}
+main select:is([name=mbron],[name=platform],[name=period],[name=mperiode],[name=window]){--f:#1f8f4e}
+main label:has(select[name=country],select[name=market],select[name=mland],select[name=research_country]){color:#0b5f9f}
+main label:has(select[name=category],select[name=mcat],select[name=research_category]){color:#5a3fc0}
+main label:has(select[name=supplier_id],select[name=research_supplier_filter],select[name=mregio]){color:#8a5a00}
+main label:has(select[name=supplier_kind],select[name=mtype]){color:#0a7a69}
+main label:has(select[name=mbron],select[name=mperiode],select[name=period]){color:#1a6e3d}
+main label:has(input[type=checkbox]){display:inline-flex;align-items:center;gap:8px;background:#eef4fd;border:1px solid #cfe0f7;border-radius:10px;padding:6px 12px}
+main label:has(input[type=checkbox]:checked){background:#e3f6f2;border-color:#9fd9cc;color:#0a6b5d}
+
+/* Monitoring: tabs en samenvattingskaarten */
+.nvm-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.nvm-tabs a{--c:#0b7fd6;display:inline-flex;align-items:center;min-height:42px;padding:8px 16px;background:#fff;border:1px solid #d7e3f4;border-bottom:3px solid var(--c);border-radius:12px;color:#17305a;font-weight:800;text-decoration:none;box-shadow:0 2px 8px #123e6b12}
+.nvm-tabs a.t2{--c:#0f9d8a}.nvm-tabs a.t3{--c:#6a4fd6}
+.nvm-tabs a:hover{background:color-mix(in srgb,var(--c) 10%,#fff)}
+.nvm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px;margin:0 0 14px}
+.nvm-kpis>div{background:#fff;border:1px solid var(--nvm-line);border-top:4px solid #0f9d8a;border-radius:14px;padding:12px 16px;box-shadow:0 2px 10px #123e6b12;min-width:0}
+.nvm-kpis .k-off{border-top-color:#e8a020}.nvm-kpis .k-bad{border-top-color:#d64545}
+.nvm-kpis span{display:block;color:var(--nvm-mute);font-weight:700;font-size:.82rem}.nvm-kpis strong{font-size:1.9rem;color:var(--nvm-navy)}.nvm-kpis small{display:block;color:#6b7a90}
+#nv-mon-koppelingen,#nv-webshop-visits,#nv-mon-controle{scroll-margin-top:16px}
+
+/* Tabelacties: ruimere klikdoelen (minimaal 36px) */
+main table button,main table .button,main table a.button,main td form button{min-height:36px}
+main td>a:not([class]),main td a.nv-tlink{display:inline-block;padding:8px 0}
+
+/* Controleronde 2: contrast (WCAG AA), klikdoelen, toetsenbord */
+.sidebar .side-links a.active,.sidebar .side-links a[aria-current="page"],body:has(#tmAdminNavigation) .nv26-sidebar a.active,body:has(#tmAdminNavigation) .nv26-sidebar a[aria-current="page"]{background:linear-gradient(110deg,#0b66e6,#0049b8)!important;color:#fff!important}
+.sidebar .side-links a:hover{background:#0a5fd8!important;color:#fff!important}
+.side-bottom small{color:#1a3560!important}
+/* afbeeldingslinks krijgen de grootte van de afbeelding */
+main a:has(>img){display:inline-block;line-height:0;border-radius:10px}
+main a:has(>img):focus-visible{outline:3px solid #0b66e6;outline-offset:2px}
+/* tekstlinks in kaarten en details/summary: ruimer klikvlak */
+main p>a:not([class]){display:inline-block;padding:9px 0;min-height:36px}
+main details>summary{min-height:36px;display:list-item;padding-top:6px;padding-bottom:6px;cursor:pointer}
+main details>summary:focus-visible,main a:focus-visible,main button:focus-visible,main input:focus-visible,main select:focus-visible,main textarea:focus-visible,#tmAdminNavigation a:focus-visible,#tmAdminNavigation summary:focus-visible{outline:3px solid #0b66e6;outline-offset:2px}
+#tmAdminNavigation a:focus-visible,#tmAdminNavigation summary:focus-visible{outline-color:#9ccaff}
+@media (max-width:820px){
+ #tmAdminNavigation a,#tmAdminNavigation summary,.sidebar .side-links a,.sidebar .shop-exit,.nv-blue-action{min-height:44px!important}
+ .nv-msearch input,#nvMenuFilter{min-height:44px}
+ .shop-exit{min-height:44px}
+ main p>a:not([class]){padding:12px 0;min-height:44px}
+ main details>summary{min-height:44px;padding-top:11px;padding-bottom:11px}
+ main button,main .nv-blue-action,main a.button,.nv-back,.nvm-tabs a,main select,main input:not([type=checkbox]):not([type=radio]):not([type=hidden]){min-height:44px}
+ main label:has(input[type=checkbox]),main label:has(input[type=radio]){min-height:44px;display:flex;align-items:center;gap:8px}
+ .nv-action-row,.actions,main td form{gap:10px}
+}
+
+.nv-skip{position:absolute;left:12px;top:-60px;z-index:100;background:#0b2a55;color:#fff!important;padding:12px 18px;border-radius:0 0 12px 12px;font-weight:800;text-decoration:none}
+.nv-skip:focus{top:0}
+#nvMain:focus{outline:none}
+@media (max-width:820px){.nv27-actions a,a.go,.nv27 a.go{min-height:44px!important;display:flex;align-items:center}}
+/* Mobiel: links in lijsten krijgen een ruim tikvlak (WCAG 2.5.8), desktop blijft ongewijzigd */
+@media (max-width:820px){main li>a,main summary>a,main .nv-market-grid>a{display:inline-block;padding:11px 2px;min-height:44px;box-sizing:border-box}}
+@media (max-width:820px){main form input[type=search],main form input[type=text],main form button{min-height:44px!important;height:auto}}
+@media (max-width:820px){.top-search input,.top-search button{min-height:44px!important;height:auto}}

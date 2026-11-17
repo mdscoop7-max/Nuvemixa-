@@ -28,13 +28,21 @@
     {% endfor %}
   </ul>
 </details>
+{% for key, label in [('weeks', 'Wekelijkse bezoekers, laatste 12 weken'), ('months', 'Maandelijkse bezoekers, laatste 12 maanden')] %}
+{% set points = w[key] %}{% set pmax = [1] + (points | map(attribute=1) | list) %}
+<details class="panel-after"><summary>{{ label }}</summary>
+  <ul class="nv-visit-chart">{% for period, number in points %}
+    <li><span>{{ period }}</span><meter min="0" max="{{ pmax | max }}" value="{{ number }}" aria-label="{{ period }}"></meter><strong>{{ number }}</strong></li>{% endfor %}
+  </ul>
+</details>
+{% endfor %}
 {% endif %}
 {% endif %}
 <details class="panel-after">
   <summary>Telregels, privacy en koppeling</summary>
   <ul>
     <li><strong>Bezoeker</strong> = unieke browser per Nederlandse kalenderdag. <strong>Paginaweergave</strong> = geladen pagina; herladen van dezelfde pagina binnen 30 minuten telt niet opnieuw.</li>
-    <li>Week (vanaf maandag), maand en totaal tellen bezoekersdagen op. Een terugkerende bezoeker telt dus per dag één keer.</li>
+    <li>Alle bezoekers worden geteld, uit elk land (niet alleen Nederland); een landverdeling wordt nog niet opgeslagen. Week (vanaf maandag), maand en totaal tellen bezoekersdagen op. Een terugkerende bezoeker telt dus per dag één keer.</li>
     <li>Cookievrij: er wordt niets op het apparaat van de bezoeker opgeslagen. Het IP-adres en de browser worden alleen gebruikt voor een dagelijks wisselende hash en worden niet bewaard. Do Not Track en Global Privacy Control worden gerespecteerd. Bots, healthchecks en dashboardpagina's worden niet geteld.</li>
     <li>Controleer zelf of de privacyverklaring van de webshop deze anonieme meting vermeldt en of dit past bij jouw situatie. Dit is geen juridisch advies.</li>
     <li>Toegestane webshopherkomst: {% for origin in w.origins %}<code>{{ origin }}</code>{% if not loop.last %}, {% endif %}{% endfor %}. Extra domeinen via <code>NUVEMIXA_WEBSHOP_ORIGINS</code>.</li>

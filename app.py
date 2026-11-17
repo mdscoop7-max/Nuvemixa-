@@ -1189,7 +1189,7 @@ def admin_configured():
 # NUVEMIXA Control - WooCommerce
 
 from nv_woo_bridge import (
-    CommerceConnectionError, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders,
+    CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
 
@@ -1721,10 +1721,10 @@ def admin_research_preview():
 
 
 def monitoring_integrations():
-    woo_readonly = read_configuration_present()
+    woo = woo_connection_status()
     integrations = {
-        "WooCommerce": (woo_readonly or woo_configured(),
-                        "" if woo_readonly else "De leestest vereist een WooCommerce-leesconfiguratie met bevestigde host."),
+        "WooCommerce": (woo["state"] != "not_configured" or woo_configured(),
+                        "" if woo["state"] != "not_configured" or woo_configured() else woo["detail"]),
         "Leverancierskoppeling": (False, "CSV-voorcontrole is lokaal. Er is geen externe voorraadbron gekoppeld."),
         "Gmail-inbox": (False, "De Gmail-inbox heeft nog geen geautoriseerde koppeling."),
         "Google Ads": (False, "Er is nog geen geautoriseerde campagnebron."),
@@ -1732,9 +1732,16 @@ def monitoring_integrations():
                     "Het dashboard heeft geen RankFix-API-verbindingstest. De bestaande link is afzonderlijk."),
         "Betalingen": (bool(os.getenv("MOLLIE_API_KEY", "").strip()), "Er is een Mollie-sleutel nodig."),
     }
-    return {name: ("unchecked", "Instellingen aanwezig. Verbinding niet getest.", follow_up)
-            if configured else ("unconfigured", "Geen externe koppeling ingericht.", follow_up)
-            for name, (configured, follow_up) in integrations.items()}
+    result = {name: ("unchecked", "Instellingen aanwezig. Verbinding niet getest.", follow_up)
+              if configured else ("unconfigured", "Geen externe koppeling ingericht.", follow_up)
+              for name, (configured, follow_up) in integrations.items()}
+    if woo["state"] == "connected":
+        result["WooCommerce"] = ("works", woo["label"] + ".", "")
+    elif woo["state"] == "error":
+        result["WooCommerce"] = ("failed", woo["detail"], "Controleer HTTPS, host en leesrechten.")
+    elif woo["state"] == "configured_untested":
+        result["WooCommerce"] = ("unchecked", woo["label"] + ".", woo["detail"])
+    return result
 
 
 def probe_monitoring_connection(name, current):
@@ -1745,9 +1752,11 @@ def probe_monitoring_connection(name, current):
             return current
         try:
             if read_recent_orders() is not None:
+                woo_record_test(True)
                 return "works", "Alleen-lezen orderuitlezing bevestigd.", ""
-        except CommerceConnectionError:
-            pass
+        except CommerceConnectionError as exc:
+            woo_record_test(False, exc)
+            return "failed", "WooCommerce-orderuitlezing mislukt.", str(exc)
         return "failed", "WooCommerce-orderuitlezing mislukt.", "Controleer HTTPS, host en leesrechten."
     result = mollie_readonly_check()
     if result["state"] in ("connected_test", "connected_live_credentials"):
@@ -1940,53 +1949,20 @@ def admin_add_research_note():
 
 
 def recent_woo_orders():
+    """Toont alleen de momentopname van een bewuste klik op 'Gegevens vernieuwen'.
 
-    """Read WooCommerce orders only if already configured. Never fabricate orders."""
-
-    try:
-        if read_configuration_present():
-            result = read_recent_orders()
-        elif woo_configured():
-            result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
-        else:
+    Het openen van een pagina doet NOOIT een WooCommerce-aanroep. Er worden geen bestellingen verzonnen.
+    """
+    import nv_woo_bridge
+    snapshot = nv_woo_bridge._SNAPSHOT
+    if not snapshot["at"]:
+        if nv_woo_bridge.connection_status()["state"] == "not_configured":
             return None, "WooCommerce niet gekoppeld."
-    except CommerceConnectionError:
-        return None, "WooCommerce-leesverbinding mislukt. Controleer de verbinding bij Monitoring."
-
-    if not isinstance(result, list):
-
-        return None, "WooCommerce niet bereikbaar of antwoord ongeldig."
-
-    # Only display operational fields; no addresses, phone or customer details.
-
-    filtered = []
-
-    for item in result:
-
-        if not isinstance(item, dict):
-
-            continue
-
-        filtered.append({
-
-            "id": str(item.get("id", ""))[:40],
-
-            "status": str(item.get("status", "onbekend"))[:45],
-
-            "date": str(item.get("date_created", ""))[:25],
-
-            "total": str(item.get("total", ""))[:40],
-
-            "currency": str(item.get("currency", "EUR"))[:10],
-
-        })
-
-    return filtered, None
-
-
-
-
-
+        return None, "Nog niet opgehaald. Gebruik 'Gegevens vernieuwen' bij WooCommerce; deze pagina doet zelf geen aanroep."
+    # Alleen operationele velden; geen adressen, telefoonnummers of klantgegevens.
+    return [{"id": str(o.get("id", ""))[:40], "status": str(o.get("status", "onbekend"))[:45],
+             "date": str(o.get("date", ""))[:25], "total": str(o.get("total", ""))[:40], "currency": "EUR"}
+            for o in snapshot["orders"]], None
 
 
 # Optional integrations are restricted to a logged-in administrator.
@@ -2166,6 +2142,10 @@ def control():
 
         "monitoring": "Monitoring",
 
+        "administratie": "Administratie",
+
+        "publicatie": "Productpublicatie",
+
     }
 
     section_descriptions = {
@@ -2205,11 +2185,15 @@ def control():
 
         "google-shopping": "Google Merchant Center en Shopping-productfeeds.",
 
-        "talen": "Beheer Nederlandse en Engelse winkelteksten.",
+        "talen": "Welke talen de webshop ondersteunt en welke taalfuncties nog niet gekoppeld zijn.",
 
         "klantenservice": "Klantvragen, contact en berichten.",
 
         "monitoring": "Koppelingen, beschikbaarheid en controles.",
+
+        "publicatie": "Producten controleren, goedkeuren en voorbereiden voor WooCommerce. Er wordt niets verzonden zonder schrijfkoppeling.",
+
+        "administratie": "Omzet, kosten, marges en overzichten voor de boekhouding.",
 
     }
 
@@ -2290,7 +2274,23 @@ def control():
             )
 
 
-    order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
+    order_rows, order_error = (recent_woo_orders() if section in ("bestellingen", "administratie") else (None, None))
+    admin_overview = None
+    publicatie = None
+    if section == "publicatie" and is_admin:
+        import nv_publicatie, json as _json
+        chosen = nv_publicatie.TEST_CANDIDATES.get(request.args.get("kandidaat", ""), None) or next(iter(nv_publicatie.TEST_CANDIDATES.values()))
+        existing, bron, fout = nv_publicatie.existing_products()
+        rows = nv_publicatie.check(chosen, existing)
+        publicatie = {"kandidaten": list(nv_publicatie.TEST_CANDIDATES.values()), "gekozen": chosen, "rijen": rows,
+                      "fouten": bool(nv_publicatie.blocking(rows)), "marge": nv_publicatie.margin(chosen),
+                      "voorbeeld": _json.dumps(nv_publicatie.payload(chosen), indent=2, ensure_ascii=False),
+                      "bron": bron, "bron_fout": fout, "goedgekeurd": nv_publicatie.approval_valid(app.secret_key, chosen, session.get("nv_pub_goedkeuringen", {}).get(chosen["sku"], "")),
+                      "schrijven_klaar": nv_publicatie.write_connection_ready(), "min_marge": nv_publicatie.MIN_MARGE}
+    if section == "administratie" and is_admin:
+        import nv_administratie
+        admin_overview = {"test": nv_administratie.test_overview(),
+                          "echt": nv_administratie.real_orders(order_rows), "echt_fout": order_error}
 
     admin_customer_rows = []
     admin_customer_error = None
@@ -2399,7 +2399,12 @@ def control():
         research_options=research_options,
 
         order_rows=order_rows,
+        admin_overview=admin_overview,
+        publicatie=publicatie,
         staff_login_enabled=__import__('nv_dashboard_manager').staff_login_enabled(),
+        talen=(__import__('nv_talen').winkel_talen() if section == 'talen' else []),
+        talen_niet_gekoppeld=__import__('nv_talen').NIET_GEKOPPELD,
+        euro=__import__('nv_administratie').euro,
 
         order_error=order_error,
 
@@ -2415,11 +2420,12 @@ def control():
         scan_labels={"works": "Werkt", "attention": "Aandacht nodig", "error": "Fout",
                      "unchecked": "Niet getest", "unconfigured": "Niet gekoppeld",
                      "failed": "Verbinding mislukt", "disabled": "Uitgeschakeld"},
+        woo_connection=woo_connection_status(),
         monitoring_connections=monitoring_integrations() if section == "monitoring" else {},
         monitoring_probes=("WooCommerce", "Betalingen") if section == "monitoring" and read_configuration_present()
                           else ("Betalingen",),
         visitor_stats=visit_summary() if section in {"statistieken", "monitoring"} else None,
-        webshop_stats=webshop_visit_summary() if section in {"statistieken", "monitoring"} else None,
+        webshop_stats=webshop_visit_summary() if section in {"dashboard", "statistieken", "monitoring"} else None,
         allowed=allowed,
         rights_labels=RIGHTS,
         account_rights=account_rights,

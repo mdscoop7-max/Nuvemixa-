@@ -39,16 +39,24 @@ def test_coupon_dates_are_optional_and_inclusive(administrator, monkeypatch, tmp
 
 
 def test_dashboard_woo_uses_protected_read_path(administrator, monkeypatch):
-    monkeypatch.setattr(dashboard, "read_configuration_present", lambda: True)
-    monkeypatch.setattr(dashboard, "woo_configured", lambda: True)
-    monkeypatch.setattr(dashboard, "woo_request", lambda *a: pytest.fail("Legacy call with active read configuration"))
-    monkeypatch.setattr(dashboard, "read_recent_orders", lambda: [{
+    """Pagina openen doet geen aanroep; na een bewuste klik toont Bestellingen alleen veilige velden."""
+    import nv_woo_bridge
+    for k, v in {"URL": "https://shop.example.invalid", "KEY": "ck_x", "SECRET": "cs_x", "HOST": "shop.example.invalid"}.items():
+        monkeypatch.setenv("NUVEMIXA_WOO_" + k, v)
+    nv_woo_bridge.reset_test()
+    monkeypatch.setattr(dashboard, "woo_request", lambda *a: pytest.fail("Legacy call"))
+    monkeypatch.setattr(nv_woo_bridge, "_fetch", lambda *a: pytest.fail("Aanroep bij openen van de pagina"))
+    assert administrator.get("/dashboard?section=bestellingen").status_code == 200
+    monkeypatch.setattr(nv_woo_bridge, "_fetch", lambda b, a, path, h: [{
         "id": 757, "status": "processing", "billing": {"email": "private@example.invalid"},
     }])
+    administrator.post("/admin/commerce/refresh", data={"_csrf_token": CSRF_TOKEN})
+    monkeypatch.setattr(nv_woo_bridge, "_fetch", lambda *a: pytest.fail("Aanroep bij openen van de pagina"))
     response = administrator.get("/dashboard?section=bestellingen")
     assert response.status_code == 200
     assert b"#757" in response.data
     assert b"private@example.invalid" not in response.data
+    nv_woo_bridge.reset_test()
 
 
 def test_canonical_uses_the_expected_origin(monkeypatch):

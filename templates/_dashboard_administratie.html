@@ -1,0 +1,53 @@
+{% set t = admin_overview.test %}{% set e = admin_overview.echt %}
+<style>
+.nv-adm{display:grid;gap:18px}
+.nv-adm .badge{display:inline-block;border-radius:6px;padding:3px 9px;font-size:.75rem;font-weight:900;letter-spacing:.04em}
+.nv-adm .badge.test{background:#fff3de;color:#8a5a00;border:1px solid #f0c987}.nv-adm .badge.echt{background:#e3f6f2;color:#0a6b5d;border:1px solid #9bd8cc}
+.nv-adm .banner{border-left:5px solid #d98a14;background:#fff8ea;padding:10px 14px;border-radius:8px}
+.nv-adm .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px}
+.nv-adm .kpi{background:#fff;border:1px dashed #d98a14;border-radius:12px;padding:12px 14px}
+.nv-adm .kpi span{display:block;font-size:.8rem;color:#5a6b82;font-weight:700}.nv-adm .kpi strong{font-size:1.4rem}
+.nv-adm .num{text-align:right;white-space:nowrap}
+</style>
+<div class="nv-adm">
+<div class="banner" role="note"><span class="badge test">TESTDATA</span> De bedragen in het blok “Testdata” hieronder zijn voorbeeldcijfers om de berekening te controleren. Ze zijn niet echt en mogen niet voor de boekhouding gebruikt worden. Echte gegevens staan apart onder “Echte gegevens”.</div>
+
+<section class="panel"><h2>Echte gegevens <span class="badge echt">ECHT · alleen-lezen</span></h2>
+{% if e %}
+<p>Laatste orders uit WooCommerce ({{ e.aantal }}). Alleen nummer, datum, status en bedrag; geen klantgegevens.</p>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Order</th><th>Datum</th><th>Betaalstatus</th><th class="num">Bedrag</th></tr></thead><tbody>
+{% for r in e.rows %}<tr><td>#{{ r.id }}</td><td>{{ r.datum }}</td><td>{{ r.status }}</td><td class="num">{{ r.totaal }}</td></tr>{% else %}<tr><td colspan="4">Geen orders in de gekoppelde bron.</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}
+<p>Geen echte orderbron beschikbaar: {{ admin_overview.echt_fout or "WooCommerce niet gekoppeld." }} Omzet, kosten en winst van de echte winkel worden daarom nog niet getoond. Inkoopprijzen komen pas uit een leverancierskoppeling of handmatige invoer.</p>
+{% endif %}</section>
+
+<section class="panel"><h2>Testdata: omzet, kosten en winst <span class="badge test">TESTDATA</span></h2>
+<div class="kpis">
+<div class="kpi"><span>Omzet (excl. btw)</span><strong>{{ euro(t.omzet) }}</strong></div>
+<div class="kpi"><span>Totale kosten</span><strong>{{ euro(t.kosten) }}</strong></div>
+<div class="kpi"><span>Winst</span><strong>{{ euro(t.winst) }}</strong></div>
+<div class="kpi"><span>Nettomarge</span><strong>{{ t.marge }}%</strong></div>
+<div class="kpi"><span>Btw over betaalde orders</span><strong>{{ euro(t.btw_af_te_dragen) }}</strong></div>
+</div>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Kostenpost</th><th class="num">Bedrag</th></tr></thead><tbody>
+<tr><td>Inkoop van verkochte producten</td><td class="num">{{ euro(t.inkoop) }}</td></tr>
+<tr><td>Verzendkosten</td><td class="num">{{ euro(t.verzend) }}</td></tr>
+<tr><td>Betaalkosten</td><td class="num">{{ euro(t.betaalkosten) }}</td></tr>
+<tr><td>Advertenties</td><td class="num">{{ euro(t.advertenties) }}</td></tr>
+</tbody></table></div></section>
+
+<section class="panel"><h2>Testdata: inkoop, verkoop en marge per product <span class="badge test">TESTDATA</span></h2>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th class="num">Inkoopprijs</th><th class="num">Verkoopprijs incl. btw</th><th class="num">Verkocht</th><th class="num">Winst</th><th class="num">Marge</th></tr></thead><tbody>
+{% for p in t.producten %}<tr><td>{{ p.naam }} <small>({{ p.sku }})</small></td><td class="num">{{ euro(p.inkoop) }}</td><td class="num">{{ euro(p.verkoop) }}</td><td class="num">{{ p.aantal }}</td><td class="num">{{ euro(p.winst) }}</td><td class="num">{{ p.marge ~ '%' if p.marge is not none else '—' }}</td></tr>{% endfor %}
+</tbody></table></div></section>
+
+<section class="panel"><h2>Testdata: bestellingen en betalingsstatus <span class="badge test">TESTDATA</span></h2>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Order</th><th>Betalingsstatus</th><th class="num">Totaal incl. btw</th><th class="num">Waarvan btw</th><th>Telt mee</th></tr></thead><tbody>
+{% for o in t.orders %}<tr><td>{{ o.id }}</td><td>{{ o.status }}</td><td class="num">{{ euro(o.totaal) }}</td><td class="num">{{ euro(o.btw) }}</td><td>{{ 'Ja' if o.betaald else 'Nee' }}</td></tr>{% endfor %}
+</tbody></table></div></section>
+
+<section class="panel"><h2>Overzicht voor de boekhouding</h2>
+<p>Btw 21% over betaalde orders (op basis van de testdata hierboven): {{ euro(t.btw_af_te_dragen) }}. Omzet excl. btw: {{ euro(t.omzet) }}.</p>
+<p>Nog niet beschikbaar: koppeling met het boekhoudpakket en exporteren naar je boekhouder. Het pakket wordt later gekozen; er wordt nu niets gekoppeld of afgesloten.</p></section>
+</div>

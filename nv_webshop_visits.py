@@ -155,7 +155,7 @@ def summary(today=None):
     state = {
         "enabled": tracking_enabled(), "origins": allowed_origins(), "persistent": persistent_backend(),
         "backend": "PostgreSQL" if persistent_backend() else "SQLite (niet permanent op Render)",
-        "error": False, "has_data": False, "last_seen": None, "periods": [], "chart": [],
+        "error": False, "has_data": False, "weeks": [], "months": [], "yesterday": 0, "last_seen": None, "periods": [], "chart": [],
         "script_url": f"{request.host_url.rstrip('/')}/static/nv-webshop-visit.js" if request else "",
     }
     week = today - timedelta(days=today.weekday())
@@ -183,6 +183,27 @@ def summary(today=None):
                 " GROUP BY day", (start.isoformat(), today.isoformat())).fetchall()}
             state["chart"] = [((start + timedelta(days=i)).strftime("%d-%m"),
                                *rows.get((start + timedelta(days=i)).isoformat(), (0, 0))) for i in range(30)]
+            # Weekreeks (laatste 12 weken, vanaf maandag) en maandreeks (laatste 12 maanden):
+            # alle bezoekers, niet beperkt tot één land. Alleen lezen, geen schemawijziging.
+            long_start = (month.replace(day=1) - timedelta(days=366)).replace(day=1)
+            daily = {row[0]: int(row[1]) for row in db.execute(
+                f"SELECT day, count(*) FROM {table} WHERE day >= {mark} AND day <= {mark} GROUP BY day",
+                (long_start.isoformat(), today.isoformat())).fetchall()}
+            weeks, months = {}, {}
+            for day_text, number in daily.items():
+                d = datetime.strptime(str(day_text)[:10], "%Y-%m-%d").date()
+                weeks[d - timedelta(days=d.weekday())] = weeks.get(d - timedelta(days=d.weekday()), 0) + number
+                months[d.replace(day=1)] = months.get(d.replace(day=1), 0) + number
+            state["weeks"] = [((week - timedelta(weeks=i)).strftime("week %d-%m"), weeks.get(week - timedelta(weeks=i), 0))
+                              for i in range(11, -1, -1)]
+            state["months"] = []
+            cursor = month
+            for _ in range(12):
+                state["months"].append((cursor.strftime("%m-%Y"), months.get(cursor, 0)))
+                cursor = (cursor - timedelta(days=1)).replace(day=1)
+            state["months"].reverse()
+            yesterday = today - timedelta(days=1)
+            state["yesterday"] = daily.get(yesterday.isoformat(), 0)
     except STORAGE_ERRORS:
         state["error"] = True
     return state

@@ -127,8 +127,9 @@
 </style>
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
-<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}"></head>
-<body class="nv-admin-ui"><div class="layout">
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=13"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
+<body class="nv-admin-ui"><a class="nv-skip" href="#nvMain">Naar hoofdinhoud</a><div class="layout">
 <aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
 {% include "_dashboard_menu.html" %}
@@ -136,7 +137,7 @@
 </aside>
 <div class="workspace">
 <header class="topbar">{% if section == "producten" and allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
-<main class="admin">
+<main class="admin" id="nvMain" tabindex="-1">
 {% if staff and section == "dashboard" %}
 <section class="panel">
 <details><summary>Mijn wachtwoord wijzigen</summary>
@@ -148,27 +149,12 @@
 </form></details></section>
 {% endif %}
 {% if section == "dashboard" %}
-<div class="heading"><div><h1>Dashboard</h1><p>Welkom terug! Hier is een overzicht van je webshop.</p></div><span class="status">● Webshop in ontwikkeling</span></div>
-{% if allowed("stats", "product_view", "order_view", "customer_view") %}<section class="metrics" aria-label="Kerncijfers">
-{% if allowed("stats", "product_view") %}<div class="metric"><div class="metric-label"><span class="metric-icon">▣</span>Catalogusproducten</div><strong class="metric-value">{{ stats.total_products }}</strong><span class="metric-note">Producten in huidige testcatalogus</span></div>
-<div class="metric"><div class="metric-label"><span class="metric-icon">▦</span>Categorieën</div><strong class="metric-value">{{ stats.total_categories }}</strong><span class="metric-note">Actieve hoofdcollecties</span></div>{% endif %}
-{% if allowed("order_view") %}<div class="metric" id="bestellingen"><div class="metric-label"><span class="metric-icon">🛒</span>Bestellingen</div><strong class="metric-value missing">Niet gekoppeld</strong><span class="metric-note">Geen bevestigde ordergegevens</span></div>{% endif %}
-{% if is_admin %}<div class="metric" id="klanten"><div class="metric-label"><span class="metric-icon">♙</span>Klanten</div><strong class="metric-value">{{ nv_customer_count if nv_customer_count is not none else "—" }}</strong><span class="metric-note">Aantal in lokale klantdatabase; geen verkoopstatistiek</span></div>{% endif %}
-</section>{% endif %}
-{% if allowed("stats") %}<div class="details">
-<section class="panel" id="statistieken"><h2>Catalogusoverzicht</h2><p>Aantal producten per categorie · dit zijn geen verkoopcijfers.</p>
-<div class="chart" role="img" aria-label="Staafdiagram met aantallen producten per categorie">
-{% for name,count in category_counts %}<div class="bar-wrap"><strong>{{ count }}</strong><div class="bar" style="--height:{{ ((count / stats.max_category_count) * 100)|round|int if stats.max_category_count else 0 }}%"></div><span>{{ name|replace(' & ',' & ') }}</span></div>{% endfor %}
-</div></section>
-<section class="panel"><h2>Webshopstatus</h2><p>Wat er op dit moment echt beschikbaar is.</p>
-<div class="category-list"><div class="category-row"><span>Catalogusproducten</span><b>{{ stats.total_products }}</b></div><div class="category-row"><span>Categorieën</span><b>{{ stats.total_categories }}</b></div><div class="category-row"><span>Gemarkeerde aanbiedingen</span><b>{{ stats.offers }}</b></div><div class="category-row"><span>Gemiddelde testprijs</span><b>{{ format_eur(stats.avg_price) }}</b></div></div>
-<div class="notice">Omzet, bestellingen, klantgegevens en voorraadstatus zijn nog niet aangesloten. Daarom worden er geen fictieve bedragen, trends of klantnamen getoond.</div></section>
-</div>{% endif %}
-{% if is_admin %}<nav class="quick" aria-label="Snelle acties"><a href="/dashboard?section=producten"><span class="bubble">＋</span><span><b>Producten beheren</b><small>Controleer de catalogus</small></span></a><a href="/dashboard?section=categorieen"><span class="bubble">▦</span><span><b>Beheer categorieën</b><small>Productgroepen</small></span></a><a href="/dashboard?section=kortingen"><span class="bubble">◇</span><span><b>Kortingsacties</b><small>Bekijk actiegegevens</small></span></a><a href="/dashboard?section=statistieken"><span class="bubble">▥</span><span><b>Bekijk rapporten</b><small>Catalogusstatistieken</small></span></a></nav>{% endif %}
+{% include "_dashboard_home.html" %}
 
 {% else %}
 <a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
-<header class="section-header"><div><span class="section-kicker">NUVEMIXA · BEHEEROMGEVING</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
+{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
+<header class="section-header nv-sg nv-sg-{{ nv_grp }}"><div><span class="section-kicker">{{ ['NUVEMIXA · OVERZICHT','WINKEL','ONDERZOEK','VINDBAARHEID','BEHEER'][nv_grp] }}</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
 {% elif section == "calculator" %}
@@ -750,7 +736,15 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "accountbeheer" %}
 {% include "_dashboard_team.html" %}
 {% elif section == "monitoring" %}
-<section class="panel integration"><h2>Monitoring en koppelingen</h2>
+{% set mon = namespace(works=0, attention=0, off=0) %}
+{% for name, (status, result, follow_up) in monitoring_connections.items() %}{% if status == "works" %}{% set mon.works = mon.works + 1 %}{% elif status in ("attention", "error", "failed") %}{% set mon.attention = mon.attention + 1 %}{% else %}{% set mon.off = mon.off + 1 %}{% endif %}{% endfor %}
+<nav class="nvm-tabs" aria-label="Monitoring onderdelen"><a class="t1" href="#nv-mon-koppelingen">Koppelingen</a><a class="t2" href="#nv-webshop-visits">Webshopbezoekers</a><a class="t3" href="#nv-mon-controle">Systeemcontrole</a></nav>
+<div class="nvm-kpis" aria-label="Samenvatting koppelingen">
+<div class="k-ok"><span>Werkt</span><strong>{{ mon.works }}</strong><small>Verbinding bevestigd</small></div>
+<div class="k-off"><span>Niet gekoppeld</span><strong>{{ mon.off }}</strong><small>Nog niet ingesteld of getest</small></div>
+<div class="k-bad"><span>Aandacht nodig</span><strong>{{ mon.attention }}</strong><small>Fout of mislukte verbinding</small></div>
+</div>
+<section class="panel integration" id="nv-mon-koppelingen"><h2>Monitoring en koppelingen</h2>
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Status</th></tr></thead><tbody>
 {% for name, (status, result, follow_up) in monitoring_connections.items() %}
 <tr><td>{{ name }}</td><td>{{ scan_labels[status] }} · {{ result }}
@@ -766,12 +760,12 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <tr><td>Bezoekersteller webshop</td><td>{{ ("Actief" + ("" if webshop_stats.has_data else ", nog geen bezoek ontvangen")) if webshop_stats.enabled else "Niet geactiveerd" }}</td></tr>
 </tbody></table></div>
 {% if is_admin %}<p><a class="integration-status" href="{{ url_for('admin_integrations') }}" target="_blank" rel="noopener">Technische configuratiestatus (JSON) →</a></p>{% endif %}
-<div class="nv-action-row"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>Lokale systeemcontrole uitvoeren →</a><span role="status" data-scan-progress></span></div>
+<div class="nv-action-row" id="nv-mon-controle"><a class="nv-blue-action" href="{{ url_for('control', section='monitoring', scan=1) }}" data-run-system-scan>Lokale systeemcontrole uitvoeren →</a><span role="status" data-scan-progress></span></div>
 </section>
 {% block monitoring_report %}{% endblock %}
 {% include "_dashboard_visits.html" %}
-{% elif section == "klantenservice" %}
-{# De bestaande klantenservice-inbox staat onderaan de pagina; geen tweede tijdelijke kaart tonen. #}
+{% elif section in ("klantenservice", "talen", "administratie", "woocommerce", "klanten", "publicatie") %}
+{# Deze onderdelen hebben hieronder een eigen inhoud; geen tweede tijdelijke kaart tonen. #}
 {% else %}
 <section class="panel integration"><h2>{{ section_names.get(section,"Beheer") }}</h2><p>Voor dit onderdeel is nog geen geverifieerde gegevenskoppeling actief. Er worden geen fictieve resultaten getoond.</p><span class="integration-status">Nog niet gekoppeld</span></section>
 {% endif %}
@@ -799,37 +793,18 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </section>
 {% elif section == 'woocommerce' %}
 <section class="nv26-panel" aria-label="WooCommerce binnen dashboard">
-  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">WEBSHOP &amp; LEVERANCIERS</div><h2>WooCommerce &amp; leveranciers</h2><p>Eén beheeromgeving. {{ 'WooCommerce-configuratie aanwezig.' if integration_status.woo else 'WooCommerce is nog niet ingesteld.' }}</p></div><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div>
+  <div class="nv26-panel-head"><div><p>Eén beheeromgeving. {{ woo_connection.detail }}</p></div><span class="nv26-chip nv26-chip-warn">{{ woo_connection.label }}</span></div>
   <div class="nv26-card nv26-woo-box">
     <p>WooCommerce en leveranciers binnen je bestaande dashboard, zonder een tweede dashboardmenu. De koppeling blijft alleen-lezen zolang die niet is ingericht.</p>
     <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
   </div>
 </section>
-{% elif section == 'dashboard' and is_admin %}
-<section class="nv26-panel nv26-home" aria-label="NUVEMIXA Control dashboard">
-  <div class="nv26-panel-head"><div><div class="nv26-eyebrow">NUVEMIXA · BEHEEROMGEVING</div><h2>Dashboard</h2><p>Overzicht, prestaties en snelle toegang tot alle beheerfuncties.</p></div><span class="nv26-chip">Lokale testomgeving</span></div>
-  <div class="nv26-kpis">
-    <div class="nv26-kpi nv26-blue"><span>▣ &nbsp;Producten</span><strong>{{ stats.total_products }}</strong></div>
-    <div class="nv26-kpi nv26-purple"><span>▦ &nbsp;Categorieën</span><strong>{{ stats.total_categories }}</strong></div>
-    <div class="nv26-kpi nv26-green"><span>▤ &nbsp;Aanbiedingen</span><strong>{{ stats.offers }}</strong></div>
-    <div class="nv26-kpi nv26-orange"><span>◈ &nbsp;Gem. catalogusprijs</span><strong>€{{ '%.2f'|format(stats.avg_price)|replace('.', ',') }}</strong></div>
-  </div>
-  <div class="nv26-home-grid">
-    <article class="nv26-card"><h3>⚡ Snelle acties</h3><div class="nv26-actions">
-      <a href="/dashboard?section=producten">▣<span>Producten</span></a>
-      <a href="/dashboard?section=categorieen">▦<span>Categorieën</span></a>
-      <a href="/dashboard?section=bestellingen">▤<span>Bestellingen</span></a>
-      <a href="/dashboard?section=klanten">♙<span>Klanten</span></a><a href="/dashboard?section=accountbeheer">♧<span>Accountbeheer</span></a>
-      <a href="/dashboard?section=leveranciers">▧<span>Leveranciers</span></a>
-      <a href="/dashboard?section=instellingen">⚙<span>Instellingen</span></a>
-    </div></article>
-    <article class="nv26-card"><div class="nv26-between"><h3>WooCommerce</h3><span class="nv26-chip nv26-chip-warn">{{ 'Ingesteld · status controleren' if integration_status.woo else 'Niet ingesteld' }}</span></div><p class="nv26-muted">De bestelpagina en beheermodule tonen hun eigen verbindingsstatus.</p><a class="nv26-primary" href="/dashboard?section=woocommerce">WooCommerce beheren →</a></article>
-    <article class="nv26-card"><h3>Recente bestellingen</h3><p class="nv26-muted">Alleen werkelijke gegevens na koppeling met een gecontroleerde orderbron.</p><a class="nv26-link" href="/dashboard?section=bestellingen">Bestellingen bekijken →</a></article>
-    <article class="nv26-card"><h3>Producten per categorie</h3><div class="nv26-categories">{% for name, amount in category_counts %}<div><span>{{ name }}</span><strong>{{ amount }}</strong></div>{% endfor %}</div></article>
-    <article class="nv26-card"><h3>Systeemstatus</h3><p><span class="nv26-chip">Beheerderslogin actief</span> <span class="nv26-chip nv26-chip-warn">{{ 'WooCommerce ingesteld' if integration_status.woo else 'WooCommerce niet ingesteld' }}</span></p><p class="nv26-muted">Gmail, leveranciers en betaalproviders tonen pas ‘Verbonden’ na een geslaagde koppeling.</p></article>
-    <article class="nv26-card"><h3>Snelkoppelingen</h3><div class="nv26-actions"><a href="/dashboard?section=klantenservice">✉<span>Klantenservice</span></a><a href="/dashboard?section=onderzoek">⌕<span>Onderzoek</span></a><a href="/dashboard?section=statistieken">◫<span>Statistieken</span></a></div></article>
-  </div>
-</section>
+{% elif section == 'publicatie' and is_admin %}
+{% include "_dashboard_publicatie.html" %}
+{% elif section == 'talen' %}
+{% include "_dashboard_talen.html" %}
+{% elif section == 'administratie' and is_admin %}
+{% include "_dashboard_administratie.html" %}
 {% elif section == 'klantenservice' %}
 <section class="nv26-panel" aria-label="Klantenservice en berichten">
   <div class="nv26-panel-head"><div><div class="nv26-eyebrow">KLANTENSERVICE</div><h2>Klantenservice &amp; berichten</h2><p>Alle klantvragen straks op één plek.</p></div><span class="nv26-chip nv26-chip-warn">Gmail nog niet gekoppeld</span></div>
