@@ -128,7 +128,7 @@
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=13"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
 <body class="nv-admin-ui"><a class="nv-skip" href="#nvMain">Naar hoofdinhoud</a><div class="layout">
 <aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
@@ -153,7 +153,7 @@
 
 {% else %}
 <a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
-{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
+{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'partners':2,'concepten':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
 <header class="section-header nv-sg nv-sg-{{ nv_grp }}"><div><span class="section-kicker">{{ ['NUVEMIXA · OVERZICHT','WINKEL','ONDERZOEK','VINDBAARHEID','BEHEER'][nv_grp] }}</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
@@ -207,11 +207,16 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </script>
 {% elif section == "viral" %}
 {% include "_dashboard_viral.html" %}
+{% elif section == "concepten" %}
+{% include "_dashboard_concepten.html" %}
+{% elif section == "partners" %}
+{% include "_dashboard_partners.html" %}
 {% elif section == "internationaal" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
 <section class="panel nv-research-panel">
-  <h2>AI Productonderzoek</h2>
+  <h2>Productonderzoek</h2>
+  <p class="nv-honest-note" role="note"><strong>Geen AI en geen verkoopcijfers.</strong> Dit zoekt in aangesloten catalogi en publicaties wanneer je op Zoeken klikt. Resultaten zijn live opgehaald bronnen of een tijdelijke cache (10 minuten); er zijn hier geen demonstratiegegevens. "Zoeken met AI" staat bij Leveranciers en is niet geactiveerd.</p>
   <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form">
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
@@ -232,7 +237,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <div class="nv-research-search">
       <label>Product of niche
         <input type="search" name="research_term" maxlength="100"
-               placeholder="Bijvoorbeeld magnetische powerbank 10.000 mAh"
+               placeholder="Bijvoorbeeld NIVEA crème 200 ml, yogamat of slimme deurbel"
                value="{{ request.args.get('research_term', '') }}">
       </label>
       <button type="submit">Zoek producten en trends</button>
@@ -263,6 +268,31 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       <small>Productcatalogi en Publicaties vullen de resultaten in dit dashboard. Google en sociale media bieden handmatige zoeklinks.</small>
     </fieldset>
   </form>
+      {% if source_coverage %}
+      <details class="nv-coverage" id="nv-source-coverage">
+        <summary>Bronnen en dekking</summary>
+        <p>Onderzocht op 17-11-2026. "Doorzoekbaar" betekent: NUVEMIXA kan de bron bevragen. Dat is niet hetzelfde als live bevestigd; gebruik de bronnentest om te zien wat nu bereikbaar is.</p>
+        <table>
+          <thead><tr><th>Categorie</th><th>Doorzoekbaar in NUVEMIXA</th><th>Alleen handmatige link</th></tr></thead>
+          <tbody>
+          {% for slug, row in source_coverage.items() %}
+            <tr><td>{{ slug }}</td>
+              <td>{% for s in row.connected %}{{ s.name }} <small>({{ s.type_label }}{% if s.fallback %}, reserve{% endif %})</small>{% if not loop.last %}, {% endif %}{% else %}Geen{% endfor %}</td>
+              <td>{% for s in row.links %}{{ s.name }} <small>({{ s.access_label }}{% if not s.onderzocht %}, niet onderzocht{% endif %})</small>{% if not loop.last %}, {% endif %}{% else %}Geen{% endfor %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <form method="post" action="{{ url_for('nv_manage.sources_test') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <button class="nv-blue-action" type="submit">Bronnen testen (alleen lezen)</button>
+        </form>
+        {% if source_test and source_test.at %}
+        <p><strong>Live gemeten op {{ source_test.at }}</strong> (vanuit de server, geen testdata):</p>
+        <ul>{% for r in source_test.rows %}<li>{{ r.name }} · {{ r.status }}{% if r.count %} · {{ r.count }} producten{% endif %}{% if r.detail %} · {{ r.detail }}{% endif %}</li>{% endfor %}</ul>
+        {% else %}<p>Nog niet getest in deze serversessie; er is dus nog niets live bevestigd.</p>{% endif %}
+      </details>
+      {% endif %}
+
   {% if product_discovery %}
   <div id="nv-research-results" class="nv-research-results" aria-live="polite">
     {% if product_discovery.error %}
@@ -278,7 +308,10 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% from '_supplier_logistics.html' import logistics, pending_notice %}
       {{ pending_notice(product_discovery.pending_sources) }}
       {% if product_discovery.source_unavailable %}
-        <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+        <details class="notice">
+          <summary>{{ product_discovery.unavailable_sources|length }} bron{{ 'nen' if product_discovery.unavailable_sources|length != 1 }} gaven geen bruikbaar antwoord</summary>
+          <p>{% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+        </details>
       {% endif %}
       {% if product_discovery.sources_checked %}
         <details>
@@ -305,6 +338,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           {% endif %}
         </details>
       {% endif %}
+      <p class="nv-honest-note" role="note"><strong>Gegevensstatus:</strong> zoekopdracht uitgevoerd op {{ product_discovery.fetched_at }} (live bij de bronnen, of uit een tijdelijke cache van maximaal 10 minuten). Bron en controledatum staan bij elk resultaat. Handmatig = door jou ingevoerd; niet beschikbaar = staat als "onbekend" of "niet bevestigd". Er zijn geen verkoopcijfers, winstmarges of trendscores: die tonen we niet en schatten we niet.</p>
       <nav class="nv-research-tabs" aria-label="Onderzoeksresultaten">
         <a href="#nv-research-products">Productresultaten ({{ product_discovery.products|length }})</a>
         <a href="#nv-research-trends">Trends &amp; inzichten</a>
@@ -371,12 +405,23 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             </details>
             {% endif %}
             {{ offer_assessment(item) }}
+            <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-save">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="titel" value="{{ item.title[:120] }}">
+              <input type="hidden" name="bron_url" value="{{ item.url }}">
+              <input type="hidden" name="bron_naam" value="{{ item.source }}">
+              <input type="hidden" name="leverancier" value="{{ item.source }}">
+              <input type="hidden" name="categorie" value="{{ item.category }}">
+              <button type="submit">Bewaar als conceptproduct</button>
+              <small>Alleen titel, bron en categorie worden overgenomen. Prijzen vul je zelf in.</small>
+            </form>
           </li>
           {% endfor %}
         </ul>
         {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
         {% else %}
           <p>{{ research_options.empty_message }}</p>
+          <p><small>Tip: zoek op producttype of merk apart (bijvoorbeeld "hydraterende crème"), kies een andere categorie of open het tabblad Leveranciers voor bronnen om zelf te onderzoeken.</small></p>
           {% if product_discovery.alternatives %}
           <h4>Vergelijkbare producten</h4>
           <ul class="nv-research-cards">
@@ -480,7 +525,22 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           {% endfor %}
         </div>
         {% endfor %}
-        {% else %}<p>Geen betrouwbare, relevante leveranciers gevonden voor deze selectie.</p>{% endif %}
+        {% else %}<p>Geen bevestigde leveranciers gevonden voor deze selectie.</p>{% endif %}
+        {% if product_discovery.next_steps %}
+        <section class="nv-next-steps" aria-label="Verder zoeken naar leveranciers">
+          <h4>Verder zoeken: bronnen voor deze categorie en dit land (handmatige links, niet bevestigd)</h4>
+          <p>NUVEMIXA doorzoekt deze bronnen niet zelf. Of zij dit product leveren, is niet gecontroleerd; vraag voorraad, prijs en voorwaarden per SKU op.</p>
+          <ul class="nv-research-articles">
+          {% for step in product_discovery.next_steps %}
+            <li><strong>{{ step.name }}</strong> <small>{{ step.type_label }} · {{ step.scope if step.scope != 'INT' else 'Internationaal' }} · {{ step.access_label }}{% if not step.onderzocht %} · niet onderzocht{% endif %}</small><br>
+              {{ step.facts }} {{ step.requirement }} <em>{{ step.cost }}</em><br>
+              <a href="{{ step.url }}" target="_blank" rel="noopener noreferrer">Bronpagina →</a>
+              {% for label, link in step.evidence %}<a href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ label }} ↗</a> {% endfor %}
+              <a href="{{ step.search_link }}" target="_blank" rel="noopener noreferrer">Zoek handmatig (Google site:) →</a></li>
+          {% endfor %}
+          </ul>
+        </section>
+        {% endif %}
       </div>
       <div id="nv-research-news">
         {% if product_discovery.news %}
@@ -528,6 +588,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 .nv-research-platforms input[type=checkbox]{width:18px;height:18px;margin:0}
 .nv-research-platforms small{display:block}
 .nv-research-results{margin-top:1.5rem;scroll-margin-top:1rem}
+.nv-honest-note{background:#fff7e0;border:1px solid #e8c766;border-radius:10px;padding:10px 12px;margin:.6rem 0}
 .nv-research-tabs,.nv-research-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:1rem 0}
 .nv-research-tabs a{padding:12px;background:#eef5ff;border-radius:10px;text-align:center;color:#12355d;font-weight:750}
 .nv-research-tabs a[aria-selected=true]{background:#0757bd;color:#fff}

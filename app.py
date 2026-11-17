@@ -1191,6 +1191,10 @@ def admin_configured():
 from nv_woo_bridge import (
     CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
+COUNTRY_CODES_FALLBACK = frozenset(('NL','BE','DE','FR','ES','IT','PL','AT','PT','IE','GB','US','SE','DK','FI'))
+import nv_supplier_sources
+import nv_partners
+import nv_concepts
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
 
 from nv_seo_scan import last_scan
@@ -2114,6 +2118,8 @@ def control():
 
     section_names = {
         "internationaal": "Internationaal marktonderzoek",
+        "partners": "Partners zoeken",
+        "concepten": "Kandidaten en concepten",
         "viral": "Viral Product Finder",
 
         "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "categorieen": "Categorieën",
@@ -2150,6 +2156,8 @@ def control():
 
     section_descriptions = {
         "internationaal": "Vergelijk vraag, leveranciers en marge per verkoopmarkt.",
+        "partners": "Zoek dropshipping-, reseller- en affiliatepartners. Niets wordt automatisch aangevraagd.",
+        "concepten": "Bewaar gevonden producten, beoordeel ze en bereid conceptproducten voor. Er wordt niets gepubliceerd.",
         "viral": "Leg trendsignalen vast en beoordeel commerciële kansen per land.",
 
         "producten": "Zoek en bekijk producten, prijzen en voorraad in de testcatalogus.",
@@ -2279,14 +2287,19 @@ def control():
     publicatie = None
     if section == "publicatie" and is_admin:
         import nv_publicatie, json as _json
-        chosen = nv_publicatie.TEST_CANDIDATES.get(request.args.get("kandidaat", ""), None) or next(iter(nv_publicatie.TEST_CANDIDATES.values()))
+        try:
+            own = nv_concepts.selected_candidates()
+        except Exception:
+            own = {}
+        pool = {**nv_publicatie.TEST_CANDIDATES, **own}
+        chosen = pool.get(request.args.get("kandidaat", ""), None) or next(iter(own.values()), None) or next(iter(nv_publicatie.TEST_CANDIDATES.values()))
         existing, bron, fout = nv_publicatie.existing_products()
         rows = nv_publicatie.check(chosen, existing)
-        publicatie = {"kandidaten": list(nv_publicatie.TEST_CANDIDATES.values()), "gekozen": chosen, "rijen": rows,
+        publicatie = {"kandidaten": list(nv_publicatie.TEST_CANDIDATES.values()), "eigen": list(own.values()), "gekozen": chosen, "rijen": rows,
                       "fouten": bool(nv_publicatie.blocking(rows)), "marge": nv_publicatie.margin(chosen),
                       "voorbeeld": _json.dumps(nv_publicatie.payload(chosen), indent=2, ensure_ascii=False),
                       "bron": bron, "bron_fout": fout, "goedgekeurd": nv_publicatie.approval_valid(app.secret_key, chosen, session.get("nv_pub_goedkeuringen", {}).get(chosen["sku"], "")),
-                      "schrijven_klaar": nv_publicatie.write_connection_ready(), "min_marge": nv_publicatie.MIN_MARGE}
+                      "schrijven_klaar": nv_publicatie.write_connection_ready() and __import__("nv_woo_writer").configured(), "ontbrekend": __import__("nv_woo_writer").missing_configuration(), "min_marge": nv_publicatie.MIN_MARGE}
     if section == "administratie" and is_admin:
         import nv_administratie
         admin_overview = {"test": nv_administratie.test_overview(),
@@ -2394,6 +2407,10 @@ def control():
 
         research_error=research_error,
         product_discovery=product_discovery,
+        concept_view=nv_concepts.view() if section == 'concepten' and is_admin else None,
+        partner_view=nv_partners.view(request.args) if section == 'partners' else None,
+        source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
+        source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
         product_margin_error=product_margin_error,
         research_options=research_options,

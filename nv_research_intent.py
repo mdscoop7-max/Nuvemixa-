@@ -332,15 +332,33 @@ CATEGORY_TERMS = {
 }
 
 
+# Woorden die een categorieterm als deelstring bevatten maar iets anders betekenen
+# (bluetooth ~ tooth, portable ~ table, standaard ~ tand, interface ~ face ...).
+FALSE_CARRIERS = {
+    "bluetooth": ("gadgets",), "portable": (), "draagbare": (), "standaard": (), "standard": (), "standby": (),
+    "interface": (), "surface": (), "tandem": (), "stable": (), "vegetable": (), "passport": (), "transport": (),
+    "smartphone": ("gadgets",), "smartwatch": ("gadgets",), "floral": (), "moral": (), "ladder": (), "icecream": (),
+}
+
+
 def infer_categories(term):
     """Geeft de categorieën terug waarin een zoekterm waarschijnlijk valt. Leeg = onbekend (dan alles doorzoeken)."""
     text = normalize(term or "")
-    flat = text.replace(" ", "")
     found = []
+    tokens = []
+    for token in text.split():
+        if token in FALSE_CARRIERS:
+            found.extend(FALSE_CARRIERS[token])
+        else:
+            tokens.append(token)
+    text = " ".join(tokens)
+    flat = text.replace(" ", "")
     for category, hints in CATEGORY_TERMS.items():
+        if category in found:
+            continue
         for hint in hints:
             plain = hint.replace(" ", "")
             if (len(plain) >= 4 and (plain in flat)) or has_phrase(text, hint):
                 found.append(category)
                 break
-    return tuple(found)
+    return tuple(dict.fromkeys(found))

@@ -89,7 +89,8 @@ ALL_PRODUCTS = "shop"
 SUPPLIER_MODES = {"suppliers", "dropship", "wholesale"}
 PRODUCT_MODES = {"products", "trends", "niche", "product"}
 DEFAULT_TABS = {**dict.fromkeys(SUPPLIER_MODES, "suppliers"), "trends": "trends", "news": "news"}
-EMPTY_RESULTS = "De geraadpleegde productbronnen leverden geen bevestigde match op voor deze selectie."
+EMPTY_RESULTS = ("Geen bevestigd product en geen bevestigde leverancier gevonden in de geraadpleegde bronnen. "
+                 "Dat betekent niet dat het product niet bestaat: NUVEMIXA kan alleen zoeken in de aangesloten catalogi.")
 EU = frozenset("NL BE DE FR ES IT PL AT PT IE SE DK FI CZ SK HU RO BG GR HR SI LT LV EE LU MT CY".split())
 
 
@@ -111,19 +112,19 @@ class Catalogue:
 CATALOGUES = (
     # Market coverage follows each provider's shipping policy. Item-level shipping
     # and trade availability still depend on the supplier's terms.
-    Catalogue("UGREEN", "eu.ugreen.com", "gadgets", EU - {"CY", "LT", "MT"}, "power bank",
+    Catalogue("UGREEN", "eu.ugreen.com", "gadgets", EU - {"CY", "LT", "MT"}, "headphones",
               r"power ?bank|charger|oplader|usb|laptop stand|charging",
               "https://www.ugreen.com/pages/wholesale-program"),
-    Catalogue("UGREEN", "us.ugreen.com", "gadgets", frozenset({"US"}), "power bank",
+    Catalogue("UGREEN", "us.ugreen.com", "gadgets", frozenset({"US"}), "headphones",
               r"power ?bank|charger|usb|laptop stand|charging",
               "https://www.ugreen.com/pages/wholesale-program"),
-    Catalogue("Baseus", "eu.baseus.com", "gadgets", (EU - {"CY", "HR", "MT"}) | {"GB"}, "power bank",
+    Catalogue("Baseus", "eu.baseus.com", "gadgets", (EU - {"CY", "HR", "MT"}) | {"GB"}, "headphones",
               r"power ?bank|charger|usb|laptop stand|charging", "https://eu.baseus.com/pages/wholesale-program"),
-    Catalogue("Baseus", "www.baseus.com", "gadgets", frozenset({"US"}), "power bank",
+    Catalogue("Baseus", "www.baseus.com", "gadgets", frozenset({"US"}), "headphones",
               r"power ?bank|charger|usb|laptop stand|charging", "https://www.baseus.com/pages/wholesale-program"),
-    Catalogue("Xtorm", "www.xtorm.eu", "gadgets", EU, "power bank",
+    Catalogue("Xtorm", "www.xtorm.eu", "gadgets", EU, "headphones",
               r"power ?bank|charger|usb|charging", "https://www.xtorm.eu/pages/contact"),
-    Catalogue("Nedis", "nedis-shop.nl", "gadgets", frozenset({"NL", "BE", "DE"}), "powerbank",
+    Catalogue("Nedis", "nedis-shop.nl", "gadgets", frozenset({"NL", "BE", "DE"}), "headphones",
               r"power ?bank|charger|usb|headphones|bluetooth speaker", "https://nedis.com/"),
     Catalogue("Nedis", "nedis-shop.nl", "smart-home", frozenset({"NL", "BE", "DE"}), "slimme camera",
               r"smartlife|smart|wifi|zigbee|camera|doorbell|sensor|energy monitoring", "https://nedis.com/"),
@@ -186,13 +187,13 @@ TRADE_PROFILES = {
 }
 ORIGINS = {**{code: details[0] for code, details in COUNTRIES.items()}, "CN": "China"}
 CATEGORY_HINTS = {
-    "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|bluetooth speaker|tracker|airtag|key finder|cable|armband|phone holder",
+    "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|earphones|headset|bluetooth speaker|speaker|tracker|airtag|key finder|cable|armband|phone holder|smartwatch|smart watch|projector|ssd|webcam|drone|keyboard|mouse|tripod|gimbal|ring light|adapter|hub|action camera|dash ?cam",
     "smart-home": r"smart|wifi|zigbee|matter|curtain|hub|sensor|lighting|rgbicww|door lock|camera|doorbell|robot vacuum|robovac|homebase",
     "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty|trimmer|straightener|curling|nail|massager|massage|mirror|flosser|toothbrush|shaver|epilator|jewelry|brush|scalp|soap dispenser|dryer",
     "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk",
     "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale",
 }
-SEEDS = {"gadgets": "power bank", "smart-home": "security camera", "beauty-care": "serum",
+SEEDS = {"gadgets": "headphones", "smart-home": "security camera", "beauty-care": "serum",
          "home-living": "table lamp", "lifestyle-sport": "yoga mat"}
 UNSAFE = re.compile(
     r"\b(?:porno?\w*|xxx|nsfw|adult\s+(?:content|video|toy)|sex\s+toy|escort|"
@@ -207,6 +208,14 @@ def category_matches(category, evidence):
     return not UNSAFE.search(evidence) and bool(
         re.search(r"\b(?:" + CATEGORY_HINTS[category] + r")\b", normalize(evidence))
     )
+
+
+def relevance_for(term):
+    """Bij een specifieke zoekopdracht beslist de productmatch (merk/type/model); de categorielijst
+    CATEGORY_HINTS bewaakt alleen leeg of generiek zoeken. Onveilige vermeldingen blijven altijd geweerd."""
+    if specific_term(term):
+        return lambda category, evidence: not UNSAFE.search(evidence)
+    return category_matches
 
 
 def research_links(term, platforms, country, language):
@@ -372,6 +381,11 @@ def shopify_variant(source, fetch, path, product_id, measures, wifi, details, de
     return {}
 
 
+def specific_term(term):
+    """True bij een zoekopdracht met minstens twee betekenisvolle woorden (bijv. merk en producttype)."""
+    return len(set(normalize(term or "").split()) - STOP_WORDS) >= 2
+
+
 def catalogue_product(source, term, fetch, product, details, deadline):
     if not isinstance(product, dict) or type(product.get("id")) is not int or product["id"] <= 0:
         return None, "ongeldige productvermelding"
@@ -392,7 +406,10 @@ def catalogue_product(source, term, fetch, product, details, deadline):
     evidence = f"{identity} {handle.replace('-', ' ')}"
     if UNSAFE.search(evidence) or UNSAFE.search(normalize(evidence)):
         return None, "onveilige of irrelevante vermelding"
-    if not re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence)):
+    # Bij een specifieke zoekterm (merk + type/model) bepaalt de productmatch of een product past. De smalle
+    # woordenlijst van de bron beperkte eerder het zoeken tot een paar producttypen (bijv. alleen opladers of oliën).
+    # Bij een leeg of generiek eenwoordig zoekwoord ("lamp") bewaakt de woordenlijst de categorie.
+    if not specific_term(term) and not re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence)):
         return None, "categorie buiten selectie"
     description = product.get("body")
     facts = visible_text(description[:35_000]) if isinstance(description, str) else ""
@@ -653,7 +670,7 @@ _SYNCEE_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="syncee")
 
 def run_syncee(fetch, query, country, selected, term, alternates, budget):
     attempts = []
-    results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, category_matches,
+    results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, relevance_for(term),
                               term=term, product_matches=product_matches, attempts=attempts,
                               alternates=alternates, deadline=monotonic() + budget)
     return results, attempts
@@ -731,11 +748,11 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     try:
         product_tasks = [submit(source.name, catalogue_items, source, term, mode, fetch, attempts, started + 7)
                          for source in sources]
-        hama_task = (submit("Hama", hama_products, fetch, term, country, read_source, matches, category_matches,
+        hama_task = (submit("Hama", hama_products, fetch, term, country, read_source, matches, relevance_for(term),
                                  product_matches)
                      if trade_mode and country in {"NL", "DE"} and "gadgets" in selected else None)
         hurtel_task = (submit("Hurtel", hurtel_products, fetch, term, country, selected, SEEDS, read_source,
-                                   index_query, product_matches, category_matches)
+                                   index_query, product_matches, relevance_for(term))
                        if trade_mode and selected.keys() & {"gadgets", "smart-home"} else None)
         dropship_task = (start_syncee(fetch, index_query(term) if term else SEEDS[category], country, selected,
                                       term, candidate_queries(term))
@@ -835,6 +852,8 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
         "pending_sources": pending,
+        "fetched_at": __import__("datetime").datetime.now(__import__("zoneinfo").ZoneInfo("Europe/Amsterdam")).strftime("%d-%m-%Y %H:%M"),
+        "next_steps": __import__("nv_supplier_sources").sources_for(selected, country, term),
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,
         "unavailable_reasons": reasons,
         "sources_checked": sorted(set(names.values())),
