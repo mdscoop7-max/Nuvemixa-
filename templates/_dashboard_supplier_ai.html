@@ -1,0 +1,45 @@
+{% if supplier_ai %}
+<section class="panel nv-ai-search" id="nv-ai-search" aria-labelledby="nv-ai-title">
+<h2 id="nv-ai-title">Leveranciers zoeken met AI</h2>
+<p>Zoek dropshippingleveranciers in de gecontroleerde B2B-bronnen. Alleen bronpagina's die de AI werkelijk citeert worden getoond. Wat niet aantoonbaar is, staat als <strong>Niet bevestigd</strong>. Resultaten worden niet opgeslagen en verdwijnen bij het sluiten of vernieuwen van deze pagina.</p>
+{% if not supplier_ai.configured %}<div class="notice" role="alert">AI-configuratie ontbreekt. Stel <code>OPENAI_API_KEY</code> en <code>NUVEMIXA_SUPPLIER_SEARCH_MODEL</code> in bij Render (Environment). Zolang die ontbreken wordt er niets verzonden.</div>{% endif %}
+<form id="nv-ai-form" method="post" action="{{ url_for('nv_manage.supplier_ai_search') }}" class="nv-admin-form" novalidate>
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Productnaam <input name="query" required minlength="2" maxlength="120" placeholder="Bijvoorbeeld: LED-bureaulamp"></label>
+<label>Productcategorie <select name="category"><option value="">Alle categorieën</option>{% for c in supplier_ai.categories %}<option>{{ c }}</option>{% endfor %}</select></label>
+<label>Land van de leverancier <select name="country"><option value="">Alle landen</option>{% for code,name in supplier_ai.countries %}<option value="{{ code }}">{{ name }}</option>{% endfor %}</select></label>
+<label>Zoekwoord <input name="keyword" maxlength="60" placeholder="Optioneel, bijvoorbeeld: dimbaar"></label>
+<label class="nv-checkbox"><input type="checkbox" name="eu_only" value="1" checked> Alleen Europese leveranciers (EU)</label>
+<label class="nv-checkbox"><input type="checkbox" name="prefer_woo" value="1"> Voorkeur voor dropshipping met WooCommerce (wordt niet gegarandeerd, alleen getoond als bevestigd)</label>
+<button type="submit" id="nv-ai-submit" {% if not supplier_ai.configured %}disabled{% endif %}>Zoeken met AI</button>
+<p class="nv-ai-usage">Gebruik deze maand: {{ supplier_ai.usage.month_used }} van {{ supplier_ai.usage.month_limit }} zoekopdrachten. Vandaag: {{ supplier_ai.usage.day_used }} van {{ supplier_ai.usage.day_limit }}. De teller staat in het geheugen van de server en begint na een herstart opnieuw; stel het harde maandbudget ook in bij OpenAI.</p>
+</form>
+<div id="nv-ai-progress" class="nv-ai-progress" hidden aria-live="polite">
+<div class="nv-ai-head"><span class="nv-ai-spinner" aria-hidden="true"></span><strong id="nv-ai-status">AI zoekt leveranciers…</strong><span id="nv-ai-timer" class="nv-ai-timer">0 s</span></div>
+<ol id="nv-ai-steps" class="nv-ai-steps"></ol>
+<p id="nv-ai-slow" class="notice" role="status" hidden>Dit duurt langer dan normaal. De zoekopdracht is nog actief; je kunt wachten.</p>
+</div>
+<div id="nv-ai-error" class="notice" role="alert" hidden></div>
+<div id="nv-ai-results" class="nv-ai-results" aria-live="polite"></div>
+</section>
+<style>
+.nv-ai-search form{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end}
+.nv-ai-search .nv-checkbox,.nv-ai-search button,.nv-ai-usage{grid-column:1/-1}
+.nv-ai-usage{font-size:.85em;margin:0}
+.nv-ai-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.nv-ai-spinner{width:18px;height:18px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:nv-ai-spin 1s linear infinite;display:inline-block}
+.nv-ai-progress.done .nv-ai-spinner{display:none}
+.nv-ai-timer{margin-left:auto;font-variant-numeric:tabular-nums}
+.nv-ai-steps{margin:0 0 8px;padding-left:20px}
+.nv-ai-results{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:14px}
+.nv-ai-card{border:1px solid rgba(128,128,128,.4);border-radius:12px;padding:14px;overflow-wrap:anywhere}
+.nv-ai-card h3{margin:0 0 6px}
+.nv-ai-card dl{display:grid;grid-template-columns:minmax(110px,auto) 1fr;gap:4px 10px;margin:0}
+.nv-ai-card dt{font-weight:600}.nv-ai-card dd{margin:0}
+.nv-ai-card .nv-unconfirmed{opacity:.75;font-style:italic}
+@keyframes nv-ai-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.nv-ai-spinner{animation:none}}
+@media (max-width:520px){.nv-ai-card dl{grid-template-columns:1fr}.nv-ai-card dt{margin-top:6px}}
+</style>
+<script src="{{ url_for('static', filename='nv-supplier-ai.js') }}" defer></script>
+{% endif %}
