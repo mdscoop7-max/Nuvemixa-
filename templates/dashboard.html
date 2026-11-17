@@ -153,7 +153,7 @@
 
 {% else %}
 <a class="nv-blue-action nv-back" href="{{ url_for('control', section='monitoring') if report else url_for('control') }}">← Terug</a>
-{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'partners':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
+{% set nv_grp = {'producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'partners':2,'concepten':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
 <header class="section-header nv-sg nv-sg-{{ nv_grp }}"><div><span class="section-kicker">{{ ['NUVEMIXA · OVERZICHT','WINKEL','ONDERZOEK','VINDBAARHEID','BEHEER'][nv_grp] }}</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div><span class="status">● Testfase</span></header>
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
@@ -207,6 +207,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </script>
 {% elif section == "viral" %}
 {% include "_dashboard_viral.html" %}
+{% elif section == "concepten" %}
+{% include "_dashboard_concepten.html" %}
 {% elif section == "partners" %}
 {% include "_dashboard_partners.html" %}
 {% elif section == "internationaal" %}
@@ -336,6 +338,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           {% endif %}
         </details>
       {% endif %}
+      <p class="nv-honest-note" role="note"><strong>Gegevensstatus:</strong> zoekopdracht uitgevoerd op {{ product_discovery.fetched_at }} (live bij de bronnen, of uit een tijdelijke cache van maximaal 10 minuten). Bron en controledatum staan bij elk resultaat. Handmatig = door jou ingevoerd; niet beschikbaar = staat als "onbekend" of "niet bevestigd". Er zijn geen verkoopcijfers, winstmarges of trendscores: die tonen we niet en schatten we niet.</p>
       <nav class="nv-research-tabs" aria-label="Onderzoeksresultaten">
         <a href="#nv-research-products">Productresultaten ({{ product_discovery.products|length }})</a>
         <a href="#nv-research-trends">Trends &amp; inzichten</a>
@@ -402,6 +405,16 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             </details>
             {% endif %}
             {{ offer_assessment(item) }}
+            <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-save">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="titel" value="{{ item.title[:120] }}">
+              <input type="hidden" name="bron_url" value="{{ item.url }}">
+              <input type="hidden" name="bron_naam" value="{{ item.source }}">
+              <input type="hidden" name="leverancier" value="{{ item.source }}">
+              <input type="hidden" name="categorie" value="{{ item.category }}">
+              <button type="submit">Bewaar als conceptproduct</button>
+              <small>Alleen titel, bron en categorie worden overgenomen. Prijzen vul je zelf in.</small>
+            </form>
           </li>
           {% endfor %}
         </ul>

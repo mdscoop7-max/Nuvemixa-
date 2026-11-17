@@ -248,6 +248,12 @@ def _publicatie_kandidaat(sku):
     import nv_publicatie
     candidate = nv_publicatie.TEST_CANDIDATES.get(str(sku))
     if candidate is None:
+        try:
+            import nv_concepts  # alleen door de eigenaar geselecteerde concepten
+            candidate = nv_concepts.candidate_by_sku(sku)
+        except Exception:
+            candidate = None
+    if candidate is None:
         abort(404)
     return nv_publicatie, candidate
 
@@ -275,8 +281,20 @@ def publicatie_publiceren():
     existing, _bron, _fout = pub.existing_products(live=True)
     token = session.get("nv_pub_goedkeuringen", {}).get(candidate["sku"], "")
     try:
-        pub.publish(candidate, existing, current_app.secret_key, token, sender=None)
-        flash("Verzonden.", "success")  # onbereikbaar zolang er geen zender is
+        if candidate.get("bron") != "concept":
+            raise pub.PublishRefused("Testproducten worden nooit naar WooCommerce gestuurd.")
+        import nv_concepts, nv_woo_writer
+        concept = nv_concepts.get_concept(int(candidate["sku"].split("-")[1]))
+        if concept is None or concept["status"] != "geselecteerd" or len(concept["checks"]) < len(nv_concepts.CHECKS):
+            raise pub.PublishRefused("Vink eerst alle beoordelingscontroles af bij het concept.")
+        if request.form.get("bevestig") != "1":
+            raise pub.PublishRefused("Bevestig eerst dat er een concept (draft) in WooCommerce wordt aangemaakt.")
+        try:
+            sender = nv_woo_writer.build_sender()
+            result = pub.publish(candidate, existing, current_app.secret_key, token, sender=sender)
+        except nv_woo_writer.WriteError as exc:
+            raise pub.PublishRefused(str(exc)) from None
+        flash(f"Aangemaakt als concept (draft) in WooCommerce, id {result.get('id')}. Er is niets gepubliceerd; controleer en publiceer zelf in WooCommerce.", "success")
     except pub.PublishRefused as exc:
         flash(str(exc), "error")
     return redirect(url_for("control", section="publicatie", kandidaat=candidate["sku"]), code=303)

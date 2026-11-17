@@ -11,7 +11,8 @@
 .nv-pub form{margin:0}.nv-pub button[disabled]{opacity:.55;cursor:not-allowed}
 </style>
 <div class="nv-pub">
-<div class="banner" role="note"><span class="badge">TESTDATA</span> De producten hieronder zijn testvoorbeelden. Er is geen WooCommerce-schrijfsleutel gebruikt en er wordt <strong>niets naar de echte webshop gestuurd</strong>.</div>
+{% if c.bron == 'concept' %}<div class="banner" role="note"><span class="badge">JOUW CONCEPT</span> Dit product heb je zelf bewaard en geselecteerd in <a href="/dashboard?section=concepten">Kandidaten en concepten</a>. Alleen gegevens die jij hebt ingevuld staan hieronder; ontbrekende gegevens zijn leeg of 0 en geven een fout. Er wordt <strong>niets naar de echte webshop gestuurd</strong>.</div>
+{% else %}<div class="banner" role="note"><span class="badge">TESTDATA</span> Het product hieronder is een testvoorbeeld. Er is geen WooCommerce-schrijfsleutel gebruikt en er wordt <strong>niets naar de echte webshop gestuurd</strong>. Selecteer eerst een concept bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a> om met je eigen product te werken.</div>{% endif %}
 
 <section class="panel"><h2>Zo werkt het</h2>
 <ol class="steps">
@@ -19,7 +20,7 @@
 <li><a href="/dashboard?section=viral">Niches en trends onderzoeken</a> — <strong>werkt deels</strong>: handmatig register plus catalogus- en publicatiezoeker. Er is <strong>geen live trendfeed</strong> en er zijn geen verkoopcijfers.</li>
 <li><a href="/dashboard?section=leveranciers">Leveranciers zoeken en vergelijken</a> — <strong>werkt deels</strong>: onderzocht register en handmatige links; "Zoeken met AI" is niet geactiveerd.</li>
 <li><a href="/dashboard?section=partners">Partners zoeken</a> en bewaren op de kandidatenlijst — werkt als <strong>onderzocht register</strong>; de lijst is op Render Free tijdelijk en niet gekoppeld aan productpublicatie.</li>
-<li>Een product selecteren — hieronder, <strong>nog niet gekoppeld</strong> aan onderzoeksresultaten of kandidaten: alleen testproducten</li>
+<li>Een product bewaren, beoordelen en selecteren — bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a>; geselecteerde concepten verschijnen hieronder (gegevens alleen zoals jij ze invult)</li>
 <li>Inkoop, verkoop en marge controleren — werkt</li>
 <li>Productgegevens en afbeeldingen controleren — werkt (alleen de gegevens; afbeeldingslinks worden niet opgehaald)</li>
 <li>Bestaat het product al in WooCommerce? — werkt met {{ 'de echte leesverbinding' if publicatie.bron == 'echt' else 'TESTDATA (geen leesverbinding ingesteld)' }}</li>
@@ -27,7 +28,10 @@
 <li>Publiceren naar WooCommerce — <strong>nog niet gekoppeld</strong>: vereist een schrijfsleutel en jouw aparte toestemming</li>
 </ol></section>
 
-<section class="panel"><h2>Kies een testproduct <span class="badge">TESTDATA</span></h2>
+<section class="panel"><h2>Kies een product</h2>
+{% if publicatie.eigen %}<p><strong>Jouw geselecteerde concepten</strong></p>
+<div class="pick">{% for k in publicatie.eigen %}<a href="/dashboard?section=publicatie&amp;kandidaat={{ k.sku }}"{% if k.sku == c.sku %} class="on" aria-current="true"{% endif %}>{{ k.sku }}</a>{% endfor %}</div>{% else %}<p>Nog geen geselecteerde concepten.</p>{% endif %}
+<p><strong>Testproducten</strong> <span class="badge">TESTDATA</span></p>
 <div class="pick">{% for k in publicatie.kandidaten %}<a href="/dashboard?section=publicatie&amp;kandidaat={{ k.sku }}"{% if k.sku == c.sku %} class="on" aria-current="true"{% endif %}>{{ k.sku }}</a>{% endfor %}</div>
 <h3>{{ c.titel }}</h3>
 <p>{{ c.beschrijving }}</p>
@@ -62,7 +66,8 @@
 <button type="submit" class="nv-blue-action"{% if publicatie.fouten %} disabled{% endif %}>{{ 'Opnieuw goedkeuren' if publicatie.goedgekeurd else 'Ik keur dit product goed' }}</button></form>
 <p>Status goedkeuring: <strong>{{ 'Goedgekeurd door jou (geldig voor deze gegevens)' if publicatie.goedgekeurd else 'Nog niet goedgekeurd' }}</strong></p>
 <form method="post" action="{{ url_for('nv_manage.publicatie_publiceren') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="sku" value="{{ c.sku }}">
-<button type="submit" class="nv-blue-action"{% if not publicatie.schrijven_klaar or not publicatie.goedgekeurd or publicatie.fouten %} disabled{% endif %}>Publiceren naar WooCommerce</button></form>
-<p>{% if not publicatie.schrijven_klaar %}Publiceren is uitgeschakeld: er is nog geen WooCommerce-schrijfkoppeling ingesteld. Dat gebeurt pas na jouw afzonderlijke toestemming.{% else %}Schrijfschakelaar staat aan.{% endif %}</p>
+<label class="nv-check"><input type="checkbox" name="bevestig" value="1"> Ik begrijp dat dit een <strong>concept (draft)</strong> in WooCommerce aanmaakt en niets publiceert.</label>
+<button type="submit" class="nv-blue-action"{% if not publicatie.schrijven_klaar or not publicatie.goedgekeurd or publicatie.fouten or c.bron != 'concept' %} disabled{% endif %}>Als concept naar WooCommerce sturen</button></form>
+<p>{% if c.bron != 'concept' %}Testproducten worden nooit verzonden.{% elif not publicatie.schrijven_klaar %}Verzenden is uitgeschakeld: de schrijfkoppeling is niet ingesteld. Nodig (alleen namen): <code>NUVEMIXA_WOO_WRITE=on</code>{% for n in publicatie.ontbrekend %}, <code>{{ n }}</code>{% endfor %}. Dat gebeurt pas na jouw afzonderlijke toestemming.{% else %}Schrijfschakelaar staat aan: na goedkeuring wordt uitsluitend een concept (draft) aangemaakt.{% endif %}</p>
 </section>
 </div>

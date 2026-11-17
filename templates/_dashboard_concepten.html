@@ -1,0 +1,63 @@
+{% set v = concept_view %}
+{% macro csrf() %}<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+{% macro fields(c) %}
+  <label>Titel <input name="titel" required minlength="3" maxlength="120" value="{{ c.titel if c else '' }}"></label>
+  <label>Categorie <select name="categorie">{% for slug, name in v.categories.items() %}<option value="{{ slug }}" {{ 'selected' if c and c.categorie == name }}>{{ name }}</option>{% endfor %}</select></label>
+  <label>Leverancier <input name="leverancier" maxlength="120" value="{{ c.leverancier if c else '' }}" placeholder="Pas invullen na controle"></label>
+  <label>Bronlink <input name="bron_url" type="url" maxlength="300" value="{{ c.bron_url if c else '' }}"></label>
+  <label>Inkoopprijs (€) <input name="inkoop" inputmode="decimal" value="{{ '%.2f'|format(c.inkoop/100) if c and c.inkoop else '' }}" placeholder="onbekend"></label>
+  <label>Verzendkosten leverancier (€) <input name="verzend" inputmode="decimal" value="{{ '%.2f'|format(c.verzend/100) if c and c.verzend else '' }}" placeholder="onbekend"></label>
+  <label>Verkoopprijs incl. btw (€) <input name="verkoop" inputmode="decimal" value="{{ '%.2f'|format(c.verkoop/100) if c and c.verkoop else '' }}" placeholder="onbekend"></label>
+  <label class="wide">Beschrijving (eigen tekst, max. 500 tekens) <textarea name="beschrijving" maxlength="500" rows="3">{{ c.beschrijving if c else '' }}</textarea></label>
+  <label class="wide">Afbeeldingen (max. 3 https-links naar .jpg/.png/.webp, één per regel; controleer eerst de rechten) <textarea name="afbeeldingen" rows="2">{{ c.afbeeldingen|join('\n') if c else '' }}</textarea></label>
+  <label class="wide">Notities <input name="notities" maxlength="300" value="{{ c.notities if c else '' }}"></label>
+{% endmacro %}
+<section class="panel nv-concepts">
+  <h2>Kandidaten en concepten</h2>
+  <div class="nv-honest-note" role="note"><strong>Wat dit is.</strong> Een conceptproduct is een product dat <strong>jij</strong> bewaart uit onderzoeksresultaten of handmatig. Prijzen, beschrijving en afbeeldingen worden <strong>nooit automatisch ingevuld of verzonnen</strong>: wat onbekend is blijft leeg en blokkeert de publicatievoorbereiding. Opslaan, selecteren en beoordelen publiceert niets; ook "geselecteerd" betekent alleen dat het in <a href="/dashboard?section=publicatie">Productpublicatie</a> verschijnt voor controle. Concepten staan op Render Free in tijdelijke opslag (SQLite) en verdwijnen bij een herstart of nieuwe deployment.</div>
+  {% for category, message in get_flashed_messages(with_categories=true) %}<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>{% endfor %}
+
+  <details class="nv-concept-new"><summary><strong>Nieuw concept handmatig toevoegen</strong></summary>
+    <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-form">{{ csrf() }}{{ fields(none) }}<button class="nv-blue-action" type="submit">Bewaar als concept</button></form>
+  </details>
+  <p>Vanuit <a href="/dashboard?section=onderzoek">Productonderzoek</a> bewaar je een gevonden product met de knop "Bewaar als conceptproduct".</p>
+
+  {% for c in v.concepten %}
+  <article class="nv-concept status-{{ c.status }}" id="concept-{{ c.id }}">
+    <header>
+      <h3>{{ c.titel }} <small>{{ c.sku }} · {{ c.categorie }}</small></h3>
+      <p><strong>{{ v.statuses[c.status] }}</strong>{% if c.bron_url %} · bron: <a href="{{ c.bron_url }}" target="_blank" rel="noopener noreferrer">{{ c.bron_naam or 'bronpagina' }} ↗</a>{% endif %} · leverancier: {{ c.leverancier or 'nog niet ingevuld' }}</p>
+      <p>Inkoop {{ ('€ %.2f'|format(c.inkoop/100)) if c.inkoop else 'onbekend' }} · verzending {{ ('€ %.2f'|format(c.verzend/100)) if c.verzend else 'onbekend' }} · verkoop incl. btw {{ ('€ %.2f'|format(c.verkoop/100)) if c.verkoop else 'onbekend' }}
+        {% if c.marge %}· netto marge <strong>{{ c.marge.procent }}%</strong> (minimum {{ v.min_marge }}%; eigen berekening uit jouw invoer){% else %}· marge niet te berekenen{% endif %}</p>
+      <p>Beoordeling: {{ c.checks_klaar }} van {{ v.checks|length }} controles afgevinkt · openstaande fouten voor publicatie: {{ c.fouten|join(', ') or 'geen' }}</p>
+    </header>
+    <details {{ 'open' if request.args.get('open')|int == c.id }}>
+      <summary>Bewerken en beoordelen</summary>
+      <form method="post" action="{{ url_for('nv_manage.concept_update') }}" class="nv-concept-form">{{ csrf() }}<input type="hidden" name="concept_id" value="{{ c.id }}">
+        {{ fields(c) }}
+        <fieldset class="wide"><legend>Beoordeling (vink pas af na eigen controle)</legend>
+          {% for key, label in v.checks.items() %}<label class="nv-check"><input type="checkbox" name="check_{{ key }}" value="1" {{ 'checked' if c.checks.get(key) }}> {{ label }}</label>{% endfor %}
+        </fieldset>
+        <div class="wide nv-concept-actions">
+          <button type="submit" name="actie" value="opslaan">Opslaan</button>
+          {% if c.status != 'geselecteerd' %}<button type="submit" name="actie" value="selecteren" class="nv-blue-action">Selecteer voor publicatievoorbereiding</button>{% else %}<a class="nv-blue-action" href="/dashboard?section=publicatie&amp;kandidaat={{ c.sku }}">Naar Productpublicatie →</a>{% endif %}
+          {% if c.status != 'afgewezen' %}<button type="submit" name="actie" value="afwijzen">Afwijzen (blijft bewaard)</button>{% else %}<button type="submit" name="actie" value="terug">Terug naar beoordeling</button>{% endif %}
+        </div>
+      </form>
+      <h4>Controle publicatievoorbereiding</h4>
+      <ul>{% for r in c.controle %}<li><strong>{{ r.stap }}</strong>: {{ {'ok':'in orde','let op':'let op','fout':'fout'}[r.status] }} — {{ r.tekst }}</li>{% endfor %}</ul>
+    </details>
+  </article>
+  {% else %}<p>Nog geen conceptproducten.</p>{% endfor %}
+</section>
+<style>
+.nv-concept-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:.8rem 0}
+.nv-concept-form label{display:grid;gap:4px;font-weight:650}.nv-concept-form .wide,.nv-concept-form fieldset{grid-column:1/-1}
+.nv-concept-form input,.nv-concept-form select,.nv-concept-form textarea,.nv-concept-form button{min-height:44px;width:100%}
+.nv-concept-form .nv-check{display:flex;gap:8px;align-items:flex-start;font-weight:500;min-height:44px}.nv-concept-form .nv-check input{width:1.2rem;min-height:0;height:1.2rem;margin-top:.2rem}
+.nv-concept-actions{display:flex;flex-wrap:wrap;gap:8px}.nv-concept-actions button,.nv-concept-actions a{width:auto;padding:0 14px;display:inline-flex;align-items:center}
+.nv-concept{border:1px solid #d6e2f2;border-left:5px solid #0757bd;border-radius:12px;padding:14px;margin:12px 0;background:#fff}
+.nv-concept.status-geselecteerd{border-left-color:#12805c}.nv-concept.status-afgewezen{border-left-color:#b3261e;opacity:.85}
+.nv-concept h3{margin:0 0 4px;overflow-wrap:anywhere}.nv-concept p{margin:.3rem 0}.nv-concept summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+.nv-concept-save{margin-top:8px;display:grid;gap:4px}.nv-concept-save button{min-height:44px}
+</style>

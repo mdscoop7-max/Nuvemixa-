@@ -99,7 +99,7 @@ def test_approve_then_publish_flow_in_routes(administrator):
     assert "Goedgekeurd door jou" in page
     publish = administrator.post("/admin/nv/publicatie/publiceren", data=data)   # geen schakelaar, geen zender
     assert publish.status_code == 303
-    assert "niet verzonden" in administrator.get("/dashboard?section=publicatie&kandidaat=TEST-P1").get_data(as_text=True).lower()
+    assert "nooit naar woocommerce gestuurd" in administrator.get("/dashboard?section=publicatie&kandidaat=TEST-P1").get_data(as_text=True).lower()
 
 
 def test_cannot_approve_product_with_errors(administrator):
