@@ -50,4 +50,3 @@ main label:has(select[name=supplier_kind],select[name=mtype]){color:#0a7a69}
 main label:has(select[name=mbron],select[name=mperiode],select[name=period]){color:#1a6e3d}
 main label:has(input[type=checkbox]){display:inline-flex;align-items:center;gap:8px;background:#eef4fd;border:1px solid #cfe0f7;border-radius:10px;padding:6px 12px}
 main label:has(input[type=checkbox]:checked){background:#e3f6f2;border-color:#9fd9cc;color:#0a6b5d}
-@media(min-width:900px){main label:has(input[type=checkbox]){white-space:nowrap;width:auto}}
