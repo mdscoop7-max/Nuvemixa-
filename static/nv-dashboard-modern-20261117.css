@@ -18,3 +18,7 @@ main .panel .integration-status{margin-top:8px}
 /* Dubbele paginatitel in de binnenste paneelkop verbergen; de h1 bovenaan blijft de enige titel */
 .nv26-panel>.nv26-panel-head .nv26-eyebrow,.nv26-panel>.nv26-panel-head h2{display:none}
 .nv26-panel>.nv26-panel-head{align-items:center}
+/* Zachte diepte en rustige knoppen */
+main :is(.panel,.card,.nv26-card){box-shadow:0 2px 10px #123e6b12;border:1px solid var(--nvm-line)}
+main a.integration-status,main .nv-blue-action:not(.nv-back){background:var(--nvm-blue);border-radius:10px;box-shadow:none;transition:background-color .15s,transform .15s}
+main a.integration-status:hover,main .nv-blue-action:not(.nv-back):hover{background:#06458f;transform:translateY(-1px)}

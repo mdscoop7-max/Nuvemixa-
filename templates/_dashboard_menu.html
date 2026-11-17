@@ -94,9 +94,10 @@ if(f)f.addEventListener('input',function(){var q=f.value.trim().toLowerCase();
 .side-links .nv-nav-group>a.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px #0006}
 .side-links .nv-nav-group>a.active svg.ic{color:#fff;filter:none}
 @media(max-width:760px){.nv-nav-group{border:1px solid #ffffff1a!important;margin:6px}}
+.side-links>*{min-width:0;max-width:100%}
 .side-links .nv-msearch{box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;margin:4px 0 10px;padding:0 12px;min-height:42px;border-radius:12px;background:#ffffff14;border:1px solid #ffffff22;color:#cfe0fb}
 .nv-msearch svg.ic{margin:0;width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
-.side-links .nv-msearch input#nvMenuFilter{flex:1;min-width:0;width:auto;background:transparent!important;border:0!important;box-shadow:none!important;color:#fff!important;font:inherit;padding:8px 0!important;margin:0;outline:0;border-radius:0}
+.side-links .nv-msearch input#nvMenuFilter{flex:1 1 0;min-width:0;width:0;background:transparent!important;border:0!important;box-shadow:none!important;color:#fff!important;font:inherit;padding:8px 0!important;margin:0;outline:0;border-radius:0}
 .nv-msearch input::placeholder{color:#a9bddb}
 .nv-msearch:focus-within{border-color:#7fb4ff;box-shadow:0 0 0 3px #3b82f655}
 </style>
