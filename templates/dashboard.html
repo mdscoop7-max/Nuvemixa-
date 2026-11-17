@@ -754,8 +754,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </section>
 {% block monitoring_report %}{% endblock %}
 {% include "_dashboard_visits.html" %}
-{% elif section == "klantenservice" %}
-{# De bestaande klantenservice-inbox staat onderaan de pagina; geen tweede tijdelijke kaart tonen. #}
+{% elif section in ("klantenservice", "talen", "administratie", "woocommerce", "klanten") %}
+{# Deze onderdelen hebben hieronder een eigen inhoud; geen tweede tijdelijke kaart tonen. #}
 {% else %}
 <section class="panel integration"><h2>{{ section_names.get(section,"Beheer") }}</h2><p>Voor dit onderdeel is nog geen geverifieerde gegevenskoppeling actief. Er worden geen fictieve resultaten getoond.</p><span class="integration-status">Nog niet gekoppeld</span></section>
 {% endif %}
@@ -789,6 +789,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
   </div>
 </section>
+{% elif section == 'talen' %}
+{% include "_dashboard_talen.html" %}
 {% elif section == 'administratie' and is_admin %}
 {% include "_dashboard_administratie.html" %}
 {% elif section == 'klantenservice' %}

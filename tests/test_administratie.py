@@ -62,3 +62,18 @@ def test_all_menu_sections_and_single_home(administrator):
     menu = home[home.index('id="tmAdminNavigation"'):]
     for section in MENU:
         assert f"section={section}" in menu, section
+
+
+def test_languages_page_lists_real_shop_languages(administrator):
+    import nv_talen
+    codes = [row["code"] for row in nv_talen.winkel_talen()]
+    assert codes == ["nl", "en", "fr", "it", "es", "de"]
+    text = administrator.get("/dashboard?section=talen").get_data(as_text=True)
+    assert "Nog niet gekoppeld" in text and "Niet gekoppeld" in text
+    for name in ("Nederlands", "Engels", "Frans", "Italiaans", "Spaans", "Duits"):
+        assert name in text
+
+
+def test_languages_page_handles_missing_files(tmp_path):
+    import nv_talen
+    assert nv_talen.winkel_talen(tmp_path) == []

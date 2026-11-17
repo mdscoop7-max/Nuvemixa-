@@ -2206,7 +2206,7 @@ def control():
 
         "google-shopping": "Google Merchant Center en Shopping-productfeeds.",
 
-        "talen": "Beheer Nederlandse en Engelse winkelteksten.",
+        "talen": "Welke talen de webshop ondersteunt en welke taalfuncties nog niet gekoppeld zijn.",
 
         "klantenservice": "Klantvragen, contact en berichten.",
 
@@ -2408,6 +2408,8 @@ def control():
 
         order_rows=order_rows,
         admin_overview=admin_overview,
+        talen=(__import__('nv_talen').winkel_talen() if section == 'talen' else []),
+        talen_niet_gekoppeld=__import__('nv_talen').NIET_GEKOPPELD,
         euro=__import__('nv_administratie').euro,
 
         order_error=order_error,

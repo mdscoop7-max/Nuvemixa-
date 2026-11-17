@@ -1,0 +1,13 @@
+<section class="panel" aria-label="Talen">
+<h2>Talen in de webshop</h2>
+<p>Dit overzicht komt uit de bestanden van de webshop zelf. Bezoekers kiezen hun taal in de webshop; de keuze wordt in hun eigen browser onthouden.</p>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Taal</th><th>Code</th><th>Interface-teksten</th><th>Producttitels en -beschrijvingen</th></tr></thead><tbody>
+{% for t in talen %}<tr><td><strong>{{ t.naam }}</strong>{% if t.code == 'nl' %} <small>(hoofdtaal)</small>{% endif %}</td><td>{{ t.code }}</td><td>{{ 'Beschikbaar' if t.interface else 'Ontbreekt' }}</td><td>{{ 'Beschikbaar' if t.code == 'nl' else 'Niet gekoppeld' }}</td></tr>{% else %}<tr><td colspan="4">De taalbestanden van de webshop konden niet worden gelezen.</td></tr>{% endfor %}
+</tbody></table></div>
+<p>Het dashboard zelf is alleen in het Nederlands.</p>
+</section>
+<section class="panel panel-after" aria-label="Nog niet gekoppeld">
+<h2>Nog niet gekoppeld</h2>
+<ul>{% for item in talen_niet_gekoppeld %}<li>{{ item }}</li>{% endfor %}</ul>
+<p>Er is niets automatisch vertaald en er is geen externe dienst toegevoegd. Marktkeuze per land: zie <a href="/dashboard?section=internationaal">Internationaal marktonderzoek</a>.</p>
+</section>
