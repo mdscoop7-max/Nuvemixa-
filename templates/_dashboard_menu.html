@@ -1,13 +1,39 @@
+{% set nv_icons = {'dashboard': 'home', 'producten': 'box', 'publicatie': 'upload', 'categorieen': 'grid', 'afbeeldingen': 'image', 'bestellingen': 'cart', 'klanten': 'users', 'klantenservice': 'mail', 'kortingen': 'tag', 'onderzoek': 'search', 'internationaal': 'globe', 'viral': 'trend', 'calculator': 'calc', 'statistieken': 'chart', 'seo': 'search', 'rankfix': 'pulse', 'google-shopping': 'cart', 'google-ads': 'megaphone', 'marketing': 'megaphone', 'leveranciers': 'truck', 'woocommerce': 'link', 'administratie': 'euro', 'accountbeheer': 'shield', 'monitoring': 'pulse', 'instellingen': 'sliders'} %}
 {% set groups = [
   ('Winkel', [('producten','Producten'),('publicatie','Productpublicatie'),('categorieen','Categorieën'),('afbeeldingen','Afbeeldingen'),('bestellingen','Bestellingen'),('klanten','Klanten'),('klantenservice','Klantenservice'),('kortingen','Kortingen')]),
   ('Onderzoek', [('onderzoek','Productonderzoek'),('internationaal','Internationaal marktonderzoek'),('viral','Viral Product Finder'),('calculator','Prijs- en margecalculator'),('statistieken','Rapportages')]),
   ('Vindbaarheid', [('seo','SEO & GEO'),('rankfix','RankFix AI'),('google-shopping','Google Shopping'),('google-ads','Google Ads'),('marketing','Marketing')]),
   ('Beheer', [('leveranciers','Leveranciers'),('woocommerce','WooCommerce'),('administratie','Administratie'),('accountbeheer','Accountbeheer'),('monitoring','Monitoring'),('instellingen','Instellingen')])
 ] %}
+<svg class="nv-sprite" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7.6L12 12.6l8.7-5M12 22V12.6"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.5a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.3M16 4.2a3.5 3.5 0 0 1 0 6.6"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-truck" viewBox="0 0 24 24"><path d="M2 6h11v10H2zM13 9h4l3 3v4h-7"/><circle cx="6" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+<symbol id="i-euro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2a4 4 0 1 0 0 5.6M7.5 11h5M7.5 13h5"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></symbol>
+<symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h2"/></symbol>
+<symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3 10v4h4l8 5V5L7 10H3zM18 9a4 4 0 0 1 0 6"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+</defs></svg>
 <details class="nv-menu-shell" open>
 <summary>Beheermenu</summary>
 <nav class="side-links nv26-menu" aria-label="Beheermenu" id="tmAdminNavigation">
-  <a href="/dashboard?section=dashboard"{% if section == 'dashboard' %} class="active" aria-current="page"{% endif %}>Dashboard</a>
+  <a href="/dashboard?section=dashboard"{% if section == 'dashboard' %} class="active" aria-current="page"{% endif %}><svg class="ic"><use href="#i-home"/></svg>Dashboard</a>
   {% for group, items in groups %}
   {% set visible = namespace(items=[]) %}
   {% for key, label in items if is_admin or key in employee_sections %}
@@ -17,7 +43,7 @@
   <details class="nv-nav-group nv-g-{{ loop.index }}"{% if section in visible.items|map(attribute=0)|list %} open{% endif %}>
     <summary>{{ group }}</summary>
     {% for key, label in visible.items %}
-    <a href="/dashboard?section={{ key }}"{% if section == key %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
+    <a href="/dashboard?section={{ key }}"{% if section == key %} class="active" aria-current="page"{% endif %}><svg class="ic"><use href="#i-{{ nv_icons.get(key,'grid') }}"/></svg>{{ label }}</a>
     {% endfor %}
   </details>
   {% endif %}
@@ -38,4 +64,6 @@
 .side-links a.active,.side-links .nv-nav-group>a.active{background:#0757bd;color:#fff;border-left:0;box-shadow:0 4px 12px #0757bd44}
 .side-links a.active:hover{background:#064eaa;color:#fff}
 @media(max-width:760px){.nv-nav-group{border-left:0;border-top:3px solid var(--accent);margin:4px 6px}}
+.side-links a svg.ic{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-right:8px;vertical-align:-.2em;opacity:.85}
+.side-links .nv-nav-group>a{display:flex;align-items:center}
 </style>

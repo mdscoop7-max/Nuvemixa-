@@ -45,3 +45,9 @@ Alle 24 menuonderdelen geven HTTP 200. Er is niets verwijderd of hernoemd.
 ## Nog ontbrekende koppelingen
 
 WooCommerce (orders/publicatie), Gmail (klantberichten), Google Ads, boekhouding (bewust nog niet), webshoptracking, OpenAI-sleutel (bewust afwezig).
+
+## Ronde 2 (modernisering alle pagina's)
+- Menu: SVG-iconen bij alle 25 items (`templates/_dashboard_menu.html`), sprite staat nu alleen daar.
+- Gedeelde stijllaag `static/nv-dashboard-modern-20261117.css` (titels, Terug-knop, focusrand, formulieren, tabellen) voor alle secties; geen functies gewijzigd.
+- Controle: 25 secties x mobiel/tablet/desktop zonder overflow en zonder JS/console-fouten (Playwright, lokale testserver, testdata).
+- Tests: 316 geslaagd, 42 overgeslagen (Postgres-tests, niet als geslaagd geteld).
