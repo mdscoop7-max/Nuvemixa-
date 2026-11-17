@@ -202,3 +202,30 @@ def test_bigbuy_dropshipping_fact_is_shown_but_woocommerce_stays_unconfirmed(adm
     install(monkeypatch, citations("https://www.bigbuy.eu/public/doc/Guia_API_BigBuy_EN.pdf"))
     (row,) = post(administrator, country="ES").json["results"]
     assert "dropshipping met eigen voorraad" in row["dropshipping"] and row["woocommerce"] == "Niet bevestigd"
+
+
+def test_route_is_blocked_during_storage_freeze_without_any_call_or_cost(administrator, configured, monkeypatch):
+    calls = install(monkeypatch, citations("https://sirocco.de/dropshipping/"))
+    monkeypatch.setenv("NUVEMIXA_DASHBOARD_FREEZE", "1")
+    response = post(administrator)
+    assert response.status_code == 503 and response.json["code"] == "frozen"
+    assert calls == [] and ai.usage_snapshot()["month_used"] == 0
+    monkeypatch.delenv("NUVEMIXA_DASHBOARD_FREEZE")
+    assert post(administrator).status_code == 200 and len(calls) == 1
+
+
+def test_limit_survives_a_server_restart_through_the_signed_session_counter(administrator, configured, monkeypatch):
+    monkeypatch.setenv(ai.DAILY_VARIABLE, "2")
+    calls = install(monkeypatch, citations("https://sirocco.de/dropshipping/"))
+    assert post(administrator, query="Product een").status_code == 200
+    assert post(administrator, query="Product twee").status_code == 200
+    monkeypatch.setattr(ai, "_usage", {"month": "", "month_count": 0, "day": "", "day_count": 0})  # herstart
+    blocked = post(administrator, query="Product drie")
+    assert blocked.status_code == 429 and blocked.json["code"] == "limit" and len(calls) == 2
+
+
+def test_tampered_session_counter_is_ignored_safely(administrator, configured, monkeypatch):
+    install(monkeypatch, citations("https://sirocco.de/dropshipping/"))
+    with administrator.session_transaction() as saved:
+        saved["nv_supplier_ai_usage"] = {"m": "x", "mc": "veel", "d": None, "dc": -5}
+    assert post(administrator).status_code == 200

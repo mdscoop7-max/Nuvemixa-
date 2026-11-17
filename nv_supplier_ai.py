@@ -38,6 +38,9 @@ KNOWN = {
     "dropxl.com": {"categories": "Wonen, tuin en andere categorieën"},
     "jgdistribution.fr": {"categories": "Gadgets en speelgoed"},
 }
+FREEZE_VARIABLE = "NUVEMIXA_DASHBOARD_FREEZE"  # zelfde schakelaar als de bevriezing van de dashboardopslag
+FREEZE_MESSAGE = ("Het dashboard staat tijdelijk in onderhoud omdat de opslag wordt verplaatst. "
+                  "Er is niets verzonden en er zijn geen kosten gemaakt.")
 _lock = threading.Lock()
 _usage = {"month": "", "month_count": 0, "day": "", "day_count": 0}
 _cache = {}
@@ -68,16 +71,37 @@ def usage_snapshot(now=None):
                 "day_used": _usage["day_count"], "day_limit": daily}
 
 
+def frozen():
+    return os.getenv(FREEZE_VARIABLE, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def session_usage(now=None):
+    """Teller per ingelogde browser (ondertekende cookie): overleeft een herstart van de server."""
+    now = now or datetime.now(timezone.utc)
+    month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+    saved = session.get("nv_supplier_ai_usage")
+    saved = saved if isinstance(saved, dict) else {}
+    month_count = saved.get("mc", 0) if saved.get("m") == month and isinstance(saved.get("mc"), int) else 0
+    day_count = saved.get("dc", 0) if saved.get("d") == day and isinstance(saved.get("dc"), int) else 0
+    return month, day, max(0, month_count), max(0, day_count)
+
+
 def reserve_search():
-    """Telt een zoekopdracht mee vóór de externe aanroep (ook bij een fout: bewust voorzichtig)."""
+    """Telt een zoekopdracht mee vóór de externe aanroep (ook bij een fout: bewust voorzichtig).
+
+    Twee tellers gelden tegelijk: de servergeheugenteller (alle gebruikers, reset bij herstart) en een
+    ondertekende teller in de sessiecookie van deze beheerder (blijft bestaan zolang de browsersessie duurt).
+    """
     state = usage_snapshot()
-    if state["month_used"] >= state["month_limit"]:
+    month, day, session_month, session_day = session_usage()
+    if state["month_used"] >= state["month_limit"] or session_month >= state["month_limit"]:
         return "Het maandelijkse zoeklimiet is bereikt. Er is geen zoekopdracht verstuurd."
-    if state["day_used"] >= state["day_limit"]:
+    if state["day_used"] >= state["day_limit"] or session_day >= state["day_limit"]:
         return "Het dagelijkse zoeklimiet is bereikt. Er is geen zoekopdracht verstuurd."
     with _lock:
         _usage["month_count"] += 1
         _usage["day_count"] += 1
+    session["nv_supplier_ai_usage"] = {"m": month, "mc": session_month + 1, "d": day, "dc": session_day + 1}
     return None
 
 
@@ -230,6 +254,8 @@ def run_search(values, rows):
 def supplier_ai_search():
     if not allowed("research"):
         abort(403)
+    if frozen():
+        return failure("frozen", FREEZE_MESSAGE, 503)
     values, error = parse_search(request.form)
     if error:
         return failure("invalid", error, 400)
