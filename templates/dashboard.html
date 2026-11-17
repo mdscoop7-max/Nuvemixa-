@@ -232,7 +232,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <div class="nv-research-search">
       <label>Product of niche
         <input type="search" name="research_term" maxlength="100"
-               placeholder="Bijvoorbeeld magnetische powerbank 10.000 mAh"
+               placeholder="Bijvoorbeeld NIVEA crème 200 ml, yogamat of slimme deurbel"
                value="{{ request.args.get('research_term', '') }}">
       </label>
       <button type="submit">Zoek producten en trends</button>
@@ -278,7 +278,10 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% from '_supplier_logistics.html' import logistics, pending_notice %}
       {{ pending_notice(product_discovery.pending_sources) }}
       {% if product_discovery.source_unavailable %}
-        <p class="notice">Niet volledig beschikbaar voor deze zoekopdracht: {% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+        <details class="notice">
+          <summary>{{ product_discovery.unavailable_sources|length }} bron{{ 'nen' if product_discovery.unavailable_sources|length != 1 }} gaven geen bruikbaar antwoord</summary>
+          <p>{% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+        </details>
       {% endif %}
       {% if product_discovery.sources_checked %}
         <details>
@@ -377,6 +380,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
         {% else %}
           <p>{{ research_options.empty_message }}</p>
+          <p><small>Tip: zoek op producttype of merk apart (bijvoorbeeld "hydraterende crème"), kies een andere categorie of open het tabblad Leveranciers voor bronnen om zelf te onderzoeken.</small></p>
           {% if product_discovery.alternatives %}
           <h4>Vergelijkbare producten</h4>
           <ul class="nv-research-cards">
@@ -480,7 +484,18 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           {% endfor %}
         </div>
         {% endfor %}
-        {% else %}<p>Geen betrouwbare, relevante leveranciers gevonden voor deze selectie.</p>{% endif %}
+        {% else %}<p>Geen bevestigde leveranciers gevonden voor deze selectie.</p>{% endif %}
+        {% if not product_discovery.suppliers and product_discovery.next_steps %}
+        <section class="nv-next-steps" aria-label="Verder zoeken naar leveranciers">
+          <h4>Verder zoeken (niet bevestigd)</h4>
+          <p>Dit zijn bekende dropshipping- en groothandelsbronnen om zelf te onderzoeken. Of zij dit product leveren, is niet gecontroleerd; vraag het magazijn, de prijs en de voorwaarden per SKU op.</p>
+          <ul class="nv-research-articles">
+          {% for step in product_discovery.next_steps %}
+            <li><a href="{{ step.url }}" target="_blank" rel="noopener noreferrer">{{ step.name }}</a> <small>{{ step.country if step.country != 'INT' else 'Internationaal' }}</small> {{ step.note }}</li>
+          {% endfor %}
+          </ul>
+        </section>
+        {% endif %}
       </div>
       <div id="nv-research-news">
         {% if product_discovery.news %}

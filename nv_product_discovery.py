@@ -89,7 +89,8 @@ ALL_PRODUCTS = "shop"
 SUPPLIER_MODES = {"suppliers", "dropship", "wholesale"}
 PRODUCT_MODES = {"products", "trends", "niche", "product"}
 DEFAULT_TABS = {**dict.fromkeys(SUPPLIER_MODES, "suppliers"), "trends": "trends", "news": "news"}
-EMPTY_RESULTS = "De geraadpleegde productbronnen leverden geen bevestigde match op voor deze selectie."
+EMPTY_RESULTS = ("Geen bevestigde match in de geraadpleegde bronnen. Dat betekent niet dat het product niet bestaat: "
+                 "NUVEMIXA kan alleen zoeken in de aangesloten catalogi.")
 EU = frozenset("NL BE DE FR ES IT PL AT PT IE SE DK FI CZ SK HU RO BG GR HR SI LT LV EE LU MT CY".split())
 
 
@@ -372,6 +373,11 @@ def shopify_variant(source, fetch, path, product_id, measures, wifi, details, de
     return {}
 
 
+def specific_term(term):
+    """True bij een zoekopdracht met minstens twee betekenisvolle woorden (bijv. merk en producttype)."""
+    return len(set(normalize(term or "").split()) - STOP_WORDS) >= 2
+
+
 def catalogue_product(source, term, fetch, product, details, deadline):
     if not isinstance(product, dict) or type(product.get("id")) is not int or product["id"] <= 0:
         return None, "ongeldige productvermelding"
@@ -392,7 +398,10 @@ def catalogue_product(source, term, fetch, product, details, deadline):
     evidence = f"{identity} {handle.replace('-', ' ')}"
     if UNSAFE.search(evidence) or UNSAFE.search(normalize(evidence)):
         return None, "onveilige of irrelevante vermelding"
-    if not re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence)):
+    # Bij een specifieke zoekterm (merk + type/model) bepaalt de productmatch of een product past. De smalle
+    # woordenlijst van de bron beperkte eerder het zoeken tot een paar producttypen (bijv. alleen opladers of oliën).
+    # Bij een leeg of generiek eenwoordig zoekwoord ("lamp") bewaakt de woordenlijst de categorie.
+    if not specific_term(term) and not re.search(r"\b(?:" + source.category_terms + r")\b", normalize(evidence)):
         return None, "categorie buiten selectie"
     description = product.get("body")
     facts = visible_text(description[:35_000]) if isinstance(description, str) else ""
@@ -835,6 +844,8 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
         "pending_sources": pending,
+        "next_steps": [{"country": row[0], "name": row[1], "url": row[2], "note": row[3]}
+                       for row in __import__("nv_supplier_finder").directories(country)][:6],
         "source_unavailable": bool(unavailable), "unavailable_sources": unavailable,
         "unavailable_reasons": reasons,
         "sources_checked": sorted(set(names.values())),
