@@ -2,3 +2,15 @@
 
 /* Embedded WooCommerce: a single parent dashboard navigation. */
 body.nv-embedded{background:transparent}body.nv-embedded .shell{display:block;min-height:0}body.nv-embedded .sidebar{display:none}body.nv-embedded main{max-width:none;padding:12px 14px 26px}body.nv-embedded .top{display:none}body.nv-embedded footer{display:none}.nv-woo-subnav{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 17px}.nv-woo-subnav a{background:#eaf3ff;border:1px solid #bcd8fb;color:#114c91;padding:11px 14px;border-radius:10px;font-weight:750;font-size:13px}.nv-woo-subnav a:hover,.nv-woo-subnav a:focus-visible{background:#1265ce;color:white;text-decoration:none}body.nv-embedded .cols{scroll-margin-top:20px}body.nv-embedded .panel{scroll-margin-top:20px}
+
+/* Modern WooCommerce-onderdeelmenu: gekleurde tabs met iconen, blijft bovenaan plakken */
+.nv-woo-subnav{position:sticky;top:0;z-index:5;background:#f5f8fe;padding:8px 0 10px;gap:8px}
+.nv-woo-subnav a{--c:#0b7fd6;display:inline-flex;align-items:center;gap:8px;min-height:42px;background:#fff;border:1px solid #d7e3f4;border-bottom:3px solid var(--c);color:#17305a;padding:8px 14px;border-radius:12px;font-weight:800;font-size:14px;box-shadow:0 2px 8px #123e6b12;transition:background-color .15s,transform .15s}
+.nv-woo-subnav a svg{color:var(--c)}
+.nv-woo-subnav a.c-sup{--c:#d98a14}.nv-woo-subnav a.c-ord{--c:#0f9d8a}.nv-woo-subnav a.c-set{--c:#6a4fd6}
+.nv-woo-subnav a:hover,.nv-woo-subnav a:focus-visible{background:color-mix(in srgb,var(--c) 10%,#fff);color:#10233f;transform:translateY(-1px);text-decoration:none}
+.nv-woo-subnav a:focus-visible{outline:3px solid #f4a62a;outline-offset:2px}
+#woo-products{border-top:4px solid #0b7fd6}#woo-suppliers{border-top:4px solid #d98a14}#woo-orders{border-top:4px solid #0f9d8a}#woo-settings{border-top:4px solid #6a4fd6}
+.tiles .tile{border-top:3px solid #0b7fd6;border-radius:14px}.tiles .tile:nth-child(2){border-top-color:#0f9d8a}.tiles .tile:nth-child(3){border-top-color:#d98a14}.tiles .tile:nth-child(4){border-top-color:#6a4fd6}
+.status:not(.connected):not(.error){background:#fff0d1;border-color:#f2d08c;color:#7a4e00}
+@media(max-width:600px){.nv-woo-subnav a{flex:1 1 calc(50% - 8px);justify-content:center}}
