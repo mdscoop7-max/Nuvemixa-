@@ -14,6 +14,7 @@ from flask import current_app, request, session
 from itsdangerous import BadData, URLSafeTimedSerializer
 
 import nv_dashboard_postgres
+import nv_freeze
 from nv_dashboard_manager import DB
 
 STOREFRONT = {"home", "shop", "deals", "products_page", "category_page", "product_detail", "product"}
@@ -49,7 +50,7 @@ def measurement_db(write=False):
 
 
 def record_visit(response):
-    if (not enabled() or request.method != "GET" or response.status_code != 200
+    if (not enabled() or nv_freeze.frozen() or request.method != "GET" or response.status_code != 200
             or request.endpoint not in STOREFRONT or request.environ.get("nuvemixa.internal_check")
             or session.get("nv_admin") or session.get("nv_staff_id")
             or request.args.get("dashboard_from") or request.args.get("from_dashboard")
