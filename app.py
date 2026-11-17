@@ -1193,6 +1193,7 @@ from nv_woo_bridge import (
 )
 COUNTRY_CODES_FALLBACK = frozenset(('NL','BE','DE','FR','ES','IT','PL','AT','PT','IE','GB','US','SE','DK','FI'))
 import nv_supplier_sources
+import nv_partners
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
 
 from nv_seo_scan import last_scan
@@ -2116,6 +2117,7 @@ def control():
 
     section_names = {
         "internationaal": "Internationaal marktonderzoek",
+        "partners": "Partners zoeken",
         "viral": "Viral Product Finder",
 
         "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "categorieen": "Categorieën",
@@ -2152,6 +2154,7 @@ def control():
 
     section_descriptions = {
         "internationaal": "Vergelijk vraag, leveranciers en marge per verkoopmarkt.",
+        "partners": "Zoek dropshipping-, reseller- en affiliatepartners. Niets wordt automatisch aangevraagd.",
         "viral": "Leg trendsignalen vast en beoordeel commerciële kansen per land.",
 
         "producten": "Zoek en bekijk producten, prijzen en voorraad in de testcatalogus.",
@@ -2396,6 +2399,7 @@ def control():
 
         research_error=research_error,
         product_discovery=product_discovery,
+        partner_view=nv_partners.view(request.args) if section == 'partners' else None,
         source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
         source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,

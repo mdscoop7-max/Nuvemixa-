@@ -1,0 +1,99 @@
+{% set v = partner_view %}
+<section class="panel nv-partners">
+  <h2>Partners zoeken</h2>
+  <p class="nv-partner-lead">Drie gescheiden modellen: <strong>A</strong> directe dropshipping, <strong>B</strong> potentiële partner (nog te vragen), <strong>C</strong> affiliate (commissie; NUVEMIXA is dan niet de verkoper). Niets hier is een bestaande overeenkomst; NUVEMIXA stuurt geen aanvragen of berichten. Onderzocht op {{ v.checked }} en niet live bijgewerkt.</p>
+  <form method="get" class="nv-partner-form" role="search">
+    <input type="hidden" name="section" value="partners">
+    <label>Productnaam of zoekwoord <input name="q" value="{{ v.form.q }}" maxlength="80" placeholder="bijvoorbeeld parfum, slimme sloten, kamerplanten"></label>
+    <label>Categorie <select name="cat"><option value="">Alle</option>{% for k, n in v.categories.items() %}<option value="{{ k }}" {{ 'selected' if v.form.cat == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Land <select name="land"><option value="">Alle</option>{% for c, n in [('NL','Nederland'),('BE','België'),('DE','Duitsland'),('FR','Frankrijk'),('ES','Spanje'),('IT','Italië'),('PL','Polen'),('GB','Verenigd Koninkrijk')] %}<option value="{{ c }}" {{ 'selected' if v.form.land == c }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Leverancierstype <select name="type"><option value="">Alle</option>{% for k, n in v.types.items() %}<option value="{{ k }}" {{ 'selected' if v.form.type == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Samenwerkingsmodel <select name="model"><option value="">Alle</option>{% for k, n in v.models.items() %}<option value="{{ k }}" {{ 'selected' if v.form.model == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Status <select name="status"><option value="">Alle</option>{% for k, n in v.statuses.items() %}<option value="{{ k }}" {{ 'selected' if v.form.status == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Gratis of betaald <select name="kosten"><option value="">Alle</option>{% for k, n in [('gratis','Gratis (optie)'),('betaald','Betaald (optie)'),('onbekend','Kosten onbekend')] %}<option value="{{ k }}" {{ 'selected' if v.form.kosten == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>API of feed <select name="integratie"><option value="">Alle</option>{% for k, n in [('api','API'),('feed','Productfeed'),('plugin','Plugin/app'),('geen-bekend','Niets bekend')] %}<option value="{{ k }}" {{ 'selected' if v.form.integratie == k }}>{{ n }}</option>{% endfor %}</select></label>
+    <button class="nv-blue-action" type="submit">Zoeken</button>
+    <a href="{{ url_for('control', section='partners') }}">Filters wissen</a>
+  </form>
+
+  <p><strong>{{ v.rows|length }}</strong> van {{ v.total }} bedrijven. Uitleg: <span class="nv-badge fact">Gecontroleerd feit</span> gelezen op de eigen pagina · <span class="nv-badge hint">Aanwijzing</span> derde bron, zoekresultaat of bestaande code · <span class="nv-badge unk">Onbekend</span> niet vastgesteld.</p>
+
+  {% for r in v.rows %}
+  <article class="nv-partner status-{{ r.status }}">
+    <header>
+      <h3><a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.name }}</a> <small>{{ r.country }} · {{ r.type_label }}</small></h3>
+      <p><span class="nv-model">{{ r.model_labels|join(' + ') }}</span> <strong>{{ r.status_label }}</strong>
+        · {{ r.cat_labels|join(', ') or 'buiten onze categorieën' }}
+        · kosten: {{ r.cost }}{% if r.integration %} · integratie: {{ r.integration|join(', ') }}{% endif %}</p>
+      <p>Geschiktheid <strong>{{ r.score.fit }}/100</strong> (alleen uit bekende gegevens) · {{ r.score.label }}: {{ r.score.facts }} feit, {{ r.score.hints }} aanwijzing, {{ r.score.unknown }} onbekend</p>
+    </header>
+    {% if r.note %}<p class="nv-partner-note">{{ r.note }}</p>{% endif %}
+    <details>
+      <summary>Beoordeling per criterium</summary>
+      <table>
+        <thead><tr><th>Criterium</th><th>Status</th><th>Wat bekend is</th></tr></thead>
+        <tbody>
+        {% for key, label, weight in v.criteria %}{% set x = r.facts[key] %}
+          <tr><td>{{ label }}</td>
+            <td><span class="nv-badge {{ 'fact' if x.status == 'feit' else ('hint' if x.status == 'aanwijzing' else 'unk') }}">{{ 'Feit' if x.status == 'feit' else ('Aanwijzing' if x.status == 'aanwijzing' else 'Onbekend') }}</span></td>
+            <td>{{ x.text }}{% if x.url %} <a href="{{ x.url }}" target="_blank" rel="noopener noreferrer">bron ↗</a>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </details>
+    {% if r.status != 'ongeschikt' %}
+    <form method="post" action="{{ url_for('nv_manage.save_candidate') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="name" value="{{ r.name }}">
+      <button type="submit">Bewaar op kandidatenlijst</button>
+    </form>
+    {% endif %}
+    {% if 'C' in r.models and 'A' not in r.models %}<p class="nv-partner-note">Affiliate: geen eigen verkoop, nooit automatisch in WooCommerce.</p>{% endif %}
+  </article>
+  {% else %}
+  <p>Geen bedrijf in het register voldoet aan deze filters. Dat betekent niet dat zo'n bedrijf niet bestaat: gebruik de ontdekkingslinks hieronder.</p>
+  {% endfor %}
+
+  <section class="nv-partner-discovery">
+    <h3>Kleinere webshops en merken ontdekken</h3>
+    <p>Handmatige zoeklinks, afgestemd op je filters. NUVEMIXA haalt hier niets automatisch op. Controleer voorwaarden, merkrechten en of een bedrijf wil samenwerken voordat je iemand benadert.</p>
+    <ul>{% for d in v.discovery %}<li><a href="{{ d.url }}" target="_blank" rel="noopener noreferrer">{{ d.label }} →</a></li>{% endfor %}</ul>
+    <form method="post" action="{{ url_for('nv_manage.save_candidate') }}" class="nv-partner-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <strong>Eigen vondst bewaren</strong>
+      <label>Bedrijfsnaam <input name="name" required minlength="2" maxlength="120"></label>
+      <label>Website <input name="url" type="url" placeholder="https://" maxlength="500"></label>
+      <label>Model <select name="model"><option>A</option><option selected>B</option><option>C</option></select></label>
+      <label>Notitie <input name="notes" maxlength="900"></label>
+      <button type="submit">Bewaar op kandidatenlijst</button>
+    </form>
+  </section>
+
+  <section class="nv-partner-candidates">
+    <h3>Kandidatenlijst</h3>
+    {% if v.candidates is none %}<p>De opslag is nu niet beschikbaar.</p>
+    {% elif v.candidates %}
+    <table><thead><tr><th>Bedrijf</th><th>Website</th><th>Notitie</th></tr></thead><tbody>
+      {% for c in v.candidates %}<tr><td>{{ c.name }}</td><td>{% if c.website %}<a href="{{ c.website }}" target="_blank" rel="noopener noreferrer">{{ c.website }}</a>{% endif %}</td><td>{{ c.notes }}</td></tr>{% endfor %}
+    </tbody></table>
+    <p><small>De lijst staat in de leveranciersopslag. Op Render Free is die tijdelijk (SQLite) en kan bij herstart leeg zijn.</small></p>
+    {% else %}<p>Nog geen kandidaten bewaard.</p>{% endif %}
+  </section>
+</section>
+<style>
+.nv-partner-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end;margin:1rem 0}
+.nv-partner-form label{display:grid;gap:4px;font-weight:650}.nv-partner-form input,.nv-partner-form select{min-height:44px;width:100%}
+.nv-partner-form button{min-height:44px}
+.nv-partner{border:1px solid #d6e2f2;border-radius:12px;padding:14px;margin:12px 0;background:#fff}
+.nv-partner.status-aantoonbaar{border-left:5px solid #12805c}.nv-partner.status-mogelijk{border-left:5px solid #0757bd}
+.nv-partner.status-affiliate{border-left:5px solid #8a5bd6}.nv-partner.status-ongeschikt{border-left:5px solid #b3261e;opacity:.85}
+.nv-partner h3{margin:0 0 4px;overflow-wrap:anywhere}.nv-partner p{margin:.3rem 0}
+.nv-badge{white-space:nowrap;display:inline-block;padding:2px 8px;border-radius:99px;font-size:.78rem;font-weight:700}
+.nv-badge.fact{background:#d9f3e6;color:#0b5b3f}.nv-badge.hint{background:#fff1cc;color:#7a5200}.nv-badge.unk{background:#e8ecf2;color:#46526a}
+.nv-model{background:#eef5ff;color:#12355d;padding:2px 8px;border-radius:8px;font-weight:700}
+.nv-partner-note{font-style:italic}.nv-partner table,.nv-partner-candidates table{width:100%;border-collapse:collapse}
+.nv-partner td,.nv-partner th,.nv-partner-candidates td,.nv-partner-candidates th{padding:6px;border-bottom:1px solid #e3eaf4;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.nv-partner summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.nv-partner button{min-height:44px;margin-top:8px}
+@media(max-width:700px){.nv-partner table{display:block;overflow-x:auto}}
+</style>

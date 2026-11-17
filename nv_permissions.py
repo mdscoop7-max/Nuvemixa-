@@ -28,6 +28,7 @@ SECTIONS = {
     "klanten": ("customer_view",),
     "onderzoek": ("research",),
     "internationaal": ("research",),
+    "partners": ("research",),
     "viral": ("research",),
     "calculator": ("calculator",),
     "statistieken": ("stats",),
