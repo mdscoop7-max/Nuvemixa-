@@ -122,7 +122,8 @@
 @media(max-width:620px){.nv-action-row{display:grid}.nv-blue-action{width:100%}}
 .top-search{display:flex;gap:8px;min-width:0}
 .top-search input{min-width:0}
-@media(max-width:760px){.topbar:has(.top-search){flex-wrap:wrap}.top-search{flex:1 0 100%;order:3}}
+/* Keep the catalog search on its own row while the tablet sidebar is visible. */
+@media(max-width:1100px){.topbar:has(.top-search){flex-wrap:wrap}.top-search{flex:1 0 100%;max-width:none;order:3}}
 .top-search button{padding:8px 14px;border:0;border-radius:8px;background:#0757bd;color:white;font-weight:700;cursor:pointer}
 </style>
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">

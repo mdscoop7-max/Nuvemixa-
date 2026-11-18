@@ -433,7 +433,11 @@ def publisher_search(fetch, query, country, language, read, site, publisher):
         page, re.S,
     )[:30]:
         parsed = urlsplit(unescape(url))
-        if parsed.query or not ARTICLE_PATH.fullmatch(parsed.path) or parsed.path.startswith(("/search/", "/author/", "/deals/")):
+        # A show title can match a product category (for example "The Beauty").
+        # Streaming reviews and viewing guides are not physical-product research.
+        if parsed.query or not ARTICLE_PATH.fullmatch(parsed.path) or parsed.path.startswith(
+            ("/search/", "/author/", "/deals/", "/streaming/", "/how-to-watch/")
+        ):
             continue
         time = re.search(r'(Published|last updated)\s+<time datetime="([0-9]{4}-[0-9]{2}-[0-9]{2})T', article, re.I)
         summary = re.search(r'<p class="synopsis">(.{1,700}?)</p>', article, re.S)

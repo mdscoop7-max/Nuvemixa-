@@ -54,6 +54,21 @@ def editorial_card(url, title, summary, published=None):
     )
 
 
+def test_beauty_research_excludes_tv_show_reviews_and_viewing_guides():
+    from nv_research_sources import publication_candidates
+
+    product = "https://www.techradar.com/tech-events/beauty-led-mask"
+    page = "".join((
+        editorial_card("https://www.techradar.com/streaming/hulu/the-beauty-fx-review",
+                       "The Beauty review", "Beauty streaming show review"),
+        editorial_card("https://www.techradar.com/how-to-watch/tv-shows/the-beauty",
+                       "How to watch The Beauty", "Beauty release schedule"),
+        editorial_card(product, "Beauty LED mask", "Silicone skincare mask"),
+    )).encode()
+    candidates = list(publication_candidates(None, "beauty", "NL", "nl", lambda *a, **k: page))
+    assert [article["url"] for article in candidates] == [product]
+
+
 @pytest.mark.parametrize(("terms", "title", "category"), [
     (("Gezichtsreiniger", "Facial cleanser"), "Gentle Face Wash 120 ml", "beauty-care"),
     (("Keukenorganizer", "Kitchen organizer"), "Kitchen Organiser 2 Tier", "home-living"),
