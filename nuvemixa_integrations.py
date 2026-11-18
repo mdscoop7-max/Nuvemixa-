@@ -14,6 +14,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from decimal import Decimal, InvalidOperation
 
+MERCHANT_PREVIEW_ORIGIN = "https://nuvemixa.alwaysdata.net"
+
 
 def rankfix_scan_url(site_url=None):
     """Deep-link to existing RankFix authenticated dashboard, no stored secrets."""
@@ -59,7 +61,7 @@ def mollie_readonly_check():
         return {"state": "unavailable", "message": "Mollie-verbinding is niet bevestigd."}
 
 
-def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
+def merchant_product_checks(item, base_url=MERCHANT_PREVIEW_ORIGIN):
     missing = []
     verification = {
         "merchant_verified": "interne goedkeuring",
@@ -84,7 +86,8 @@ def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
         missing.append("valuta")
     if item.get("stock_status") not in ("in_stock", "out_of_stock"):
         missing.append("voorraad")
-    gtin = str(item.get("gtin") or "")
+    gtin = str(item.get("gtin") or "").strip()
+    brand, mpn = (str(item.get(key) or "").strip() for key in ("brand", "mpn"))
     if gtin:
         valid_gtin = (bool(re.fullmatch(r"[0-9]+", gtin)) and len(gtin) in {8, 12, 13, 14}
                       and sum(int(digit) * (1 if index % 2 == 0 else 3)
@@ -92,9 +95,9 @@ def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
         if not valid_gtin:
             missing.append("GTIN")
     no_identifiers = item.get("identifier_exists_verified") is True
-    if not no_identifiers and (not item.get("brand") or not (gtin or item.get("mpn"))):
+    if not no_identifiers and (not brand or not (gtin or mpn)):
         missing.append("merk en GTIN of MPN")
-    if no_identifiers and (gtin or item.get("mpn")):
+    if no_identifiers and (gtin or mpn):
         missing.append("tegenstrijdige productidentificatie")
     for key, label in (("product_url", "productlink"), ("image", "afbeeldingslink")):
         value = str(item.get(key) or "")
@@ -104,14 +107,14 @@ def merchant_product_checks(item, base_url="https://nuvemixa.alwaysdata.net"):
                     or not url.hostname or url.username or url.password
                     or (key == "product_url" and url.netloc.lower() != urllib.parse.urlsplit(base_url).netloc.lower())):
                 missing.append(label)
-            elif key == "image" and url.path.startswith("/img/product/"):
+            elif key == "image" and urllib.parse.unquote(url.path).startswith("/img/product/"):
                 missing.append("gegenereerde tijdelijke afbeelding")
         except ValueError:
             missing.append(label)
     return missing
 
 
-def merchant_feed_preview(items, base_url="https://nuvemixa.alwaysdata.net"):
+def merchant_feed_preview(items, base_url=MERCHANT_PREVIEW_ORIGIN):
     """Generate the private XML preview from the same checks as the JSON report."""
     namespace = "http://base.google.com/ns/1.0"
     ET.register_namespace("g", namespace)
@@ -134,8 +137,9 @@ def merchant_feed_preview(items, base_url="https://nuvemixa.alwaysdata.net"):
             "availability": product["stock_status"],
         }
         for key in ("brand", "gtin", "mpn"):
-            if product.get(key):
-                attributes[key] = product[key]
+            value = str(product.get(key) or "").strip()
+            if value:
+                attributes[key] = value
         if product.get("identifier_exists_verified") is True:
             attributes["identifier_exists"] = "no"
         row = ET.SubElement(channel, "item")

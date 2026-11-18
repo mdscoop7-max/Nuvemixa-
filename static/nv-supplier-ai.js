@@ -11,6 +11,11 @@
   var errorBox = document.getElementById("nv-ai-error");
   var results = document.getElementById("nv-ai-results");
   var running = false;
+  var label0 = button.textContent, disabled0 = button.disabled;
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    running = false; button.disabled = disabled0; button.textContent = label0; box.hidden = true;
+  });
   var CLIENT_TIMEOUT_MS = 28000;
   var SLOW_AFTER_S = 8;
 
@@ -70,10 +75,11 @@
     if (!form.reportValidity()) return;
     running = true;
     button.disabled = true;
+    button.textContent = "Bezig met zoeken...";
     errorBox.hidden = true; slow.hidden = true;
     results.textContent = ""; steps.textContent = "";
     box.hidden = false; box.className = "nv-ai-progress";
-    status.textContent = "AI zoekt leveranciers…";
+    status.textContent = "Product analyseren en AI zoekt leveranciers…";
     var started = Date.now();
     timer.textContent = "0 s";
     var tick = setInterval(function () {
@@ -93,6 +99,7 @@
       slow.hidden = true;
       running = false;
       button.disabled = false;
+      button.textContent = label0;
     }
     fetch(form.action, {method: "POST", body: new FormData(form), credentials: "same-origin",
                         headers: {"Accept": "application/json"}, signal: controller.signal})

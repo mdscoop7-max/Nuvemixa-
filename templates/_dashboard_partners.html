@@ -5,11 +5,11 @@
   <div class="nv-partner-honest" role="note">
     <strong>Wat dit is, en wat niet.</strong> "Partners zoeken" is een <strong>onderzocht register</strong> (handmatig samengesteld op {{ v.checked }}) met <strong>handmatige ontdekkingslinks</strong>. Het is <strong>geen live, automatische internetzoekmachine</strong>: er wordt niets op internet opgehaald, niemand benaderd en de gegevens verversen niet vanzelf. De score is een voorlopige indicatie, geen keurmerk. Een bewaarde kandidaat is <strong>geen goedgekeurde leverancier</strong>.
   </div>
-  <form method="get" class="nv-partner-form" role="search">
+  <form method="get" class="nv-partner-form" role="search" data-research-search="Partners zoeken..." data-search-phases="Partners zoeken...|Resultaten voorbereiden...">
     <input type="hidden" name="section" value="partners">
     <label>Productnaam of zoekwoord <input name="q" value="{{ v.form.q }}" maxlength="80" placeholder="bijvoorbeeld parfum, slimme sloten, kamerplanten"></label>
     <label>Categorie <select name="cat"><option value="">Alle</option>{% for k, n in v.categories.items() %}<option value="{{ k }}" {{ 'selected' if v.form.cat == k }}>{{ n }}</option>{% endfor %}</select></label>
-    <label>Land <select name="land"><option value="">Alle</option>{% for c, n in [('NL','Nederland'),('BE','België'),('DE','Duitsland'),('FR','Frankrijk'),('ES','Spanje'),('IT','Italië'),('PL','Polen'),('GB','Verenigd Koninkrijk')] %}<option value="{{ c }}" {{ 'selected' if v.form.land == c }}>{{ n }}</option>{% endfor %}</select></label>
+    <label>Doelland <select name="land"><option value="">Alle</option>{% for c, n in [('NL','Nederland'),('BE','België'),('DE','Duitsland'),('FR','Frankrijk'),('ES','Spanje'),('IT','Italië'),('PL','Polen'),('GB','Verenigd Koninkrijk')] %}<option value="{{ c }}" {{ 'selected' if v.form.land == c }}>{{ n }}</option>{% endfor %}</select></label>
     <label>Leverancierstype <select name="type"><option value="">Alle</option>{% for k, n in v.types.items() %}<option value="{{ k }}" {{ 'selected' if v.form.type == k }}>{{ n }}</option>{% endfor %}</select></label>
     <label>Samenwerkingsmodel <select name="model"><option value="">Alle</option>{% for k, n in v.models.items() %}<option value="{{ k }}" {{ 'selected' if v.form.model == k }}>{{ n }}</option>{% endfor %}</select></label>
     <label>Status <select name="status"><option value="">Alle</option>{% for k, n in v.statuses.items() %}<option value="{{ k }}" {{ 'selected' if v.form.status == k }}>{{ n }}</option>{% endfor %}</select></label>
@@ -17,6 +17,7 @@
     <label>API of feed <select name="integratie"><option value="">Alle</option>{% for k, n in [('api','API'),('feed','Productfeed'),('plugin','Plugin/app'),('geen-bekend','Niets bekend')] %}<option value="{{ k }}" {{ 'selected' if v.form.integratie == k }}>{{ n }}</option>{% endfor %}</select></label>
     <button class="nv-blue-action" type="submit">Zoeken</button>
     <a href="{{ url_for('control', section='partners') }}">Filters wissen</a>
+    <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
 
   <p><strong>{{ v.rows|length }}</strong> van {{ v.total }} bedrijven. Uitleg: <span class="nv-badge fact">Gecontroleerd feit</span> gelezen op de eigen pagina · <span class="nv-badge hint">Aanwijzing</span> derde bron, zoekresultaat of bestaande code · <span class="nv-badge unk">Onbekend</span> niet vastgesteld.</p>
@@ -72,16 +73,23 @@
     </form>
   </section>
 
-  <section class="nv-partner-candidates">
+  <section class="nv-partner-candidates" id="nv-partner-candidates">
     <h3>Kandidatenlijst</h3>
     <p class="nv-partner-warn">{% if v.permanent %}<strong>Opslag: permanent.</strong> De kandidatenlijst staat in de PostgreSQL-dashboardopslag en blijft na een herstart bewaard.{% else %}<strong>Let op: tijdelijk.</strong> De PostgreSQL-dashboardopslag staat niet aan; de kandidatenlijst staat in SQLite op Render Free en verdwijnt bij een herstart of nieuwe deployment. Noteer belangrijke kandidaten ook elders.{% endif %} Kandidaten zijn geen goedgekeurde leveranciers en er is geen contact gelegd.</p>
+    <form method="get" action="{{ url_for('control', _anchor='nv-partner-candidates') }}" class="nv-partner-form" role="search" data-research-search="Kandidaten zoeken..." data-search-phases="Kandidaten zoeken...|Resultaten voorbereiden...">
+      <input type="hidden" name="section" value="partners">
+      {% for key, value in v.form.items() if value %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+      <label>Zoek bewaarde kandidaat <input type="search" name="candidate_q" maxlength="100" value="{{ v.candidate_query }}"></label>
+      <button type="submit">Zoeken</button>
+      <p class="nv-search-progress" role="status"><span hidden></span></p>
+    </form>
     {% if v.candidates is none %}<p>De opslag is nu niet beschikbaar.</p>
     {% elif v.candidates %}
-    <table><thead><tr><th>Bedrijf</th><th>Website</th><th>Notitie</th></tr></thead><tbody>
+    <div class="admin-table-wrap"><table><thead><tr><th>Bedrijf</th><th>Website</th><th>Notitie</th></tr></thead><tbody>
       {% for c in v.candidates %}<tr><td>{{ c.name }}</td><td>{% if c.website and (c.website.startswith('https://') or c.website.startswith('http://')) %}<a href="{{ c.website }}" target="_blank" rel="noopener noreferrer">{{ c.website }}</a>{% elif c.website %}{{ c.website }}{% endif %}</td><td>{{ c.notes }}</td></tr>{% endfor %}
-    </tbody></table>
+    </tbody></table></div>
     
-    {% else %}<p>Nog geen kandidaten bewaard.</p>{% endif %}
+    {% else %}<p>{{ 'Geen kandidaten gevonden. Zoek op bedrijf, website of zoekwoord uit de notitie.' if v.candidate_query else 'Nog geen kandidaten bewaard.' }}</p>{% endif %}
   </section>
 </section>
 <style>

@@ -5,7 +5,12 @@ from test_system_check import administrator, CSRF_TOKEN  # noqa: F401
 
 import app as dashboard
 
-MENUS = ["onderzoek", "internationaal", "viral", "leveranciers", "partners", "publicatie", "woocommerce", "calculator"]
+MENUS = [
+    "dashboard", "producten", "categorieen", "onderzoek", "internationaal", "viral", "leveranciers", "partners",
+    "concepten", "publicatie", "woocommerce", "calculator", "afbeeldingen", "bestellingen", "klanten",
+    "accountbeheer", "kortingen", "marketing", "seo", "rankfix", "statistieken", "instellingen", "google-ads",
+    "google-shopping", "talen", "klantenservice", "monitoring", "administratie",
+]
 
 
 @pytest.mark.parametrize("sectie", MENUS)
@@ -26,10 +31,14 @@ def test_menu_geweigerd_voor_anoniem_en_klant(sectie, klant):
     assert client.get(f"/dashboard?section={sectie}").status_code in (302, 303, 403)
 
 
-def test_productonderzoek_beweert_geen_ai(administrator):
+def test_productonderzoek_toont_eerlijke_ai_status(administrator, monkeypatch):
     html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
     assert "AI Productonderzoek" not in html
-    assert "Geen AI en geen verkoopcijfers" in html and "niet geactiveerd" in html
+    assert "AI niet beschikbaar" in html and "normaal zoeken is actief" in html
+    assert "Geen verzonnen verkoopcijfers" in html
+    monkeypatch.setenv("OPENAI_API_KEY", "fixture-key")
+    html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
+    assert "AI actief" in html and "fixture-key" not in html
 
 
 def test_viral_toont_vaste_notities_als_niet_live(administrator):
@@ -39,7 +48,7 @@ def test_viral_toont_vaste_notities_als_niet_live(administrator):
 
 def test_publicatie_beweert_niet_dat_alles_werkt(administrator):
     html = administrator.get("/dashboard?section=publicatie").get_data(as_text=True)
-    assert "werkt deels" in html and "geen live trendfeed" in html
+    assert "Google Trends en eigen waarnemingen" in html and "Sociale populariteitscijfers ontbreken" in html
     assert "nog niet gekoppeld" in html and "TESTDATA" in html
 
 
@@ -52,7 +61,11 @@ def test_bronnentest_alleen_eigenaar(administrator, monkeypatch):
     assert r.status_code == 403 and called == []
 
 
-@pytest.mark.parametrize("sectie", ["viral", "internationaal"])
-def test_viral_en_internationaal_zijn_eerlijk_over_ontbrekende_trenddata(administrator, sectie):
+@pytest.mark.parametrize(("sectie", "uitleg"), [
+    ("viral", ("Google Trends toont zoekinteresse", "Verkoopcijfers en sociale populariteitscijfers ontbreken")),
+    ("internationaal", ("Verkoopcijfers en marktprijzen ontbreken",)),
+])
+def test_onderzoeksmenus_vermelden_welke_data_beschikbaar_zijn(administrator, sectie, uitleg):
     html = administrator.get(f"/dashboard?section={sectie}").get_data(as_text=True)
-    assert "Geen live trendmeting" in html
+    for tekst in uitleg:
+        assert tekst in html

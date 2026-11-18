@@ -78,7 +78,7 @@ def test_warehouse_outside_eu_is_shown_with_attention_points():
     company = next(c for c in result["suppliers"] if c["name"] == "NNE Living")
     assert company["warehouse_label"] == "United Kingdom" and company["warehouse_region"] == "international"
     assert "buiten de EU" in company["logistics_notes"][0] and "niet bevestigd" in company["logistics_notes"][0]
-    assert company["lead_time_note"] and "werkdagen" in company["lead_time_note"]
+    assert company["lead_time_note"] == "4–7 dagen (geschat door aanbieder)"
 
 
 def test_warehouse_inside_eu_and_unknown():

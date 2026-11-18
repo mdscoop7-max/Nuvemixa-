@@ -2,7 +2,7 @@
 <section class="panel nv-ai-search" id="nv-ai-search" aria-labelledby="nv-ai-title">
 <h2 id="nv-ai-title">Leveranciers zoeken met AI</h2>
 <p>Zoek dropshippingleveranciers in de gecontroleerde B2B-bronnen. Alleen bronpagina's die de AI werkelijk citeert worden getoond. Wat niet aantoonbaar is, staat als <strong>Niet bevestigd</strong>. Resultaten worden niet opgeslagen en verdwijnen bij het sluiten of vernieuwen van deze pagina.</p>
-{% if not supplier_ai.configured %}<div class="notice" role="alert">AI-configuratie ontbreekt. Stel <code>OPENAI_API_KEY</code> en <code>NUVEMIXA_SUPPLIER_SEARCH_MODEL</code> in bij Render (Environment). Zolang die ontbreken wordt er niets verzonden.</div>{% endif %}
+{% if not supplier_ai.configured %}<div class="notice" role="alert">AI-configuratie ontbreekt. Stel <code>OPENAI_API_KEY</code> in bij Render (Environment). Zolang die ontbreken wordt er niets verzonden.</div>{% endif %}
 <form id="nv-ai-form" method="post" action="{{ url_for('nv_manage.supplier_ai_search') }}" class="nv-admin-form" novalidate>
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <label>Productnaam <input name="query" required minlength="2" maxlength="120" placeholder="Bijvoorbeeld: LED-bureaulamp"></label>

@@ -11,6 +11,17 @@ PHRASES = (
     (r"\b(?:puur|pure|zuiver(?:e)?)\b", "pure"),
     (r"\b(?:koud[\s-]*geperst|cold[\s-]*press(?:ed)?)\b", "cold pressed"),
     (r"\b(?:gezichtsreinigingsborstel|gezichtsborstel|(?:facial|face) (?:cleansing|cleaning) brush)\b", "facial cleansing brush"),
+    (r"\b(?:gezichts[\s-]*reiniger(?:s)?|gezichts[\s-]*wasgel|(?:facial|face) (?:cleansers?|wash|cleansing (?:gel|foam)))\b", "facial cleanser"),
+    (r"\b(?:keuken[\s-]*(?:organi[sz]ers?|opbergers?)|kitchen (?:organi[sz]ers?|storage racks?))\b", "kitchen organizer"),
+    (r"\b(?:katten[\s-]*(?:voerbak(?:ken)?|voerautomaat|voederautomaat)|(?:cat|feline) (?:feeders?|food dispensers?))\b", "cat feeder"),
+    (r"\b(?:automatische|automatisch|auto[\s-]+(?=cat feeder))\b", "automatic"),
+    (r"\b(?:huisdieren?[\s-]*accessoires?|pet accessor(?:y|ies))\b", "pet accessories"),
+    (r"\b(?:bluetooth[\s-]*(?:luidsprekers?|speakers?)|(?:draagbare )?bluetoothbox(?:en)?)\b", "bluetooth speaker"),
+    (r"\b(?:led[\s-]*strips?|lichtstrips?)\b", "led lighting strip"),
+    (r"\b(?:led[\s-]*(?:verlichting|lights?|lighting|lampen?))\b", "led lighting"),
+    (r"\b(?:kerst[\s-]*(?:lampjes|verlichting)|christmas (?:string |fairy )?lights?)\b", "christmas lights"),
+    (r"\b(?:sjaals?|scarves|scarfs)\b", "scarf"),
+    (r"\b(?:zijden|zijde)\b", "silk"),
     (r"\b(?:siliconen|silicone)\b", "silicone"),
     (r"\b(?:elektrisch(?:e)?|electric|sonic|sonisch(?:e)?)\b", "electric"),
     (r"\b(?:slimm?e? (?:wifi )?stekker|slim stopcontact|smart (?:socket|outlet|plug)|wifi (?:socket|outlet|stekker))\b", "smart plug"),
@@ -40,6 +51,14 @@ NORMALIZATIONS = tuple((re.compile(pattern), replacement) for pattern, replaceme
 
 # Terms in this table deliberately expand candidate retrieval only.
 PRODUCTS = {
+    "facial cleanser": ("facial cleanser", "face wash", "cleansing gel", "gezichtsreiniger"),
+    "kitchen organizer": ("kitchen organizer", "kitchen organiser", "kitchen storage rack", "keukenorganizer"),
+    "cat feeder": ("cat feeder", "automatic cat feeder", "cat food dispenser", "kattenvoerbak"),
+    "bluetooth speaker": ("bluetooth speaker", "portable bluetooth speaker", "bluetooth luidspreker"),
+    "led lighting": ("led lighting", "LED lights", "LED strip", "ledverlichting"),
+    "pet accessories": ("pet accessories", "pet supplies", "cat toys", "dog collars"),
+    "scarf": ("scarf", "sjaal", "scarves"),
+    "christmas lights": ("christmas lights", "christmas string lights", "kerstverlichting"),
     "argan oil": ("argan oil", "arganolie", "cosmetic argan oil", "argan olie"),
     "facial cleansing brush": ("facial cleansing brush", "gezichtsreinigingsborstel", "silicone face brush"),
     "smart plug": ("smart plug", "slimme stekker", "wifi energy monitoring plug"),
@@ -59,12 +78,13 @@ FACETS = {
     "smart plug": ("wifi", "energy monitoring"),
     "resistance band": ("set",),
     "table lamp": ("wireless", "led", "rechargeable", "usbc"),
+    "cat feeder": ("automatic",),
 }
 FACET_LABELS = {
     "pure": "zuiverheid", "cold pressed": "koudgeperst", "skin": "geschikt voor de huid",
     "electric": "elektrisch", "silicone": "siliconen", "usbc": "USB-C",
     "wifi": "wifi", "energy monitoring": "energiemeter", "set": "meerdelige set",
-    "wireless": "draadloos", "led": "led", "rechargeable": "oplaadbaar",
+    "wireless": "draadloos", "led": "led", "rechargeable": "oplaadbaar", "automatic": "automatisch",
 }
 
 ALIASES = {
@@ -142,7 +162,11 @@ STOP_WORDS = frozenset("a de een en for het in is met of the van voor with and b
 MEASURE = re.compile(r"\b(\d+)\s+(mah|ml|amp)\b")
 CAPACITY = re.compile(r"\b([0-9]+) mah\b")
 CONNECTOR = re.compile(r"\b(?:usb[\s‐‑–—-]*(?:type[\s‐‑–—-]*)?c|type[\s‐‑–—-]*c)\b")
-ACCESSORIES = r"cable|kabel|spray|cover|case|houder|mount|bracket|strap|hoes|replacement head|opzetborstel"
+ACCESSORIES = (r"cables?|kabel|spray|covers?|cases?|houder|mounts?|brackets?|straps?|stands?|bags?|hoes|"
+               r"replacement head|opzetborstel|replacement filter|replacement adapter")
+# Losse onderdelen die alleen "voor" een product bestaan of er direct achter staan (bijv. reislader, montageband).
+PARTS = r"(?:travel )?chargers?|(?:reis)?(?:op)?laders?|charging (?:cables?|docks?)|(?:mounting |carrying )?straps?|bevestigingsband(?:en)?|draagriem(?:en)?|mounts?"
+
 
 def normalize(value):
     value = "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if not unicodedata.combining(c))
@@ -212,6 +236,8 @@ def index_query(term):
     normalized = normalize(term)
     subject = subject_for(normalized)
     if subject and not identity_words(normalized, subject):
+        if subject == "cat feeder" and has_phrase(normalized, "automatic"):
+            return "automatic cat feeder"
         return PRODUCTS[subject][0]
     if not subject and normalized:
         english = re.sub(r"(?<=\d) (?=(?:mah|ml)\b)", "", normalized)
@@ -245,10 +271,19 @@ def offer_match(term, identity, description="", variant=""):
     variant = normalize(variant)
     evidence = f"{title} {body} {variant}"
     subject = subject_for(query)
+    # A deterrent replica cannot provide the recording/security function sought.
+    replica = r"\b(?:dummy|fake|decoy|imitation|imitatie|nep)\b"
+    if subject == "security camera" and re.search(replica, title) and not re.search(replica, query):
+        return "", ()
     core = "power bank" if power_bank_query(term) else subject
-    if core and not re.search(r"\b(?:" + ACCESSORIES + r")\b", query):
+    accessory_query = re.search(r"\b(?:" + ACCESSORIES + r")\b", query)
+    if core and not accessory_query:
         if (re.search(r"\b(?:" + ACCESSORIES + r") (?:for|voor|compatible with) " + core + r"\b", title)
                 or re.search(r"\b" + core + r" (?:cleaning )?(?:" + ACCESSORIES + r")\b", title)):
+            return "", ()
+        if core != "power bank" and not re.search(r"\b(?:" + PARTS + r")\b", query) and (
+                re.search(r"\b(?:" + PARTS + r") (?:\w+ ){0,2}(?:for|voor|compatible with) (?:\w+ ){0,3}" + core + r"\b", title)
+                or re.search(r"\b" + core + r" (?:(?!with |met |incl)\w+ ){0,2}(?:" + PARTS + r")\b", title)):
             return "", ()
     if core == "power bank":
         if not power_bank_query(identity):
@@ -265,11 +300,34 @@ def offer_match(term, identity, description="", variant=""):
         return ("similar", tuple(missing)) if missing else ("exact", ())
 
     subject_in_title = has_phrase(title, subject)
+    if subject == "facial cleanser":
+        subject_in_title |= has_phrase(title, "cleanser") and bool(words(body) & {"face", "facial", "gezicht"})
+        if not words(query) & {"oil", "olie", "brush", "borstel"} and words(title) & {
+                "oil", "olie", "oils", "brush", "borstel", "brushes", "cleansing brush"}:
+            return "", ()
+    if subject == "pet accessories":
+        subject_in_title |= pet_accessory(title)
+    if subject == "bluetooth speaker" and has_phrase(title, "bluetooth"):
+        subject_in_title |= bool(words(title) & {"speaker", "speakers", "luidspreker"})
+    if subject == "led lighting":
+        primary = re.split(r"\b(?:with|met|including|inclusief)\b", title, maxsplit=1)[0]
+        subject_in_title = has_phrase(title, "led lighting") and bool(re.search(
+            r"\b(?:led lighting|lamps?|lampen|strips?|bulbs?|spots?|spotlights?|floodlights?|downlights?|lanterns?)\b",
+            primary,
+        )) and not bool(re.search(r"\b(?:mirror|spiegel|speaker|trimmer|dresser|camera|controller)\b", primary))
     if subject == "moisturizing cream":
         subject_in_title |= "cream" in title.split()
     if subject == "table lamp" and "lamp" in title.split() and "portable" in title.split():
         subject_in_title |= "table" in body.split() and "floor lamp" not in title
-    if not subject_in_title or not exact_identity(query, title, subject):
+    identity_matches = exact_identity(query, title, subject)
+    if subject == "bluetooth speaker" and not identity_matches:
+        # Some catalogues put the model in the title and spell out the full
+        # product name at the start of the description.
+        identity_tokens = identity_words(query, subject)
+        identifiers = [word for word in query.split() if word in identity_tokens]
+        identity_matches = (len(identifiers) >= 2 and set(identifiers[1:]) <= words(title)
+                            and (body == query or body.startswith(query + " ")))
+    if not subject_in_title or not identity_matches:
         return "", ()
     if subject == "argan oil" and words(title) & {
         "soap", "zeep", "shampoo", "conditioner", "balm", "lotion", "blend", "gratis", "proefflesje",
@@ -312,7 +370,25 @@ def offer_match(term, identity, description="", variant=""):
 
 
 # Automatische categorieherkenning (Nederlands en Engels). Deelstrings van samenstellingen tellen mee.
+SUBJECT_CATEGORIES = {
+    "facial cleanser": ("beauty-care",),
+    "kitchen organizer": ("home-living",),
+    "cat feeder": ("pets",),
+    "pet accessories": ("pets",),
+    "bluetooth speaker": ("gadgets",),
+    "led lighting": ("smart-home", "home-living"),
+    "scarf": ("lifestyle-sport",),
+    "christmas lights": ("home-living",),
+}
+
+
+def pet_accessory(title):
+    return bool(words(title) & {"pet", "pets", "dog", "cat", "hond", "kat", "huisdier"}
+                and re.search(r"\b(?:accessories|collars?|leash(?:es)?|harness(?:es)?|toys?|beds?|bowls?|feeders?|carriers?|speeltjes?|voerbak)\b", title))
+
+
 CATEGORY_TERMS = {
+    "pets": ("pet", "dog", "cat", "honden", "katten", "huisdier", "voerbak", "halsband"),
     "gadgets": ("powerbank", "power bank", "oplader", "charger", "lader", "kabel", "cable", "usb", "bluetooth",
                 "koptelefoon", "headphone", "oordopje", "earbud", "speaker", "telefoon", "phone", "laptop",
                 "magsafe", "adapter", "toetsenbord", "keyboard", "muis", "mouse", "organizer", "tracker", "armband", "stekkerdoos"),
@@ -344,6 +420,9 @@ FALSE_CARRIERS = {
 def infer_categories(term):
     """Geeft de categorieën terug waarin een zoekterm waarschijnlijk valt. Leeg = onbekend (dan alles doorzoeken)."""
     text = normalize(term or "")
+    subjects = SUBJECT_CATEGORIES.get(subject_for(text))
+    if subjects:
+        return subjects
     found = []
     tokens = []
     for token in text.split():
@@ -358,7 +437,7 @@ def infer_categories(term):
             continue
         for hint in hints:
             plain = hint.replace(" ", "")
-            if (len(plain) >= 4 and (plain in flat)) or has_phrase(text, hint):
+            if (category != "pets" and len(plain) >= 4 and plain in flat) or has_phrase(text, hint):
                 found.append(category)
                 break
     return tuple(dict.fromkeys(found))

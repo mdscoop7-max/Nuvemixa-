@@ -5,7 +5,7 @@
 {% set planned_domain = 'NUVEMIXA.nl' if r.market in ('NL','BE','DE','FR','ES') else 'NUVEMIXA.com' %}
 <p>Gepland verkoopdomein voor {{ country }} · {{ planned_domain }}</p>
 <section class="panel">
-  <form method="get" action="{{ url_for('control') }}" class="nv-admin-form">
+  <form method="get" action="{{ url_for('control') }}" class="nv-admin-form" data-research-search data-search-phases="Markt en product openen...|Bronnen per land controleren...|Resultaten voorbereiden...">
     <input type="hidden" name="section" value="internationaal">
     <label>Verkoopmarkt<select name="market">{% for code, market in r.markets.items() %}
       <option value="{{ code }}"{% if code == r.market %} selected{% endif %}>{{ market[0] }} · {{ market[1] }}</option>

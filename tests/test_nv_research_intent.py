@@ -24,6 +24,15 @@ def test_domain_variants(query, english):
     assert any(english in variant.casefold() for variant in variants)
 
 
+def test_security_camera_search_excludes_replicas_unless_requested():
+    for query in ("security camera", "beveiligingscamera"):
+        for title in ("Dummy Beveiligingscamera Bullet - IP44", "Dummy Security Camera",
+                      "Fake Security Camera", "Decoy Security Camera"):
+            assert offer_match(query, title)[0] == ""
+        assert offer_match(query, "Outdoor Wireless Security Camera")[0] == "exact"
+    assert offer_match("dummy security camera", "Dummy Security Camera")[0] == "exact"
+
+
 def test_sizes_brand_formula_and_connector_stay_distinct():
     query = "NIVEA Soft Hydraterende Crème 200 ml"
     assert offer_match(query, "Nivea Soft Moisturiser 200ml")[0] == "exact"
@@ -111,3 +120,23 @@ def test_public_woocommerce_catalogue_accepts_only_its_own_product_links():
     assert [p["url"] for p in result["products"]] == [accepted_url]
     attempt = next(a for a in result["search_attempts"] if a["source"] == "Aurgan")
     assert attempt["raw"] == 2 and attempt["exact"] == 1
+
+
+def test_live_findings_speaker_parts_and_cleanser_oils_are_excluded():
+    rejected = [("Bluetooth-speaker", "Travel charger for bluetooth speaker"),
+                ("bluetooth speaker", "Bluetooth speaker mounting strap"),
+                ("bluetooth speaker", "Reislader voor JBL bluetooth speaker"),
+                ("Facial cleanser", "Facial cleansing oil 100ml"),
+                ("Facial cleanser", "Facial cleansing brush silicone"),
+                ("Security camera", "Dummy security camera with LED")]
+    for query, title in rejected:
+        assert offer_match(query, title)[0] == "", (query, title)
+    kept = [("bluetooth speaker", "Portable Bluetooth Speaker 10W"),
+            ("bluetooth speaker", "Bluetooth speaker with carrying strap"),
+            ("facial cleanser", "CeraVe Hydrating Facial Cleanser"),
+            ("Gezichtsreiniger", "Facial cleanser gel"),
+            ("Automatische kattenvoerbak", "Automatic cat feeder 4L"),
+            ("Keukenorganizer", "Kitchen organizer rack"),
+            ("power bank 10000mah", "Power bank charger 10000mAh")]
+    for query, title in kept:
+        assert offer_match(query, title)[0] == "exact", (query, title)

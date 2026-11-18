@@ -8,6 +8,12 @@ from test_nv_product_discovery import Response, catalogue, item
 
 
 class ProductResearchPageTests(unittest.TestCase):
+    def test_source_coverage_uses_the_selected_non_eu_market(self):
+        with patch("app.admin_is_authenticated", return_value=True), patch("nv_supplier_sources.coverage") as coverage:
+            response = app.test_client().get("/dashboard?section=onderzoek&research_country=CA")
+        self.assertEqual(response.status_code, 200)
+        coverage.assert_called_once_with("CA")
+
     def test_unauthenticated_requests_do_not_reach_any_source(self):
         with patch("nv_product_discovery.requests.get") as fetch:
             response = app.test_client().get("/dashboard?section=onderzoek&research_run=1&research_term=lamp")
@@ -37,9 +43,9 @@ class ProductResearchPageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         form = html.split('name="research_category"', 1)[1].split("</select>", 1)[0]
-        for name in ("Gadgets", "Smart Home", "Beauty &amp; Care", "Home &amp; Living", "Lifestyle &amp; Sport", "All products"):
+        for name in ("Gadgets", "Smart Home", "Beauty &amp; Care", "Home &amp; Living", "Lifestyle &amp; Sport", "Huisdieren", "All products"):
             self.assertIn(f">{name}</option>", form)
-        self.assertEqual(form.count("<option "), 6)
+        self.assertEqual(form.count("<option "), 7)
         self.assertIn('value="smart-home" selected', form)
         self.assertIn('value="BE" selected', html)
         self.assertIn('value="niche" selected', html)

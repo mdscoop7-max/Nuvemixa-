@@ -17,7 +17,7 @@ from flask import abort, flash, redirect, request, url_for
 from nv_dashboard_manager import admin, bp
 from nv_permissions import allowed
 
-CATEGORIES = ("gadgets", "beauty-care", "lifestyle-sport", "home-living", "smart-home")
+CATEGORIES = ("gadgets", "beauty-care", "lifestyle-sport", "home-living", "smart-home", "pets")
 EU = frozenset("NL BE DE FR ES IT PL AT PT IE SE DK FI CZ SK HU RO BG GR HR SI LT LV EE LU MT CY".split())
 RESEARCHED = "17-11-2026"
 

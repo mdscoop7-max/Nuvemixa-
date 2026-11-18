@@ -6,6 +6,8 @@ import time
 import urllib.error
 import urllib.request
 
+import nv_openai
+
 from flask import abort, current_app, flash, redirect, request, session, url_for
 
 from nuvemixa_admin_store import connect
@@ -22,13 +24,13 @@ ACTIONS = {
 
 
 def research_enabled():
-    return (os.getenv("NUVEMIXA_RESEARCH_AI", "").strip().lower() == "true"
-            and bool(os.getenv("OPENAI_API_KEY", "").strip()))
+    # Centrale configuratie: alleen OPENAI_API_KEY is nodig (NUVEMIXA_AI=off schakelt uit).
+    return nv_openai.configured()
 
 
 def choose_action(country, observations):
     data = {
-        "model": os.getenv("TRENDMIX_AI_MODEL", "gpt-4o-mini"),
+        "model": nv_openai.model(),
         "response_format": {"type": "json_object"},
         "messages": [
             {"role": "system", "content": "Choose one next dropshipping research step based on the supplied "
@@ -41,12 +43,7 @@ def choose_action(country, observations):
         "temperature": 0.2,
         "max_tokens": 160,
     }
-    query = urllib.request.Request("https://api.openai.com/v1/chat/completions",
-                                   method="POST", data=json.dumps(data).encode(),
-                                   headers={"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"].strip(),
-                                            "Content-Type": "application/json"})
-    with urllib.request.urlopen(query, timeout=7) as response:
-        result = json.loads(response.read(20_000))
+    result = nv_openai.post("chat/completions", data, timeout=7, max_bytes=20_000, estimate_usd=0.001)
     decision = json.loads(result["choices"][0]["message"]["content"])
     action = decision["action"]
     evidence = decision["evidence"]
@@ -86,7 +83,8 @@ def research_suggestion():
         observations = [dict(item, row_id=index) for index, item in enumerate(rows, 1)]
         session["nv_research_ai_at"] = now
         action, matches = choose_action(row["country"], observations)
-    except (OSError, ValueError, KeyError, IndexError, TypeError, RuntimeError, sqlite3.Error):
+    except (OSError, ValueError, KeyError, IndexError, TypeError, RuntimeError, sqlite3.Error,
+            nv_openai.AIUnavailable):
         current_app.logger.warning("Onderzoeksassistent niet beschikbaar")
         flash("AI-analyse is tijdelijk niet beschikbaar.", "error")
     else:

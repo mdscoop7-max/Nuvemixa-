@@ -47,11 +47,13 @@
 <section class="panel">
 <h2>{{ "Productafbeeldingen" if section == "afbeeldingen" else "Productcatalogus" }}</h2>
 <p>{{ filtered_products|length }} producten{% if search %} voor “{{ search }}”{% endif %}</p>
-<form method="get" action="/dashboard" class="nv-admin-form">
+<form method="get" action="/dashboard" class="nv-admin-form" role="search" data-research-search="Catalogus doorzoeken..." data-search-phases="Catalogus doorzoeken...|Resultaten voorbereiden...">
 <input type="hidden" name="section" value="{{ section }}">
 <label>Zoek product<input type="search" name="q" value="{{ search }}" maxlength="120"></label>
 <button type="submit">Zoeken</button>
+<p class="nv-search-progress" role="status"><span hidden></span></p>
 </form>
+{% if search and not filtered_products %}<p>Geen catalogusproducten voor deze zoekterm. Probeer de productnaam, het merk of een kortere zoekterm.</p>{% endif %}
 {% if section == "producten" and allowed("product_add") %}
 <details class="panel-after"><summary>Product toevoegen</summary>
 <form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
@@ -65,7 +67,10 @@
 <p><a href="{{ product.product_url }}?dashboard_from={{ section }}">Bekijk productpagina</a> · Voorraadstatus {{ stock_labels.get(product.stock_status, 'Onbekend') }}{% if product.stock_quantity is not none %} · {{ product.stock_quantity }} stuks{% endif %}</p>
 {% if section == "afbeeldingen" %}
 {% for image in product.images %}
-<a href="{{ image }}" target="_blank" rel="noopener noreferrer"><img src="{{ image }}" alt="{{ product.name }} · afbeelding {{ loop.index }}" width="88" height="88" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="object-fit:contain"></a>
+<span>
+  <a href="{{ image }}" target="_blank" rel="noopener noreferrer"><img data-dashboard-catalog-image src="{{ image }}" alt="{{ product.name }} · afbeelding {{ loop.index }}" width="88" height="88" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="object-fit:contain"></a>
+  <small hidden>Afbeelding {{ loop.index }} is niet beschikbaar.</small>
+</span>
 {% endfor %}
 {% if allowed("image_manage") %}
 <form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">

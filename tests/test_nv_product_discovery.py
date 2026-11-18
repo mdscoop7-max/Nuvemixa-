@@ -6,13 +6,14 @@ from unittest.mock import Mock
 import unittest
 
 import requests
+import pytest
 
 from nv_product_discovery import COUNTRIES, EMPTY_RESULTS, MODES, discover, product_matches
 from nv_research_sources import CJ_PRODUCT, syncee_product_details
 
 CATEGORIES = {
     "gadgets": "Gadgets", "smart-home": "Smart Home", "beauty-care": "Beauty & Care",
-    "home-living": "Home & Living", "lifestyle-sport": "Lifestyle & Sport",
+    "home-living": "Home & Living", "lifestyle-sport": "Lifestyle & Sport", "pets": "Huisdieren",
 }
 TERM = "Magnetische powerbank 10000mAh"
 SYNCEE_PRODUCT = "https://syncee.com/product/253317_83365_123/powerbank-magnetic-10000mah"
@@ -51,6 +52,119 @@ def editorial_card(url, title, summary, published=None):
         f'<article><header>Published <time datetime="{published}T12:00:00Z">Today</time></header>'
         f'<p class="synopsis">{summary}</p></article></a>'
     )
+
+
+def test_beauty_research_excludes_tv_show_reviews_and_viewing_guides():
+    from nv_research_sources import publication_candidates
+
+    product = "https://www.techradar.com/tech-events/beauty-led-mask"
+    page = "".join((
+        editorial_card("https://www.techradar.com/streaming/hulu/the-beauty-fx-review",
+                       "The Beauty review", "Beauty streaming show review"),
+        editorial_card("https://www.techradar.com/how-to-watch/tv-shows/the-beauty",
+                       "How to watch The Beauty", "Beauty release schedule"),
+        editorial_card(product, "Beauty LED mask", "Silicone skincare mask"),
+    )).encode()
+    candidates = list(publication_candidates(None, "beauty", "NL", "nl", lambda *a, **k: page))
+    assert [article["url"] for article in candidates] == [product]
+
+
+@pytest.mark.parametrize(("terms", "title", "category"), [
+    (("Gezichtsreiniger", "Facial cleanser"), "Gentle Face Wash 120 ml", "beauty-care"),
+    (("Keukenorganizer", "Kitchen organizer"), "Kitchen Organiser 2 Tier", "home-living"),
+    (("Automatische kattenvoerbak", "Automatic cat feeder"), "Smart Automatic Cat Feeder 4 L", "pets"),
+    (("Bluetooth speaker", "Bluetooth luidspreker"), "Bluetooth Speaker", "gadgets"),
+    (("Yogamat", "Yoga mat"), "Natural Yoga Mat", "lifestyle-sport"),
+    (("LED-verlichting", "LED lighting"), "Dimmable LED Light Strip", "smart-home"),
+    (("Huisdierenaccessoires", "Pet accessories"), "Reflective Dog Collar", "pets"),
+    (("Zijden sjaal", "Silk scarf"), "Silk Scarf", "lifestyle-sport"),
+    (("Kerstverlichting", "Christmas lights"), "Outdoor Christmas String Lights", "home-living"),
+])
+def test_bilingual_supplier_search_with_region_filters(terms, title, category):
+    def fetch(url, **kwargs):
+        if url.startswith("https://syncee.com/collections/"):
+            return Response(syncee_card(title) * 2)
+        if url == SYNCEE_PRODUCT:
+            return Response(syncee_details(["NL"], title))
+        raise AssertionError(url)
+
+    for term in terms:
+        all_results = discover(term, mode="dropship", categories=CATEGORIES, platforms=["Productcatalogi"], fetch=fetch)
+        company, = all_results["suppliers"]
+        assert company["origin"] == "AU"
+        assert company["dropshipping"] is True
+        assert company["shipping_nl"] == "Bevestigd"
+        product, = company["products"]
+        assert product["category"] == category
+        assert product["url"] == SYNCEE_PRODUCT
+
+        eu = discover(term, mode="dropship", categories=CATEGORIES, platforms=["Productcatalogi"],
+                      fetch=fetch, supplier_filter="eu")
+        assert not eu["suppliers"]
+
+
+@pytest.mark.parametrize(("term", "title"), [
+    ("Bluetooth speaker", "Bluetooth Speaker Case"),
+    ("Bluetooth speaker", "Wireless Speaker for FM Radio"),
+    ("Automatische kattenvoerbak", "Gravity Cat Feeder"),
+    ("Gezichtsreiniger", "Facial Cleansing Brush"),
+    ("Keukenorganizer", "Cable Organizer"),
+    ("Huisdierenaccessoires", "Cat Food"),
+    ("LED-verlichting", "Desktop Speaker with LED Lighting"),
+    ("LED-verlichting", "Makeup Mirror With LED Lighting"),
+])
+def test_unrelated_offers_are_rejected(term, title):
+    assert not product_matches(term, title)
+
+
+def test_speaker_brand_in_catalogue_description_requires_matching_model_and_self_identification():
+    term = "Anker Soundcore Bluetooth speaker"
+    assert product_matches(term, "Bluetooth speaker Soundcore", term)
+    assert not product_matches(term, "Bluetooth speaker Soundcore", "Geschikt voor " + term)
+    assert not product_matches(term, "Bluetooth speaker JBL", term)
+    assert product_matches("bluetooth speaker case", "Bluetooth speaker case")
+
+
+@pytest.mark.parametrize(("term", "category", "seed"), [
+    ("Sportproducten", "lifestyle-sport", "yoga mat"),
+    ("Sports products", "lifestyle-sport", "yoga mat"),
+    ("Beautyproducten", "beauty-care", "serum"),
+    ("Beauty products", "beauty-care", "serum"),
+])
+def test_category_keywords_use_the_matching_catalogue(term, category, seed):
+    searched = []
+
+    def fetch(url, **kwargs):
+        searched.append((url, kwargs["params"]))
+        return Response(catalogue())
+
+    result = discover(term, mode="wholesale", categories=CATEGORIES, platforms=["Productcatalogi"], fetch=fetch)
+    assert result["term"] == term
+    assert result["interpretation"]["categories"] == [CATEGORIES[category]]
+    assert seed in result["interpretation"]["queries"]
+    if category == "lifestyle-sport":
+        assert any(params.get("q") == seed for _, params in searched)
+
+
+def test_eu_search_tries_synonyms_after_non_eu_results():
+    eu_url = SYNCEE_PRODUCT.replace("253317", "279866")
+    title = "Kitchen Organizer"
+
+    def fetch(url, **kwargs):
+        if url == eu_url:
+            return Response(syncee_details(["NL"], title).replace(b"253317", b"279866"))
+        if "search=kitchen%20organiser" in url:
+            return Response(syncee_card(title).replace(b"253317", b"279866")
+                            .replace(b"NNE Living", b"Golden Pigs"))
+        if url.startswith("https://syncee.com/collections/"):
+            return Response(syncee_card(title))
+        raise AssertionError(url)
+
+    result = discover("Kitchen organizer", mode="dropship", categories=CATEGORIES, platforms=["Productcatalogi"],
+                      fetch=fetch, supplier_filter="eu")
+    company, = result["suppliers"]
+    assert company["origin"] == "RO"
+    assert company["products"][0]["url"] == eu_url
 
 
 class Response:
@@ -183,7 +297,7 @@ class DiscoveryTests(unittest.TestCase):
         def fetch(url, **kwargs):
             if url == "https://www.techradar.com/search":
                 return Response(feed)
-            if url == "https://9to5mac.com/":
+            if url in {"https://9to5mac.com/", "https://trends.google.com/trending/rss"}:
                 return Response(b"<rss><channel/></rss>")
             if url == "https://www.androidcentral.com/search":
                 return Response()
@@ -231,7 +345,7 @@ class DiscoveryTests(unittest.TestCase):
         fetch = Mock()
         for country in COUNTRIES:
             result = self.search("lamp", country=country, platforms=["Google", "TikTok"], fetch=fetch)
-            self.assertEqual([name for name, _ in result["links"]], ["Google", "TikTok"])
+            self.assertEqual([name for name, _ in result["links"]], ["Google", "TikTok", "TikTok Creative Center"])
             self.assertIn(f"gl={country}", result["links"][0][1])
             self.assertEqual(result["products"], [])
         for kwargs in ({"category": "unknown"}, {"country": "unknown"}, {"mode": "unknown"},

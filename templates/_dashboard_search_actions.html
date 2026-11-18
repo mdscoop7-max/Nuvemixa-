@@ -1,0 +1,12 @@
+{% macro research_product_actions(item, source) %}
+<form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-save">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="titel" value="{{ item.title[:120] }}">
+  <input type="hidden" name="bron_url" value="{{ item.url }}">
+  <input type="hidden" name="bron_naam" value="{{ source[:80] }}">
+  <input type="hidden" name="leverancier" value="{{ source[:120] }}">
+  <input type="hidden" name="categorie" value="{{ item.category }}">
+  <button type="submit">Bewaar als conceptproduct</button>
+</form>
+<a href="{{ url_for('control', section='onderzoek', margin_product=item.title[:120], _anchor='nv-product-margin') }}">Bereken marge voor dit product</a>
+{% endmacro %}

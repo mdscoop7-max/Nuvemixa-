@@ -19,6 +19,7 @@ from flask import abort, current_app, jsonify, request, session
 from nv_dashboard_manager import bp
 from nv_permissions import allowed
 from nv_product_dossier import MARKETS
+import nv_openai
 from nv_supplier_finder import DIRECTORIES, EU, search_configured, source
 
 CATEGORIES = ("Gadgets", "Smart Home", "Beauty & Care", "Home & Living", "Lifestyle & Sport")
@@ -157,7 +158,7 @@ def call_openai(values, rows):
     destination = values["country"] or ("EU" if values["eu_only"] else "any")
     wish = " Prefer suppliers that mention WooCommerce or Sell The Trend integrations." if values["prefer_woo"] else ""
     data = {
-        "model": os.environ["NUVEMIXA_SUPPLIER_SEARCH_MODEL"].strip(), "store": False,
+        "model": nv_openai.search_model(), "store": False,
         "max_tool_calls": 3, "max_output_tokens": 450,
         "tools": [{"type": "web_search", "filters": {"allowed_domains": domains}, "search_context_size": "low"}],
         "tool_choice": {"type": "web_search"},
@@ -171,8 +172,20 @@ def call_openai(values, rows):
                                  headers={"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"].strip(),
                                           "Content-Type": "application/json"},
                                  data=json.dumps(data).encode())
-    with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as reply:
-        raw = reply.read(120_000)
+    nv_openai.reserve(0.08)  # centrale kostenbewaking (gedeeld met alle AI-zoekfuncties)
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as reply:
+            raw = reply.read(120_000)
+    except BaseException:
+        nv_openai.settle(0.08, 0.0)
+        raise
+    try:
+        parsed = json.loads(raw) if raw.strip() else {}
+        calls = sum(1 for item in parsed.get("output", []) or [] if isinstance(item, dict)
+                    and item.get("type") == "web_search_call")
+        nv_openai.settle(0.08, nv_openai.cost(data["model"], parsed.get("usage"), calls))
+    except (ValueError, AttributeError):
+        nv_openai.settle(0.08, 0.02)
     if not raw.strip():
         raise ValueError("leeg")
     try:
@@ -240,6 +253,8 @@ def run_search(values, rows):
         return failure("empty" if str(exc) == "leeg" else "invalid_json", text, 503)
     except OSError:
         return failure("network", "De AI-dienst is niet bereikbaar.", 503)
+    except nv_openai.AIUnavailable as exc:
+        return failure("limit", exc.message, 429)
     received, found = extract_cited(response, domains)
     by_domain = {urlsplit(row[2]).hostname.removeprefix("www."): row for row in rows}
     results = [card_for(by_domain[domain], found[domain]) for domain in domains if domain in found][:3]
@@ -260,8 +275,8 @@ def supplier_ai_search():
     if error:
         return failure("invalid", error, 400)
     if not search_configured():
-        return failure("not_configured", "AI-configuratie ontbreekt: stel OPENAI_API_KEY en "
-                       "NUVEMIXA_SUPPLIER_SEARCH_MODEL in op Render. Er is niets verzonden.", 503)
+        return failure("not_configured", "AI-configuratie ontbreekt: stel OPENAI_API_KEY in op Render. "
+                       "Er is niets verzonden.", 503)
     rows = select_sources(values)
     if not rows:
         return failure("no_sources", "Er is geen gecontroleerde bron voor deze combinatie van land en filters. "

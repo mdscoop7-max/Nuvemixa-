@@ -1191,8 +1191,8 @@ def admin_configured():
 from nv_woo_bridge import (
     CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
-COUNTRY_CODES_FALLBACK = frozenset(('NL','BE','DE','FR','ES','IT','PL','AT','PT','IE','GB','US','SE','DK','FI'))
 import nv_supplier_sources
+import nv_research_period
 import nv_partners
 import nv_concepts
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
@@ -2216,7 +2216,21 @@ def control():
         abort(403)
     search = request.args.get("q", "").strip()[:120]
 
-    filtered_products = filter_products(all_products, search=search) if search else all_products
+    filtered_products = all_products
+    if search and section in {"producten", "afbeeldingen"}:
+        from nv_research_intent import matches, normalize, offer_match, subject_for
+
+        subject = subject_for(normalize(search))
+        if subject:
+            filtered_products = [product for product in all_products if any(
+                offer_match(search, title, product.get("description") or "")[0] == "exact"
+                for title in (product.get("name"), product.get("en_name")) if title
+            )]
+        else:
+            raw_matches = {id(product) for product in filter_products(all_products, search=search)}
+            filtered_products = [product for product in all_products if id(product) in raw_matches or matches(
+                search, " ".join(str(product.get(key) or "") for key in ("name", "en_name", "brand", "category_name", "sku"))
+            )]
 
 
 
@@ -2241,26 +2255,34 @@ def control():
 
     research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
     product_margin = None
+    margin_scenario = None
     product_margin_error = None
     if section == "onderzoek" and request.args.get("margin_run") == "1":
-        from nv_product_margin import automatic_margin
+        from nv_product_margin import automatic_margin, calculate_margin
         try:
-            product_margin = automatic_margin(request.args.get("purchase_cost", ""))
+            if request.args.get("margin_method") == "scenario":
+                margin_scenario = calculate_margin(request.args)
+            else:
+                product_margin = automatic_margin(request.args.get("purchase_cost", ""))
         except ValueError as exc:
             product_margin_error = str(exc)
     product_discovery = None
+    source_coverage = None
     research_options = {}
     if section == "onderzoek":
-        from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, discover
+        from nv_product_discovery import (
+            ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, RESEARCH_CATEGORIES, SUPPLIER_MODES, discover,
+        )
 
-        research_categories = {slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}
+        research_categories = {**{slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}, **RESEARCH_CATEGORIES}
         research_category = request.args.get("research_category", ALL_PRODUCTS)
         research_mode = request.args.get("research_mode", "products")
         research_country = request.args.get("research_country", "NL")
+        source_coverage = nv_supplier_sources.coverage(research_country if research_country in COUNTRIES else "NL")
         research_platforms = [
             "Publicaties" if value == "Bing" else value for value in request.args.getlist("research_platform")
         ]
-        research_filter = request.args.get("research_supplier_filter", "all")
+        research_filter = request.args.get("research_supplier_filter", "eu" if research_mode in SUPPLIER_MODES else "all")
         research_options = {
             "categories": {**research_categories, ALL_PRODUCTS: "All products"},
             "countries": COUNTRIES,
@@ -2273,13 +2295,30 @@ def control():
             "empty_message": EMPTY_RESULTS,
             "supplier_filters": FILTERS,
             "supplier_filter": research_filter,
+            "periods": nv_research_period.CHOICES,
+            "period": request.args.get("research_period", "slim"),
+            # Schakelaar: verborgen '0' plus aangevinkte '1'. Zonder AI-configuratie toont ai_discover zelf 'uit'.
+            "ai_enabled": (request.args.get("research_run") != "1" or "1" in request.args.getlist("research_ai")
+                           or "research_ai" not in request.args or not __import__("nv_openai").configured()),
+            "block": request.args.get("research_block", "product"),
         }
         if request.args.get("research_run") == "1":
-            product_discovery = discover(
-                request.args.get("research_term", ""), country=research_country, mode=research_mode,
-                platforms=research_platforms, category=research_category, categories=research_categories,
-                supplier_filter=research_filter,
-            )
+            from nv_ai_search import ai_discover
+            period_days, period_label = nv_research_period.resolve(research_options["period"], research_mode)
+            search_args = dict(country=research_country, mode=research_mode, platforms=research_platforms,
+                               category=research_category, categories=research_categories,
+                               supplier_filter=research_filter)
+            if research_options["ai_enabled"]:
+                product_discovery = ai_discover(request.args.get("research_term", ""), **search_args)
+            else:
+                product_discovery = discover(request.args.get("research_term", ""), **search_args)
+                if isinstance(product_discovery, dict) and not product_discovery.get("error"):
+                    product_discovery["ai"] = {"state": "off", "label": "AI uitgezet", "removed": 0,
+                                               "message": "AI is voor deze zoekopdracht uitgezet; normaal zoeken.",
+                                               "keywords_en": [], "keywords_nl": [], "category": "", "used_query": ""}
+            if isinstance(product_discovery, dict) and not product_discovery.get("error"):
+                product_discovery["period"] = {**nv_research_period.apply(product_discovery, period_days),
+                                               "label": period_label}
 
 
     order_rows, order_error = (recent_woo_orders() if section in ("bestellingen", "administratie") else (None, None))
@@ -2400,6 +2439,7 @@ def control():
         supplier_rows=supplier_rows,
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
+        ai_status=__import__('nv_openai').status(),
 
         supplier_error=supplier_error,
 
@@ -2407,11 +2447,12 @@ def control():
 
         research_error=research_error,
         product_discovery=product_discovery,
-        concept_view=nv_concepts.view() if section == 'concepten' and is_admin else None,
+        concept_view=nv_concepts.view(request.args.get("concept_q", "")) if section == 'concepten' and is_admin else None,
         partner_view=nv_partners.view(request.args) if section == 'partners' else None,
-        source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
+        source_coverage=source_coverage,
         source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
+        margin_scenario=margin_scenario,
         product_margin_error=product_margin_error,
         research_options=research_options,
 

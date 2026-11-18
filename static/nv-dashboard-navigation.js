@@ -1,4 +1,14 @@
 (() => {
+  for (const image of document.querySelectorAll('[data-dashboard-catalog-image]')) {
+    const showFailure = () => {
+      const link = image.parentElement;
+      link.hidden = true;
+      link.nextElementSibling.hidden = false;
+    };
+    image.addEventListener('error', showFailure, { once: true });
+    if (image.complete && !image.naturalWidth) showFailure();
+  }
+
   const copyCoupon = document.querySelector('[data-copy-coupon]');
   if (copyCoupon) {
     const code = document.querySelector('#nv-created-coupon');
@@ -39,6 +49,8 @@
       entries[next].focus();
     });
   }
+  // Zoekbalken: zie nv-search-meter.js (zoekmeter met fasen, dubbelklikbeveiliging en herstel).
+
   const forms = [...document.querySelectorAll('main form[method="post"]')];
   const dirty = new Set();
   const submitting = new WeakSet();

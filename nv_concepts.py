@@ -20,6 +20,7 @@ from nv_dashboard_manager import admin, bp
 
 PREFIX = "[Concept] "
 CATEGORY_NAMES = {"gadgets": "Gadgets", "beauty-care": "Beauty & Care", "lifestyle-sport": "Lifestyle & Sport",
+                  "pets": "Huisdieren",
                   "home-living": "Home & Living", "smart-home": "Smart Home"}
 STATUSES = {"nieuw": "Nieuw", "beoordelen": "In beoordeling", "geselecteerd": "Geselecteerd voor publicatievoorbereiding",
             "afgewezen": "Afgewezen"}
@@ -182,10 +183,10 @@ def set_status(concept_id, status):
 
 
 def to_candidate(concept):
-    """Vorm die nv_publicatie verwacht. Ontbrekende gegevens blijven 0/leeg zodat de controles ze als fout tonen."""
+    """Behoud bij verzendkosten het onderscheid tussen onbekend en gratis."""
     return {"sku": concept["sku"], "titel": concept["titel"], "beschrijving": concept["beschrijving"],
             "afbeeldingen": list(concept["afbeeldingen"]), "inkoop": concept["inkoop"] or 0,
-            "verzend": concept["verzend"] or 0, "verkoop": concept["verkoop"] or 0,
+            "verzend": concept["verzend"], "verkoop": concept["verkoop"] or 0,
             "leverancier": concept["leverancier"], "categorie": concept["categorie"], "bron": "concept"}
 
 
@@ -198,17 +199,24 @@ def candidate_by_sku(sku):
     return selected_candidates().get(str(sku))
 
 
-def view():
+def view(query=""):
     import nv_publicatie
+    from nv_research_intent import matches
+
+    query = query.strip()[:100]
     existing, bron, _fout = nv_publicatie.existing_products()
     rows = []
     for concept in list_concepts():
+        if query and not matches(query, " ".join(
+            str(concept.get(key) or "") for key in ("titel", "categorie", "leverancier", "sku")
+        )):
+            continue
         candidate = to_candidate(concept)
         steps = nv_publicatie.check(candidate, existing)
         rows.append({**concept, "marge": nv_publicatie.margin(candidate) if candidate["verkoop"] and candidate["inkoop"] else None,
                      "controle": steps, "fouten": [s["stap"] for s in nv_publicatie.blocking(steps)],
                      "checks_klaar": sum(1 for k in CHECKS if concept["checks"].get(k))})
-    return {"concepten": rows, "statuses": STATUSES, "checks": CHECKS, "categories": CATEGORY_NAMES,
+    return {"concepten": rows, "query": query, "statuses": STATUSES, "checks": CHECKS, "categories": CATEGORY_NAMES,
             "bron": bron, "min_marge": nv_publicatie.MIN_MARGE,
             "permanent": nv_dashboard_postgres.runtime_enabled()}
 

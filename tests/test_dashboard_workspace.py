@@ -112,6 +112,14 @@ def isolated_research(administrator, monkeypatch, tmp_path):
     return administrator, candidate
 
 
+def test_saved_viral_search_opens_results(isolated_research):
+    admin, _ = isolated_research
+    result = admin.get("/dashboard?section=viral&candidate_q=organizer").get_data(as_text=True)
+    assert 'class="panel nv-manual-block" open' in result and "Fixture organizer" in result
+    unmatched = admin.get("/dashboard?section=viral&candidate_q=yogamat").get_data(as_text=True)
+    assert "Fixture organizer" not in unmatched
+
+
 def test_dossier_retains_offers_and_never_approves_retailer(isolated_research):
     admin, candidate = isolated_research
     form = {"_csrf_token": CSRF_TOKEN, "candidate": candidate, "market": "NL",

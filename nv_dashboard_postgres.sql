@@ -106,4 +106,12 @@ CREATE TABLE IF NOT EXISTS supplier_comparisons (
     payload text NOT NULL, PRIMARY KEY (candidate_id, market, supplier_key)
 );
 
+-- Interne AI-kostenteller (maand 'YYYY-MM' en dag 'YYYY-MM-DD'); overleeft herstarts.
+-- De applicatierol heeft hier SELECT, INSERT en UPDATE nodig.
+CREATE TABLE IF NOT EXISTS ai_usage (
+    period text PRIMARY KEY,
+    usd double precision NOT NULL DEFAULT 0,
+    calls integer NOT NULL DEFAULT 0
+);
+
 COMMIT;

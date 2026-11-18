@@ -78,6 +78,10 @@ def test_postgres_bewaart_concept_status_en_kandidaat_over_aparte_processen():
             with s.connect() as db:
                 assert db.execute("SELECT 1 FROM suppliers WHERE name=?", ("PG proef kandidaat " + sys.argv[2],)).fetchone()
     """)
+    # Wegwerpdatabase: eerst het (idempotente, niet-destructieve) dashboardschema toepassen.
+    import psycopg
+    with psycopg.connect(PG, autocommit=True) as db:
+        db.execute((ROOT / "nv_dashboard_postgres.sql").read_text(encoding="utf-8"))
     env = {**os.environ, "NUVEMIXA_DASHBOARD_BACKEND": "postgres", "NUVEMIXA_DASHBOARD_DATABASE_URL": PG, "PYTHONPATH": str(ROOT)}
     run = uuid.uuid4().hex[:8]
     for fase in ("schrijf", "lees"):

@@ -5,6 +5,7 @@ import re
 import pytest
 import requests
 from test_system_check import administrator, CSRF_TOKEN  # noqa: F401
+from test_nv_product_discovery import Response, SYNCEE_PRODUCT, syncee_card, syncee_details
 from zoek_fixture import maak_fetch
 
 import app as dashboard
@@ -46,6 +47,34 @@ def test_onderzoeksresultaat_naar_concept_neemt_alleen_bekende_gegevens_over(adm
     c = nc.list_concepts()[0]
     assert c["inkoop"] is None and c["verkoop"] is None and c["beschrijving"] == "" and c["afbeeldingen"] == []
     assert c["status"] == "nieuw" and c["sku"].startswith("NV-")
+
+
+def test_leveranciersresultaat_wordt_ongepubliceerd_huisdierenconcept(administrator, storage_tmp, monkeypatch):
+    title = "Automatic Cat Feeder"
+
+    def fetch(url, **kwargs):
+        if url == SYNCEE_PRODUCT:
+            return Response(syncee_details(["NL"], title))
+        assert url.startswith("https://syncee.com/collections/")
+        return Response(syncee_card(title))
+
+    monkeypatch.setattr(requests, "get", fetch)
+    response = administrator.get("/dashboard", query_string={
+        "section": "onderzoek", "research_run": 1, "research_term": "Automatische kattenvoerbak",
+        "research_mode": "dropship", "research_platform": "Productcatalogi", "research_supplier_filter": "all",
+    })
+    assert response.status_code == 200
+    html = response.get_data(as_text=True).split('id="nv-research-suppliers"', 1)[1]
+    form = re.search(r'<form [^>]*class="nv-concept-save">(.*?)</form>', html, re.S)[1]
+    fields = dict(re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)"', form))
+    saved = administrator.post("/dashboard/concepten/nieuw", data=fields)
+    assert saved.status_code == 303
+    concept, = nc.list_concepts()
+    assert concept["status"] == "nieuw"
+    assert (concept["titel"], concept["categorie"], concept["bron_url"]) == (title, "Huisdieren", SYNCEE_PRODUCT)
+    assert concept["inkoop"] is None and concept["verkoop"] is None
+    assert title in administrator.get("/dashboard?section=concepten&concept_q=kattenvoerbak").get_data(as_text=True)
+    assert title not in administrator.get("/dashboard?section=concepten&concept_q=yogamat").get_data(as_text=True)
 
 
 def test_concept_zonder_prijzen_blokkeert_publicatievoorbereiding(administrator, storage_tmp):
