@@ -81,3 +81,65 @@ main section.nv27-home h2.nv27-sec{font-size:.8rem;line-height:1.2;margin:4px 0 
   .nv27-home .nv27-flow a{min-height:48px}
 }
 @media(max-width:520px){.nv27-home .nv27-card a.go{align-self:flex-start;white-space:nowrap}}
+
+/* ===== Alle secties: compact en consistent (ontwerp v2) ===== */
+body.nv-admin-ui main h1{font-size:1.6rem;line-height:1.15}
+body.nv-admin-ui main .panel{padding:16px 18px;border-radius:14px}
+body.nv-admin-ui main .panel + .panel{margin-top:12px}
+body.nv-admin-ui main .panel > h2{font-size:1.08rem;margin:0 0 8px}
+body.nv-admin-ui main .panel h3{font-size:.98rem}
+body.nv-admin-ui main .nv-honest-note,body.nv-admin-ui main .nv-ai-state{font-size:.84rem;line-height:1.45;padding:8px 12px;margin:6px 0}
+body.nv-admin-ui main .nv-admin-form{gap:10px}
+body.nv-admin-ui main .nv-admin-form label{font-size:.82rem;font-weight:700}
+body.nv-admin-ui main form select,body.nv-admin-ui main form input:not([type=checkbox]):not([type=radio]):not([type=hidden]),body.nv-admin-ui main form textarea{
+  min-height:38px;padding:7px 10px;font-size:.9rem;border-radius:10px}
+body.nv-admin-ui main form button[type=submit],body.nv-admin-ui main form button:not([type]){
+  min-height:36px;padding:7px 16px;font-size:.88rem;border-radius:999px;line-height:1.2}
+body.nv-admin-ui main a.nv-blue-action,body.nv-admin-ui main .nv-action-row a{
+  min-height:32px;padding:5px 12px;font-size:.82rem;border-radius:999px}
+body.nv-admin-ui main .nv-research-search input,body.nv-admin-ui main .nv-research-search button{min-height:40px}
+body.nv-admin-ui main .nv-research-search{gap:8px}
+
+/* Productonderzoek: drie blokken */
+.nv-research-blocks{display:grid;gap:12px;margin-top:10px}
+.nv-rblock{position:relative;border:1px solid #e3eaf4;border-radius:12px;background:#fff;padding:12px 14px;display:grid;gap:10px;box-shadow:0 1px 2px #0f2a4f0d}
+.nv-rblock--info{background:#f8fafd}
+.nv-rblock__title{margin:0;display:flex;align-items:center;gap:8px;font-size:.95rem;color:#0b2a55}
+.nv-rblock__title span{display:grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#0757bd;color:#fff;font-size:.75rem}
+.nv-rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(190px,100%),1fr));gap:8px 10px;align-items:end}
+.nv-rgrid label{display:grid;gap:4px;margin:0}
+.nv-ai-toggle{display:flex!important;align-items:center;gap:8px;min-height:38px;padding:6px 10px;border:1px solid #e3eaf4;border-radius:10px;background:#f8fafd}
+.nv-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:6px;border:0;padding:0;margin:0}
+.nv-pchip{display:flex!important;align-items:center;gap:8px;padding:6px 10px;border:1px solid #e3eaf4;border-radius:10px;background:#fff;cursor:pointer;min-height:42px}
+.nv-pchip span{display:grid;line-height:1.15}
+.nv-pchip b{font-size:.84rem;color:#0b2a55}
+.nv-pchip small{font-size:.7rem;font-weight:600;color:#64748b}
+.nv-pchip--live{border-left:3px solid #0f9d8a}.nv-pchip--trend{border-left:3px solid #6a4fd6}.nv-pchip--link{border-left:3px solid #cbd5e1}
+.nv-pchip:has(input:checked){background:#f2f7ff;border-color:#bcd2f3}
+.nv-inline-select{display:flex!important;align-items:center;gap:8px;max-width:280px}
+.nv-rnote{margin:0;font-size:.8rem;color:#5b6b81}
+.nv-rperiod{margin:0;padding-left:1.1rem;font-size:.84rem;color:#334155;display:grid;gap:3px}
+.nv-rperiod-used{margin:0;font-size:.84rem;padding:6px 10px;border-radius:8px;background:#eef4ff;color:#0b2a55}
+.nv-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Aanraakschermen: klikvlakken minimaal 44 px */
+@media(pointer:coarse),(max-width:760px){
+  body.nv-admin-ui main form button[type=submit],body.nv-admin-ui main form button:not([type]),
+  body.nv-admin-ui main a.nv-blue-action,body.nv-admin-ui main .nv-action-row a,
+  body.nv-admin-ui main form select,body.nv-admin-ui main form input:not([type=checkbox]):not([type=radio]):not([type=hidden]){min-height:44px}
+  .nv-pchip,.nv-ai-toggle{min-height:44px}
+}
+/* Blokken: eigen indeling, los van het oudere formulierraster */
+body.nv-admin-ui main form.nv-rblock{display:flex!important;flex-direction:column;align-items:stretch;gap:10px;grid-template-columns:none}
+body.nv-admin-ui main form.nv-rblock > *{grid-column:auto;width:auto;max-width:none;margin:0}
+body.nv-admin-ui main .nv-rblock .nv-research-search{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end}
+body.nv-admin-ui main .nv-rblock .nv-research-search label{display:grid;gap:4px}
+body.nv-admin-ui main .nv-rblock .nv-rgrid select{width:100%}
+body.nv-admin-ui main .nv-rblock .nv-pgrid{display:grid!important;min-width:0}
+body.nv-admin-ui main .nv-rblock .nv-pchip{margin:0;background:#fff;font-weight:600}
+body.nv-admin-ui main .nv-rblock .nv-pchip input{width:16px;height:16px;flex:none;margin:0}
+body.nv-admin-ui main .nv-rblock .nv-inline-select select{width:auto;min-width:140px}
+@media(max-width:520px){body.nv-admin-ui main .nv-rblock .nv-research-search{grid-template-columns:minmax(0,1fr)}}
+body.nv-admin-ui main .nv-rblock fieldset.nv-pgrid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(min(165px,100%),1fr))!important;width:100%;inline-size:100%;min-inline-size:0}
+body.nv-admin-ui main .nv-rblock fieldset.nv-pgrid > label{width:auto}
+body.nv-admin-ui main .nv-research-blocks > form,body.nv-admin-ui main .nv-research-blocks > div{margin:0!important}

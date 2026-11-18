@@ -75,9 +75,9 @@
       <label>Productcategorie<select name="mcat"><option value="shop">Alle categorieën</option>{% for slug, name in m.categories.items() %}<option value="{{ slug }}"{% if m.form.category == slug %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label>Leverancier<select name="mregio">{% for key, name in m.regions.items() %}<option value="{{ key }}"{% if m.form.region == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label>Soort leverancier<select name="mtype">{% for key, name in m.supplier_types.items() %}<option value="{{ key }}"{% if m.form.supplier_type == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Periode<select name="mperiode">{% for key, name in m.periods.items() %}<option value="{{ key }}"{% if m.form.period == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       {% if viral_page %}
       <label>Bron<select name="mbron">{% for key, name in m.sources.items() %}<option value="{{ key }}"{% if m.form.source == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
-      <label>Periode<select name="mperiode">{% for key, name in m.periods.items() %}<option value="{{ key }}"{% if m.form.period == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label class="nv-checkbox"><input type="checkbox" name="mgoogle" value="1"{% if m.form.google_trends %} checked{% endif %}> Actuele zoektrends uit Google Trends</label>
       {% endif %}
       <label class="nv-checkbox"><input type="checkbox" name="mnl" value="1"{% if m.form.ships_nl %} checked{% endif %}> Verzending naar Nederland bevestigd</label>
@@ -97,6 +97,7 @@
     {% if m.all_failed %}<p class="notice" role="alert"><strong>Externe bronnen niet bereikbaar.</strong> Er is niets doorzocht dat resultaten kon geven; dit is geen bewijs dat het product niet bestaat. Probeer het later opnieuw.</p>{% endif %}
     {{ pending_notice(m.pending_sources) }}
 {% with ai = m.ai %}{% include "_dashboard_ai_status.html" %}{% endwith %}
+{% if m.period_label %}<p class="nv-rperiod-used">Periode: {{ m.period_label }}</p>{% endif %}
 {% if m.interpretation %}<p class="nv-market-note"><strong>Zo zoekt NUVEMIXA:</strong> {{ m.interpretation.queries|join(' · ') }}{% if m.interpretation.categories %} — categorie{{ 'ën' if m.interpretation.categories|length > 1 }}: {{ m.interpretation.categories|join(', ') }}{% if m.interpretation.automatic %} (automatisch herkend){% endif %}{% endif %}</p>{% endif %}
     {% if m.unavailable %}<p class="notice">Niet volledig beschikbaar: {% for name in m.unavailable %}{{ name }}{% if m.unavailable_reasons.get(name) %} ({{ m.unavailable_reasons[name] }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
     {% if m.sources_checked %}<p><small>Geraadpleegd: {{ m.sources_checked|join(', ') }}.</small></p>{% endif %}

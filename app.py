@@ -1192,6 +1192,7 @@ from nv_woo_bridge import (
     CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
 import nv_supplier_sources
+import nv_research_period
 import nv_partners
 import nv_concepts
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
@@ -2294,14 +2295,30 @@ def control():
             "empty_message": EMPTY_RESULTS,
             "supplier_filters": FILTERS,
             "supplier_filter": research_filter,
+            "periods": nv_research_period.CHOICES,
+            "period": request.args.get("research_period", "slim"),
+            # Schakelaar: verborgen '0' plus aangevinkte '1'. Zonder AI-configuratie toont ai_discover zelf 'uit'.
+            "ai_enabled": (request.args.get("research_run") != "1" or "1" in request.args.getlist("research_ai")
+                           or "research_ai" not in request.args or not __import__("nv_openai").configured()),
+            "block": request.args.get("research_block", "product"),
         }
         if request.args.get("research_run") == "1":
             from nv_ai_search import ai_discover
-            product_discovery = ai_discover(
-                request.args.get("research_term", ""), country=research_country, mode=research_mode,
-                platforms=research_platforms, category=research_category, categories=research_categories,
-                supplier_filter=research_filter,
-            )
+            period_days, period_label = nv_research_period.resolve(research_options["period"], research_mode)
+            search_args = dict(country=research_country, mode=research_mode, platforms=research_platforms,
+                               category=research_category, categories=research_categories,
+                               supplier_filter=research_filter)
+            if research_options["ai_enabled"]:
+                product_discovery = ai_discover(request.args.get("research_term", ""), **search_args)
+            else:
+                product_discovery = discover(request.args.get("research_term", ""), **search_args)
+                if isinstance(product_discovery, dict) and not product_discovery.get("error"):
+                    product_discovery["ai"] = {"state": "off", "label": "AI uitgezet", "removed": 0,
+                                               "message": "AI is voor deze zoekopdracht uitgezet; normaal zoeken.",
+                                               "keywords_en": [], "keywords_nl": [], "category": "", "used_query": ""}
+            if isinstance(product_discovery, dict) and not product_discovery.get("error"):
+                product_discovery["period"] = {**nv_research_period.apply(product_discovery, period_days),
+                                               "label": period_label}
 
 
     order_rows, order_error = (recent_woo_orders() if section in ("bestellingen", "administratie") else (None, None))

@@ -129,7 +129,7 @@
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><link rel="stylesheet" href="{{ url_for('static',filename='nv-search-meter.css') }}?v=1"><link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-compact-20261118.css') }}?v=3"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><link rel="stylesheet" href="{{ url_for('static',filename='nv-search-meter.css') }}?v=1"><link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-compact-20261118.css') }}?v=7"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
 <body class="nv-admin-ui" data-ai-state="{{ ai_status.state if ai_status else 'off' }}"><a class="nv-skip" href="#nvMain">Naar hoofdinhoud</a><div class="layout">
 <aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
@@ -232,58 +232,98 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
   <h2>Productonderzoek</h2>
   <p class="nv-ai-state nv-ai-state--{{ ai_status.state if ai_status else 'off' }}" role="note"><strong>{{ ai_status.label if ai_status else 'AI niet beschikbaar' }}</strong> · {{ ai_status.message if ai_status else '' }}</p>
   <p class="nv-honest-note" role="note"><strong>Geen verzonnen verkoopcijfers.</strong> Dit zoekt in aangesloten catalogi en publicaties wanneer je op Zoeken klikt. Resultaten zijn live opgehaald bronnen of een tijdelijke cache (10 minuten); er zijn hier geen demonstratiegegevens. Als AI beschikbaar is, helpt die met Nederlandse en Engelse zoekwoorden en het wegfilteren van accessoires; AI voegt zelf geen producten, leveranciers of prijzen toe.</p>
-  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form" data-research-search data-search-phases="Product analyseren...|Nederlandse en Engelse zoekwoorden controleren...|Catalogi en publicaties doorzoeken...|Leveranciers zoeken...|EU- en internationale resultaten filteren...|AI analyseert zoekresultaten...|Resultaten voorbereiden...">
+  {% set ro = research_options %}
+  {% set plat_kind = {"Productcatalogi": ("live", "Live doorzocht"), "Publicaties": ("live", "Redactionele artikelen"), "Google Trends": ("trend", "Zoekinteresse (Google)"), "Google": ("link", "Alleen bronlink"), "TikTok": ("link", "Alleen bronlink"), "Instagram": ("link", "Alleen bronlink"), "Facebook": ("link", "Alleen bronlink"), "YouTube Shorts": ("link", "Alleen bronlink"), "Pinterest Trends": ("link", "Alleen bronlink")} %}
+  {% set plat_name = {"YouTube Shorts": "YouTube / Shorts", "Pinterest Trends": "Pinterest"} %}
+  <div class="nv-research-blocks">
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form nv-rblock" data-research-search data-search-phases="Zoekopdracht analyseren...|Nederlandse en Engelse zoekwoorden controleren...|Catalogi doorzoeken...|Leveranciers vergelijken...|EU- en internationale resultaten controleren...|AI analyseert resultaten...|Zoekresultaten voorbereiden..." aria-labelledby="nv-rb1">
+    <h3 id="nv-rb1" class="nv-rblock__title"><span>1</span> Product zoeken</h3>
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
-    <label>Webshopcategorie
-      <select name="research_category">
-        {% for slug, name in research_options.categories.items() %}
-        <option value="{{ slug }}" {% if research_options.category == slug %}selected{% endif %}>{{ name }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <label>Zoektype
-      <select name="research_mode">
-        {% for mode, name in research_options.modes.items() %}
-        <option value="{{ mode }}" {% if research_options.mode == mode %}selected{% endif %}>{{ name }}</option>
-        {% endfor %}
-      </select>
-    </label>
+    <input type="hidden" name="research_block" value="product">
+    {% for platform in ro.platforms %}<input type="hidden" name="research_platform" value="{{ platform }}">{% endfor %}
     <div class="nv-research-search">
       <label>Product of niche
         <input type="search" name="research_term" maxlength="100"
                placeholder="Bijvoorbeeld NIVEA crème 200 ml, yogamat of slimme deurbel"
-               value="{{ request.args.get('research_term', '') }}">
+               value="{{ request.args.get('research_term', '') if ro.block != 'platforms' else '' }}">
       </label>
       <button type="submit">Zoeken</button>
     </div>
-    <div class="nv-research-filters">
-    <label>Doelland
-      <select name="research_country">
-        {% for code, details in research_options.countries.items() %}
-        <option value="{{ code }}" {% if research_options.country == code %}selected{% endif %}>{{ details[0] }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <label>Leverancierfilter
-      <select name="research_supplier_filter">
-        {% for value, name in research_options.supplier_filters.items() %}
-        <option value="{{ value }}" {% if research_options.supplier_filter == value %}selected{% endif %}>{{ name }}</option>
-        {% endfor %}
-      </select>
-    </label>
+    <div class="nv-rgrid">
+      <label>Webshopcategorie
+        <select name="research_category">
+          {% for slug, name in ro.categories.items() %}<option value="{{ slug }}" {% if ro.category == slug %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Zoektype
+        <select name="research_mode">
+          {% for mode, name in ro.modes.items() %}<option value="{{ mode }}" {% if ro.mode == mode %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Doelland
+        <select name="research_country">
+          {% for code, details in ro.countries.items() %}<option value="{{ code }}" {% if ro.country == code %}selected{% endif %}>{{ details[0] }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Leverancierfilter
+        <select name="research_supplier_filter">
+          {% for value, name in ro.supplier_filters.items() %}<option value="{{ value }}" {% if ro.supplier_filter == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Periode
+        <select name="research_period">
+          {% for value, name in ro.periods.items() %}<option value="{{ value }}" {% if ro.period == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="nv-checkbox nv-ai-toggle"><input type="hidden" name="research_ai" value="0"><input type="checkbox" name="research_ai" value="1" {% if ro.ai_enabled %}checked{% endif %} {% if not ai_status or ai_status.state == 'off' %}disabled{% endif %}> AI-ondersteuning{% if not ai_status or ai_status.state == 'off' %} (niet beschikbaar){% endif %}</label>
     </div>
-    <fieldset class="nv-research-platforms">
-      <legend>Onderzoeksplatforms</legend>
-      {% for platform in research_options.platforms %}
-      <label><input type="checkbox" name="research_platform" value="{{ platform }}"
-        {% if platform in research_options.selected_platforms %}checked{% endif %}>
-        {{ platform }}</label>
-      {% endfor %}
-      <small>Productcatalogi en Publicaties vullen de resultaten. Google Trends controleert de actuele zoekinteresse in de modus Trends. Sociale platforms openen via zoeklinks.</small>
-    </fieldset>
     <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
+
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-rblock" data-research-search data-search-phases="Zoekopdracht analyseren...|Geselecteerde bronnen doorzoeken...|Publicaties en trends controleren...|AI analyseert resultaten...|Zoekresultaten voorbereiden..." aria-labelledby="nv-rb2">
+    <h3 id="nv-rb2" class="nv-rblock__title"><span>2</span> Onderzoeksplatforms</h3>
+    <input type="hidden" name="section" value="onderzoek">
+    <input type="hidden" name="research_run" value="1">
+    <input type="hidden" name="research_block" value="platforms">
+    <input type="hidden" name="research_mode" value="trends">
+    <input type="hidden" name="research_category" value="{{ ro.category }}">
+    <input type="hidden" name="research_country" value="{{ ro.country }}">
+    <input type="hidden" name="research_supplier_filter" value="all">
+    <input type="hidden" name="research_ai" value="{{ '1' if ro.ai_enabled else '0' }}">
+    <div class="nv-research-search">
+      <label>Zoeken in geselecteerde bronnen
+        <input type="search" name="research_term" maxlength="100" required placeholder="Bijvoorbeeld LED-verlichting of yogamat"
+               value="{{ request.args.get('research_term', '') if ro.block == 'platforms' else '' }}">
+      </label>
+      <button type="submit">Bronnen doorzoeken</button>
+    </div>
+    <fieldset class="nv-research-platforms nv-pgrid">
+      <legend class="nv-sr">Bronnen</legend>
+      {% for platform in ro.platforms %}{% set kind = plat_kind.get(platform, ("link", "Alleen bronlink")) %}
+      <label class="nv-pchip nv-pchip--{{ kind[0] }}"><input type="checkbox" name="research_platform" value="{{ platform }}"
+        {% if platform in ro.selected_platforms %}checked{% endif %}><span><b>{{ plat_name.get(platform, platform) }}</b><small>{{ kind[1] }}</small></span></label>
+      {% endfor %}
+    </fieldset>
+    <label class="nv-inline-select">Periode
+      <select name="research_period">
+        {% for value, name in ro.periods.items() %}<option value="{{ value }}" {% if ro.period == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select>
+    </label>
+    <p class="nv-rnote">TikTok, Instagram, Facebook, YouTube en Pinterest zijn <strong>niet live gekoppeld</strong>: je krijgt alleen een zoeklink om zelf te openen. Productcatalogi en publicaties worden echt doorzocht; Google Trends toont actuele zoekinteresse.</p>
+    <p class="nv-search-progress" role="status"><span hidden></span></p>
+  </form>
+
+  <div class="nv-rblock nv-rblock--info" aria-labelledby="nv-rb3">
+    <h3 id="nv-rb3" class="nv-rblock__title"><span>3</span> Tijdsfilter</h3>
+    <ul class="nv-rperiod">
+      <li><b>7 / 14 / 30 dagen</b> — alleen publicaties en trendartikelen met een publicatiedatum binnen die periode.</li>
+      <li><b>Slim</b> — viral en trends 14 dagen, niche- en productonderzoek 30 dagen, leveranciers zonder tijdsbeperking.</li>
+      <li>Productcatalogi en leveranciers hebben geen betrouwbare datum en worden <strong>nooit</strong> door de periode verwijderd.</li>
+    </ul>
+    {% if product_discovery and product_discovery.period %}<p class="nv-rperiod-used">Gebruikt bij deze zoekopdracht: <strong>{{ product_discovery.period.label }}</strong>{% if product_discovery.period.removed %} · {{ product_discovery.period.removed }} oudere publicaties weggelaten{% endif %}{% if product_discovery.period.undated %} · {{ product_discovery.period.undated }} zonder datum niet als trend getoond{% endif %}</p>{% endif %}
+  </div>
+  </div>
       {% if source_coverage %}
       <details class="nv-coverage" id="nv-source-coverage">
         <summary>Bronnen en dekking</summary>

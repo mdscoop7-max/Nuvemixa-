@@ -14,7 +14,7 @@ REGIONS = {"all": "Wereldwijd", "eu": "Binnen EU", "international": "Buiten EU"}
 SUPPLIER_TYPES = {
     "all": "Alle soorten", "dropship": "Dropshipping", "wholesale": "Groothandel", "manufacturer": "Fabrikant of merk",
 }
-PERIODS = {"0": "Alle periodes", "30": "30 dagen", "90": "90 dagen", "365": "12 maanden"}
+PERIODS = {"slim": "Slim", "7": "7 dagen", "14": "14 dagen", "30": "30 dagen", "90": "90 dagen", "365": "12 maanden", "0": "Alle periodes"}
 VIRAL_SOURCES = {"all": "Producten en publicaties", "products": "Alleen productbronnen", "news": "Alleen publicaties"}
 PRICE_NOTE = ("Marktprijzen en verkoopcijfers leveren de huidige bronnen niet. Ze worden daarom niet getoond "
               "of geschat. Controleer prijzen handmatig via de bronlinks.")
@@ -55,7 +55,7 @@ def parse(kind, args, categories):
         "supplier_type": choice(args, "mtype", SUPPLIER_TYPES, "all"),
         "ships_nl": args.get("mnl") == "1",
         "dropship_only": args.get("mdrop") == "1",
-        "period": choice(args, "mperiode", PERIODS, "0"),
+        "period": choice(args, "mperiode", PERIODS, "slim"),
         "source": choice(args, "mbron", VIRAL_SOURCES, "all"),
         "google_trends": args.get("mgoogle") == "1",
         "run": args.get("mrun") == "1",
@@ -96,7 +96,10 @@ def attach_supplier_refs(products, suppliers):
     return result
 
 
-def within_period(articles, period):
+def within_period(articles, period, kind="viral"):
+    if period == "slim":
+        days = __import__("nv_research_period").SMART.get(kind, 30)
+        period = "0" if days is None else str(days)
     if period == "0":
         return articles
     start = (date.today() - timedelta(days=int(period))).isoformat()
@@ -170,8 +173,8 @@ def search_view(kind, categories, args, *, fetch=None):
         products = [p for p in products if any(r["dropshipping"] == "Bevestigd" for r in p["supplier_refs"])]
     if form["region"] != "all" or form["ships_nl"]:
         products = [p for p in products if p["supplier_refs"]]
-    publications = within_period(result["news"], form["period"])
-    trends = within_period(result["trends"], form["period"])
+    publications = within_period(result["news"], form["period"], kind)
+    trends = within_period(result["trends"], form["period"], kind)
     counts = Counter(item["source"] for item in products)
     view.update(
         result=result, products=products, suppliers=suppliers, publications=publications, trends=trends,
@@ -182,6 +185,8 @@ def search_view(kind, categories, args, *, fetch=None):
         alternatives=result.get("alternatives", []), country_name=result["country_name"],
         interpretation=result.get("interpretation"), all_failed=result.get("all_sources_failed", False),
         ai=result.get("ai"),
+        period_label=(PERIODS[form["period"]] + (" → {} dagen".format(__import__("nv_research_period").SMART.get(kind, 30))
+                      if form["period"] == "slim" else "") + " · alleen publicaties met datum; productbronnen en leveranciers niet gefilterd"),
     )
     view["opportunities"], view["risks"] = opportunities_and_risks(view, form)
     return view
