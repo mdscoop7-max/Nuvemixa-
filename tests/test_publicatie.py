@@ -31,6 +31,9 @@ def test_margin_calculation():
     m = pub.margin(P1)
     assert m["netto_verkoop"] == 2475 and m["procent"] == Decimal("39.3")
     assert pub.margin(P3)["procent"] < 0 and pub.margin({"verkoop": 0}) is None
+    assert pub.margin(dict(P1, verzend=None)) is None
+    assert "Winstmarge" in failing(pub.check(dict(P1, verzend=None), []))
+    assert pub.margin(dict(P1, verzend=0)) is not None
 
 
 def test_checks_pass_fail_and_duplicates():
@@ -61,6 +64,8 @@ def test_approval_is_bound_to_content_and_expires():
     token = pub.sign_approval("geheim", P1, now=1000)
     assert pub.approval_valid("geheim", P1, token, now=1100)
     assert not pub.approval_valid("geheim", dict(P1, verkoop=3000), token, now=1100)
+    assert not pub.approval_valid("geheim", dict(P1, inkoop=1200), token, now=1100)
+    assert not pub.approval_valid("geheim", dict(P1, verzend=0), token, now=1100)
     assert not pub.approval_valid("ander", P1, token, now=1100)
     assert not pub.approval_valid("geheim", P1, token, now=1000 + pub.APPROVAL_VALID_SECONDS + 1)
     assert not pub.approval_valid("geheim", P1, "kapot", now=1100) and not pub.approval_valid("geheim", P1, None)

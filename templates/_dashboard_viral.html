@@ -4,7 +4,7 @@
 {% endmacro %}
 {% macro csrf() %}<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% endmacro %}
 {% if market_search %}{% include "_dashboard_market_search.html" %}{% endif %}
-<details class="panel nv-manual-block"><summary><strong>Handmatige registratie en eerste bronvondsten</strong></summary>
+<details class="panel nv-manual-block"{% if v.detail or v.filters.values()|select|list %} open{% endif %}><summary><strong>Handmatige registratie en eerste bronvondsten</strong></summary>
 <section>
 <h2>Kandidaten en trendsignalen</h2>
 <p>Registreer controleerbare waarnemingen uit openbare pagina’s en toegestane exports. De score is een onderbouwde beoordeling. Groei vereist twee vergelijkbare metingen van dezelfde bron, platform, maatstaf en periode.</p>
@@ -19,14 +19,16 @@
 {% endfor %}
 {% if v.error %}<p class="notice" role="alert">{{ v.error }}</p>{% else %}
 {% set platform_options = v.platforms.items()|list %}
-<form method="get" class="nv-admin-form">
+<form method="get" class="nv-admin-form" role="search" data-research-search="Kandidaten zoeken...">
 <input type="hidden" name="section" value="viral">
+<label>Zoek kandidaat<input type="search" name="candidate_q" maxlength="100" value="{{ v.filters.candidate_q }}"></label>
 <label>Platform<select name="platform"><option value="">Alle platforms</option>{% for code, p in platform_options %}<option value="{{ code }}"{% if v.filters.platform == code %} selected{% endif %}>{{ p[0] }}</option>{% endfor %}</select></label>
 <label>Land<select name="country"><option value="">Alle landen</option>{{ options(v.countries.items(),v.filters.country) }}</select></label>
 <label>Niche<select name="niche"><option value="">Alle niches</option>{% for niche in v.niches %}<option{% if v.filters.niche==niche %} selected{% endif %}>{{ niche }}</option>{% endfor %}</select></label>
 <label>Meetperiode<select name="period"><option value="">Alle perioden</option>{{ options([('7','7 dagen'),('30','30 dagen'),('90','90 dagen')],v.filters.period) }}</select></label>
 <label>Minimumscore<input type="number" min="0" max="100" name="score" value="{{ v.filters.score }}"></label>
 <button type="submit">Filter toepassen</button>
+<p class="nv-search-progress" role="status"><span hidden></span></p>
 </form>
 <details><summary>Kandidaat toevoegen</summary>
 <form method="post" action="{{ url_for('nv_manage.save_viral') }}" class="nv-admin-form">

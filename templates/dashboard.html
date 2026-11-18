@@ -136,7 +136,7 @@
 <div class="side-bottom"><b>NUVEMIXA beheer</b><small>Dashboard in testfase. Alleen gecontroleerde gegevens worden getoond. Koppelingen volgen na inrichting.</small></div>
 </aside>
 <div class="workspace">
-<header class="topbar">{% if section == "producten" and allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus"><input type="hidden" name="section" value="producten"><input name="q" value="{{ search if section == 'producten' else '' }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
+<header class="topbar">{% if section == "producten" and allowed("product_view", "product_edit") %}<form class="top-search" action="{{ url_for('control') }}" method="get" role="search" aria-label="Zoeken in de beheercatalogus" data-research-search="Catalogus doorzoeken..."><input type="hidden" name="section" value="producten"><input name="q" value="{{ search }}" type="search" maxlength="120" required placeholder="Zoek producten in beheer..." aria-label="Zoek producten in beheer"><button type="submit">Zoeken</button><p class="nv-search-progress" role="status"><span hidden></span></p></form>{% endif %}<div class="top-profile"><span>🇳🇱 Nederlands</span><span class="avatar">NV</span><div>NUVEMIXA<small>Beheerweergave · testfase</small></div></div><form class="admin-access" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Uitloggen</button></form></header>
 <main class="admin" id="nvMain" tabindex="-1">
 {% if staff and section == "dashboard" %}
 <section class="panel">
@@ -949,7 +949,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 
 
 
-{% if section in ('onderzoek', 'leveranciers', 'viral', 'internationaal', 'concepten') %}
+{% if section in ('onderzoek', 'leveranciers', 'viral', 'internationaal', 'concepten', 'partners', 'producten', 'afbeeldingen') %}
 <style>
 .nv-search-progress{display:flex;align-items:center;gap:.6rem;margin:0;grid-column:1/-1}
 .nv-search-progress span:not([hidden]){width:1rem;height:1rem;border:2px solid currentColor;border-inline-end-color:transparent;border-radius:50%;animation:nv-search-spin .8s linear infinite}

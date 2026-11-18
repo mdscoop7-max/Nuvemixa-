@@ -2215,7 +2215,21 @@ def control():
         abort(403)
     search = request.args.get("q", "").strip()[:120]
 
-    filtered_products = filter_products(all_products, search=search) if search else all_products
+    filtered_products = all_products
+    if search and section in {"producten", "afbeeldingen"}:
+        from nv_research_intent import matches, normalize, offer_match, subject_for
+
+        subject = subject_for(normalize(search))
+        if subject:
+            filtered_products = [product for product in all_products if any(
+                offer_match(search, title, product.get("description") or "")[0] == "exact"
+                for title in (product.get("name"), product.get("en_name")) if title
+            )]
+        else:
+            raw_matches = {id(product) for product in filter_products(all_products, search=search)}
+            filtered_products = [product for product in all_products if id(product) in raw_matches or matches(
+                search, " ".join(str(product.get(key) or "") for key in ("name", "en_name", "brand", "category_name", "sku"))
+            )]
 
 
 

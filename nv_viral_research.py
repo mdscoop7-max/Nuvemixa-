@@ -171,7 +171,10 @@ def growth_for(observations):
 
 
 def viral_dashboard():
+    from nv_research_intent import matches
+
     filters = {field: request.args.get(field,"") for field in ("country","niche","platform","period","score")}
+    filters["candidate_q"] = request.args.get("candidate_q", "").strip()[:100]
     if (filters["country"] not in COUNTRIES and filters["country"]
             or filters["niche"] not in NICHES and filters["niche"]
             or filters["platform"] not in PLATFORMS and filters["platform"]
@@ -193,6 +196,10 @@ def viral_dashboard():
         candidates = []
         error = "Trendonderzoek is tijdelijk niet beschikbaar."
     for row in candidates:
+        if filters["candidate_q"] and not matches(
+            filters["candidate_q"], " ".join((row["title"], row["niche"], row["notes"])),
+        ):
+            continue
         if any(filters[key] and row[key] != filters[key] for key in ("country", "niche")):
             continue
         evidence = observations.get(row["id"],[])

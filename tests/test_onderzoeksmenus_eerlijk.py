@@ -5,7 +5,12 @@ from test_system_check import administrator, CSRF_TOKEN  # noqa: F401
 
 import app as dashboard
 
-MENUS = ["onderzoek", "internationaal", "viral", "leveranciers", "partners", "publicatie", "woocommerce", "calculator"]
+MENUS = [
+    "dashboard", "producten", "categorieen", "onderzoek", "internationaal", "viral", "leveranciers", "partners",
+    "concepten", "publicatie", "woocommerce", "calculator", "afbeeldingen", "bestellingen", "klanten",
+    "accountbeheer", "kortingen", "marketing", "seo", "rankfix", "statistieken", "instellingen", "google-ads",
+    "google-shopping", "talen", "klantenservice", "monitoring", "administratie",
+]
 
 
 @pytest.mark.parametrize("sectie", MENUS)
@@ -39,7 +44,7 @@ def test_viral_toont_vaste_notities_als_niet_live(administrator):
 
 def test_publicatie_beweert_niet_dat_alles_werkt(administrator):
     html = administrator.get("/dashboard?section=publicatie").get_data(as_text=True)
-    assert "werkt deels" in html and "geen live trendfeed" in html
+    assert "Google Trends en eigen waarnemingen" in html and "Sociale populariteitscijfers ontbreken" in html
     assert "nog niet gekoppeld" in html and "TESTDATA" in html
 
 

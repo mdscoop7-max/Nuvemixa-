@@ -16,6 +16,7 @@ from flask import abort, flash, redirect, request, url_for
 
 from nv_dashboard_manager import admin, bp
 from nv_permissions import allowed
+from nv_research_intent import matches
 
 CHECKED = "17-11-2026"
 CATEGORIES = {"gadgets": "Gadgets", "beauty-care": "Beauty & Care", "lifestyle-sport": "Lifestyle & Sport",
@@ -328,7 +329,7 @@ def search(args):
                 continue
         if q:
             hay = " ".join((p["name"], p["note"], " ".join(p["products"]), " ".join(CATEGORIES.get(c, c) for c in p["categories"]))).lower()
-            if not all(word in hay for word in q.split()):
+            if not all(word in hay for word in q.split()) and not matches(q, hay):
                 continue
         rows.append({**p, "score": score(p), "model_labels": [MODELS[m] for m in p["models"]], "type_label": TYPES[p["type"]],
                      "status_label": STATUS[p["status"]], "cat_labels": [CATEGORIES.get(c, c) for c in p["categories"]]})
@@ -356,21 +357,26 @@ def candidate_note(model, status, name):
     return f"[Kandidaat · model {model} · {STATUS.get(status, status)}] Nog geen overeenkomst en geen contact gelegd. Bron: partnerzoeker {CHECKED}."
 
 
-def candidates():
+def candidates(query=""):
     """Kandidatenlijst = bestaande leverancierslijst met status 'onderzoek' en een kandidaat-notitie."""
     from nuvemixa_admin_store import list_suppliers
     try:
-        return [r for r in list_suppliers() if str(r["notes"]).startswith("[Kandidaat")]
+        rows = [r for r in list_suppliers() if str(r["notes"]).startswith("[Kandidaat")]
     except Exception:  # opslag tijdelijk niet beschikbaar: pagina blijft werken
         return None
+    if query:
+        rows = [row for row in rows if matches(query, " ".join(row[key] or "" for key in ("name", "website", "notes")))]
+    return rows
 
 
 def view(args):
     rows = search(args)
+    candidate_query = (args.get("candidate_q") or "").strip()[:100]
     return {"rows": rows, "total": len(all_partners()), "form": {k: (args.get(k) or "") for k in
             ("q", "cat", "land", "type", "model", "kosten", "integratie", "status")},
             "discovery": discovery_links((args.get("q") or "").strip()[:80], args.get("cat", ""), args.get("land", "")),
-            "candidates": candidates(), "criteria": CRITERIA, "checked": CHECKED, "models": MODELS, "types": TYPES,
+            "candidates": candidates(candidate_query), "candidate_query": candidate_query,
+            "criteria": CRITERIA, "checked": CHECKED, "models": MODELS, "types": TYPES,
             "categories": CATEGORIES, "statuses": STATUS,
             "permanent": nv_dashboard_postgres.runtime_enabled()}
 

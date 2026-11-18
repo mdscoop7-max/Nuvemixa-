@@ -34,6 +34,8 @@ SYNCEE_SUPPLIER_ORIGINS = {
     "546145": ("GB", "https://cashymart.com/nb/pages/terms-of-services"),
     "727418": ("AU", "https://www.lifebay.com.au/pages/contact"),
     "802498": ("US", "https://www.tips-usa.com/pdf_profile.cfm?RecordID=754BC7B3144883AED4D6869405BE32BC"),
+    "1459958": ("IN", "https://fasderma.com/pages/contact-us"),
+    "1569216": ("NL", "https://pe-cosmetics.com/nl"),
     "105656": ("IT", "https://www.maiden-art.com/policies/legal-notice"),
     "279866": ("RO", "https://www.orderchamp.com/store/tomescu-st-cristian-pfa/listings/1842806604644353"),
 }

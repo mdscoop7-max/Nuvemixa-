@@ -41,12 +41,13 @@ def _cents(value):
 
 
 def margin(candidate):
-    """Netto marge: (verkoop excl. btw - inkoop - verzend - betaalkosten) / verkoop excl. btw."""
+    """Bijdrage na inkoop, bevestigde verzending en betaalkosten."""
     verkoop, inkoop = candidate.get("verkoop") or 0, candidate.get("inkoop") or 0
-    if verkoop <= 0:
+    verzending = candidate.get("verzend")
+    if verkoop <= 0 or inkoop <= 0 or verzending is None or verzending < 0:
         return None
     net = Decimal(verkoop) / (1 + BTW)
-    kosten = Decimal(inkoop) + Decimal(candidate.get("verzend") or 0) + Decimal(verkoop) * BETAALKOSTEN
+    kosten = Decimal(inkoop) + Decimal(verzending) + Decimal(verkoop) * BETAALKOSTEN
     winst = net - kosten
     return {"netto_verkoop": _cents(net), "kosten": _cents(kosten), "winst": _cents(winst),
             "procent": (winst * 100 / net).quantize(Decimal("0.1"), ROUND_HALF_UP)}
@@ -87,13 +88,15 @@ def check(candidate, existing):
     add("Verkoopprijs", "ok" if verkoop > inkoop > 0 else "fout",
         "Verkoopprijs hoger dan inkoopprijs." if verkoop > inkoop > 0 else "Verkoopprijs ontbreekt of ligt niet boven de inkoopprijs.")
     if m is None:
-        add("Winstmarge", "fout", "Marge kan niet worden berekend.")
+        reason = ("Verzendkosten ontbreken. Vul 0 in bij bevestigde gratis verzending."
+                  if candidate.get("verzend") is None else "Marge kan niet worden berekend.")
+        add("Winstmarge", "fout", reason)
     elif m["procent"] >= MIN_MARGE:
-        add("Winstmarge", "ok", f"Netto marge {m['procent']}% (minimum {MIN_MARGE}%).")
+        add("Winstmarge", "ok", f"Bijdragemarge {m['procent']}% (referentie {MIN_MARGE}%).")
     elif m["procent"] > 0:
-        add("Winstmarge", "let op", f"Netto marge {m['procent']}% ligt onder het minimum van {MIN_MARGE}%.")
+        add("Winstmarge", "let op", f"Bijdragemarge {m['procent']}% ligt onder de referentie van {MIN_MARGE}%.")
     else:
-        add("Winstmarge", "fout", f"Verlies: netto marge {m['procent']}%.")
+        add("Winstmarge", "fout", f"Negatieve bijdragemarge van {m['procent']}%.")
     titel, tekst = str(candidate.get("titel", "")).strip(), str(candidate.get("beschrijving", "")).strip()
     add("Producttitel", "ok" if 10 <= len(titel) <= 120 else "fout", "Titel heeft een goede lengte." if 10 <= len(titel) <= 120 else "Titel moet 10 tot 120 tekens zijn.")
     add("Beschrijving", "ok" if len(tekst) >= 40 else "fout", "Beschrijving is voldoende uitgebreid." if len(tekst) >= 40 else "Beschrijving is korter dan 40 tekens.")
@@ -125,7 +128,8 @@ def payload(candidate):
 
 
 def digest(candidate):
-    return hashlib.sha256(json.dumps(payload(candidate), sort_keys=True).encode()).hexdigest()
+    approved = {"payload": payload(candidate), **{key: candidate.get(key) for key in ("inkoop", "verzend", "categorie")}}
+    return hashlib.sha256(json.dumps(approved, sort_keys=True).encode()).hexdigest()
 
 
 def sign_approval(secret, candidate, now=None):

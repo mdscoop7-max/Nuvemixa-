@@ -162,7 +162,7 @@ STOP_WORDS = frozenset("a de een en for het in is met of the van voor with and b
 MEASURE = re.compile(r"\b(\d+)\s+(mah|ml|amp)\b")
 CAPACITY = re.compile(r"\b([0-9]+) mah\b")
 CONNECTOR = re.compile(r"\b(?:usb[\s‐‑–—-]*(?:type[\s‐‑–—-]*)?c|type[\s‐‑–—-]*c)\b")
-ACCESSORIES = (r"cables?|kabel|spray|covers?|cases?|houder|mounts?|brackets?|straps?|bags?|hoes|"
+ACCESSORIES = (r"cables?|kabel|spray|covers?|cases?|houder|mounts?|brackets?|straps?|stands?|bags?|hoes|"
                r"replacement head|opzetborstel|replacement filter|replacement adapter")
 
 def normalize(value):
@@ -269,7 +269,8 @@ def offer_match(term, identity, description="", variant=""):
     evidence = f"{title} {body} {variant}"
     subject = subject_for(query)
     core = "power bank" if power_bank_query(term) else subject
-    if core and not re.search(r"\b(?:" + ACCESSORIES + r")\b", query):
+    accessory_query = re.search(r"\b(?:" + ACCESSORIES + r")\b", query)
+    if core and not accessory_query:
         if (re.search(r"\b(?:" + ACCESSORIES + r") (?:for|voor|compatible with) " + core + r"\b", title)
                 or re.search(r"\b" + core + r" (?:cleaning )?(?:" + ACCESSORIES + r")\b", title)):
             return "", ()
@@ -313,8 +314,6 @@ def offer_match(term, identity, description="", variant=""):
         identity_matches = (len(identifiers) >= 2 and set(identifiers[1:]) <= words(title)
                             and (body == query or body.startswith(query + " ")))
     if not subject_in_title or not identity_matches:
-        return "", ()
-    if subject == "bluetooth speaker" and re.search(r"\b(?:portable |wireless )?bluetooth speaker (?:cables?|covers?|cases?|mounts?|straps?|stands?|bags?)\b", title):
         return "", ()
     if subject == "argan oil" and words(title) & {
         "soap", "zeep", "shampoo", "conditioner", "balm", "lotion", "blend", "gratis", "proefflesje",

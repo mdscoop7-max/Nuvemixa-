@@ -11,15 +11,15 @@
 .nv-pub form{margin:0}.nv-pub button[disabled]{opacity:.55;cursor:not-allowed}
 </style>
 <div class="nv-pub">
-{% if c.bron == 'concept' %}<div class="banner" role="note"><span class="badge">JOUW CONCEPT</span> Dit product heb je zelf bewaard en geselecteerd in <a href="/dashboard?section=concepten">Kandidaten en concepten</a>. Alleen gegevens die jij hebt ingevuld staan hieronder; ontbrekende gegevens zijn leeg of 0 en geven een fout. Er wordt <strong>niets naar de echte webshop gestuurd</strong>.</div>
+{% if c.bron == 'concept' %}<div class="banner" role="note"><span class="badge">JOUW CONCEPT</span> Dit product heb je geselecteerd in <a href="/dashboard?section=concepten">Kandidaten en concepten</a>. Ontbrekende gegevens staan bij de controles. De berekening gebruikt inkoop, verzending en betaalkosten. Overige kosten vul je in bij <a href="{{ url_for('control', section='onderzoek', margin_product=c.titel, _anchor='nv-product-margin') }}">Winstmarge per product</a>.</div>
 {% else %}<div class="banner" role="note"><span class="badge">TESTDATA</span> Het product hieronder is een testvoorbeeld. Er is geen WooCommerce-schrijfsleutel gebruikt en er wordt <strong>niets naar de echte webshop gestuurd</strong>. Selecteer eerst een concept bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a> om met je eigen product te werken.</div>{% endif %}
 
 <section class="panel"><h2>Zo werkt het</h2>
 <ol class="steps">
 <li><a href="/dashboard?section=onderzoek">Producten zoeken</a> — <strong>werkt deels</strong>: doorzoekt aangesloten catalogi (geen AI, geen verkoopcijfers). Of de bronnen vanaf Render bereikbaar zijn, is nog niet bewezen: gebruik "Bronnen testen".</li>
-<li><a href="/dashboard?section=viral">Niches en trends onderzoeken</a> — <strong>werkt deels</strong>: handmatig register plus catalogus- en publicatiezoeker. Er is <strong>geen live trendfeed</strong> en er zijn geen verkoopcijfers.</li>
-<li><a href="/dashboard?section=leveranciers">Leveranciers zoeken en vergelijken</a> — <strong>werkt deels</strong>: onderzocht register en handmatige links; "Zoeken met AI" is niet geactiveerd.</li>
-<li><a href="/dashboard?section=partners">Partners zoeken</a> en bewaren op de kandidatenlijst — werkt als <strong>onderzocht register</strong>; de lijst is op Render Free tijdelijk en niet gekoppeld aan productpublicatie.</li>
+<li><a href="/dashboard?section=viral">Niches en trends onderzoeken</a> met catalogi, publicaties, Google Trends en eigen waarnemingen. Sociale populariteitscijfers ontbreken.</li>
+<li><a href="/dashboard?section=leveranciers">Leveranciers zoeken en vergelijken</a> in catalogi en via handmatige bronlinks.</li>
+<li><a href="/dashboard?section=partners">Partners zoeken</a> en bewaren op de kandidatenlijst.</li>
 <li>Een product bewaren, beoordelen en selecteren — bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a>; geselecteerde concepten verschijnen hieronder (gegevens alleen zoals jij ze invult)</li>
 <li>Inkoop, verkoop en marge controleren — werkt</li>
 <li>Productgegevens en afbeeldingen controleren — werkt (alleen de gegevens; afbeeldingslinks worden niet opgehaald)</li>
@@ -41,12 +41,12 @@
 <section class="panel"><h2>Prijs en marge</h2>
 <div class="admin-table-wrap"><table class="admin-table"><tbody>
 <tr><td>Inkoopprijs</td><td class="num">{{ euro(c.inkoop) }}</td></tr>
-<tr><td>Verzendkosten leverancier</td><td class="num">{{ euro(c.verzend) }}</td></tr>
+<tr><td>Verzendkosten leverancier</td><td class="num">{{ 'Onbekend' if c.verzend is none else euro(c.verzend) }}</td></tr>
 <tr><td>Verkoopprijs incl. btw</td><td class="num">{{ euro(c.verkoop) }}</td></tr>
 {% if m %}<tr><td>Verkoopprijs excl. btw (21%)</td><td class="num">{{ euro(m.netto_verkoop) }}</td></tr>
 <tr><td>Kosten (inkoop, verzending, betaalkosten)</td><td class="num">{{ euro(m.kosten) }}</td></tr>
-<tr><td><strong>Winst</strong></td><td class="num"><strong>{{ euro(m.winst) }}</strong></td></tr>
-<tr><td><strong>Netto marge</strong> (minimum {{ publicatie.min_marge }}%)</td><td class="num"><strong>{{ m.procent }}%</strong></td></tr>{% endif %}
+<tr><td><strong>Geschatte bijdrage per verkoop</strong></td><td class="num"><strong>{{ euro(m.winst) }}</strong></td></tr>
+<tr><td><strong>Bijdragemarge</strong> (referentie {{ publicatie.min_marge }}%)</td><td class="num"><strong>{{ m.procent }}%</strong></td></tr>{% endif %}
 </tbody></table></div></section>
 
 <section class="panel"><h2>Controles</h2>

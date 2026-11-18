@@ -5,8 +5,8 @@
   <label>Categorie <select name="categorie">{% for slug, name in v.categories.items() %}<option value="{{ slug }}" {{ 'selected' if c and c.categorie == name }}>{{ name }}</option>{% endfor %}</select></label>
   <label>Leverancier <input name="leverancier" maxlength="120" value="{{ c.leverancier if c else '' }}" placeholder="Pas invullen na controle"></label>
   <label>Bronlink <input name="bron_url" type="url" maxlength="300" value="{{ c.bron_url if c else '' }}"></label>
-  <label>Inkoopprijs (€) <input name="inkoop" inputmode="decimal" value="{{ '%.2f'|format(c.inkoop/100) if c and c.inkoop else '' }}" placeholder="onbekend"></label>
-  <label>Verzendkosten leverancier (€) <input name="verzend" inputmode="decimal" value="{{ '%.2f'|format(c.verzend/100) if c and c.verzend else '' }}" placeholder="onbekend"></label>
+  <label>Inkoopprijs (€) <input name="inkoop" inputmode="decimal" value="{{ '%.2f'|format(c.inkoop/100) if c and c.inkoop is not none else '' }}" placeholder="onbekend"></label>
+  <label>Verzendkosten leverancier (€) <input name="verzend" inputmode="decimal" value="{{ '%.2f'|format(c.verzend/100) if c and c.verzend is not none else '' }}" placeholder="onbekend"></label>
   <label>Verkoopprijs incl. btw (€) <input name="verkoop" inputmode="decimal" value="{{ '%.2f'|format(c.verkoop/100) if c and c.verkoop else '' }}" placeholder="onbekend"></label>
   <label class="wide">Beschrijving (eigen tekst, max. 500 tekens) <textarea name="beschrijving" maxlength="500" rows="3">{{ c.beschrijving if c else '' }}</textarea></label>
   <label class="wide">Afbeeldingen (max. 3 https-links naar .jpg/.png/.webp, één per regel; controleer eerst de rechten) <textarea name="afbeeldingen" rows="2">{{ c.afbeeldingen|join('\n') if c else '' }}</textarea></label>
@@ -36,8 +36,8 @@
     <header>
       <h3>{{ c.titel }} <small>{{ c.sku }} · {{ c.categorie }}</small></h3>
       <p><strong>{{ v.statuses[c.status] }}</strong>{% if c.bron_url %} · bron: <a href="{{ c.bron_url }}" target="_blank" rel="noopener noreferrer">{{ c.bron_naam or 'bronpagina' }} ↗</a>{% endif %} · leverancier: {{ c.leverancier or 'nog niet ingevuld' }}</p>
-      <p>Inkoop {{ ('€ %.2f'|format(c.inkoop/100)) if c.inkoop else 'onbekend' }} · verzending {{ ('€ %.2f'|format(c.verzend/100)) if c.verzend else 'onbekend' }} · verkoop incl. btw {{ ('€ %.2f'|format(c.verkoop/100)) if c.verkoop else 'onbekend' }}
-        {% if c.marge %}· netto marge <strong>{{ c.marge.procent }}%</strong> (minimum {{ v.min_marge }}%; eigen berekening uit jouw invoer){% else %}· marge niet te berekenen{% endif %}</p>
+      <p>Inkoop {{ ('€ %.2f'|format(c.inkoop/100)) if c.inkoop is not none else 'onbekend' }} · verzending {{ ('€ %.2f'|format(c.verzend/100)) if c.verzend is not none else 'onbekend' }} · verkoop incl. btw {{ ('€ %.2f'|format(c.verkoop/100)) if c.verkoop else 'onbekend' }}
+        {% if c.marge %}· bijdragemarge <strong>{{ c.marge.procent }}%</strong> (na inkoop, verzending en betaalkosten){% else %}· marge niet te berekenen{% endif %}</p>
       <p>Beoordeling: {{ c.checks_klaar }} van {{ v.checks|length }} controles afgevinkt · openstaande fouten voor publicatie: {{ c.fouten|join(', ') or 'geen' }}</p>
     </header>
     <details {{ 'open' if request.args.get('open')|int == c.id }}>

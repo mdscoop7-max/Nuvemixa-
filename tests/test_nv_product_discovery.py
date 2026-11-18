@@ -107,6 +107,28 @@ def test_speaker_brand_in_catalogue_description_requires_matching_model_and_self
     assert product_matches(term, "Bluetooth speaker Soundcore", term)
     assert not product_matches(term, "Bluetooth speaker Soundcore", "Geschikt voor " + term)
     assert not product_matches(term, "Bluetooth speaker JBL", term)
+    assert product_matches("bluetooth speaker case", "Bluetooth speaker case")
+
+
+@pytest.mark.parametrize(("term", "category", "seed"), [
+    ("Sportproducten", "lifestyle-sport", "yoga mat"),
+    ("Sports products", "lifestyle-sport", "yoga mat"),
+    ("Beautyproducten", "beauty-care", "serum"),
+    ("Beauty products", "beauty-care", "serum"),
+])
+def test_category_keywords_use_the_matching_catalogue(term, category, seed):
+    searched = []
+
+    def fetch(url, **kwargs):
+        searched.append((url, kwargs["params"]))
+        return Response(catalogue())
+
+    result = discover(term, mode="wholesale", categories=CATEGORIES, platforms=["Productcatalogi"], fetch=fetch)
+    assert result["term"] == term
+    assert result["interpretation"]["categories"] == [CATEGORIES[category]]
+    assert seed in result["interpretation"]["queries"]
+    if category == "lifestyle-sport":
+        assert any(params.get("q") == seed for _, params in searched)
 
 
 def test_eu_search_tries_synonyms_after_non_eu_results():

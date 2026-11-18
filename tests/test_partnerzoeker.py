@@ -105,6 +105,17 @@ def test_kandidaat_eigen_vondst_is_gemarkeerd_als_ongecontroleerd(administrator,
     assert "ongecontroleerd" in saved[0][3]
 
 
+def test_bewaarde_kandidaten_zijn_zoekbaar_op_nederlandse_productvariant(administrator, monkeypatch):
+    import nuvemixa_admin_store as store
+    monkeypatch.setattr(store, "list_suppliers", lambda: [
+        {"name": "Fixture feeder company", "website": "", "notes": "[Kandidaat] Automatic cat feeder"},
+        {"name": "Fixture separate company", "website": "", "notes": "[Kandidaat] Lighting"},
+    ])
+    html = administrator.get("/dashboard?section=partners&candidate_q=kattenvoerbak").get_data(as_text=True)
+    assert "Fixture feeder company" in html
+    assert "Fixture separate company" not in html
+
+
 def test_kandidaat_route_vereist_inlog_en_csrf(administrator):
     import app
     assert app.app.test_client().post("/dashboard/partners/kandidaat", data={"name": "X"}).status_code in (302, 303, 400, 401, 403)

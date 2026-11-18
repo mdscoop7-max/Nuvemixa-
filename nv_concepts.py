@@ -183,10 +183,10 @@ def set_status(concept_id, status):
 
 
 def to_candidate(concept):
-    """Vorm die nv_publicatie verwacht. Ontbrekende gegevens blijven 0/leeg zodat de controles ze als fout tonen."""
+    """Behoud bij verzendkosten het onderscheid tussen onbekend en gratis."""
     return {"sku": concept["sku"], "titel": concept["titel"], "beschrijving": concept["beschrijving"],
             "afbeeldingen": list(concept["afbeeldingen"]), "inkoop": concept["inkoop"] or 0,
-            "verzend": concept["verzend"] or 0, "verkoop": concept["verkoop"] or 0,
+            "verzend": concept["verzend"], "verkoop": concept["verkoop"] or 0,
             "leverancier": concept["leverancier"], "categorie": concept["categorie"], "bron": "concept"}
 
 

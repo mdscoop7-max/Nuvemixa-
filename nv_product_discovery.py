@@ -247,7 +247,10 @@ def research_links(term, platforms, country, language):
 
 def trend_scope(term):
     clean = normalize(term)
-    if not re.search(r"\b(?:trending|viral|viraal|populair|popular|trends?)\b", clean):
+    social = r"(?:tiktok|instagram|pinterest|youtube)(?:\s+(?:producten|products|reels|shorts|producttrends|product trends))?"
+    if re.fullmatch(r"(?:tiktok|instagram|pinterest|youtube)\s+product\s?trends", clean):
+        return "", "social"
+    if not re.search(r"\b(?:trending|viral|viraal|populair(?:e)?|popular|trends?)\b", clean):
         return term, None
     topic = re.sub(r"\b(?:trending|viral|viraal|populair(?:e)?|popular|trends?)\b", "", clean).strip()
     broad = {
@@ -256,9 +259,16 @@ def trend_scope(term):
     }
     if topic in broad:
         return "", broad[topic]
-    if re.fullmatch(r"(?:tiktok|instagram|pinterest|youtube)(?:[ -]?(?:producten|products|reels|shorts))?", topic):
+    if re.fullmatch(social, topic):
         return "", "social"
     return topic or term, None
+
+
+CATEGORY_QUERIES = {
+    "sportproducten": "lifestyle-sport", "sport producten": "lifestyle-sport", "sports products": "lifestyle-sport",
+    "fitnessproducten": "lifestyle-sport", "fitness products": "lifestyle-sport",
+    "beautyproducten": "beauty-care", "beauty producten": "beauty-care", "beauty products": "beauty-care",
+}
 
 
 def google_trend_matches(fetch, country, term, categories, broad):
@@ -791,10 +801,14 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
     name, language, _ = COUNTRIES[country]
     original_term = term
     term, broad = trend_scope(term) if mode == "trends" else (term, None)
+    catalogue_scope = CATEGORY_QUERIES.get(normalize(term)) if mode != "news" else None
+    if catalogue_scope in categories and category in (ALL_PRODUCTS, catalogue_scope):
+        term = SEEDS[catalogue_scope]
     selected = categories if category == ALL_PRODUCTS else {category: categories[category]}
     inferred = ()
     if category == ALL_PRODUCTS:
-        inferred = (broad,) if broad in categories else tuple(slug for slug in infer_categories(term) if slug in categories)
+        explicit = broad or catalogue_scope
+        inferred = (explicit,) if explicit in categories else tuple(slug for slug in infer_categories(term) if slug in categories)
     if inferred:
         selected = {slug: categories[slug] for slug in inferred}
     from_catalogues = "Productcatalogi" in platforms and mode != "news" and not broad
