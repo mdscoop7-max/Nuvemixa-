@@ -158,17 +158,18 @@
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
 {% elif section == "calculator" %}
-<section class="panel" id="tm-calc"><h2>Productprijs & winst berekenen</h2><p>Bereken de verkoopprijs, btw, marge en verwachte winst van een dropshippingproduct. Vul je werkelijke leverancierskosten in; bedragen zijn standaard exclusief btw.</p>
+<section class="panel" id="tm-calc"><h2>Productprijs & winst berekenen</h2><p>Vul de kosten per verkoop exclusief btw in. Gebruik 0 als een kostenpost aantoonbaar niet geldt. De btw en doelmarge zijn aanpasbare voorinstellingen.</p>
 <div class="calc-grid">
-<label>Inkoopprijs excl. btw (€)<input id="calc-buy" type="number" min="0" step=".01" value="20"></label>
-<label>Verzend- en fulfilmentkosten excl. btw (€)<input id="calc-shipping" type="number" min="0" step=".01" value="5"></label>
-<label>Overige vaste kosten per order excl. btw (€)<input id="calc-other" type="number" min="0" step=".01" value="2"></label>
-<label>Betaalproviderkosten (% verkoopprijs incl. btw)<input id="calc-fee" type="number" min="0" max="100" step=".1" value="2"></label>
-<label>Btw op verkoop (%)<input id="calc-vat" type="number" min="0" max="100" step=".1" value="21"></label>
-<label>Verkoopprijs incl. btw (€), optioneel<input id="calc-manual" type="number" min=".01" step=".01"></label>
+<label>Inkoopprijs excl. btw (€)<input id="calc-buy" type="number" min="0" max="1000000" step=".01" required></label>
+<label>Verzend- en fulfilmentkosten excl. btw (€)<input id="calc-shipping" type="number" min="0" max="1000000" step=".01" required></label>
+<label>Overige kosten per verkoop excl. btw (€), zoals reclame, retour en invoer<input id="calc-other" type="number" min="0" max="1000000" step=".01" required></label>
+<label>Betaalproviderkosten (% verkoopprijs incl. btw)<input id="calc-fee" type="number" min="0" max="100" step=".01" required></label>
+<label>Btw op verkoop (%)<input id="calc-vat" type="number" min="0" max="100" step=".01" value="21" required></label>
+<label>Verkoopprijs incl. btw (€), optioneel<input id="calc-manual" type="number" min=".01" max="1000000" step=".01"></label>
 <label>Gewenste winstmarge na betaalprovider (%)<input id="calc-margin" type="number" min="0" max="99" step=".1" value="35"></label>
 </div>
-<div class="calc-results" aria-live="polite"><div><small>Verkoopprijs incl. btw</small><strong id="calc-price">—</strong></div><div><small>Verkoopprijs excl. btw</small><strong id="calc-net">—</strong></div><div><small>Geschatte winst na ingevoerde kosten</small><strong id="calc-profit">—</strong></div><div><small>Geschatte winstmarge na kosten</small><strong id="calc-actual-margin">—</strong></div></div>
+<div class="calc-results" aria-live="polite"><div><small>Verkoopprijs incl. btw</small><strong id="calc-price">—</strong></div><div><small>Verkoopprijs excl. btw</small><strong id="calc-net">—</strong></div><div><small>Brutowinst na inkoop</small><strong id="calc-gross-profit">—</strong></div><div><small>Geschatte winst na ingevoerde kosten</small><strong id="calc-profit">—</strong></div><div><small>Geschatte winstmarge na kosten</small><strong id="calc-actual-margin">—</strong></div></div>
+<p role="status" id="calc-status"></p>
 <p class="calc-footnote" id="calc-note">Indicatieve berekening. Geen fiscale of boekhoudkundige beoordeling. Controleer btw-regels per verkoopland en of leverancierskosten inclusief of exclusief btw zijn.</p>
 </section>
 <script>
@@ -178,17 +179,25 @@ const field=id=>document.getElementById(id);
 const num=id=>Number(field(id).value);
 const cents=id=>Math.round(num(id)*100);
 const fmt=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n/100);
-const outputs=['calc-price','calc-net','calc-profit','calc-actual-margin'];
+const outputs=['calc-price','calc-net','calc-gross-profit','calc-profit','calc-actual-margin'];
+function clear(message){
+ outputs.forEach(id=>field(id).textContent='—');
+ field('calc-status').textContent=message;
+}
 function calc(){
- if([...root.querySelectorAll('input')].some(input=>!input.validity.valid)){
-  outputs.forEach(id=>field(id).textContent='Controleer invoer');
+ const manual=field('calc-manual').value!=='';
+ const inputs=[...root.querySelectorAll('input')].filter(input=>!manual||input.id!=='calc-margin');
+ if(inputs.some(input=>!input.validity.valid)||(!manual&&field('calc-margin').value==='')){
+  clear('Vul de ontbrekende bedragen in of corrigeer de invoer. Vul 0 in voor kosten die niet gelden.');
   return;
  }
  const cost=cents('calc-buy')+cents('calc-shipping')+cents('calc-other');
  const vat=num('calc-vat')/100, desired=num('calc-margin')/100, fee=num('calc-fee')/100;
- const manual=field('calc-manual').value!=='';
  const denom=1-desired-fee*(1+vat);
- if(!manual&&denom<=0){outputs.forEach(id=>field(id).textContent='Niet mogelijk');return}
+ if(!manual&&(denom<=0||cost===0)){
+  clear('Vul een verkoopprijs in of pas de kosten en doelmarge aan.');
+  return;
+ }
  let price=manual?cents('calc-manual'):Math.ceil(cost*(1+vat)/denom-1e-9);
  const netOf=gross=>Math.round(gross/(1+vat));
  const profitOf=gross=>netOf(gross)-cost-Math.round(gross*fee);
@@ -197,8 +206,10 @@ function calc(){
   price=Math.ceil((cost+1)*(1+vat)/denom);
  }
  const net=netOf(price),profit=profitOf(price),margin=net>0?100*profit/net:0;
+ field('calc-status').textContent='';
  field('calc-price').textContent=fmt(price);
  field('calc-net').textContent=fmt(net);
+ field('calc-gross-profit').textContent=fmt(net-cents('calc-buy'));
  field('calc-profit').textContent=fmt(profit);
  field('calc-actual-margin').textContent=margin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%';
 }
@@ -744,11 +755,18 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% elif section == "rankfix" %}
 <section class="panel integration"><div class="integration-icon" aria-hidden="true">◈</div><h2>RankFix AI</h2><p>RankFix blijft een aparte applicatie. NUVEMIXA toont pas gecontroleerde SEO/GEO-scanresultaten wanneer een beveiligde koppeling is geïnstalleerd en de scanbewijzen gevalideerd zijn. Automatische wijzigingen blijven uitgeschakeld.</p><a href="{{ url_for('admin_rankfix_open') }}" class="integration-status" target="_blank" rel="noopener noreferrer">Open RankFix-scanner voor NUVEMIXA →</a><p style="margin-top:14px">De scan opent in de afzonderlijke RankFix-omgeving. Log daar in met je RankFix-account. Automatisch scans starten of resultaten in NUVEMIXA opslaan is nog niet geactiveerd.</p></section>
 {% elif section == "google-shopping" %}
-<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2><p>Gecontroleerde catalogus: <strong>{{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }}</strong> producten doorstaan de interne basiscontrole. Alleen bevestigde leverancier-, prijs-, voorraad-, verzend- en productgegevens komen in aanmerking. Er wordt niets naar Google gepubliceerd.</p><a href="{{ url_for('admin_merchant_preview', download=1) }}" class="integration-status">Download interne productcontrole (JSON) →</a><p><a href="{{ url_for('admin_merchant_feed_preview') }}" class="integration-status">Bekijk XML-bron (technisch) →</a></p><p>De XML-bron bevat alleen intern goedgekeurde producten. Bij 0 goedgekeurde producten is de feed leeg; dit is geen browserfout.</p>
+<section class="panel integration"><div class="integration-icon" aria-hidden="true">▤</div><h2>Google Shopping & Merchant Center</h2>
+<p><strong>Interne controle van de testcatalogus.</strong> {{ integration_status.merchant.ready }} van {{ integration_status.merchant.total }} artikelen voldoen aan de lokale productcontroles. Goedkeuring en verzendinstellingen in Google Merchant Center zijn niet gecontroleerd.</p>
+<div class="nv-action-row"><a href="{{ url_for('admin_merchant_preview', download=1) }}" class="integration-status">Download redenen per artikel (JSON) →</a><a href="{{ url_for('admin_merchant_feed_preview') }}" class="integration-status">Open interne XML-preview →</a></div>
+{% if integration_status.merchant.reason_counts %}
+<h3>Afkeuringsredenen</h3><ul>
+{% for reason, count in integration_status.merchant.reason_counts|dictsort(by='value', reverse=true) %}<li>{{ reason }} · {{ count }} artikel{{ 'en' if count != 1 }}</li>{% endfor %}
+</ul>
+{% endif %}
 <div class="admin-table-wrap nv-merchant-audit"><table class="admin-table">
 <thead><tr><th>Product-ID en naam</th><th>Afkeurreden, veld en oplossing</th></tr></thead>
 <tbody>{% for row in merchant_preview_rows %}
-<tr><td><strong>{{ row.name }}</strong><br>{{ row.id }}</td><td>
+<tr><td><strong>{{ row.name }}</strong><br>{{ row.id }}{% if row.category %}<br>{{ row.category }}{% endif %}{% if row.temporary_image %}<br><small>Tijdelijke illustratie</small>{% endif %}</td><td>
 {% if row.issues %}<details><summary>{{ row.issues|length }} punten bekijken</summary><ul>
 {% for issue in row.issues %}<li><strong>{{ issue.reason }}</strong> · {{ issue.field }}. {% if issue.detail %}{{ issue.detail }} {% endif %}{{ issue.solution }}</li>{% endfor %}
 </ul></details>{% else %}Interne controle geslaagd{% endif %}
@@ -858,6 +876,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Onderdeel</th><th>Status</th><th>Waarde</th></tr></thead><tbody>
 {% for label, passed, value in seo_report[1].checks %}<tr><td>{{ label }}</td><td>{{ 'Aanwezig' if passed else 'Controle nodig' }}</td><td>{{ value or '—' }}</td></tr>{% endfor %}
 </tbody></table></div>
+{% elif not seo_error %}
+<p role="status">Nog geen lokaal SEO-rapport. Kies een productpagina en voer de controle uit.</p>
 {% endif %}
 </section>
 {% elif section == "google-ads" %}

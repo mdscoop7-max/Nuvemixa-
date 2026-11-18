@@ -16,7 +16,7 @@ from nv_merchant_audit import audit as merchant_audit
 from nv_dashboard_manager import DB, coupon_amount
 import nv_dashboard_postgres
 from nv_permissions import RIGHTS, SECTIONS
-from nv_seo_scan import ProductMetadata, canonical_matches
+from nv_seo_scan import ProductMetadata, canonical_matches, last_scan
 from nv_visits import visit_summary
 
 
@@ -180,16 +180,14 @@ def scan(items, categories, customer_db, integrations):
                                                 environ_overrides={"nuvemixa.internal_check": True})
         parser = ProductMetadata()
         parser.feed(response.get_data(as_text=True))
-        schema = any(isinstance(row, dict) and row.get("@type") == "Product" for row in parser.structured_data)
-        if (response.status_code != 200 or not all((parser.title, parser.description, schema))
+        parser.close()
+        schema = any(isinstance(row, dict) and row.get("@type") == "Product"
+                     and isinstance(row.get("name"), str) and row["name"].strip() for row in parser.structured_data)
+        if (response.status_code != 200 or response.mimetype != "text/html"
+                or not all((parser.title, parser.description, schema))
                 or not canonical_matches(parser.canonical, path, request.host_url)):
             return "error", "Steekproef op productmetadata mislukt.", "Controleer producttemplate en metadata."
-        if not nv_dashboard_postgres.runtime_enabled() and not DB.is_file():
-            return "attention", "Metadata aanwezig; rapportopslag nog niet ingericht.", "Voer een lokale SEO-controle uit."
-        with nv_dashboard_postgres.read_db(DB, timeout=0.25) as db:
-            table = nv_dashboard_postgres.table_exists(db, "seo_scans")
-            stored = table and db.execute("SELECT 1 FROM seo_scans LIMIT 1").fetchone()
-        return ("works", "Metadata en opgeslagen rapport leesbaar.", "") if stored else (
+        return ("works", "Metadata en opgeslagen rapport leesbaar.", "") if last_scan() else (
             "attention", "Metadata aanwezig; er is nog geen rapport opgeslagen.", "Voer een lokale SEO-controle uit.")
 
     def calculator():
