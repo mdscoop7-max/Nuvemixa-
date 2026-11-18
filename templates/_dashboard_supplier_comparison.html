@@ -47,7 +47,7 @@ Totaal {% if offer.total is none %}onbekend{% else %}{{ offer.total }} {{ d.mark
 <details class="panel-after"><summary>Onderzoek starten</summary>
 <ul>{% for country,name,url,note in c.directories %}<li><a href="{{ url }}" rel="noopener noreferrer">{{ name }}</a> · {{ country }}. {{ note }}</li>{% endfor %}</ul>
 {% if c.ai %}
-<form method="post" action="{{ url_for('nv_manage.supplier_search') }}" class="nv-admin-form">
+<form method="post" action="{{ url_for('nv_manage.supplier_search') }}" class="nv-admin-form" data-research-search data-search-phases="Product analyseren...|AI zoekt in gecontroleerde leveranciersbronnen...|Geciteerde bronnen controleren...|Resultaten voorbereiden...">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <input type="hidden" name="candidate" value="{{ row.id }}"><input type="hidden" name="market" value="{{ d.market }}">
 <label>Openbare SKU, GTIN of merk en model <input name="identifier" maxlength="120"></label>

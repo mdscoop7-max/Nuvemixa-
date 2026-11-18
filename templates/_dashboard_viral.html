@@ -19,7 +19,7 @@
 {% endfor %}
 {% if v.error %}<p class="notice" role="alert">{{ v.error }}</p>{% else %}
 {% set platform_options = v.platforms.items()|list %}
-<form method="get" class="nv-admin-form" role="search" data-research-search="Kandidaten zoeken...">
+<form method="get" class="nv-admin-form" role="search" data-research-search="Kandidaten zoeken..." data-search-phases="Kandidaten zoeken...|Resultaten voorbereiden...">
 <input type="hidden" name="section" value="viral">
 <label>Zoek kandidaat<input type="search" name="candidate_q" maxlength="100" value="{{ v.filters.candidate_q }}"></label>
 <label>Platform<select name="platform"><option value="">Alle platforms</option>{% for code, p in platform_options %}<option value="{{ code }}"{% if v.filters.platform == code %} selected{% endif %}>{{ p[0] }}</option>{% endfor %}</select></label>
@@ -70,7 +70,7 @@
 {% if v.detail == row.id and v.dossier %}
 {% include "_dashboard_product_dossier.html" %}
 {% if v.research_ai %}
-<form method="post" action="{{ url_for('nv_manage.research_suggestion') }}" class="nv-admin-form">
+<form method="post" action="{{ url_for('nv_manage.research_suggestion') }}" class="nv-admin-form" data-research-search data-search-phases="Opgeslagen waarnemingen verzamelen...|AI analyseert de waarnemingen...|Advies voorbereiden...">
 {{ csrf() }}<input type="hidden" name="candidate" value="{{ row.id }}">
 <button type="submit">AI-advies over bestaande waarnemingen</button>
 </form>

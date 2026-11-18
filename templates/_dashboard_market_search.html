@@ -61,7 +61,7 @@
 <section class="panel nv-market-panel">
   <h2>{{ 'Viral Product Finder' if viral_page else 'Internationaal marktonderzoek' }}</h2>
   <p class="nv-honest-note" role="note">NUVEMIXA zoekt in aangesloten catalogi en openbare publicaties. {{ 'Google Trends toont zoekinteresse. Sociale platforms open je via bronlinks. Verkoopcijfers en sociale populariteitscijfers ontbreken.' if viral_page else 'Verkoopcijfers en marktprijzen ontbreken bij deze bronnen.' }} Resultaten kunnen tot 10 minuten in de cache staan.</p>
-  <form method="get" action="{{ url_for('control') }}" class="nv-market-form" role="search" data-research-search>
+  <form method="get" action="{{ url_for('control') }}" class="nv-market-form" role="search" data-research-search data-search-phases="{{ 'Product analyseren...|Nederlandse en Engelse zoekwoorden controleren...|Trendbronnen en publicaties controleren...|Leveranciers zoeken...|AI analyseert zoekresultaten...|Resultaten voorbereiden...' if viral_page else 'Product analyseren...|Nederlandse en Engelse zoekwoorden controleren...|Catalogi en publicaties doorzoeken...|Leveranciers zoeken...|EU- en internationale resultaten filteren...|AI analyseert zoekresultaten...|Resultaten voorbereiden...' }}">
     <input type="hidden" name="section" value="{{ 'viral' if viral_page else 'internationaal' }}">
     <input type="hidden" name="mrun" value="1">
     <div class="nv-market-searchbar">
@@ -96,6 +96,7 @@
     {% include "_dashboard_trend_signals.html" %}
     {% if m.all_failed %}<p class="notice" role="alert"><strong>Externe bronnen niet bereikbaar.</strong> Er is niets doorzocht dat resultaten kon geven; dit is geen bewijs dat het product niet bestaat. Probeer het later opnieuw.</p>{% endif %}
     {{ pending_notice(m.pending_sources) }}
+{% with ai = m.ai %}{% include "_dashboard_ai_status.html" %}{% endwith %}
 {% if m.interpretation %}<p class="nv-market-note"><strong>Zo zoekt NUVEMIXA:</strong> {{ m.interpretation.queries|join(' · ') }}{% if m.interpretation.categories %} — categorie{{ 'ën' if m.interpretation.categories|length > 1 }}: {{ m.interpretation.categories|join(', ') }}{% if m.interpretation.automatic %} (automatisch herkend){% endif %}{% endif %}</p>{% endif %}
     {% if m.unavailable %}<p class="notice">Niet volledig beschikbaar: {% for name in m.unavailable %}{{ name }}{% if m.unavailable_reasons.get(name) %} ({{ m.unavailable_reasons[name] }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
     {% if m.sources_checked %}<p><small>Geraadpleegd: {{ m.sources_checked|join(', ') }}.</small></p>{% endif %}

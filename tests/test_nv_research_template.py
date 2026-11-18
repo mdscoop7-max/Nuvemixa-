@@ -12,7 +12,8 @@ class ResearchTemplateRegression(unittest.TestCase):
             response = app.test_client().get("/dashboard?section=leveranciers")
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        form = html.split("data-research-search>", 1)[1].split("</form>", 1)[0]
+        form = html.split("id=\"nv-supplier-search-title\"", 1)[1].split("</form>", 1)[0]
+        self.assertIn("data-search-phases=", form)
         self.assertIn('name="section" value="onderzoek"', form)
         self.assertIn('name="research_platform" value="Productcatalogi"', form)
         self.assertIn('<option value="eu">Binnen EU</option>', form)

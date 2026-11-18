@@ -47,7 +47,7 @@
 <section class="panel">
 <h2>{{ "Productafbeeldingen" if section == "afbeeldingen" else "Productcatalogus" }}</h2>
 <p>{{ filtered_products|length }} producten{% if search %} voor “{{ search }}”{% endif %}</p>
-<form method="get" action="/dashboard" class="nv-admin-form" role="search" data-research-search="Catalogus doorzoeken...">
+<form method="get" action="/dashboard" class="nv-admin-form" role="search" data-research-search="Catalogus doorzoeken..." data-search-phases="Catalogus doorzoeken...|Resultaten voorbereiden...">
 <input type="hidden" name="section" value="{{ section }}">
 <label>Zoek product<input type="search" name="q" value="{{ search }}" maxlength="120"></label>
 <button type="submit">Zoeken</button>

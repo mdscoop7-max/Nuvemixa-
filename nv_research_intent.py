@@ -11,7 +11,7 @@ PHRASES = (
     (r"\b(?:puur|pure|zuiver(?:e)?)\b", "pure"),
     (r"\b(?:koud[\s-]*geperst|cold[\s-]*press(?:ed)?)\b", "cold pressed"),
     (r"\b(?:gezichtsreinigingsborstel|gezichtsborstel|(?:facial|face) (?:cleansing|cleaning) brush)\b", "facial cleansing brush"),
-    (r"\b(?:gezichts[\s-]*reiniger(?:s)?|gezichts[\s-]*wasgel|(?:facial|face) (?:cleansers?|wash|cleansing (?:gel|foam|oil)))\b", "facial cleanser"),
+    (r"\b(?:gezichts[\s-]*reiniger(?:s)?|gezichts[\s-]*wasgel|(?:facial|face) (?:cleansers?|wash|cleansing (?:gel|foam)))\b", "facial cleanser"),
     (r"\b(?:keuken[\s-]*(?:organi[sz]ers?|opbergers?)|kitchen (?:organi[sz]ers?|storage racks?))\b", "kitchen organizer"),
     (r"\b(?:katten[\s-]*(?:voerbak(?:ken)?|voerautomaat|voederautomaat)|(?:cat|feline) (?:feeders?|food dispensers?))\b", "cat feeder"),
     (r"\b(?:automatische|automatisch|auto[\s-]+(?=cat feeder))\b", "automatic"),
@@ -164,6 +164,9 @@ CAPACITY = re.compile(r"\b([0-9]+) mah\b")
 CONNECTOR = re.compile(r"\b(?:usb[\s‐‑–—-]*(?:type[\s‐‑–—-]*)?c|type[\s‐‑–—-]*c)\b")
 ACCESSORIES = (r"cables?|kabel|spray|covers?|cases?|houder|mounts?|brackets?|straps?|stands?|bags?|hoes|"
                r"replacement head|opzetborstel|replacement filter|replacement adapter")
+# Losse onderdelen die alleen "voor" een product bestaan of er direct achter staan (bijv. reislader, montageband).
+PARTS = r"(?:travel )?chargers?|(?:reis)?(?:op)?laders?|charging (?:cables?|docks?)|(?:mounting |carrying )?straps?|bevestigingsband(?:en)?|draagriem(?:en)?|mounts?"
+
 
 def normalize(value):
     value = "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if not unicodedata.combining(c))
@@ -278,6 +281,10 @@ def offer_match(term, identity, description="", variant=""):
         if (re.search(r"\b(?:" + ACCESSORIES + r") (?:for|voor|compatible with) " + core + r"\b", title)
                 or re.search(r"\b" + core + r" (?:cleaning )?(?:" + ACCESSORIES + r")\b", title)):
             return "", ()
+        if core != "power bank" and not re.search(r"\b(?:" + PARTS + r")\b", query) and (
+                re.search(r"\b(?:" + PARTS + r") (?:\w+ ){0,2}(?:for|voor|compatible with) (?:\w+ ){0,3}" + core + r"\b", title)
+                or re.search(r"\b" + core + r" (?:(?!with |met |incl)\w+ ){0,2}(?:" + PARTS + r")\b", title)):
+            return "", ()
     if core == "power bank":
         if not power_bank_query(identity):
             return "", ()
@@ -295,6 +302,9 @@ def offer_match(term, identity, description="", variant=""):
     subject_in_title = has_phrase(title, subject)
     if subject == "facial cleanser":
         subject_in_title |= has_phrase(title, "cleanser") and bool(words(body) & {"face", "facial", "gezicht"})
+        if not words(query) & {"oil", "olie", "brush", "borstel"} and words(title) & {
+                "oil", "olie", "oils", "brush", "borstel", "brushes", "cleansing brush"}:
+            return "", ()
     if subject == "pet accessories":
         subject_in_title |= pet_accessory(title)
     if subject == "bluetooth speaker" and has_phrase(title, "bluetooth"):

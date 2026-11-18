@@ -120,3 +120,23 @@ def test_public_woocommerce_catalogue_accepts_only_its_own_product_links():
     assert [p["url"] for p in result["products"]] == [accepted_url]
     attempt = next(a for a in result["search_attempts"] if a["source"] == "Aurgan")
     assert attempt["raw"] == 2 and attempt["exact"] == 1
+
+
+def test_live_findings_speaker_parts_and_cleanser_oils_are_excluded():
+    rejected = [("Bluetooth-speaker", "Travel charger for bluetooth speaker"),
+                ("bluetooth speaker", "Bluetooth speaker mounting strap"),
+                ("bluetooth speaker", "Reislader voor JBL bluetooth speaker"),
+                ("Facial cleanser", "Facial cleansing oil 100ml"),
+                ("Facial cleanser", "Facial cleansing brush silicone"),
+                ("Security camera", "Dummy security camera with LED")]
+    for query, title in rejected:
+        assert offer_match(query, title)[0] == "", (query, title)
+    kept = [("bluetooth speaker", "Portable Bluetooth Speaker 10W"),
+            ("bluetooth speaker", "Bluetooth speaker with carrying strap"),
+            ("facial cleanser", "CeraVe Hydrating Facial Cleanser"),
+            ("Gezichtsreiniger", "Facial cleanser gel"),
+            ("Automatische kattenvoerbak", "Automatic cat feeder 4L"),
+            ("Keukenorganizer", "Kitchen organizer rack"),
+            ("power bank 10000mah", "Power bank charger 10000mAh")]
+    for query, title in kept:
+        assert offer_match(query, title)[0] == "exact", (query, title)

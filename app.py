@@ -2296,7 +2296,8 @@ def control():
             "supplier_filter": research_filter,
         }
         if request.args.get("research_run") == "1":
-            product_discovery = discover(
+            from nv_ai_search import ai_discover
+            product_discovery = ai_discover(
                 request.args.get("research_term", ""), country=research_country, mode=research_mode,
                 platforms=research_platforms, category=research_category, categories=research_categories,
                 supplier_filter=research_filter,
@@ -2421,6 +2422,7 @@ def control():
         supplier_rows=supplier_rows,
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
+        ai_status=__import__('nv_openai').status(),
 
         supplier_error=supplier_error,
 

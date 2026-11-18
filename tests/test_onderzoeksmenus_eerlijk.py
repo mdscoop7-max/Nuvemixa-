@@ -31,10 +31,14 @@ def test_menu_geweigerd_voor_anoniem_en_klant(sectie, klant):
     assert client.get(f"/dashboard?section={sectie}").status_code in (302, 303, 403)
 
 
-def test_productonderzoek_beweert_geen_ai(administrator):
+def test_productonderzoek_toont_eerlijke_ai_status(administrator, monkeypatch):
     html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
     assert "AI Productonderzoek" not in html
-    assert "Geen AI en geen verkoopcijfers" in html and "niet geactiveerd" in html
+    assert "AI niet beschikbaar" in html and "normaal zoeken is actief" in html
+    assert "Geen verzonnen verkoopcijfers" in html
+    monkeypatch.setenv("OPENAI_API_KEY", "fixture-key")
+    html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
+    assert "AI actief" in html and "fixture-key" not in html
 
 
 def test_viral_toont_vaste_notities_als_niet_live(administrator):

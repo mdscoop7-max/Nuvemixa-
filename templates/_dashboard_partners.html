@@ -5,7 +5,7 @@
   <div class="nv-partner-honest" role="note">
     <strong>Wat dit is, en wat niet.</strong> "Partners zoeken" is een <strong>onderzocht register</strong> (handmatig samengesteld op {{ v.checked }}) met <strong>handmatige ontdekkingslinks</strong>. Het is <strong>geen live, automatische internetzoekmachine</strong>: er wordt niets op internet opgehaald, niemand benaderd en de gegevens verversen niet vanzelf. De score is een voorlopige indicatie, geen keurmerk. Een bewaarde kandidaat is <strong>geen goedgekeurde leverancier</strong>.
   </div>
-  <form method="get" class="nv-partner-form" role="search" data-research-search="Partners zoeken...">
+  <form method="get" class="nv-partner-form" role="search" data-research-search="Partners zoeken..." data-search-phases="Partners zoeken...|Resultaten voorbereiden...">
     <input type="hidden" name="section" value="partners">
     <label>Productnaam of zoekwoord <input name="q" value="{{ v.form.q }}" maxlength="80" placeholder="bijvoorbeeld parfum, slimme sloten, kamerplanten"></label>
     <label>Categorie <select name="cat"><option value="">Alle</option>{% for k, n in v.categories.items() %}<option value="{{ k }}" {{ 'selected' if v.form.cat == k }}>{{ n }}</option>{% endfor %}</select></label>
@@ -76,7 +76,7 @@
   <section class="nv-partner-candidates" id="nv-partner-candidates">
     <h3>Kandidatenlijst</h3>
     <p class="nv-partner-warn">{% if v.permanent %}<strong>Opslag: permanent.</strong> De kandidatenlijst staat in de PostgreSQL-dashboardopslag en blijft na een herstart bewaard.{% else %}<strong>Let op: tijdelijk.</strong> De PostgreSQL-dashboardopslag staat niet aan; de kandidatenlijst staat in SQLite op Render Free en verdwijnt bij een herstart of nieuwe deployment. Noteer belangrijke kandidaten ook elders.{% endif %} Kandidaten zijn geen goedgekeurde leveranciers en er is geen contact gelegd.</p>
-    <form method="get" action="{{ url_for('control', _anchor='nv-partner-candidates') }}" class="nv-partner-form" role="search" data-research-search="Kandidaten zoeken...">
+    <form method="get" action="{{ url_for('control', _anchor='nv-partner-candidates') }}" class="nv-partner-form" role="search" data-research-search="Kandidaten zoeken..." data-search-phases="Kandidaten zoeken...|Resultaten voorbereiden...">
       <input type="hidden" name="section" value="partners">
       {% for key, value in v.form.items() if value %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
       <label>Zoek bewaarde kandidaat <input type="search" name="candidate_q" maxlength="100" value="{{ v.candidate_query }}"></label>

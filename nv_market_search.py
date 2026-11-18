@@ -7,7 +7,8 @@ onbekend getoond.
 from collections import Counter
 from datetime import date, timedelta
 
-from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, MANUAL_PLATFORMS, RESEARCH_CATEGORIES, discover
+from nv_ai_search import ai_discover as discover  # AI-ondersteund, valt terug op normaal zoeken
+from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, MANUAL_PLATFORMS, RESEARCH_CATEGORIES
 
 REGIONS = {"all": "Wereldwijd", "eu": "Binnen EU", "international": "Buiten EU"}
 SUPPLIER_TYPES = {
@@ -142,7 +143,7 @@ def search_view(kind, categories, args, *, fetch=None):
             "price_note": PRICE_NOTE, "trend_note": TREND_NOTE, "ran": False, "error": None,
             "products": [], "suppliers": [], "publications": [], "trends": [], "competitors": [],
             "opportunities": [], "risks": [], "pending_sources": [], "links": [], "unavailable": [], "sources_checked": [],
-            "empty_message": "", "result": None}
+            "empty_message": "", "result": None, "ai": None}
     if not form["run"]:
         return view
     if not form["q"]:
@@ -180,6 +181,7 @@ def search_view(kind, categories, args, *, fetch=None):
         sources_checked=result.get("sources_checked", []), empty_message="Geen bevestigde producten gevonden voor deze selectie.",
         alternatives=result.get("alternatives", []), country_name=result["country_name"],
         interpretation=result.get("interpretation"), all_failed=result.get("all_sources_failed", False),
+        ai=result.get("ai"),
     )
     view["opportunities"], view["risks"] = opportunities_and_risks(view, form)
     return view

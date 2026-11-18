@@ -1,0 +1,29 @@
+/* NUVEMIXA zoekmeter */
+.nv-search-meter{grid-column:1/-1;margin:.75rem 0 0;padding:.85rem 1rem;border:1px solid #c7d2fe;border-radius:12px;background:#eef2ff;color:#1e1b4b;font-size:.95rem}
+.nv-search-meter[hidden],.nv-search-meter [hidden]{display:none!important}
+.nv-search-meter__head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.nv-search-meter__phase{flex:1 1 auto;min-width:12rem}
+.nv-search-meter__time{font-variant-numeric:tabular-nums;color:#4338ca;font-weight:600}
+.nv-search-meter__spinner{width:1.1rem;height:1.1rem;border:2px solid #4f46e5;border-inline-end-color:transparent;border-radius:50%;animation:nv-meter-spin .8s linear infinite;flex:none}
+.nv-search-meter__bar{position:relative;height:8px;margin:.65rem 0 .5rem;border-radius:99px;background:#c7d2fe;overflow:hidden}
+.nv-search-meter__bar span{position:absolute;inset-block:0;width:35%;border-radius:inherit;background:linear-gradient(90deg,#6366f1,#22d3ee);animation:nv-meter-slide 1.3s ease-in-out infinite}
+.nv-search-meter__steps{display:flex;flex-wrap:wrap;gap:.35rem .5rem;margin:.25rem 0;padding:0;list-style:none;font-size:.82rem}
+.nv-search-meter__steps li{padding:.15rem .55rem;border-radius:99px;background:#fff;color:#64748b;border:1px solid #e0e7ff}
+.nv-search-meter__steps li.is-done{color:#166534;border-color:#bbf7d0;background:#f0fdf4}
+.nv-search-meter__steps li.is-done::before{content:"✓ "}
+.nv-search-meter__steps li.is-current{color:#1e1b4b;border-color:#6366f1;font-weight:600}
+.nv-search-meter__note{margin:.35rem 0 0;font-size:.78rem;color:#475569}
+.nv-search-meter__slow{margin:.5rem 0 0;padding:.5rem .7rem;border-radius:8px;background:#fef3c7;color:#78350f;font-weight:600}
+.nv-search-meter__stop{margin-top:.5rem;min-height:40px}
+.nv-search-meter.is-stopped{background:#f8fafc;border-color:#cbd5e1}
+.nv-search-meter.is-stopped .nv-search-meter__spinner,.nv-search-meter.is-stopped .nv-search-meter__bar,.nv-search-meter.is-stopped .nv-search-meter__steps,.nv-search-meter.is-stopped .nv-search-meter__note{display:none}
+form.nv-searching button[type=submit][disabled]{cursor:progress;opacity:.8}
+@keyframes nv-meter-spin{to{transform:rotate(360deg)}}
+@keyframes nv-meter-slide{0%{left:-35%}100%{left:100%}}
+@media(prefers-reduced-motion:reduce){.nv-search-meter__spinner,.nv-search-meter__bar span{animation:none}.nv-search-meter__bar span{width:100%;opacity:.5}}
+@media(max-width:760px){.nv-search-meter{position:sticky;bottom:.5rem;z-index:30;box-shadow:0 6px 24px rgba(30,27,75,.18)}.nv-search-meter__phase{min-width:0}}
+/* AI-status bij zoekresultaten */
+.nv-ai-state{margin:.5rem 0;padding:.6rem .85rem;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;font-size:.9rem}
+.nv-ai-state--active{border-color:#a7f3d0;background:#ecfdf5;color:#064e3b}
+.nv-ai-state--fallback{border-color:#fde68a;background:#fffbeb;color:#78350f}
+.nv-ai-state--off{color:#334155}

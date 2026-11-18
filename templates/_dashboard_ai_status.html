@@ -1,0 +1,14 @@
+{# Toont of AI bij deze zoekopdracht actief was. Variabele: ai (dict uit nv_ai_search) #}
+{% if ai %}
+<p class="nv-ai-state nv-ai-state--{{ ai.state }}" role="status">
+  <strong>{{ '🤖 AI actief' if ai.state == 'active' else ('AI niet beschikbaar — normaal zoeken' if ai.state == 'fallback' else 'Normaal zoeken (AI uit)') }}</strong>
+  {% if ai.state == 'active' %}
+    {% if ai.keywords_en or ai.keywords_nl %} · Zoekwoorden: {{ (ai.keywords_nl + ai.keywords_en)|join(', ') }}{% endif %}
+    {% if ai.used_query %} · Gezocht als: “{{ ai.used_query }}”{% endif %}
+    {% if ai.category %} · Categorie: {{ ai.category }}{% endif %}
+    {% if ai.removed %} · {{ ai.removed }} niet-passende resultaten (accessoires/andere producten) verwijderd{% endif %}
+  {% endif %}
+  {% if ai.message %}<br><small>{{ ai.message }}</small>{% endif %}
+  <br><small>AI kiest alleen zoekwoorden en filtert opgehaalde resultaten; producten, leveranciers en prijzen komen uitsluitend uit de bronnen.</small>
+</p>
+{% endif %}

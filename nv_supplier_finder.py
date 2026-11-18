@@ -220,8 +220,9 @@ def save_supplier_comparison():
 
 
 def search_configured():
-    return bool(os.getenv("NUVEMIXA_SUPPLIER_SEARCH_MODEL", "").strip()
-                and os.getenv("OPENAI_API_KEY", "").strip())
+    # Alleen OPENAI_API_KEY is nodig; het model heeft een kostenefficiënte standaard (nv_openai).
+    import nv_openai
+    return nv_openai.configured()
 
 
 def search_supplier_sources(title, identifier, market, *, international=False):
@@ -232,7 +233,7 @@ def search_supplier_sources(title, identifier, market, *, international=False):
         domains = [domain for domain in domains if domain not in {"avasam.com", "cjdropshipping.com"}]
     order = "NL, BE, DE, then FR, ES, PL and other EU warehouses" if market in EU else f"{market} warehouses first, then nearby dispatch countries"
     data = {
-        "model": os.environ["NUVEMIXA_SUPPLIER_SEARCH_MODEL"].strip(),
+        "model": __import__("nv_openai").search_model(),
         "store": False,
         "max_tool_calls": 3,
         "max_output_tokens": 450,
@@ -245,12 +246,8 @@ def search_supplier_sources(title, identifier, market, *, international=False):
         "input": json.dumps({"public_product_title": title, "public_sku_gtin_or_model": identifier,
                              "destination": market}, ensure_ascii=False),
     }
-    query = urllib.request.Request("https://api.openai.com/v1/responses", method="POST",
-                                   headers={"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"].strip(),
-                                            "Content-Type": "application/json"},
-                                   data=json.dumps(data).encode())
-    with urllib.request.urlopen(query, timeout=12) as reply:
-        response = json.loads(reply.read(120_000))
+    import nv_openai
+    response = nv_openai.post("responses", data, timeout=12, estimate_usd=0.08)
     result = {}
     for item in response.get("output", []):
         if item.get("type") != "message":
@@ -300,7 +297,7 @@ def supplier_search():
         session["nv_supplier_search_at"] = now
         links = search_supplier_sources(row["title"], identifier, market,
                                         international=request.form.get("international") == "1")
-    except (TypeError, AttributeError, *STORAGE_ERRORS):
+    except (TypeError, AttributeError, __import__("nv_openai").AIUnavailable, *STORAGE_ERRORS):
         current_app.logger.warning("AI-leverancierszoekopdracht tijdelijk niet beschikbaar")
         flash("AI-zoekopdracht niet beschikbaar. Gebruik de B2B-bronnen hieronder.", "error")
     else:

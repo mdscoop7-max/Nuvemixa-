@@ -49,29 +49,7 @@
       entries[next].focus();
     });
   }
-  for (const form of document.querySelectorAll('[data-research-search]')) {
-    const button = form.querySelector('button[type="submit"]');
-    const status = form.querySelector('[role="status"]');
-    const spinner = status.querySelector('span');
-    const message = document.createTextNode('');
-    status.append(message);
-    form.addEventListener('submit', event => {
-      if (button.disabled) {
-        event.preventDefault();
-        return;
-      }
-      form.setAttribute('aria-busy', 'true');
-      button.disabled = true;
-      spinner.hidden = false;
-      message.textContent = form.dataset.researchSearch || 'Producten en leveranciers zoeken...';
-    });
-    window.addEventListener('pageshow', () => {
-      form.removeAttribute('aria-busy');
-      button.disabled = false;
-      spinner.hidden = true;
-      message.textContent = '';
-    });
-  }
+  // Zoekbalken: zie nv-search-meter.js (zoekmeter met fasen, dubbelklikbeveiliging en herstel).
 
   const forms = [...document.querySelectorAll('main form[method="post"]')];
   const dirty = new Set();

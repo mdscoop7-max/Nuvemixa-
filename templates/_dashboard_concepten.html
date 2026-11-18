@@ -23,7 +23,7 @@
     <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-form">{{ csrf() }}{{ fields(none) }}<button class="nv-blue-action" type="submit">Bewaar als concept</button></form>
   </details>
   <p>Vanuit <a href="/dashboard?section=onderzoek">Productonderzoek</a> bewaar je een gevonden product met de knop "Bewaar als conceptproduct".</p>
-  <form method="get" action="{{ url_for('control') }}" role="search" class="nv-admin-form" data-research-search="Conceptproducten zoeken...">
+  <form method="get" action="{{ url_for('control') }}" role="search" class="nv-admin-form" data-research-search="Conceptproducten zoeken..." data-search-phases="Conceptproducten zoeken...|Resultaten voorbereiden...">
     <input type="hidden" name="section" value="concepten">
     <label>Zoek een concept<input type="search" name="concept_q" maxlength="100" value="{{ v.query }}" placeholder="Product, categorie, leverancier of SKU"></label>
     <button type="submit">Zoeken</button>
