@@ -319,5 +319,16 @@ window.TrendMixEnglishLabels={
   "Bekijk Lifestyle & Sport →": "Explore Lifestyle & Sport →",
   "Bekijk producten in Lifestyle & Sport": "View products in Lifestyle & Sport",
   "Heb je een vraag over een product, bestelling of levering? Vul het formulier in.": "Do you have a question about a product, order or delivery? Fill in the form.",
-  "Heb je een vraag over een product, bestelling of levering? Vul het formulier in. We gebruiken je gegevens alleen om je vraag te beantwoorden.": "Do you have a question about a product, order or delivery? Fill in the form. We only use your details to answer your question."
+  "Heb je een vraag over een product, bestelling of levering? Vul het formulier in. We gebruiken je gegevens alleen om je vraag te beantwoorden.": "Do you have a question about a product, order or delivery? Fill in the form. We only use your details to answer your question.",
+  "Slimme gadgets voor een makkelijker leven.": "Smart gadgets for an easier life.",
+  "Maak je huis slimmer en comfortabeler.": "Make your home smarter and more comfortable.",
+  "Jouw dagelijkse verzorging, nét wat fijner.": "Your daily care routine, just a little nicer.",
+  "Een mooier en praktischer thuis.": "A more beautiful and practical home.",
+  "Beweeg, ontdek en leef actief.": "Move, explore and live actively.",
+  "Slimme tech en handige accessoires voor elke dag.": "Smart tech and handy accessories for every day.",
+  "Verlichting, sensoren en slimme oplossingen voor thuis.": "Lighting, sensors and smart solutions for your home.",
+  "Verzorging, haarstyling en moderne beautytools.": "Skincare, hair styling and modern beauty tools.",
+  "Stijlvolle en handige producten voor wonen en organiseren.": "Stylish and handy products for living and organising.",
+  "Sportaccessoires, herstelproducten en reisgemak.": "Sports accessories, recovery products and travel convenience.",
+  "AANBIEDINGEN": "DEALS"
 };
