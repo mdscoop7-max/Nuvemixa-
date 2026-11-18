@@ -39,6 +39,32 @@
       entries[next].focus();
     });
   }
+  for (const form of document.querySelectorAll('[data-research-search]')) {
+    const button = form.querySelector('button[type="submit"]');
+    const status = form.querySelector('[role="status"]');
+    const spinner = status.querySelector('span');
+    const message = document.createTextNode('');
+    status.append(message);
+    form.addEventListener('submit', event => {
+      if (button.disabled) {
+        event.preventDefault();
+        return;
+      }
+      form.setAttribute('aria-busy', 'true');
+      button.disabled = true;
+      spinner.hidden = false;
+      const mode = form.elements.research_mode.value;
+      message.textContent = ['suppliers', 'dropship', 'wholesale'].includes(mode)
+        ? 'Leveranciers zoeken...' : 'Zoeken...';
+    });
+    window.addEventListener('pageshow', () => {
+      form.removeAttribute('aria-busy');
+      button.disabled = false;
+      spinner.hidden = true;
+      message.textContent = '';
+    });
+  }
+
   const forms = [...document.querySelectorAll('main form[method="post"]')];
   const dirty = new Set();
   const submitting = new WeakSet();

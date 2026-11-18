@@ -6,13 +6,14 @@ from unittest.mock import Mock
 import unittest
 
 import requests
+import pytest
 
 from nv_product_discovery import COUNTRIES, EMPTY_RESULTS, MODES, discover, product_matches
 from nv_research_sources import CJ_PRODUCT, syncee_product_details
 
 CATEGORIES = {
     "gadgets": "Gadgets", "smart-home": "Smart Home", "beauty-care": "Beauty & Care",
-    "home-living": "Home & Living", "lifestyle-sport": "Lifestyle & Sport",
+    "home-living": "Home & Living", "lifestyle-sport": "Lifestyle & Sport", "pets": "Huisdieren",
 }
 TERM = "Magnetische powerbank 10000mAh"
 SYNCEE_PRODUCT = "https://syncee.com/product/253317_83365_123/powerbank-magnetic-10000mah"
@@ -51,6 +52,73 @@ def editorial_card(url, title, summary, published=None):
         f'<article><header>Published <time datetime="{published}T12:00:00Z">Today</time></header>'
         f'<p class="synopsis">{summary}</p></article></a>'
     )
+
+
+@pytest.mark.parametrize(("terms", "title", "category"), [
+    (("Gezichtsreiniger", "Facial cleanser"), "Gentle Face Wash 120 ml", "beauty-care"),
+    (("Keukenorganizer", "Kitchen organizer"), "Kitchen Organiser 2 Tier", "home-living"),
+    (("Automatische kattenvoerbak", "Automatic cat feeder"), "Smart Automatic Cat Feeder 4 L", "pets"),
+    (("Bluetooth speaker", "Bluetooth luidspreker"), "Bluetooth Speaker", "gadgets"),
+    (("Yogamat", "Yoga mat"), "Natural Yoga Mat", "lifestyle-sport"),
+    (("LED-verlichting", "LED lighting"), "Dimmable LED Light Strip", "smart-home"),
+    (("Huisdierenaccessoires", "Pet accessories"), "Reflective Dog Collar", "pets"),
+])
+def test_bilingual_supplier_search_with_region_filters(terms, title, category):
+    def fetch(url, **kwargs):
+        if url.startswith("https://syncee.com/collections/"):
+            return Response(syncee_card(title) * 2)
+        if url == SYNCEE_PRODUCT:
+            return Response(syncee_details(["NL"], title))
+        raise AssertionError(url)
+
+    for term in terms:
+        all_results = discover(term, mode="dropship", categories=CATEGORIES, platforms=["Productcatalogi"], fetch=fetch)
+        company, = all_results["suppliers"]
+        assert company["origin"] == "AU"
+        assert company["dropshipping"] is True
+        assert company["shipping_nl"] == "Bevestigd"
+        product, = company["products"]
+        assert product["category"] == category
+        assert product["url"] == SYNCEE_PRODUCT
+
+        eu = discover(term, mode="dropship", categories=CATEGORIES, platforms=["Productcatalogi"],
+                      fetch=fetch, supplier_filter="eu")
+        assert not eu["suppliers"]
+
+
+@pytest.mark.parametrize(("term", "title"), [
+    ("Bluetooth speaker", "Bluetooth Speaker Case"),
+    ("Bluetooth speaker", "Wireless Speaker for FM Radio"),
+    ("Automatische kattenvoerbak", "Gravity Cat Feeder"),
+    ("Gezichtsreiniger", "Facial Cleansing Brush"),
+    ("Keukenorganizer", "Cable Organizer"),
+    ("Huisdierenaccessoires", "Cat Food"),
+    ("LED-verlichting", "Desktop Speaker with LED Lighting"),
+    ("LED-verlichting", "Makeup Mirror With LED Lighting"),
+])
+def test_unrelated_offers_are_rejected(term, title):
+    assert not product_matches(term, title)
+
+
+def test_eu_search_tries_synonyms_after_non_eu_results():
+    eu_url = SYNCEE_PRODUCT.replace("253317", "279866")
+    title = "Kitchen Organizer"
+
+    def fetch(url, **kwargs):
+        if url == eu_url:
+            return Response(syncee_details(["NL"], title).replace(b"253317", b"279866"))
+        if "search=kitchen%20organiser" in url:
+            return Response(syncee_card(title).replace(b"253317", b"279866")
+                            .replace(b"NNE Living", b"Golden Pigs"))
+        if url.startswith("https://syncee.com/collections/"):
+            return Response(syncee_card(title))
+        raise AssertionError(url)
+
+    result = discover("Kitchen organizer", mode="dropship", categories=CATEGORIES, platforms=["Productcatalogi"],
+                      fetch=fetch, supplier_filter="eu")
+    company, = result["suppliers"]
+    assert company["origin"] == "RO"
+    assert company["products"][0]["url"] == eu_url
 
 
 class Response:

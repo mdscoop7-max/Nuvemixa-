@@ -7,6 +7,18 @@ from test_nv_product_discovery import Response, editorial_card
 
 
 class ResearchTemplateRegression(unittest.TestCase):
+    def test_supplier_search_entry_works_without_ai_and_defaults_to_eu(self):
+        with patch("app.admin_is_authenticated", return_value=True):
+            response = app.test_client().get("/dashboard?section=leveranciers")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        form = html.split("data-research-search>", 1)[1].split("</form>", 1)[0]
+        self.assertIn('name="section" value="onderzoek"', form)
+        self.assertIn('name="research_platform" value="Productcatalogi"', form)
+        self.assertIn('<option value="eu">Binnen EU</option>', form)
+        self.assertIn('<option value="all">Alle landen</option>', form)
+        self.assertIn('role="status"', form)
+
     def test_screened_news_renders_and_unsafe_link_is_absent(self):
         approved = "https://www.techradar.com/phones/phone-accessories/magnetic-powerbank-trends"
         unwanted = "https://login.microsoftonline.com/"

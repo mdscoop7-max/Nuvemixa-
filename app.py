@@ -2251,9 +2251,11 @@ def control():
     product_discovery = None
     research_options = {}
     if section == "onderzoek":
-        from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, discover
+        from nv_product_discovery import (
+            ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, RESEARCH_CATEGORIES, discover,
+        )
 
-        research_categories = {slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}
+        research_categories = {**{slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}, **RESEARCH_CATEGORIES}
         research_category = request.args.get("research_category", ALL_PRODUCTS)
         research_mode = request.args.get("research_mode", "products")
         research_country = request.args.get("research_country", "NL")

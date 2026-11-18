@@ -217,7 +217,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <section class="panel nv-research-panel">
   <h2>Productonderzoek</h2>
   <p class="nv-honest-note" role="note"><strong>Geen AI en geen verkoopcijfers.</strong> Dit zoekt in aangesloten catalogi en publicaties wanneer je op Zoeken klikt. Resultaten zijn live opgehaald bronnen of een tijdelijke cache (10 minuten); er zijn hier geen demonstratiegegevens. "Zoeken met AI" staat bij Leveranciers en is niet geactiveerd.</p>
-  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form">
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-research-form" data-research-search>
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
     <label>Webshopcategorie
@@ -240,7 +240,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
                placeholder="Bijvoorbeeld NIVEA crème 200 ml, yogamat of slimme deurbel"
                value="{{ request.args.get('research_term', '') }}">
       </label>
-      <button type="submit">Zoek producten en trends</button>
+      <button type="submit">Zoeken</button>
     </div>
     <div class="nv-research-filters">
     <label>Doelland
@@ -267,6 +267,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% endfor %}
       <small>Productcatalogi en Publicaties vullen de resultaten in dit dashboard. Google en sociale media bieden handmatige zoeklinks.</small>
     </fieldset>
+    <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
       {% if source_coverage %}
       <details class="nv-coverage" id="nv-source-coverage">
@@ -306,6 +307,17 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         <p><strong>Zo zoekt NUVEMIXA:</strong> {{ product_discovery.interpretation.queries|join(' · ') }}{% if product_discovery.interpretation.automatic %} — categorie automatisch herkend: {{ product_discovery.interpretation.categories|join(', ') }}{% endif %}</p>
       {% endif %}
       {% from '_supplier_logistics.html' import logistics, pending_notice %}
+      {% macro save_research_concept(item, source) %}
+      <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-save">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="titel" value="{{ item.title[:120] }}">
+        <input type="hidden" name="bron_url" value="{{ item.url }}">
+        <input type="hidden" name="bron_naam" value="{{ source }}">
+        <input type="hidden" name="leverancier" value="{{ source }}">
+        <input type="hidden" name="categorie" value="{{ item.category }}">
+        <button type="submit">Bewaar als conceptproduct</button>
+      </form>
+      {% endmacro %}
       {{ pending_notice(product_discovery.pending_sources) }}
       {% if product_discovery.source_unavailable %}
         <details class="notice">
@@ -405,16 +417,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             </details>
             {% endif %}
             {{ offer_assessment(item) }}
-            <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-save">
-              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-              <input type="hidden" name="titel" value="{{ item.title[:120] }}">
-              <input type="hidden" name="bron_url" value="{{ item.url }}">
-              <input type="hidden" name="bron_naam" value="{{ item.source }}">
-              <input type="hidden" name="leverancier" value="{{ item.source }}">
-              <input type="hidden" name="categorie" value="{{ item.category }}">
-              <button type="submit">Bewaar als conceptproduct</button>
-              <small>Alleen titel, bron en categorie worden overgenomen. Prijzen vul je zelf in.</small>
-            </form>
+            {{ save_research_concept(item, item.source) }}
           </li>
           {% endfor %}
         </ul>
@@ -514,6 +517,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
                   <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
                   <small>{{ research_options.categories[item.category] }}{% if item.match_detail %} · {{ item.match_detail }}{% endif %}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}</small>
                   {{ offer_assessment(item) }}
+                  {{ save_research_concept(item, company.name) }}
                 </li>
               {% endfor %}
               </ul>
@@ -525,7 +529,24 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           {% endfor %}
         </div>
         {% endfor %}
-        {% else %}<p>Geen bevestigde leveranciers gevonden voor deze selectie.</p>{% endif %}
+        {% else %}
+        <p>Geen leveranciersresultaten voor deze zoekopdracht en dit filter.</p>
+        {% if product_discovery.pending_sources %}<p>De zoekopdracht loopt nog bij {{ product_discovery.pending_sources|join(', ') }}.</p>{% endif %}
+        {% if research_options.supplier_filter == 'eu' %}
+        <p><a href="{{ url_for('control', section='onderzoek', research_run=1, research_mode=research_options.mode,
+          research_category=research_options.category, research_country=research_options.country,
+          research_supplier_filter='all', research_platform=research_options.selected_platforms,
+          research_term=product_discovery.term) }}">Zoek in alle landen</a></p>
+        {% endif %}
+        {% if product_discovery.supplier_suggestions %}
+        <p>Probeer ook {% for query in product_discovery.supplier_suggestions %}
+          <a href="{{ url_for('control', section='onderzoek', research_run=1, research_mode=research_options.mode,
+            research_category=research_options.category, research_country=research_options.country,
+            research_supplier_filter=research_options.supplier_filter, research_platform=research_options.selected_platforms,
+            research_term=query) }}">{{ query }}</a>{{ ', ' if not loop.last }}{% endfor %}.
+        </p>
+        {% endif %}
+        {% endif %}
         {% if product_discovery.next_steps %}
         <section class="nv-next-steps" aria-label="Verder zoeken naar leveranciers">
           <h4>Verder zoeken: bronnen voor deze categorie en dit land (handmatige links, niet bevestigd)</h4>
@@ -710,6 +731,32 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <p>Google beoordeelt ook het account, de winkel, bereikbaarheid en voorwaarden per markt. Deze lokale controle heeft geen Google-beoordeling opgevraagd.</p>
 <p><a href="https://support.google.com/merchants/answer/7052112?hl=nl" rel="noopener noreferrer">Productspecificatie van Google</a></p></section>
 {% elif section == "leveranciers" %}
+<section class="panel" aria-labelledby="nv-supplier-search-title">
+  <h2 id="nv-supplier-search-title">Leveranciers zoeken</h2>
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form" data-research-search>
+    <input type="hidden" name="section" value="onderzoek">
+    <input type="hidden" name="research_run" value="1">
+    <input type="hidden" name="research_platform" value="Productcatalogi">
+    <label>Product of niche
+      <input type="search" name="research_term" maxlength="100" required placeholder="Bijvoorbeeld gezichtsreiniger">
+    </label>
+    <label>Zoektype
+      <select name="research_mode">
+        <option value="suppliers">Leveranciers</option>
+        <option value="dropship">Dropshippingpartners</option>
+      </select>
+    </label>
+    <label>Vestigingsland
+      <select name="research_supplier_filter">
+        <option value="eu">Binnen EU</option>
+        <option value="all">Alle landen</option>
+        <option value="international">Buiten EU</option>
+      </select>
+    </label>
+    <button type="submit">Zoeken</button>
+    <p class="nv-search-progress" role="status"><span hidden></span></p>
+  </form>
+</section>
 {% include "_dashboard_supplier_ai.html" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
@@ -877,4 +924,12 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 
 
 
+{% if section in ('onderzoek', 'leveranciers') %}
+<style>
+.nv-search-progress{display:flex;align-items:center;gap:.6rem;margin:0;grid-column:1/-1}
+.nv-search-progress span:not([hidden]){width:1rem;height:1rem;border:2px solid currentColor;border-inline-end-color:transparent;border-radius:50%;animation:nv-search-spin .8s linear infinite}
+@keyframes nv-search-spin{to{transform:rotate(1turn)}}
+@media(prefers-reduced-motion:reduce){.nv-search-progress span{animation:none!important}}
+</style>
+{% endif %}
 <script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script></body></html>

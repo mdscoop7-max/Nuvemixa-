@@ -20,6 +20,7 @@ from nv_dashboard_manager import admin, bp
 
 PREFIX = "[Concept] "
 CATEGORY_NAMES = {"gadgets": "Gadgets", "beauty-care": "Beauty & Care", "lifestyle-sport": "Lifestyle & Sport",
+                  "pets": "Huisdieren",
                   "home-living": "Home & Living", "smart-home": "Smart Home"}
 STATUSES = {"nieuw": "Nieuw", "beoordelen": "In beoordeling", "geselecteerd": "Geselecteerd voor publicatievoorbereiding",
             "afgewezen": "Afgewezen"}

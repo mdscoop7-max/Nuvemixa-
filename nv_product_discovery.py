@@ -17,7 +17,7 @@ import requests
 from nv_research_assessment import Fact, assess_offer
 from nv_research_identity import approved_catalogue_identity, company_key, offer_key
 from nv_research_intent import (
-    MEASURE, STOP_WORDS, candidate_queries, index_query, infer_categories,
+    MEASURE, STOP_WORDS, SUBJECT_CATEGORIES, candidate_queries, english_query, index_query, infer_categories,
     matches, normalize,
     offer_match, power_bank_query, subject_for,
 )
@@ -75,6 +75,7 @@ COUNTRIES = {
 }
 
 PLATFORMS = ("Productcatalogi", "Publicaties", "Google", "TikTok", "Instagram", "Facebook")
+RESEARCH_CATEGORIES = {"pets": "Huisdieren"}
 MODES = {
     "products": "Producten zoeken",
     "trends": "Trends en nichekansen",
@@ -192,9 +193,10 @@ CATEGORY_HINTS = {
     "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty|trimmer|straightener|curling|nail|massager|massage|mirror|flosser|toothbrush|shaver|epilator|jewelry|brush|scalp|soap dispenser|dryer",
     "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk",
     "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale",
+    "pets": r"pet|pets|cat|cats|dog|dogs|huisdier|kat|hond",
 }
 SEEDS = {"gadgets": "headphones", "smart-home": "security camera", "beauty-care": "serum",
-         "home-living": "table lamp", "lifestyle-sport": "yoga mat"}
+         "home-living": "table lamp", "lifestyle-sport": "yoga mat", "pets": "pet accessories"}
 UNSAFE = re.compile(
     r"\b(?:porno?\w*|xxx|nsfw|adult\s+(?:content|video|toy)|sex\s+toy|escort|"
     r"casino|gambling|sign[ -]?in|log[ -]?in|inloggen|aanmelden|oauth|"
@@ -213,6 +215,9 @@ def category_matches(category, evidence):
 def relevance_for(term):
     """Bij een specifieke zoekopdracht beslist de productmatch (merk/type/model); de categorielijst
     CATEGORY_HINTS bewaakt alleen leeg of generiek zoeken. Onveilige vermeldingen blijven altijd geweerd."""
+    subject_categories = SUBJECT_CATEGORIES.get(subject_for(normalize(term)))
+    if subject_categories:
+        return lambda category, evidence: category in subject_categories and not UNSAFE.search(evidence)
     if specific_term(term):
         return lambda category, evidence: not UNSAFE.search(evidence)
     return category_matches
@@ -576,6 +581,7 @@ def logistics(company):
 
 def unique_suppliers(offers, supplier_filter):
     companies = {}
+    shipping_nl = ("Niet beschikbaar", UNKNOWN, "Bevestigd")
     for profile, item in offers:
         key = company_key(profile)
         company = companies.setdefault(key, {**profile, "products": {}, "region": (
@@ -588,11 +594,8 @@ def unique_suppliers(offers, supplier_filter):
             company["products"][item_key] = item
         if profile["shipping"].startswith("Geverifieerd"):
             company["shipping"] = "Bevestigd voor minstens één getoond product"
-        netherlands = profile.get("shipping_nl", UNKNOWN)
-        current = company.get("shipping_nl", netherlands)
-        if netherlands == "Bevestigd" or current == "Niet beschikbaar":
-            current = netherlands
-        company["shipping_nl"] = current
+        company["shipping_nl"] = max(company.get("shipping_nl", profile.get("shipping_nl", UNKNOWN)),
+                                     profile.get("shipping_nl", UNKNOWN), key=shipping_nl.index)
         if profile.get("dropshipping") is True and profile.get("dropshipping_source"):
             company["dropshipping"] = True
             company["dropshipping_source"] = profile["dropshipping_source"]
@@ -600,13 +603,7 @@ def unique_suppliers(offers, supplier_filter):
 
     filtered = []
     for company in companies.values():
-        if supplier_filter == "eu" and company["region"] != "eu":
-            continue
-        if supplier_filter == "international" and company["region"] != "international":
-            continue
-        if supplier_filter == "dropship" and company["dropshipping"] is not True:
-            continue
-        if supplier_filter == "trade" and company["business"] is not True:
+        if not supplier_in_scope(company, supplier_filter):
             continue
         company["origin_name"] = ORIGINS.get(company["origin"], UNKNOWN)
         company.update(logistics(company))
@@ -615,7 +612,24 @@ def unique_suppliers(offers, supplier_filter):
         company["products"] = sorted(company["products"].values(),
                                      key=lambda product: not product.get("shipping", "").startswith("Geverifieerd"))
         filtered.append(company)
-    return filtered
+    return sorted(filtered, key=lambda company: (
+        company.get("shipping_nl") != "Bevestigd",
+        company.get("dropshipping") is not True,
+        company.get("business") is not True,
+    ))
+
+
+def supplier_in_scope(profile, scope):
+    origin = profile["origin"]
+    if scope == "eu":
+        return origin in EU
+    if scope == "international":
+        return bool(origin and origin not in EU)
+    if scope == "dropship":
+        return profile.get("dropshipping") is True and bool(profile.get("dropshipping_source"))
+    if scope == "trade":
+        return profile.get("business") is True
+    return True
 
 
 def catalogue_sources(categories, country, product_mode, *, fallback=False):
@@ -668,18 +682,21 @@ SOURCE_WINDOW = 12  # seconden die een zoekopdracht maximaal op bronnen wacht
 _SYNCEE_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="syncee")
 
 
-def run_syncee(fetch, query, country, selected, term, alternates, budget):
+def run_syncee(fetch, query, country, selected, term, alternates, budget, supplier_filter):
     attempts = []
     results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, relevance_for(term),
                               term=term, product_matches=product_matches, attempts=attempts,
-                              alternates=alternates, deadline=monotonic() + budget)
+                              alternates=alternates, deadline=monotonic() + budget,
+                              eligible=lambda profile: supplier_in_scope(profile, supplier_filter),
+                              shortlist=(lambda profile: supplier_in_scope(profile, supplier_filter))
+                              if supplier_filter in {"eu", "international"} else None)
     return results, attempts
 
 
-def start_syncee(fetch, query, country, selected, term, alternates):
-    key = ("syncee", query, country, tuple(sorted(selected)), tuple(alternates), term)
+def start_syncee(fetch, query, country, selected, term, alternates, supplier_filter):
+    key = ("syncee", query, country, tuple(sorted(selected)), tuple(alternates), term, supplier_filter)
     return nv_source_guard.job(key, lambda: _SYNCEE_POOL.submit(
-        run_syncee, fetch, query, country, selected, term, alternates, SYNCEE_BACKGROUND))
+        run_syncee, fetch, query, country, selected, term, alternates, SYNCEE_BACKGROUND, supplier_filter))
 
 
 def collect(future, errors, source):
@@ -754,9 +771,13 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         hurtel_task = (submit("Hurtel", hurtel_products, fetch, term, country, selected, SEEDS, read_source,
                                    index_query, product_matches, relevance_for(term))
                        if trade_mode and selected.keys() & {"gadgets", "smart-home"} else None)
-        dropship_task = (start_syncee(fetch, index_query(term) if term else SEEDS[category], country, selected,
-                                      term, candidate_queries(term))
-                         if dropship_mode else None)
+        dropship_task = None
+        if dropship_mode:
+            variants = candidate_queries(term)
+            if variants[:1] == (term,) and english_query(term).casefold() != term.casefold():
+                variants = (*variants[1:], term)
+            dropship_task = start_syncee(fetch, index_query(term) if term else SEEDS[category], country, selected,
+                                         term, variants, "all" if product_mode else supplier_filter)
         if dropship_task:
             names[dropship_task] = "Syncee"
         readers = [("TechRadar", publication_candidates)]
@@ -766,7 +787,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                       for publisher, reader in readers
                       if topic and "Publicaties" in platforms and mode not in SUPPLIER_MODES]
 
-        if term and product_tasks:
+        if term and trade_mode:
             wait(product_tasks, timeout=2.5)
             exact = sum(entry.get("exact", 0) for entry in tuple(attempts))
             if exact == 0 or (exact < 3 and subject_for(normalize(term))):
@@ -848,6 +869,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         "topic": topic,
         "interpretation": {"queries": candidate_queries(term), "categories": [categories[s] for s in selected],
                            "automatic": bool(inferred)},
+        "supplier_suggestions": [query for query in candidate_queries(term) if query.casefold() != term.casefold()][:4],
         "all_sources_failed": bool(sources) and bool(unavailable) and not products and not suppliers
                               and len(unavailable) >= max(1, len(set(names.values())) - 1),
         "preferred_tab": DEFAULT_TABS.get(mode, "products"),
