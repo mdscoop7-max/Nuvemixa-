@@ -11,6 +11,7 @@ AI voegt nooit producten, leveranciers, prijzen, verkoopcijfers of trendcijfers 
 draait exact dezelfde normale zoekopdracht.
 """
 import re
+from time import monotonic
 
 import nv_openai
 from nv_product_discovery import discover
@@ -57,12 +58,17 @@ def expand(term, categories):
             "keywords_nl": _words(answer.get("keywords_nl"), 3), "exclude": _words(answer.get("exclude"), 6)}
 
 
-def reject_ids(term, titles):
+REQUEST_BUDGET = 24.0   # seconden voor de hele zoekopdracht; gunicorn breekt af na 30 s
+FILTER_MIN_LEFT = 3.0    # alleen filteren als er nog genoeg tijd over is
+
+
+def reject_ids(term, titles, timeout=5):
     """Indices (0-based) van titels die AI als ander product/accessoire markeert."""
     if not titles:
         return set()
     rows = [{"id": index, "title": title[:120]} for index, title in enumerate(titles[:MAX_TITLES])]
-    answer = nv_openai.chat_json("filter", FILTER_SYSTEM, {"search": term[:100], "results": rows}, max_tokens=120)
+    answer = nv_openai.chat_json("filter", FILTER_SYSTEM, {"search": term[:100], "results": rows}, max_tokens=120,
+                                 timeout=timeout)
     ids = answer.get("reject")
     if not isinstance(ids, list):
         raise nv_openai.AIUnavailable("invalid_json", "De AI-dienst gaf een onleesbaar antwoord.")
@@ -71,12 +77,19 @@ def reject_ids(term, titles):
     return set() if len(rejected) >= len(rows) else rejected
 
 
+def safe_status():
+    try:
+        return nv_openai.status()
+    except Exception:
+        return {"state": "fallback", "label": "AI-status onbekend", "message": "AI-status kon niet worden gelezen."}
+
+
 def _needs_translation(term):
     normalized = normalize(term)
     return not subject_for(normalized) and english_query(term).casefold() == normalized.casefold()
 
 
-def _apply_filter(term, result, exclude):
+def _apply_filter(term, result, exclude, timeout=5):
     groups = [("products", result.get("products") or []), ("alternatives", result.get("alternatives") or [])]
     suppliers = result.get("suppliers") or []
     titles, owners = [], []
@@ -90,7 +103,7 @@ def _apply_filter(term, result, exclude):
             owners.append(("supplier", s_index, p_index))
     if not titles:
         return 0
-    rejected = reject_ids(term, titles)
+    rejected = reject_ids(term, titles, timeout)
     # Deterministische aanvulling: door AI voorgestelde uitsluitwoorden die niet in de zoekterm staan.
     query_words = set(normalize(term).split())
     blocked = [w for w in (normalize(x) for x in exclude) if w and not set(w.split()) & query_words]
@@ -116,12 +129,13 @@ def _apply_filter(term, result, exclude):
 def ai_discover(term, *args, categories, **kwargs):
     """Zelfde contract als discover(); voegt result['ai'] toe met de AI-status voor de interface."""
     term = (term or "").strip()
+    started = monotonic()
     info = {"state": "off", "label": "Normaal zoeken", "message": "", "keywords_en": [], "keywords_nl": [],
             "category": "", "removed": 0, "used_query": ""}
     if not term or not nv_openai.configured():
         result = discover(term, *args, categories=categories, **kwargs)
         if isinstance(result, dict) and not result.get("error"):
-            info.update(nv_openai.status())
+            info.update(safe_status())
             result["ai"] = info
         return result
     hints = None
@@ -129,6 +143,10 @@ def ai_discover(term, *args, categories, **kwargs):
         hints = expand(term, categories)
     except nv_openai.AIUnavailable as exc:
         info.update(state="fallback", label="AI niet beschikbaar, normaal zoeken", message=exc.message)
+    except Exception:  # onverwachte fout in de AI-laag mag de zoekpagina nooit laten vastlopen
+        hints = None
+        info.update(state="fallback", label="AI niet beschikbaar, normaal zoeken",
+                    message="AI gaf een onverwachte fout; normaal zoeken is gebruikt.")
     search_term = term
     if hints:
         info.update(state="active", label="AI actief", keywords_en=hints["keywords_en"],
@@ -144,9 +162,15 @@ def ai_discover(term, *args, categories, **kwargs):
         return result
     result["term"] = term
     if hints:
-        try:
-            info["removed"] = _apply_filter(term, result, hints["exclude"])
-        except nv_openai.AIUnavailable as exc:
-            info.update(message="Zoekwoorden door AI, filteren niet beschikbaar: " + exc.message)
+        left = REQUEST_BUDGET - (monotonic() - started)
+        if left < FILTER_MIN_LEFT:
+            info.update(message="Zoekwoorden door AI; filteren overgeslagen omdat de bronnen lang nodig hadden.")
+        else:
+            try:
+                info["removed"] = _apply_filter(term, result, hints["exclude"], timeout=min(5.0, left - 1.0))
+            except nv_openai.AIUnavailable as exc:
+                info.update(message="Zoekwoorden door AI, filteren niet beschikbaar: " + exc.message)
+            except Exception:
+                info.update(message="Zoekwoorden door AI; filteren gaf een onverwachte fout en is overgeslagen.")
     result["ai"] = info
     return result

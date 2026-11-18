@@ -176,10 +176,53 @@ def test_without_persistent_storage_a_stricter_daily_limit_applies(api, monkeypa
     monkeypatch.setattr(nv_openai, "store_connect", broken)
     info = nv_openai.usage()
     assert info["persistent"] is False and info["day_limit"] == nv_openai.UNPERSISTED_DAILY_CALLS
-    assert "niet blijvend opgeslagen" in nv_openai.status()["message"]
+    assert "strengere daglimiet" in nv_openai.status()["message"]
 
 
 def test_postgres_schema_contains_the_usage_table():
     import pathlib
     sql = (pathlib.Path(__file__).resolve().parents[1] / "nv_dashboard_postgres.sql").read_text(encoding="utf-8")
     assert "CREATE TABLE IF NOT EXISTS ai_usage" in sql and "DROP" not in sql.upper()
+
+
+def test_slow_usage_storage_never_blocks_page_or_search(api, monkeypatch):
+    """Regressie live-500 (18-11-2026): elke databaseverbinding duurde seconden en de worker werd afgebroken."""
+    import contextlib
+    import time as _time
+    calls, answers = api
+
+    @contextlib.contextmanager
+    def slow_store():
+        _time.sleep(3)
+        raise RuntimeError("te traag")
+        yield  # pragma: no cover
+
+    monkeypatch.setattr(nv_openai, "store_connect", slow_store)
+    started = _time.monotonic()
+    assert nv_openai.status()["state"] == "active"
+    assert _time.monotonic() - started < 0.5          # paginaweergave wacht nooit op de database
+    answers += [{"category": "", "keywords_en": ["speaker"], "exclude": []}, {"reject": []}]
+    started = _time.monotonic()
+    result = nv_ai_search.ai_discover("bluetooth speaker", categories=CATS)
+    assert _time.monotonic() - started < 2 * nv_openai.RESERVE_WAIT + 1
+    assert result["ai"]["state"] == "active" and len(calls) == 2
+
+
+def test_unexpected_ai_error_falls_back_to_normal_search(api, monkeypatch):
+    monkeypatch.setattr(nv_ai_search, "expand", lambda *a, **k: (_ for _ in ()).throw(TypeError("kapot")))
+    result = nv_ai_search.ai_discover("bluetooth speaker", categories=CATS)
+    assert result["ai"]["state"] == "fallback" and len(result["products"]) == 2
+
+
+def test_filter_is_skipped_when_sources_used_the_time_budget(api, monkeypatch):
+    calls, answers = api
+    answers += [{"category": "", "keywords_en": [], "exclude": []}]
+    monkeypatch.setattr(nv_ai_search, "REQUEST_BUDGET", 0.0)
+    result = nv_ai_search.ai_discover("bluetooth speaker", categories=CATS)
+    assert len(calls) == 1 and "overgeslagen" in result["ai"]["message"] and len(result["products"]) == 2
+
+
+def test_dashboard_renders_when_ai_status_raises(monkeypatch):
+    from test_system_check import administrator  # noqa: F401
+    monkeypatch.setattr(nv_openai, "status", lambda: (_ for _ in ()).throw(RuntimeError("db weg")))
+    assert nv_ai_search.safe_status()["state"] == "fallback"

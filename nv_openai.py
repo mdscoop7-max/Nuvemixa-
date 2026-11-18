@@ -13,6 +13,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 API_BASE = "https://api.openai.com/v1/"
@@ -125,10 +126,62 @@ def _persist(now, usd=0.0, calls=0):
         return None
 
 
-def usage():
+# De blijvende teller mag een request NOOIT laten wachten op de database: elke verbinding Render (Oregon) ->
+# Neon (Frankfurt) kost seconden. Lezen gebeurt via een geheugenbuffer die op de achtergrond wordt ververst;
+# schrijven gebeurt op de achtergrond in één volgorde-bewarende thread.
+SNAPSHOT_TTL = 120          # seconden dat een gelezen stand geldig blijft
+RESERVE_WAIT = 1.5          # max. wachttijd op de eerste stand na een herstart (alleen bij een AI-aanroep)
+_snap = {"at": 0.0, "periods": None, "value": None, "pending": None}
+_writer = ThreadPoolExecutor(max_workers=1, thread_name_prefix="nv-ai-usage")
+
+
+def _remember(now, value):
+    if value is not None:
+        with _lock:
+            _snap.update(at=time.time(), periods=_periods(now), value=value)
+    return value
+
+
+def _write(now, usd, calls):
+    return _remember(now, _persist(now, usd, calls))
+
+
+def _stored(now, wait=0.0):
+    """Laatst bekende blijvende stand (maand_usd, dag_aanroepen) of None. Blokkeert hooguit `wait` seconden."""
+    with _lock:
+        snap = _snap["value"] if _snap["periods"] == _periods(now) else None
+        fresh = snap is not None and time.time() - _snap["at"] < SNAPSHOT_TTL
+        pending = _snap["pending"]
+        if not fresh and (pending is None or pending.done()):
+            pending = _snap["pending"] = _writer.submit(_write, now, 0.0, 0)
+    if fresh or wait <= 0:
+        return snap
+    try:
+        return pending.result(timeout=wait) or snap
+    except Exception:  # time-out of opslagfout: niet wachten, strengere limiet geldt
+        return snap
+
+
+def _add_to_snapshot(now, usd, calls):
+    with _lock:
+        if _snap["value"] is not None and _snap["periods"] == _periods(now):
+            month_usd, day_calls = _snap["value"]
+            _snap["value"] = (month_usd + usd, day_calls + calls)
+    _writer.submit(_write, now, usd, calls)
+
+
+def flush(timeout=5):
+    """Wacht tot alle achtergrondschrijfacties klaar zijn (tests en afsluiten)."""
+    try:
+        _writer.submit(lambda: None).result(timeout=timeout)
+    except Exception:
+        pass
+
+
+def usage(wait=0.0):
     monthly, daily = limits()
     now = time.time()
-    stored = _persist(now)
+    stored = _stored(now, wait)
     with _lock:
         _roll(now)
         month_usd, day_calls = stored if stored else (_state["month_usd"], _state["day_calls"])
@@ -140,7 +193,7 @@ def usage():
 
 
 def status():
-    """Korte status voor de interface: active, fallback of off."""
+    """Korte status voor de interface: active, fallback of off. Wacht nooit op de database."""
     if not configured():
         return {"state": "off", "label": "AI niet beschikbaar",
                 "message": "OPENAI_API_KEY ontbreekt of AI staat uit; normaal zoeken is actief."}
@@ -151,21 +204,23 @@ def status():
     note = ("Interne schatting deze maand: US$ {:.2f} van US$ {:.2f}; het OpenAI-projectbudget blijft de echte grens."
             .format(info["month_usd"], info["month_limit_usd"]))
     if not info["persistent"]:
-        note += " Teller niet blijvend opgeslagen: strengere daglimiet actief."
+        note += " Blijvende teller wordt geladen of is niet bereikbaar: strengere daglimiet actief."
     return {"state": "active", "label": "AI actief",
             "message": "AI helpt met zoekwoorden en het filteren van resultaten. " + note}
 
 
 def reset_for_tests():
+    flush()
     with _lock:
         _state.update(month="", month_usd=0.0, day="", day_calls=0, blocked_until=0.0, last_error="")
+        _snap.update(at=0.0, periods=None, value=None, pending=None)
         _cache.clear()
 
 
 def reserve(estimate):
     monthly, daily = limits()
     now = time.time()
-    stored = _persist(now)
+    stored = _stored(now, RESERVE_WAIT)
     with _lock:
         _roll(now)
         if now < _state["blocked_until"]:
@@ -178,14 +233,14 @@ def reserve(estimate):
             raise AIUnavailable("budget", "Intern maandbudget voor AI in NUVEMIXA bereikt; normaal zoeken is actief.")
         _state["day_calls"] += 1
         _state["month_usd"] += estimate  # voorlopig; na het antwoord vervangen door het werkelijke verbruik
-    _persist(now, estimate, 1)
+    _add_to_snapshot(now, estimate, 1)
 
 
 def settle(estimate, actual):
     with _lock:
         _state["month_usd"] = max(0.0, _state["month_usd"] - estimate + actual)
     if actual != estimate:
-        _persist(time.time(), actual - estimate, 0)
+        _add_to_snapshot(time.time(), actual - estimate, 0)
 
 
 def _block(seconds, message):
@@ -245,7 +300,7 @@ def post(path, data, *, timeout, max_bytes=120_000, estimate_usd=0.002):
     return payload
 
 
-def chat_json(task, system, user_payload, *, max_tokens=200, timeout=6):
+def chat_json(task, system, user_payload, *, max_tokens=200, timeout=5):
     """Kort JSON-verzoek met caching. Geeft een dict terug of gooit AIUnavailable."""
     body = json.dumps(user_payload, ensure_ascii=False, sort_keys=True)
     key = hashlib.sha256(f"{task}|{model()}|{body}".encode()).hexdigest()
