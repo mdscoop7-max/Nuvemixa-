@@ -1,0 +1,41 @@
+{# Compacte productrijen. Gebruik: {% call(row) product_rows(rows, 'id-prefix') %}…details…{% endcall %} #}
+{% macro product_rows(rows, prefix, show_status=True) %}
+<div class="nv-prows" role="list">
+  <div class="nv-prow nv-prow--head" aria-hidden="true">
+    <span>Product</span><span>Leverancier</span><span>Dropshipping</span><span>Prijs</span><span>Acties</span>
+  </div>
+  {% for row in rows %}{% set rid = prefix ~ '-' ~ loop.index %}
+  <div class="nv-prow" role="listitem">
+    <div class="nv-prow__product">
+      {% if row.image %}<img src="{{ row.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" width="40" height="40">{% else %}<span class="nv-prow__noimg" aria-hidden="true"></span>{% endif %}
+      <div class="nv-prow__name">
+        <a href="{{ row.url }}" target="_blank" rel="noopener noreferrer">{{ row.title }}</a>
+        <small>{% if row.category %}<span class="nv-prow__cat">{{ row.category }}</span> · {% endif %}Bron: <a href="{{ row.url }}" target="_blank" rel="noopener noreferrer">{{ row.source }}</a>{% if row.duplicates %} · +{{ row.duplicates }} varianten{% endif %}</small>
+      </div>
+    </div>
+    <div class="nv-prow__cell" data-label="Leverancier"><strong>{{ row.supplier }}</strong><small>{{ row.origin }}</small></div>
+    <div class="nv-prow__cell" data-label="Dropshipping"><span class="nv-prow__badge nv-prow__badge--{{ 'ok' if row.dropship == 'Bevestigd' else ('no' if row.dropship == 'Niet beschikbaar' else 'unk') }}">{{ row.dropship }}</span></div>
+    <div class="nv-prow__cell" data-label="Prijs">{{ row.price or 'Niet beschikbaar' }}</div>
+    <div class="nv-prow__actions">
+      <button type="button" class="nv-prow__btn" data-prow-toggle aria-expanded="false" aria-controls="{{ rid }}">Details</button>
+      <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-prow__form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="titel" value="{{ row.title[:120] }}">
+        <input type="hidden" name="bron_url" value="{{ row.url }}">
+        <input type="hidden" name="bron_naam" value="{{ row.source[:80] }}">
+        <input type="hidden" name="leverancier" value="{{ row.supplier[:120] }}">
+        <input type="hidden" name="categorie" value="{{ row.item.category }}">
+        <button type="submit" class="nv-prow__btn">Bewaar als concept</button>
+      </form>
+      <a class="nv-prow__btn" href="{{ url_for('control', section='onderzoek', margin_product=row.title[:120], _anchor='nv-product-margin') }}">Bereken marge</a>
+    </div>
+    <div class="nv-prow__details" id="{{ rid }}" data-prow-details>
+      {% if show_status and row.status %}<p><strong>{{ row.status }}</strong>{% if row.reason %} · {{ row.reason }}{% endif %}</p>{% endif %}
+      {% if row.refs %}<p><strong>Potentiële leveranciers:</strong></p><ul>{% for ref in row.refs %}<li><a href="{{ ref.website }}" target="_blank" rel="noopener noreferrer">{{ ref.name }}</a> · {{ ref.role }} · Dropshipping: {{ ref.dropshipping }}</li>{% endfor %}</ul>{% endif %}
+      {% if row.item.other_sources %}<p><strong>Andere bronnen:</strong> {% for source in row.item.other_sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+      {{ caller(row) if caller else '' }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

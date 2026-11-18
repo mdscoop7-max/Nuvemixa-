@@ -1,5 +1,6 @@
 {% from '_supplier_logistics.html' import logistics, pending_notice %}
 {% from '_dashboard_search_actions.html' import research_product_actions with context %}
+{% from '_product_rows.html' import product_rows with context %}
 {% set m = market_search %}
 {% set viral_page = m.kind == 'viral' %}
 {% macro dropship_badge(value) %}<span class="nv-badge {{ 'ok' if value == 'Bevestigd' else '' }}">Dropshipping: {{ value }}</span>{% endmacro %}
@@ -40,6 +41,11 @@
   {% for item in items %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
     <small>{{ item.source }} · {{ item.date }} · {{ item.kind }}{% if item.scope %} · {{ item.scope }}{% endif %}</small></li>{% endfor %}
   </ul>
+{% endmacro %}
+{% macro market_details(item) %}
+  <p><strong>Signalen:</strong> {{ item.signal_count }} recente publicatie{{ 's' if item.signal_count != 1 }} in deze categorie{% if not item.signal_count %} (geen gevonden){% endif %}.</p>
+  {% if item.assessment.market_context %}<ul class="nv-research-articles">{% for article in item.assessment.market_context %}<li><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a> <small>{{ article.source }} · {{ article.date }}</small></li>{% endfor %}</ul>{% endif %}
+  <p><a class="nv-blue-action" href="{{ url_for('control', section='internationaal', mq=item.title, mland=m.form.country, mcat=m.form.category, mrun=1) }}">Verder onderzoeken</a></p>
 {% endmacro %}
 {% macro product_card(item) %}
 <li class="nv-market-card">
@@ -103,7 +109,7 @@
     {% if m.sources_checked %}<p><small>Geraadpleegd: {{ m.sources_checked|join(', ') }}.</small></p>{% endif %}
     {% if viral_page %}
       <p class="nv-market-note">{{ m.trend_note }}</p>
-      {% if m.products %}<ul class="nv-market-grid-cards">{% for item in m.products %}{{ product_card(item) }}{% endfor %}</ul>
+      {% if m.products %}{% call(row) product_rows(m.rows, 'nv-mrA') %}{{ market_details(row.item) }}{% endcall %}
       {% else %}<p>{{ m.empty_message }}</p>
         {% if m.alternatives %}<h4>Vergelijkbare producten (niet exact)</h4><ul class="nv-research-articles">
           {% for item in m.alternatives %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> <small>{{ item.source }} · Afwijkend of onbevestigd: {{ item.match_missing|join(', ') }}</small></li>{% endfor %}</ul>{% endif %}
@@ -117,7 +123,7 @@
         {% for key, label in tabs %}<input type="radio" name="nv-tab" id="nv-tab-{{ key }}"{% if loop.first %} checked{% endif %}><label for="nv-tab-{{ key }}">{{ label|safe }}</label>{% endfor %}
         <div class="nv-tab-panels">
           <div class="nv-tab-panel" data-tab="products">
-            {% if m.products %}<ul class="nv-market-grid-cards">{% for item in m.products %}{{ product_card(item) }}{% endfor %}</ul>
+            {% if m.products %}{% call(row) product_rows(m.rows, 'nv-mrB') %}{{ market_details(row.item) }}{% endcall %}
             {% else %}<p>{{ m.empty_message }}</p>
               {% if m.alternatives %}<h4>Vergelijkbare producten (niet exact)</h4><ul class="nv-research-articles">
                 {% for item in m.alternatives %}<li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a> <small>{{ item.source }} · Afwijkend of onbevestigd: {{ item.match_missing|join(', ') }}</small></li>{% endfor %}</ul>{% endif %}

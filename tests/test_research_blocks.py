@@ -36,10 +36,11 @@ def test_period_only_filters_dated_publications_never_products_or_suppliers():
 def test_three_blocks_and_honest_platform_labels(administrator):
     html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
     for text in ("1</span> Product zoeken", "2</span> Onderzoeksplatforms", "3</span> Tijdsfilter",
-                 "Bronnen doorzoeken", 'name="research_period"', "Slim", "14 dagen"):
+                 'name="research_period"', "Slim", "14 dagen", "Trendperiode", "Onderzoeksbronnen",
+                 "Alle categorieën", "Overig / Algemeen", "Smart Home", "Lifestyle &amp; Sport"):
         assert text in html, text
-    assert html.count("Alleen bronlink") >= 6 and "niet live gekoppeld" in html
-    assert "Live doorzocht" in html
+    assert html.count("Externe zoeklink") >= 6 and "niet via een API gekoppeld" in html
+    assert html.count(">Doorzocht<") >= 2
 
 
 def test_platform_block_searches_selected_sources_with_period(administrator, monkeypatch):
@@ -64,6 +65,79 @@ def test_platform_block_searches_selected_sources_with_period(administrator, mon
     assert page.status_code == 200 and seen["term"] == "yogamat"
     assert seen["platforms"] == ["Publicaties", "TikTok"] and seen["mode"] == "trends"
     assert "7 dagen (zelf gekozen)" in html and "1 oudere publicaties weggelaten" in html
+
+
+def _empty(term, **extra):
+    return {"error": None, "term": term, "country_name": "Nederland", "category_name": "Gadgets",
+            "products": [], "suppliers": [], "news": [], "trends": [], "links": [], "search_trends": [],
+            "alternatives": [], "pending_sources": [], "unavailable_sources": [], "unavailable_reasons": {},
+            "sources_checked": [], "next_steps": [], "interpretation": {"queries": [], "categories": [], "automatic": False},
+            "supplier_suggestions": [], "preferred_tab": "products", "fetched_at": "-", "topic": term,
+            "google_trends_checked": False, "supplier_products": 0, "all_sources_failed": False,
+            "source_unavailable": False, **extra}
+
+
+def test_platform_category_really_changes_the_backend_search(administrator, monkeypatch):
+    seen = []
+    monkeypatch.setattr(nv_ai_search, "discover", lambda term, *a, **k: seen.append(k) or _empty(term))
+    base = {"section": "onderzoek", "research_run": "1", "research_block": "platforms", "research_mode": "trends",
+            "research_term": "Automatische kattenvoerbak", "research_platform": ["Productcatalogi"],
+            "research_country": "NL", "research_supplier_filter": "all"}
+    administrator.get("/dashboard", query_string={**base, "research_category": "smart-home"})
+    administrator.get("/dashboard", query_string={**base, "research_category": "overig"})
+    page = administrator.get("/dashboard", query_string={**base, "research_category": "shop"})
+    assert seen[0]["category"] == "smart-home" and seen[0].get("infer", True) is True
+    assert seen[1]["category"] == "shop" and seen[1]["infer"] is False
+    assert seen[2]["category"] == "shop" and seen[2].get("infer", True) is True
+    html = page.get_data(as_text=True)
+    assert "Niets gevonden" in html and "Gebruikte periode" in html
+
+
+def test_overig_skips_automatic_category_narrowing():
+    from nv_product_discovery import discover
+    cats = {"gadgets": "Gadgets", "pets": "Huisdieren", "home-living": "Home & Living"}
+    def offline(*a, **k):
+        raise OSError("offline")
+    narrowed = discover("kattenvoerbak", mode="products", platforms=["Productcatalogi"], fetch=offline,
+                        categories=cats)
+    broad = discover("kattenvoerbak", mode="products", platforms=["Productcatalogi"], fetch=offline,
+                     categories=cats, infer=False)
+    assert narrowed["interpretation"]["automatic"] is True
+    assert broad["interpretation"]["automatic"] is False and len(broad["interpretation"]["categories"]) == 3
+
+
+def test_compact_rows_show_required_fields_and_merge_duplicates():
+    import nv_product_rows
+    from nv_research_assessment import Fact
+    products = [
+        {"title": "Automatic Cat Feeder 4L", "url": "https://a.example/1", "source": "PetShop", "category": "pets",
+         "facts": {"purchase": Fact("19.95", "https://a.example/1", "2026-11-18", "EUR")}, "assessment": {"status": "Nader onderzoeken", "reason": "x"}},
+        {"title": "Automatic cat feeder 4l", "url": "https://a.example/2", "source": "PetShop", "category": "pets"},
+        {"title": "Andere voerbak", "url": "https://b.example/1", "source": "Andere", "category": "pets"},
+    ]
+    suppliers = [{"name": "Echte BV", "origin_name": "Duitsland", "region": "eu", "website": "https://echt.example",
+                  "dropshipping": True, "dropshipping_source": "https://echt.example/ds",
+                  "products": [{"url": "https://a.example/1"}]}]
+    rows = nv_product_rows.build(products, suppliers, {"pets": "Huisdieren"})
+    assert len(rows) == 2 and rows[0]["duplicates"] == 1
+    first = rows[0]
+    assert (first["supplier"], first["origin"], first["dropship"], first["category"]) == ("Echte BV", "Duitsland", "Bevestigd", "Huisdieren")
+    assert first["price"] == "Inkoop € 19,95"
+    assert rows[1]["price"] is None and rows[1]["dropship"] == "Niet bevestigd" and rows[1]["origin"] == "Onbekend"
+
+
+def test_results_render_as_compact_rows_with_actions(administrator, monkeypatch):
+    item = {"title": "Automatic Cat Feeder 4L", "url": "https://a.example/1", "source": "PetShop", "category": "gadgets",
+            "image": "", "other_sources": [],
+            "assessment": {"status": "Nader onderzoeken", "reason": "Controleer eerst iets.", "facts": [], "missing": [],
+                           "scenario": None, "indicative": None, "market_context": [], "safety_portal": "https://ec.europa.eu",
+                           "alert": None, "safety_weeks": 0}}
+    monkeypatch.setattr(nv_ai_search, "discover", lambda term, *a, **k: _empty(term, products=[item]))
+    html = administrator.get("/dashboard", query_string={"section": "onderzoek", "research_run": "1",
+                                                         "research_term": "kattenvoerbak"}).get_data(as_text=True)
+    assert 'class="nv-prow"' in html and "nv-research-cards" not in html.split('id="nv-research-products"')[1][:400]
+    for text in ("Details", "Bewaar als concept", "Bereken marge", "Niet bevestigd", "Niet beschikbaar", "Controleer eerst iets."):
+        assert text in html, text
 
 
 def test_ai_switch_off_uses_plain_search(administrator, monkeypatch):

@@ -154,7 +154,7 @@ def ai_discover(term, *args, categories, **kwargs):
         if hints["keywords_en"] and _needs_translation(term):
             search_term = hints["keywords_en"][0]
             info["used_query"] = search_term
-        if (hints["category"] and kwargs.get("category", "shop") == "shop"
+        if (hints["category"] and kwargs.get("category", "shop") == "shop" and kwargs.get("infer", True)
                 and not infer_categories(search_term)):
             kwargs = {**kwargs, "category": hints["category"]}
     result = discover(search_term, *args, categories=categories, **kwargs)
