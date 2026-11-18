@@ -1193,6 +1193,7 @@ from nv_woo_bridge import (
 )
 import nv_supplier_sources
 import nv_research_period
+import nv_product_rows
 import nv_partners
 import nv_concepts
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
@@ -2301,13 +2302,19 @@ def control():
             "ai_enabled": (request.args.get("research_run") != "1" or "1" in request.args.getlist("research_ai")
                            or "research_ai" not in request.args or not __import__("nv_openai").configured()),
             "block": request.args.get("research_block", "product"),
+            "platform_categories": {ALL_PRODUCTS: "Alle categorieën",
+                                    **{slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()},
+                                    "overig": "Overig / Algemeen"},
         }
         if request.args.get("research_run") == "1":
             from nv_ai_search import ai_discover
             period_days, period_label = nv_research_period.resolve(research_options["period"], research_mode)
+            general = research_category == "overig"  # Onderzoeksplatforms: 'Overig / Algemeen'
             search_args = dict(country=research_country, mode=research_mode, platforms=research_platforms,
-                               category=research_category, categories=research_categories,
-                               supplier_filter=research_filter)
+                               category=ALL_PRODUCTS if general else research_category,
+                               categories=research_categories, supplier_filter=research_filter)
+            if general:
+                search_args["infer"] = False
             if research_options["ai_enabled"]:
                 product_discovery = ai_discover(request.args.get("research_term", ""), **search_args)
             else:
@@ -2317,6 +2324,11 @@ def control():
                                                "message": "AI is voor deze zoekopdracht uitgezet; normaal zoeken.",
                                                "keywords_en": [], "keywords_nl": [], "category": "", "used_query": ""}
             if isinstance(product_discovery, dict) and not product_discovery.get("error"):
+                product_discovery["rows"] = nv_product_rows.build(product_discovery.get("products") or [],
+                                                                  product_discovery.get("suppliers") or [],
+                                                                  research_options["categories"])
+                if general:
+                    product_discovery["category_name"] = "Overig / Algemeen"
                 product_discovery["period"] = {**nv_research_period.apply(product_discovery, period_days),
                                                "label": period_label}
 

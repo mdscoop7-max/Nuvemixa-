@@ -146,7 +146,7 @@ def search_view(kind, categories, args, *, fetch=None):
             "price_note": PRICE_NOTE, "trend_note": TREND_NOTE, "ran": False, "error": None,
             "products": [], "suppliers": [], "publications": [], "trends": [], "competitors": [],
             "opportunities": [], "risks": [], "pending_sources": [], "links": [], "unavailable": [], "sources_checked": [],
-            "empty_message": "", "result": None, "ai": None}
+            "empty_message": "", "result": None, "ai": None, "rows": []}
     if not form["run"]:
         return view
     if not form["q"]:
@@ -185,6 +185,7 @@ def search_view(kind, categories, args, *, fetch=None):
         alternatives=result.get("alternatives", []), country_name=result["country_name"],
         interpretation=result.get("interpretation"), all_failed=result.get("all_sources_failed", False),
         ai=result.get("ai"),
+        rows=__import__("nv_product_rows").build(products, suppliers, categories),
         period_label=(PERIODS[form["period"]] + (" → {} dagen".format(__import__("nv_research_period").SMART.get(kind, 30))
                       if form["period"] == "slim" else "") + " · alleen publicaties met datum; productbronnen en leveranciers niet gefilterd"),
     )

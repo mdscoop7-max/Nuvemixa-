@@ -129,7 +129,7 @@
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><link rel="stylesheet" href="{{ url_for('static',filename='nv-search-meter.css') }}?v=1"><link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-compact-20261118.css') }}?v=7"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><link rel="stylesheet" href="{{ url_for('static',filename='nv-search-meter.css') }}?v=1"><link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-compact-20261118.css') }}?v=9"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
 <body class="nv-admin-ui" data-ai-state="{{ ai_status.state if ai_status else 'off' }}"><a class="nv-skip" href="#nvMain">Naar hoofdinhoud</a><div class="layout">
 <aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
@@ -281,36 +281,39 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
 
-  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-rblock" data-research-search data-search-phases="Zoekopdracht analyseren...|Geselecteerde bronnen doorzoeken...|Publicaties en trends controleren...|AI analyseert resultaten...|Zoekresultaten voorbereiden..." aria-labelledby="nv-rb2">
+  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-rblock nv-rblock--platforms" data-research-search data-search-phases="Zoekopdracht analyseren...|Geselecteerde bronnen doorzoeken...|Publicaties en trends controleren...|AI analyseert resultaten...|Zoekresultaten voorbereiden..." aria-labelledby="nv-rb2">
     <h3 id="nv-rb2" class="nv-rblock__title"><span>2</span> Onderzoeksplatforms</h3>
     <input type="hidden" name="section" value="onderzoek">
     <input type="hidden" name="research_run" value="1">
     <input type="hidden" name="research_block" value="platforms">
     <input type="hidden" name="research_mode" value="trends">
-    <input type="hidden" name="research_category" value="{{ ro.category }}">
     <input type="hidden" name="research_country" value="{{ ro.country }}">
     <input type="hidden" name="research_supplier_filter" value="all">
     <input type="hidden" name="research_ai" value="{{ '1' if ro.ai_enabled else '0' }}">
-    <div class="nv-research-search">
-      <label>Zoeken in geselecteerde bronnen
-        <input type="search" name="research_term" maxlength="100" required placeholder="Bijvoorbeeld LED-verlichting of yogamat"
+    <div class="nv-pform">
+      <label>Webshopcategorie
+        <select name="research_category">
+          {% for slug, name in ro.platform_categories.items() %}<option value="{{ slug }}" {% if ro.block == 'platforms' and ro.category == slug %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="nv-pform__query">Zoekopdracht
+        <input type="search" name="research_term" maxlength="100" required placeholder="Bijvoorbeeld Automatische kattenvoerbak"
                value="{{ request.args.get('research_term', '') if ro.block == 'platforms' else '' }}">
       </label>
-      <button type="submit">Bronnen doorzoeken</button>
+      <fieldset class="nv-pperiod">
+        <legend>Trendperiode</legend>
+        {% for value, name in ro.periods.items() %}<label><input type="radio" name="research_period" value="{{ value }}" {% if ro.period == value %}checked{% endif %}><span>{{ name }}</span></label>{% endfor %}
+      </fieldset>
+      <button type="submit">Zoeken</button>
     </div>
     <fieldset class="nv-research-platforms nv-pgrid">
-      <legend class="nv-sr">Bronnen</legend>
+      <legend class="nv-psrc-legend">Onderzoeksbronnen <small><span class="nv-dot nv-dot--live"></span> doorzocht · <span class="nv-dot nv-dot--link"></span> alleen externe zoeklink</small></legend>
       {% for platform in ro.platforms %}{% set kind = plat_kind.get(platform, ("link", "Alleen bronlink")) %}
       <label class="nv-pchip nv-pchip--{{ kind[0] }}"><input type="checkbox" name="research_platform" value="{{ platform }}"
-        {% if platform in ro.selected_platforms %}checked{% endif %}><span><b>{{ plat_name.get(platform, platform) }}</b><small>{{ kind[1] }}</small></span></label>
+        {% if platform in ro.selected_platforms %}checked{% endif %}><span><b>{{ plat_name.get(platform, platform) }}</b><small>{{ 'Doorzocht' if kind[0] == 'live' else ('Doorzocht · zoekinteresse' if kind[0] == 'trend' else 'Externe zoeklink') }}</small></span></label>
       {% endfor %}
     </fieldset>
-    <label class="nv-inline-select">Periode
-      <select name="research_period">
-        {% for value, name in ro.periods.items() %}<option value="{{ value }}" {% if ro.period == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
-      </select>
-    </label>
-    <p class="nv-rnote">TikTok, Instagram, Facebook, YouTube en Pinterest zijn <strong>niet live gekoppeld</strong>: je krijgt alleen een zoeklink om zelf te openen. Productcatalogi en publicaties worden echt doorzocht; Google Trends toont actuele zoekinteresse.</p>
+    <p class="nv-rnote">Google, TikTok, Instagram, Facebook, YouTube en Pinterest zijn <strong>niet via een API gekoppeld</strong>: daarvoor krijg je alleen een zoeklink, geen live trenddata. De periode geldt alleen voor bronnen met een publicatie- of trenddatum; leverancierscatalogi worden nooit door de periode beperkt.</p>
     <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
 
@@ -356,6 +359,10 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     {% else %}
       <h3>{{ product_discovery.category_name }} · {{ product_discovery.country_name }}{% if product_discovery.term %} · {{ product_discovery.term }}{% endif %}</h3>
       {% with ai = product_discovery.ai %}{% include "_dashboard_ai_status.html" %}{% endwith %}
+      {% if product_discovery.period %}<p class="nv-rperiod-used">Gebruikte periode: <strong>{{ product_discovery.period.label }}</strong></p>{% endif %}
+      {% if not product_discovery.products and not product_discovery.suppliers and not product_discovery.news and not product_discovery.trends and not product_discovery.search_trends and not product_discovery.alternatives %}
+        <p class="notice nv-nothing" role="status"><strong>Niets gevonden</strong> voor “{{ product_discovery.term }}” in {{ product_discovery.category_name }}{% if product_discovery.period and product_discovery.period.days %} binnen {{ product_discovery.period.days }} dagen{% endif %}. Probeer een andere categorie, een langere periode of een kortere zoekterm.{% if product_discovery.links %} De externe zoeklinks hieronder kun je zelf openen.{% endif %}</p>
+      {% endif %}
       {% if product_discovery.all_sources_failed %}
         <p class="notice" role="alert"><strong>Externe bronnen niet bereikbaar.</strong> Er is niets doorzocht dat resultaten kon geven; dit bewijst niet dat het product niet bestaat.</p>
       {% endif %}
@@ -450,23 +457,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
       {% endmacro %}
       <div id="nv-research-products">
         {% if product_discovery.products %}
-        <ul class="nv-research-cards">
-          {% for item in product_discovery.products %}
-          <li>
-            {% if item.image %}<img src="{{ item.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
-            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
-            <small>{{ item.source }} · {{ research_options.categories[item.category] }}</small>
-            {% if item.other_sources %}
-            <details>
-              <summary>Andere bronnen voor dit product</summary>
-              <ul>{% for source in item.other_sources %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></li>{% endfor %}</ul>
-            </details>
-            {% endif %}
-            {{ offer_assessment(item) }}
-            {{ research_product_actions(item, item.source) }}
-          </li>
-          {% endfor %}
-        </ul>
+        {% from '_product_rows.html' import product_rows with context %}
+        {% call(row) product_rows(product_discovery.rows, 'nv-pr', False) %}{{ offer_assessment(row.item) }}{% endcall %}
         {% elif product_discovery.preferred_tab in ['suppliers', 'news'] %}<p>Kies ‘Producten zoeken’ voor productvermeldingen.</p>
         {% else %}
           <p>{{ research_options.empty_message }}</p>
@@ -1023,4 +1015,5 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </style>
 {% endif %}
 <script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script>
-<script src="{{ url_for('static',filename='nv-search-meter.js') }}?v=1" defer></script></body></html>
+<script src="{{ url_for('static',filename='nv-search-meter.js') }}?v=1" defer></script>
+<script src="{{ url_for('static',filename='nv-research-rows.js') }}?v=1" defer></script></body></html>

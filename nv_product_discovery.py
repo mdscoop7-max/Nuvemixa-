@@ -782,7 +782,7 @@ def product_groups(items):
 
 
 def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
-             category=ALL_PRODUCTS, categories, supplier_filter="all"):
+             category=ALL_PRODUCTS, categories, supplier_filter="all", infer=True):
     term = (term or "").strip()[:100]
     if ((category != ALL_PRODUCTS and category not in categories) or mode not in MODES
             or country not in COUNTRIES or supplier_filter not in FILTERS):
@@ -806,7 +806,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         term = SEEDS[catalogue_scope]
     selected = categories if category == ALL_PRODUCTS else {category: categories[category]}
     inferred = ()
-    if category == ALL_PRODUCTS:
+    if category == ALL_PRODUCTS and infer:  # infer=False: 'Overig / Algemeen' zoekt breed in alle categorieën
         explicit = broad or catalogue_scope
         inferred = (explicit,) if explicit in categories else tuple(slug for slug in infer_categories(term) if slug in categories)
     if inferred:
