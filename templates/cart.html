@@ -3,10 +3,12 @@
 <html lang="nl">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Winkelwagen | NUVEMIXA</title><link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css', v='20260920-3') }}"><script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
   <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script><link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261106-nav-firstpaint1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='nv-winkelwagen.css', v='20261118-1') }}">
 </head>
 <body>
 {% include "_header.html" %}
 <main class="shell cart-page"><a class="back-link" href="/" data-i18n="continueShopping">← Verder winkelen</a><div class="checkout-steps" aria-label="Bestelstappen"><span class="active" data-i18n="stepCart">1 · Winkelwagen</span><span data-i18n="stepDetails">2 · Gegevens</span><span data-i18n="stepConfirm">3 · Bevestiging</span></div><section class="cart-panel commerce-card"><div class="commerce-heading"><div><span class="eyebrow dark">NUVEMIXA</span><h1 data-i18n="cartTitle">Je winkelwagen</h1><p>Controleer je producten en aantallen voordat je doorgaat.</p></div><span class="commerce-badge">{{ cart_count }} item{% if cart_count != 1 %}s{% endif %}</span></div>
+{% if notice %}<p class="nv-cart-notice" role="status">{{ notice }}</p>{% endif %}
 {% if cart %}
 <div id="cartItems">
 {% for item in cart %}
@@ -24,10 +26,10 @@
 </div>
 <form action="/winkelwagen" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="clear"><button type="submit" class="btn btn-outline cart-clear" data-i18n="clearCart">Winkelwagen leegmaken</button></form>
 {% else %}
-<div class="empty-state"><h3 data-i18n="cartEmpty">Je winkelwagen is leeg</h3><p data-i18n="cartEmptyText">Voeg producten toe vanuit een collectie.</p></div>
+<div class="empty-state"><h3 data-i18n="cartEmpty">Je winkelwagen is leeg</h3><p data-i18n="cartEmptyText">Voeg producten toe vanuit een collectie.</p><a class="btn btn-dark" href="/shop">Verder winkelen →</a></div>
 {% endif %}
 <div class="cart-total modern-total"><span><small>Overzicht</small><strong data-i18n="total">Totaal</strong></span><strong>{{ format_eur(cart_total) }}</strong></div>
-{% if cart %}<div class="cart-checkout-box"><div><small data-i18n="testCheckout">Checkout in testfase</small><strong>{{ format_eur(cart_total) }}</strong></div><a class="btn btn-dark checkout-button" href="/afrekenen" data-i18n="checkout">Naar afrekenen →</a></div>{% endif %}
+{% if cart %}<div class="cart-checkout-box"><div><small data-i18n="testCheckout">Checkout in testfase</small><strong>{{ format_eur(cart_total) }}</strong></div><a class="btn btn-dark checkout-button" href="/afrekenen" data-i18n="checkoutProceed">Verder naar afrekenen →</a></div><p class="nv-cart-note">Verzendkosten en btw worden getoond zodra de verzend- en bedrijfsgegevens bevestigd zijn. Er zijn nu geen kortingen of toeslagen toegepast.</p><a class="btn btn-outline nv-continue" href="/shop">Verder winkelen →</a>{% endif %}
 </section></main>
 {% include '_footer.html' %}
 </body></html>

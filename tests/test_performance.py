@@ -57,7 +57,7 @@ def test_shared_cart_footer_and_ai_trendmix_remain_everywhere():
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
         assert html.count('class="site-footer tm-footer tm-footer-v2"') == 1, path
-        assert 'AI TrendMix' in html, path
+        assert 'AI NUVEMIXA' in html, path
 
     # Checkout correctly redirects when the cart is empty. Populate a test
     # cart first so the actual checkout page is inspected, not the redirect.
@@ -67,4 +67,4 @@ def test_shared_cart_footer_and_ai_trendmix_remain_everywhere():
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     assert html.count('class="site-footer tm-footer tm-footer-v2"') == 1
-    assert 'AI TrendMix' in html
+    assert 'AI NUVEMIXA' in html

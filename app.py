@@ -1,4 +1,5 @@
 import json
+import nv_checkout
 import re
 import os
 import hmac
@@ -209,6 +210,12 @@ def cart_count():
     return sum(max(1, int(item.get("qty", 1))) for item in cart_items())
 
 
+def cart_dropped_count():
+    """Aantal items in de sessie dat niet meer in de catalogus staat (voor een duidelijke melding)."""
+    stored = [i for i in session.get("trendmix_cart", []) if isinstance(i, dict)]
+    return max(0, len(stored) - len(cart_items()))
+
+
 def cart_total():
     return sum(
         float(item.get("price", 0) or 0) * max(1, int(item.get("qty", 1)))
@@ -280,7 +287,7 @@ def woo_configured():
 
 def live_orders_enabled():
     """Require an explicit go-live switch; connecting credentials is not permission to order."""
-    return woo_configured() and os.getenv("TRENDMIX_LIVE_ORDERS", "").lower() == "true"
+    return woo_configured() and os.getenv("NUVEMIXA_LIVE_ORDERS", "").lower() == "true"
 
 
 def woo_request(method, path, payload=None):
@@ -991,12 +998,23 @@ def legacy_product_url(category_slug, subcategory_slug, product_slug):
 @app.route("/winkelwagen", methods=["GET", "POST"])
 def winkelwagen():
     cart = [dict(item) for item in cart_items()]
+    notice = None
+    if request.method == "GET":
+        dropped = cart_dropped_count()
+        if dropped:
+            notice = ("Een product in je winkelwagen is niet meer beschikbaar en is verwijderd." if dropped == 1
+                      else "Producten in je winkelwagen zijn niet meer beschikbaar en zijn verwijderd.")
+            session["trendmix_cart"] = [{"id": item["id"], "qty": item["qty"]} for item in cart]
+            session.modified = True
+        notice = notice or session.pop("trendmix_cart_notice", None)
 
     if request.method == "POST":
         action = request.form.get("action", "").strip()
 
         if action == "add":
             product = find_product(request.form.get("product_id", "").strip())
+            if not product:
+                session["trendmix_cart_notice"] = "Dit product is niet beschikbaar en is niet aan je winkelwagen toegevoegd."
             if product:
                 found = next((item for item in cart if str(item["id"]) == str(product["id"])), None)
                 if found:
@@ -1047,6 +1065,7 @@ def winkelwagen():
         cart=cart,
         cart_count=cart_count(),
         cart_total=total,
+        notice=notice,
     )
 
 
@@ -1058,6 +1077,7 @@ def afrekenen():
     total = sum(float(item.get("price", 0) or 0) * max(1, int(item.get("qty", 1))) for item in cart)
     order = None
     error = None
+    field_errors = {}
     if request.method == "POST":
         customer = {
             "first_name": request.form.get("first_name", "").strip(),
@@ -1069,10 +1089,9 @@ def afrekenen():
             "country": request.form.get("country", "").strip().upper(),
         }
         consent = request.form.get("checkout_consent") == "yes"
-        if not all(customer.values()):
-            error = "Vul alle verplichte gegevens in."
-        elif not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", customer["email"]):
-            error = "Vul een geldig e-mailadres in."
+        field_errors = nv_checkout.validate_customer(customer)
+        if field_errors:
+            error = "Controleer de gemarkeerde velden."
         elif not consent:
             error = "Controleer en bevestig je gegevens voordat je doorgaat."
         elif live_orders_enabled():
@@ -1085,7 +1104,7 @@ def afrekenen():
             # Never retain customer names, emails or addresses in that cookie.
             session.pop("trendmix_test_checkout", None)
             return render_template("checkout.html", categories=CATEGORIES, cart=cart, cart_count=cart_count(), cart_total=total, test_mode=True, order={"id": "TEST"}, error=None)
-    return render_template("checkout.html", categories=CATEGORIES, cart=cart, cart_count=cart_count(), cart_total=total, test_mode=not live_orders_enabled(), order=order, error=error, customer=(customer if request.method == "POST" else {}))
+    return render_template("checkout.html", categories=CATEGORIES, cart=cart, cart_count=cart_count(), cart_total=total, test_mode=not live_orders_enabled(), order=order, error=error, field_errors=field_errors, customer=(customer if request.method == "POST" else {}))
 
 
 @app.route("/faq")
@@ -1148,6 +1167,7 @@ def contact():
         return Response(json.dumps({"ok": False}), status=502, mimetype="application/json")
     return redirect(url_for("contact_page") + "?status=error")
 
+@app.route("/over-nuvemixa")
 @app.route("/over-trendmix")
 def over_trendmix():
     return render_info_page("over-trendmix")
