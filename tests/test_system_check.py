@@ -89,19 +89,49 @@ def test_merchant_previews_share_eligibility(administrator, monkeypatch, tmp_pat
     items = [item, {**item, "id": "duplicate"}, {**item, "id": "duplicate"},
              {**item, "id": "a" * 51, "image": "/img/product/gadgets/test.svg"},
              {**item, "id": "broken", "image": "/static/missing.jpg"},
+             {**item, "id": "broken-absolute", "image": "https://nuvemixa.alwaysdata.net/static/missing.jpg"},
+             {**item, "id": "placeholder", "image": "/%69mg/product/gadgets/test.svg"},
+             {**item, "id": "blank-identifiers", "brand": " ", "mpn": "\t"},
              {**item, "id": "sub-cent", "price": "0.001"},
              {**item, "id": "other-port", "product_url": "https://nuvemixa.alwaysdata.net:8443/gadgets/test"}]
     monkeypatch.setattr(dashboard, "catalog_items", lambda: items)
     report = administrator.get("/admin/merchant-preview").json
     assert report["ready"] == 1
     assert report["reason_counts"] == {
-        "dubbele product-ID": 2, "gegenereerde tijdelijke afbeelding": 1,
-        "product-ID": 1, "lokaal afbeeldingsbestand ontbreekt": 1, "prijs": 1, "productlink": 1,
+        "dubbele product-ID": 2, "gegenereerde tijdelijke afbeelding": 2,
+        "product-ID": 1, "lokaal afbeeldingsbestand ontbreekt": 2, "prijs": 1, "productlink": 1,
+        "merk en GTIN of MPN": 1,
     }
     assert "51 tekens" in report["products"][3]["issues"][0]["detail"]
     feed = administrator.get("/admin/merchant-feed-preview.xml")
     assert feed.headers["X-NUVEMIXA-Eligible-Count"] == "1"
     assert b"<g:id>eligible</g:id>" in feed.data
+
+
+def test_seo_report_is_run_locally_stored_and_read_back(administrator, monkeypatch, tmp_path):
+    import nv_dashboard_manager as manager
+    import nv_seo_scan
+
+    path = tmp_path / "seo.sqlite3"
+    monkeypatch.setattr(manager, "DB", path)
+    monkeypatch.delenv("NUVEMIXA_DASHBOARD_BACKEND", raising=False)
+    monkeypatch.delenv("NUVEMIXA_CANONICAL_URL", raising=False)
+    url = "/dashboard?section=seo"
+    assert b"Nog geen lokaal SEO-rapport" in administrator.get(url).data
+    assert not path.exists()
+    product = next(dashboard.catalog_items())
+    action = "/admin/nv/seo-scan"
+    assert administrator.post(action, data={"product_url": product["product_url"]}).status_code == 403
+    assert administrator.post(action, data={
+        "_csrf_token": CSRF_TOKEN, "product_url": product["product_url"],
+    }).status_code == 303
+    _, report = nv_seo_scan.last_scan()
+    assert report["path"] == product["product_url"]
+    assert [check[1] for check in report["checks"]] == [True, True, True, True]
+    assert b"Laatste rapport" in administrator.get(url).data
+    with closing(sqlite3.connect(path)) as db, db:
+        db.execute("UPDATE seo_scans SET payload = '[]'")
+    assert b"Het laatste scanrapport kan tijdelijk niet worden geladen." in administrator.get(url).data
 
 
 def test_visitor_count_opt_in_and_exclusions(administrator, monkeypatch, tmp_path):

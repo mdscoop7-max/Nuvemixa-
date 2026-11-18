@@ -65,7 +65,10 @@
 <p><a href="{{ product.product_url }}?dashboard_from={{ section }}">Bekijk productpagina</a> · Voorraadstatus {{ stock_labels.get(product.stock_status, 'Onbekend') }}{% if product.stock_quantity is not none %} · {{ product.stock_quantity }} stuks{% endif %}</p>
 {% if section == "afbeeldingen" %}
 {% for image in product.images %}
-<a href="{{ image }}" target="_blank" rel="noopener noreferrer"><img src="{{ image }}" alt="{{ product.name }} · afbeelding {{ loop.index }}" width="88" height="88" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="object-fit:contain"></a>
+<span>
+  <a href="{{ image }}" target="_blank" rel="noopener noreferrer"><img data-dashboard-catalog-image src="{{ image }}" alt="{{ product.name }} · afbeelding {{ loop.index }}" width="88" height="88" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="object-fit:contain"></a>
+  <small hidden>Afbeelding {{ loop.index }} is niet beschikbaar.</small>
+</span>
 {% endfor %}
 {% if allowed("image_manage") %}
 <form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">

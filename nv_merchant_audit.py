@@ -1,8 +1,8 @@
 from collections import Counter
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
-from nuvemixa_integrations import merchant_product_checks
+from nuvemixa_integrations import MERCHANT_PREVIEW_ORIGIN, merchant_product_checks
 
 GUIDANCE = {
     "interne goedkeuring": ("merchant_verified", "Laat het product na broncontrole intern goedkeuren."),
@@ -31,12 +31,17 @@ SPECIFICATION = "https://support.google.com/merchants/answer/7052112?hl=nl"
 
 def product_issues(product, static_folder):
     reasons = merchant_product_checks(product)
-    image = urlsplit(str(product.get("image") or "")) if "afbeeldingslink" not in reasons else None
-    if image and not image.netloc and image.path.startswith("/static/"):
-        directory = Path(static_folder).resolve()
-        file = (directory / image.path.removeprefix("/static/")).resolve()
-        if not file.is_relative_to(directory) or not file.is_file():
-            reasons.append("lokaal afbeeldingsbestand ontbreekt")
+    if "afbeeldingslink" not in reasons:
+        image = urlsplit(urljoin(MERCHANT_PREVIEW_ORIGIN + "/", str(product["image"])))
+        path = unquote(image.path)
+        if image.netloc.lower() == urlsplit(MERCHANT_PREVIEW_ORIGIN).netloc and path.startswith("/static/"):
+            directory = Path(static_folder).resolve()
+            try:
+                file = (directory / path.removeprefix("/static/")).resolve()
+                if not file.is_relative_to(directory) or not file.is_file():
+                    reasons.append("lokaal afbeeldingsbestand ontbreekt")
+            except (OSError, ValueError):
+                reasons.append("lokaal afbeeldingsbestand ontbreekt")
     details = {}
     for key, label, limit in (("id", "product-ID", 50), ("name", "titel", 150),
                               ("description", "beschrijving", 5000)):
@@ -49,8 +54,8 @@ def product_issues(product, static_folder):
         details["voorraad"] = "Geen bevestigde status op voorraad of uitverkocht."
     if "merk en GTIN of MPN" in reasons:
         missing = [label for absent, label in (
-            (not product.get("brand"), "merk"),
-            (not (product.get("gtin") or product.get("mpn")), "GTIN of MPN"),
+            (not str(product.get("brand") or "").strip(), "merk"),
+            (not any(str(product.get(key) or "").strip() for key in ("gtin", "mpn")), "GTIN of MPN"),
         ) if absent]
         details["merk en GTIN of MPN"] = "Ontbreekt: " + " en ".join(missing) + "."
     return [issue(reason, details.get(reason)) for reason in reasons]
@@ -74,11 +79,14 @@ def audit(items, static_folder):
         counts.update(issue["reason"] for issue in issues)
         products.append({
             "id": str(item.get("id") or ""), "name": item.get("name"), "price_eur": item.get("price"),
+            "category": item.get("category_name"), "product_url": item.get("product_url"),
+            "temporary_image": any(i["reason"] == "gegenereerde tijdelijke afbeelding" for i in issues),
             "availability": item.get("stock_status"), "currency": item.get("currency", "EUR"),
             "missing": [issue["reason"] for issue in issues], "issues": issues,
         })
     return {
         "status": "internal_preview_only", "published": False, "google_review": "not_checked",
+        "shipping_settings": "not_checked",
         "specification": SPECIFICATION, "total": len(products),
         "ready": sum(not row["issues"] for row in products), "reason_counts": dict(counts),
         "products": products,

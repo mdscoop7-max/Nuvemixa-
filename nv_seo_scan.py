@@ -6,6 +6,7 @@ from html.parser import HTMLParser
 from urllib.parse import urlsplit
 
 from flask import current_app, request
+import nv_dashboard_manager
 from nv_dashboard_manager import bp, connect, management_result, require_admin
 import nv_dashboard_postgres
 
@@ -26,7 +27,7 @@ class ProductMetadata(HTMLParser):
             self.capture = tag
             self.buffer = []
         elif tag == "meta" and attrs.get("name") == "description":
-            self.description = attrs.get("content") or ""
+            self.description = (attrs.get("content") or "").strip()
         elif tag == "link" and attrs.get("rel") == "canonical":
             self.canonical = attrs.get("href") or ""
 
@@ -61,11 +62,21 @@ def canonical_matches(value, path, base_url):
 
 
 def last_scan():
-    with connect() as db:
+    path = nv_dashboard_manager.DB
+    if not nv_dashboard_postgres.runtime_enabled() and not path.is_file():
+        return None
+    with nv_dashboard_postgres.read_db(path) as db:
         if not nv_dashboard_postgres.table_exists(db, "seo_scans"):
             return None
         row = db.execute("SELECT created_at,payload FROM seo_scans ORDER BY id DESC LIMIT 1").fetchone()
-        return (row["created_at"], json.loads(row["payload"])) if row else None
+    if row is None:
+        return None
+    report = json.loads(row["payload"])
+    if (not isinstance(report, dict) or not isinstance(report.get("path"), str)
+            or not isinstance(report.get("checks"), list)
+            or any(not isinstance(check, list) or len(check) != 3 for check in report["checks"])):
+        raise ValueError("Ongeldig SEO-rapport")
+    return row["created_at"], report
 
 
 @bp.post("/admin/nv/seo-scan")
@@ -83,7 +94,8 @@ def seo_scan():
         metadata.feed(response.get_data(as_text=True))
         metadata.close()
         schema = next((item for item in metadata.structured_data
-                       if isinstance(item, dict) and item.get("@type") == "Product"), None)
+                       if isinstance(item, dict) and item.get("@type") == "Product"
+                       and isinstance(item.get("name"), str) and item["name"].strip()), None)
         checks = [
             ["Paginatitel", bool(metadata.title), metadata.title],
             ["Metabeschrijving", bool(metadata.description), metadata.description],
