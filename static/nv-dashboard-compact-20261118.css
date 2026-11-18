@@ -27,9 +27,9 @@ main section.nv27-home h2.nv27-sec{font-size:.8rem;line-height:1.2;margin:4px 0 
 .nv27-home .nv27-quick a svg{padding:4px;border-radius:7px}
 
 /* Onderdelen: kleinere kaarten, knoppen netjes onderaan op één lijn */
-.nv27-home .nv27-modules{grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:10px}
+.nv27-home .nv27-modules{grid-template-columns:repeat(auto-fill,minmax(max(min(205px,100%),calc((100% - 30px) / 4)),1fr));gap:10px}
 .nv27-home .nv27-card{padding:12px 14px;gap:6px;border-radius:12px}
-.nv27-home .nv27-card header{gap:6px;align-items:center;flex-wrap:nowrap}
+.nv27-home .nv27-card header{gap:4px 8px;align-items:center;flex-wrap:wrap}
 .nv27-home .nv27-card header h2,.nv27-home .nv27-card header h3{min-width:0;font-size:.98rem;gap:7px}
 .nv27-home .nv27-card .nv27-chip{padding:2px 8px;font-size:.68rem;white-space:nowrap;flex:none}
 .nv27-home .nv27-chip{padding:3px 9px;font-size:.72rem}
@@ -39,11 +39,9 @@ main section.nv27-home h2.nv27-sec{font-size:.8rem;line-height:1.2;margin:4px 0 
 .nv27-home .nv27-two .nv27-card{gap:6px}
 
 /* Brede kaarten (kopregel met lange chip) mogen de chip op een eigen regel zetten */
-@media(max-width:1280px){.nv27-home .nv27-card header{flex-wrap:wrap}}
 
 /* Tablet */
 @media(max-width:1024px){
-  .nv27-home .nv27-modules{grid-template-columns:repeat(auto-fill,minmax(min(210px,100%),1fr))}
 }
 
 /* Aanraakschermen en mobiel: klikvlak minimaal 44 px */
@@ -57,3 +55,29 @@ main section.nv27-home h2.nv27-sec{font-size:.8rem;line-height:1.2;margin:4px 0 
   .nv27-home .nv27-card a.go{align-self:stretch;justify-content:center;white-space:normal}
   .nv27-home .nv27-flow{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* ===== Ontwerp v2 (goedgekeurd 18-11-2026): rustig, strak, kleine afgeronde knoppen ===== */
+.nv27-home .nv27-card{border:1px solid #e3eaf4;box-shadow:0 1px 2px #0f2a4f0d;transition:box-shadow .15s,border-color .15s}
+.nv27-home .nv27-card:hover{border-color:color-mix(in srgb,var(--c,#0757bd) 35%,#e3eaf4);box-shadow:0 4px 12px #0f2a4f12}
+.nv27-home .nv27-card header h2 svg.ic,.nv27-home .nv27-card header h3 svg.ic{box-sizing:content-box;width:16px;height:16px;padding:6px;border-radius:8px;background:color-mix(in srgb,var(--c,#0757bd) 12%,#fff);color:var(--c,#0757bd)}
+.nv27-home .nv27-card header h2,.nv27-home .nv27-card header h3{font-size:.95rem;font-weight:750;letter-spacing:-.01em}
+.nv27-home .nv27-card p{font-size:.83rem;color:#5b6b81}
+.nv27-home .nv27-card a.go{min-height:30px;padding:5px 12px;border-radius:999px;font-size:.8rem;font-weight:700;
+  background:color-mix(in srgb,var(--c,#0757bd) 10%,#fff);color:color-mix(in srgb,var(--c,#0757bd) 85%,#000);
+  border:1px solid color-mix(in srgb,var(--c,#0757bd) 25%,#fff);box-shadow:none;gap:4px}
+.nv27-home .nv27-card a.go:hover{background:var(--c,#0757bd);color:#fff;border-color:var(--c,#0757bd)}
+.nv27-home .nv27-card .nv27-chip{font-weight:700;letter-spacing:.01em}
+/* Kerncijfers: getal centraal, icoon klein */
+.nv27-home .nv27-kpi{border:1px solid #e3eaf4;border-top-width:3px;box-shadow:0 1px 2px #0f2a4f0d}
+.nv27-home .nv27-kpi strong{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;color:#0b2a55}
+/* Snelle acties en stappen als nette pillen */
+.nv27-home .nv27-quick a{min-height:34px;padding:4px 12px 4px 6px;border-radius:999px;border:1px solid #e3eaf4;font-size:.84rem;font-weight:700;box-shadow:0 1px 2px #0f2a4f0d}
+.nv27-home .nv27-quick a{border-left:1px solid #e3eaf4}
+.nv27-home .nv27-quick a svg{padding:4px;border-radius:999px}
+.nv27-home .nv27-flow a{border:1px solid #e3eaf4;border-left:3px solid var(--c,#6a4fd6);box-shadow:0 1px 2px #0f2a4f0d;font-size:.86rem}
+@media(pointer:coarse),(max-width:760px){
+  .nv27-home .nv27-card a.go{min-height:44px;padding:9px 16px;font-size:.85rem}
+  .nv27-home .nv27-quick a{min-height:44px}
+  .nv27-home .nv27-flow a{min-height:48px}
+}
+@media(max-width:520px){.nv27-home .nv27-card a.go{align-self:flex-start;white-space:nowrap}}
