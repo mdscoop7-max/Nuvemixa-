@@ -268,6 +268,10 @@ def offer_match(term, identity, description="", variant=""):
     variant = normalize(variant)
     evidence = f"{title} {body} {variant}"
     subject = subject_for(query)
+    # A deterrent replica cannot provide the recording/security function sought.
+    replica = r"\b(?:dummy|fake|decoy|imitation|imitatie|nep)\b"
+    if subject == "security camera" and re.search(replica, title) and not re.search(replica, query):
+        return "", ()
     core = "power bank" if power_bank_query(term) else subject
     accessory_query = re.search(r"\b(?:" + ACCESSORIES + r")\b", query)
     if core and not accessory_query:

@@ -24,6 +24,15 @@ def test_domain_variants(query, english):
     assert any(english in variant.casefold() for variant in variants)
 
 
+def test_security_camera_search_excludes_replicas_unless_requested():
+    for query in ("security camera", "beveiligingscamera"):
+        for title in ("Dummy Beveiligingscamera Bullet - IP44", "Dummy Security Camera",
+                      "Fake Security Camera", "Decoy Security Camera"):
+            assert offer_match(query, title)[0] == ""
+        assert offer_match(query, "Outdoor Wireless Security Camera")[0] == "exact"
+    assert offer_match("dummy security camera", "Dummy Security Camera")[0] == "exact"
+
+
 def test_sizes_brand_formula_and_connector_stay_distinct():
     query = "NIVEA Soft Hydraterende Crème 200 ml"
     assert offer_match(query, "Nivea Soft Moisturiser 200ml")[0] == "exact"
