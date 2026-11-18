@@ -52,7 +52,11 @@ def test_bronnentest_alleen_eigenaar(administrator, monkeypatch):
     assert r.status_code == 403 and called == []
 
 
-@pytest.mark.parametrize("sectie", ["viral", "internationaal"])
-def test_viral_en_internationaal_zijn_eerlijk_over_ontbrekende_trenddata(administrator, sectie):
+@pytest.mark.parametrize(("sectie", "uitleg"), [
+    ("viral", ("Google Trends toont zoekinteresse", "Verkoopcijfers en sociale populariteitscijfers ontbreken")),
+    ("internationaal", ("Verkoopcijfers en marktprijzen ontbreken",)),
+])
+def test_onderzoeksmenus_vermelden_welke_data_beschikbaar_zijn(administrator, sectie, uitleg):
     html = administrator.get(f"/dashboard?section={sectie}").get_data(as_text=True)
-    assert "Geen live trendmeting" in html
+    for tekst in uitleg:
+        assert tekst in html

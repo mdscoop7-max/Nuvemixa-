@@ -60,7 +60,7 @@
 
 <section class="panel nv-market-panel">
   <h2>{{ 'Viral Product Finder' if viral_page else 'Internationaal marktonderzoek' }}</h2>
-  <p class="nv-honest-note" role="note">NUVEMIXA zoekt in aangesloten catalogi en openbare publicaties. {{ 'Google Trends kan actuele zoekinteresse tonen. Sociale platforms open je via bronlinks.' if viral_page else 'Verkoopcijfers en marktprijzen ontbreken bij deze bronnen.' }} Resultaten kunnen tot 10 minuten in de cache staan.</p>
+  <p class="nv-honest-note" role="note">NUVEMIXA zoekt in aangesloten catalogi en openbare publicaties. {{ 'Google Trends toont zoekinteresse. Sociale platforms open je via bronlinks. Verkoopcijfers en sociale populariteitscijfers ontbreken.' if viral_page else 'Verkoopcijfers en marktprijzen ontbreken bij deze bronnen.' }} Resultaten kunnen tot 10 minuten in de cache staan.</p>
   <form method="get" action="{{ url_for('control') }}" class="nv-market-form" role="search" data-research-search>
     <input type="hidden" name="section" value="{{ 'viral' if viral_page else 'internationaal' }}">
     <input type="hidden" name="mrun" value="1">

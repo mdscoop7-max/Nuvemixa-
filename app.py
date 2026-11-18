@@ -1191,7 +1191,6 @@ def admin_configured():
 from nv_woo_bridge import (
     CommerceConnectionError, connection_status as woo_connection_status, nuvemixa_woo_blueprint, read_configuration_present, read_recent_orders, record_test as woo_record_test,
 )
-COUNTRY_CODES_FALLBACK = frozenset(('NL','BE','DE','FR','ES','IT','PL','AT','PT','IE','GB','US','SE','DK','FI'))
 import nv_supplier_sources
 import nv_partners
 import nv_concepts
@@ -2253,6 +2252,7 @@ def control():
         except ValueError as exc:
             product_margin_error = str(exc)
     product_discovery = None
+    source_coverage = None
     research_options = {}
     if section == "onderzoek":
         from nv_product_discovery import (
@@ -2263,6 +2263,7 @@ def control():
         research_category = request.args.get("research_category", ALL_PRODUCTS)
         research_mode = request.args.get("research_mode", "products")
         research_country = request.args.get("research_country", "NL")
+        source_coverage = nv_supplier_sources.coverage(research_country if research_country in COUNTRIES else "NL")
         research_platforms = [
             "Publicaties" if value == "Bing" else value for value in request.args.getlist("research_platform")
         ]
@@ -2415,7 +2416,7 @@ def control():
         product_discovery=product_discovery,
         concept_view=nv_concepts.view(request.args.get("concept_q", "")) if section == 'concepten' and is_admin else None,
         partner_view=nv_partners.view(request.args) if section == 'partners' else None,
-        source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
+        source_coverage=source_coverage,
         source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
         margin_scenario=margin_scenario,
