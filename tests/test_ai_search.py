@@ -155,3 +155,31 @@ def test_search_meter_is_on_every_research_search_bar():
     assert forms >= 12
     script = (root / "static/nv-search-meter.js").read_text(encoding="utf-8")
     assert "Bezig met zoeken..." in script and "pageshow" in script and "%" not in script.split("*/", 1)[1]
+
+
+def test_cost_counter_survives_a_restart_and_is_not_presented_as_hard_limit(api, monkeypatch):
+    calls, answers = api
+    monkeypatch.setenv("NUVEMIXA_AI_DAILY_CALLS", "2")
+    answers += [{"category": "", "keywords_en": [], "exclude": []}, {"reject": []}]
+    nv_ai_search.ai_discover("bluetooth speaker", categories=CATS)
+    assert len(calls) == 2 and nv_openai.usage()["persistent"] is True
+    nv_openai.reset_for_tests()  # nagebootste herstart: geheugen leeg, opslag blijft
+    result = nv_ai_search.ai_discover("yogamat", categories=CATS)
+    assert len(calls) == 2 and "Daglimiet" in result["ai"]["message"]
+    monkeypatch.setenv("NUVEMIXA_AI_DAILY_CALLS", "80")
+    assert "OpenAI-projectbudget blijft de echte grens" in nv_openai.status()["message"]
+
+
+def test_without_persistent_storage_a_stricter_daily_limit_applies(api, monkeypatch):
+    def broken():
+        raise RuntimeError("geen opslag")
+    monkeypatch.setattr(nv_openai, "store_connect", broken)
+    info = nv_openai.usage()
+    assert info["persistent"] is False and info["day_limit"] == nv_openai.UNPERSISTED_DAILY_CALLS
+    assert "niet blijvend opgeslagen" in nv_openai.status()["message"]
+
+
+def test_postgres_schema_contains_the_usage_table():
+    import pathlib
+    sql = (pathlib.Path(__file__).resolve().parents[1] / "nv_dashboard_postgres.sql").read_text(encoding="utf-8")
+    assert "CREATE TABLE IF NOT EXISTS ai_usage" in sql and "DROP" not in sql.upper()

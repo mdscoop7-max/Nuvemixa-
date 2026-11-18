@@ -1,0 +1,59 @@
+/* NUVEMIXA dashboard: compacte weergave (18-11-2026).
+ * Alleen afmetingen en witruimte; kleuren, iconen, logo en menu's blijven gelijk.
+ * Geladen na alle andere dashboardstijlen. */
+
+/* Hoofdscherm: minder witruimte tussen blokken */
+.nv27-home{gap:12px}
+.nv27-home .nv27-hero h1{font-size:1.5rem;line-height:1.15}
+.nv27-home .nv27-hero p{margin-top:.1rem;font-size:.92rem}
+main section.nv27-home h2.nv27-sec{font-size:.8rem;line-height:1.2;margin:4px 0 -4px}
+
+/* Kerncijfers: label naast icoon, waarde eronder; geen afgebroken woorden */
+.nv27-home .nv27-kpis{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:10px}
+.nv27-home .nv27-kpi{grid-template-columns:auto minmax(0,1fr);gap:2px 8px;padding:9px 12px;border-radius:12px;align-items:center}
+.nv27-home .nv27-kpi .badge{grid-row:auto;width:28px;height:28px;border-radius:8px}
+.nv27-home .nv27-kpi .badge svg.ic{width:1.05em;height:1.05em}
+.nv27-home .nv27-kpi span:not(.badge){font-size:.74rem;line-height:1.2;overflow-wrap:normal;word-break:normal;hyphens:auto}
+.nv27-home .nv27-kpi strong{grid-column:1/-1;font-size:1.3rem;line-height:1.1;margin-top:2px}
+.nv27-home .nv27-kpi small{grid-column:1/-1;font-size:.72rem;line-height:1.3}
+
+/* Werkplek en snelle acties */
+.nv27-home .nv27-flow{gap:8px}
+.nv27-home .nv27-flow a{min-height:46px;padding:7px 10px;border-radius:10px;font-size:.9rem;line-height:1.2}
+.nv27-home .nv27-flow a::before{width:22px;height:22px;font-size:.72rem}
+.nv27-home .nv27-flow a small{font-size:.76rem}
+.nv27-home .nv27-quick{gap:6px}
+.nv27-home .nv27-quick a{min-height:38px;padding:5px 11px;border-radius:9px;font-size:.88rem;gap:7px}
+.nv27-home .nv27-quick a svg{padding:4px;border-radius:7px}
+
+/* Onderdelen: kleinere kaarten, knoppen netjes onderaan op één lijn */
+.nv27-home .nv27-modules{grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:10px}
+.nv27-home .nv27-card{padding:12px 14px;gap:6px;border-radius:12px}
+.nv27-home .nv27-card header{gap:6px;align-items:center;flex-wrap:nowrap}
+.nv27-home .nv27-card header h2,.nv27-home .nv27-card header h3{min-width:0;font-size:.98rem;gap:7px}
+.nv27-home .nv27-card .nv27-chip{padding:2px 8px;font-size:.68rem;white-space:nowrap;flex:none}
+.nv27-home .nv27-chip{padding:3px 9px;font-size:.72rem}
+.nv27-home .nv27-card p{font-size:.85rem;line-height:1.4}
+.nv27-home .nv27-card a.go{margin-top:auto;align-self:flex-start;min-height:34px;padding:6px 12px;border-radius:9px;font-size:.85rem;line-height:1.2;white-space:nowrap;max-width:100%}
+.nv27-home .nv27-two{gap:10px}
+.nv27-home .nv27-two .nv27-card{gap:6px}
+
+/* Brede kaarten (kopregel met lange chip) mogen de chip op een eigen regel zetten */
+@media(max-width:1280px){.nv27-home .nv27-card header{flex-wrap:wrap}}
+
+/* Tablet */
+@media(max-width:1024px){
+  .nv27-home .nv27-modules{grid-template-columns:repeat(auto-fill,minmax(min(210px,100%),1fr))}
+}
+
+/* Aanraakschermen en mobiel: klikvlak minimaal 44 px */
+@media(pointer:coarse),(max-width:760px){
+  .nv27-home .nv27-card a.go,.nv27 a.go,.nv27-home .nv27-quick a{min-height:44px}
+}
+@media(max-width:520px){
+  .nv27-home .nv27-hero h1{font-size:1.3rem}
+  .nv27-home .nv27-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nv27-home .nv27-modules{grid-template-columns:minmax(0,1fr)}
+  .nv27-home .nv27-card a.go{align-self:stretch;justify-content:center;white-space:normal}
+  .nv27-home .nv27-flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

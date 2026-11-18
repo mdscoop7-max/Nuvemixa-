@@ -22,7 +22,7 @@ DEFAULT_SEARCH_MODEL = "gpt-4.1-mini"  # Responses API met web_search (leveranci
 PRICES = {"gpt-4o-mini": (0.15, 0.60), "gpt-4.1-mini": (0.40, 1.60), "gpt-4.1-nano": (0.10, 0.40)}
 FALLBACK_PRICE = (2.50, 10.00)          # onbekend model: reken duur, zodat de limiet eerder ingrijpt
 WEB_SEARCH_CALL_USD = 0.025             # per uitgevoerde web_search-aanroep (bovengrens)
-DEFAULT_MONTHLY_USD = 3.00              # applicatielimiet; het OpenAI-projectbudget (US$ 5) blijft de achtervang
+DEFAULT_MONTHLY_USD = 3.00              # interne schatting, geen garantie; het OpenAI-projectbudget (US$ 5) is de echte grens
 DEFAULT_DAILY_CALLS = 80
 CACHE_SECONDS = 6 * 3600
 CACHE_SIZE = 300
@@ -79,22 +79,64 @@ def limits():
             _int_env("NUVEMIXA_AI_DAILY_CALLS", DEFAULT_DAILY_CALLS))
 
 
-def _roll(now):
+UNPERSISTED_DAILY_CALLS = 20            # strengere daglimiet zolang de teller niet blijvend kan worden opgeslagen
+SQLITE_TABLE = ("CREATE TABLE IF NOT EXISTS ai_usage (period TEXT PRIMARY KEY, "
+                "usd REAL NOT NULL DEFAULT 0, calls INTEGER NOT NULL DEFAULT 0)")
+UPSERT = ("INSERT INTO ai_usage(period, usd, calls) VALUES (?, ?, ?) ON CONFLICT(period) DO UPDATE "
+          "SET usd = ai_usage.usd + excluded.usd, calls = ai_usage.calls + excluded.calls")
+
+
+def _periods(now):
     stamp = datetime.fromtimestamp(now, timezone.utc)
-    month, day = stamp.strftime("%Y-%m"), stamp.strftime("%Y-%m-%d")
+    return stamp.strftime("%Y-%m"), stamp.strftime("%Y-%m-%d")
+
+
+def _roll(now):
+    month, day = _periods(now)
     if _state["month"] != month:
         _state.update(month=month, month_usd=0.0)
     if _state["day"] != day:
         _state.update(day=day, day_calls=0)
 
 
+def store_connect():
+    """Dashboardopslag (PostgreSQL of SQLite). Vervangbaar in tests."""
+    import nuvemixa_admin_store
+    return nuvemixa_admin_store.connect()
+
+
+def _persist(now, usd=0.0, calls=0):
+    """Telt op in de blijvende opslag en geeft (maand_usd, dag_aanroepen) terug, of None als dat niet lukt.
+
+    Alleen INSERT/UPDATE op de eigen tabel ai_usage; er wordt nooit iets verwijderd."""
+    month, day = _periods(now)
+    try:
+        with store_connect() as db:
+            import nv_dashboard_postgres
+            if not nv_dashboard_postgres.runtime_enabled():
+                db.execute(SQLITE_TABLE)
+            if usd or calls:
+                db.execute(UPSERT, (month, float(usd), int(calls)))
+                db.execute(UPSERT, (day, 0.0, int(calls)))
+            m = db.execute("SELECT usd FROM ai_usage WHERE period = ?", (month,)).fetchone()
+            d = db.execute("SELECT calls FROM ai_usage WHERE period = ?", (day,)).fetchone()
+            return (float(m[0]) if m else 0.0), (int(d[0]) if d else 0)
+    except Exception:  # opslag niet beschikbaar, bevroren of tabel nog niet gemigreerd
+        return None
+
+
 def usage():
     monthly, daily = limits()
+    now = time.time()
+    stored = _persist(now)
     with _lock:
-        _roll(time.time())
-        return {"month_usd": round(_state["month_usd"], 4), "month_limit_usd": monthly,
-                "day_calls": _state["day_calls"], "day_limit": daily,
-                "blocked": time.time() < _state["blocked_until"], "last_error": _state["last_error"]}
+        _roll(now)
+        month_usd, day_calls = stored if stored else (_state["month_usd"], _state["day_calls"])
+        return {"month_usd": round(max(month_usd, _state["month_usd"]), 4), "month_limit_usd": monthly,
+                "day_calls": max(day_calls, _state["day_calls"]),
+                "day_limit": daily if stored else min(daily, UNPERSISTED_DAILY_CALLS),
+                "persistent": stored is not None,
+                "blocked": now < _state["blocked_until"], "last_error": _state["last_error"]}
 
 
 def status():
@@ -105,8 +147,13 @@ def status():
     info = usage()
     if info["blocked"] or info["month_usd"] >= info["month_limit_usd"] or info["day_calls"] >= info["day_limit"]:
         return {"state": "fallback", "label": "AI tijdelijk uit, normaal zoeken",
-                "message": info["last_error"] or "De AI-limiet van NUVEMIXA is bereikt; normaal zoeken is actief."}
-    return {"state": "active", "label": "AI actief", "message": "AI helpt met zoekwoorden en het filteren van resultaten."}
+                "message": info["last_error"] or "De interne AI-limiet van NUVEMIXA is bereikt; normaal zoeken is actief."}
+    note = ("Interne schatting deze maand: US$ {:.2f} van US$ {:.2f}; het OpenAI-projectbudget blijft de echte grens."
+            .format(info["month_usd"], info["month_limit_usd"]))
+    if not info["persistent"]:
+        note += " Teller niet blijvend opgeslagen: strengere daglimiet actief."
+    return {"state": "active", "label": "AI actief",
+            "message": "AI helpt met zoekwoorden en het filteren van resultaten. " + note}
 
 
 def reset_for_tests():
@@ -118,21 +165,27 @@ def reset_for_tests():
 def reserve(estimate):
     monthly, daily = limits()
     now = time.time()
+    stored = _persist(now)
     with _lock:
         _roll(now)
         if now < _state["blocked_until"]:
             raise AIUnavailable("cooldown", _state["last_error"] or "AI tijdelijk gepauzeerd na een fout.")
-        if _state["day_calls"] >= daily:
+        month_usd = max(stored[0] if stored else 0.0, _state["month_usd"])
+        day_calls = max(stored[1] if stored else 0, _state["day_calls"])
+        if day_calls >= (daily if stored else min(daily, UNPERSISTED_DAILY_CALLS)):
             raise AIUnavailable("limit", "Daglimiet voor AI-aanroepen bereikt; normaal zoeken is actief.")
-        if _state["month_usd"] + estimate > monthly:
-            raise AIUnavailable("budget", "Maandbudget voor AI in NUVEMIXA bereikt; normaal zoeken is actief.")
+        if month_usd + estimate > monthly:
+            raise AIUnavailable("budget", "Intern maandbudget voor AI in NUVEMIXA bereikt; normaal zoeken is actief.")
         _state["day_calls"] += 1
         _state["month_usd"] += estimate  # voorlopig; na het antwoord vervangen door het werkelijke verbruik
+    _persist(now, estimate, 1)
 
 
 def settle(estimate, actual):
     with _lock:
         _state["month_usd"] = max(0.0, _state["month_usd"] - estimate + actual)
+    if actual != estimate:
+        _persist(time.time(), actual - estimate, 0)
 
 
 def _block(seconds, message):

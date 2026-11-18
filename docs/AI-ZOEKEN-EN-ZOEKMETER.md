@@ -21,8 +21,19 @@ AI voegt nooit producten, leveranciers, prijzen, verkoopcijfers of trendcijfers 
 
 ## Kostenbewaking
 Caching (6 uur) per identieke vraag, max. 160–200 uitvoertokens, temperatuur 0, pauze na HTTP 429/5xx/time-out,
-pauze van 15 minuten na een geweigerde sleutel. Tellers staan in het servergeheugen en beginnen na een herstart
-opnieuw; het OpenAI-projectbudget blijft daarom de harde grens.
+pauze van 15 minuten na een geweigerde sleutel.
+
+De interne teller (geschatte kosten per maand, aanroepen per dag) staat in tabel `ai_usage` in de dashboardopslag
+en overleeft dus herstarts en deploys. Alleen INSERT/UPDATE op die eigen tabel; er wordt nooit iets verwijderd.
+- SQLite: de tabel wordt automatisch aangemaakt.
+- PostgreSQL (`NUVEMIXA_DASHBOARD_BACKEND=postgres`): voer eenmalig `nv_dashboard_postgres.sql` uit met de
+  migratierol (idempotent, alleen `CREATE TABLE IF NOT EXISTS`) en geef de applicatierol
+  `SELECT, INSERT, UPDATE ON nuvemixa_dashboard.ai_usage`.
+- Is de opslag niet bereikbaar of de tabel nog niet aangemaakt, dan valt de teller terug op het geheugen
+  met een strengere daglimiet (20 aanroepen) en meldt het dashboard dat de teller niet blijvend is opgeslagen.
+
+De interne teller is een schatting op basis van gerapporteerde tokens, geen gegarandeerde grens. Het
+OpenAI-projectbudget (US$ 5 per maand) blijft de echte, harde limiet.
 
 ## Zoekmeter
 `static/nv-search-meter.js` + `.css` op elk formulier met `data-research-search` (fasen via `data-search-phases`).
