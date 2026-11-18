@@ -1,0 +1,19 @@
+{% if trend_result and trend_result.google_trends_checked %}
+<section aria-label="Google Trends">
+  <h4>Actuele zoekinteresse uit Google Trends</h4>
+  <p>Google signaleert verhoogde zoekinteresse. De volumes zijn schattingen van zoekopdrachten.</p>
+  {% if trend_result.search_trends %}
+  <ul class="nv-research-articles">
+    {% for row in trend_result.search_trends %}
+    <li><a href="{{ row.url }}" target="_blank" rel="noopener noreferrer">{{ row.title }}</a>
+      <small>{{ row.category }} · {{ row.source }} · <time datetime="{{ row.date }}">{{ row.date }}</time>{% if row.indicator %} · circa {{ row.indicator }} zoekopdrachten{% endif %}</small>
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif 'Google Trends' in trend_result.unavailable_sources %}
+  <p>De Google Trends-feed was tijdelijk niet beschikbaar.</p>
+  {% else %}
+  <p>De feed bevat nu geen passend zoektrendresultaat voor deze markt.</p>
+  {% endif %}
+</section>
+{% endif %}

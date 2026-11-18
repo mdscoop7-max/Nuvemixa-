@@ -53,9 +53,7 @@
       form.setAttribute('aria-busy', 'true');
       button.disabled = true;
       spinner.hidden = false;
-      const mode = form.elements.research_mode.value;
-      message.textContent = ['suppliers', 'dropship', 'wholesale'].includes(mode)
-        ? 'Leveranciers zoeken...' : 'Zoeken...';
+      message.textContent = form.dataset.researchSearch || 'Producten en leveranciers zoeken...';
     });
     window.addEventListener('pageshow', () => {
       form.removeAttribute('aria-busy');

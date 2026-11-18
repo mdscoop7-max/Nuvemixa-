@@ -61,7 +61,7 @@ def test_leveranciersresultaat_wordt_ongepubliceerd_huisdierenconcept(administra
     monkeypatch.setattr(requests, "get", fetch)
     response = administrator.get("/dashboard", query_string={
         "section": "onderzoek", "research_run": 1, "research_term": "Automatische kattenvoerbak",
-        "research_mode": "dropship", "research_platform": "Productcatalogi",
+        "research_mode": "dropship", "research_platform": "Productcatalogi", "research_supplier_filter": "all",
     })
     assert response.status_code == 200
     html = response.get_data(as_text=True).split('id="nv-research-suppliers"', 1)[1]
@@ -73,6 +73,8 @@ def test_leveranciersresultaat_wordt_ongepubliceerd_huisdierenconcept(administra
     assert concept["status"] == "nieuw"
     assert (concept["titel"], concept["categorie"], concept["bron_url"]) == (title, "Huisdieren", SYNCEE_PRODUCT)
     assert concept["inkoop"] is None and concept["verkoop"] is None
+    assert title in administrator.get("/dashboard?section=concepten&concept_q=kattenvoerbak").get_data(as_text=True)
+    assert title not in administrator.get("/dashboard?section=concepten&concept_q=yogamat").get_data(as_text=True)
 
 
 def test_concept_zonder_prijzen_blokkeert_publicatievoorbereiding(administrator, storage_tmp):

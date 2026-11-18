@@ -7,7 +7,7 @@ onbekend getoond.
 from collections import Counter
 from datetime import date, timedelta
 
-from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, discover
+from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, MANUAL_PLATFORMS, RESEARCH_CATEGORIES, discover
 
 REGIONS = {"all": "Wereldwijd", "eu": "Binnen EU", "international": "Buiten EU"}
 SUPPLIER_TYPES = {
@@ -19,7 +19,6 @@ PRICE_NOTE = ("Marktprijzen en verkoopcijfers leveren de huidige bronnen niet. Z
               "of geschat. Controleer prijzen handmatig via de bronlinks.")
 TREND_NOTE = ("Er is geen betrouwbare trendscore of marktvraag beschikbaar. De signalen hieronder zijn "
               "openbare publicaties en productvermeldingen, geen verkoopcijfers.")
-MANUAL_PLATFORMS = ("Google", "TikTok", "Instagram", "Facebook")
 
 
 def choice(args, key, options, default):
@@ -57,6 +56,7 @@ def parse(kind, args, categories):
         "dropship_only": args.get("mdrop") == "1",
         "period": choice(args, "mperiode", PERIODS, "0"),
         "source": choice(args, "mbron", VIRAL_SOURCES, "all"),
+        "google_trends": args.get("mgoogle") == "1",
         "run": args.get("mrun") == "1",
     }
 
@@ -135,6 +135,7 @@ def opportunities_and_risks(view, form):
 
 def search_view(kind, categories, args, *, fetch=None):
     """kind is 'viral' of 'internationaal'. Geeft altijd een dict terug die de template kan tonen."""
+    categories = {**categories, **RESEARCH_CATEGORIES}
     form = parse(kind, args, categories)
     view = {"kind": kind, "form": form, "categories": categories, "countries": COUNTRIES, "regions": REGIONS,
             "supplier_types": SUPPLIER_TYPES, "periods": PERIODS, "sources": VIRAL_SOURCES,
@@ -152,6 +153,8 @@ def search_view(kind, categories, args, *, fetch=None):
         platforms = ["Productcatalogi", *MANUAL_PLATFORMS]
     elif kind == "viral" and form["source"] == "news":
         platforms = ["Publicaties", *MANUAL_PLATFORMS]
+    if kind == "viral" and form["google_trends"]:
+        platforms.append("Google Trends")
     supplier_filter = {"dropship": "dropship", "wholesale": "trade", "manufacturer": "trade"}.get(form["supplier_type"], "all")
     result = discover(form["q"], country=form["country"], mode="trends" if kind == "viral" else "products",
                       platforms=platforms, fetch=fetch, category=form["category"],

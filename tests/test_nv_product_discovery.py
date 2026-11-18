@@ -62,6 +62,8 @@ def editorial_card(url, title, summary, published=None):
     (("Yogamat", "Yoga mat"), "Natural Yoga Mat", "lifestyle-sport"),
     (("LED-verlichting", "LED lighting"), "Dimmable LED Light Strip", "smart-home"),
     (("Huisdierenaccessoires", "Pet accessories"), "Reflective Dog Collar", "pets"),
+    (("Zijden sjaal", "Silk scarf"), "Silk Scarf", "lifestyle-sport"),
+    (("Kerstverlichting", "Christmas lights"), "Outdoor Christmas String Lights", "home-living"),
 ])
 def test_bilingual_supplier_search_with_region_filters(terms, title, category):
     def fetch(url, **kwargs):
@@ -98,6 +100,13 @@ def test_bilingual_supplier_search_with_region_filters(terms, title, category):
 ])
 def test_unrelated_offers_are_rejected(term, title):
     assert not product_matches(term, title)
+
+
+def test_speaker_brand_in_catalogue_description_requires_matching_model_and_self_identification():
+    term = "Anker Soundcore Bluetooth speaker"
+    assert product_matches(term, "Bluetooth speaker Soundcore", term)
+    assert not product_matches(term, "Bluetooth speaker Soundcore", "Geschikt voor " + term)
+    assert not product_matches(term, "Bluetooth speaker JBL", term)
 
 
 def test_eu_search_tries_synonyms_after_non_eu_results():
@@ -251,7 +260,7 @@ class DiscoveryTests(unittest.TestCase):
         def fetch(url, **kwargs):
             if url == "https://www.techradar.com/search":
                 return Response(feed)
-            if url == "https://9to5mac.com/":
+            if url in {"https://9to5mac.com/", "https://trends.google.com/trending/rss"}:
                 return Response(b"<rss><channel/></rss>")
             if url == "https://www.androidcentral.com/search":
                 return Response()
@@ -299,7 +308,7 @@ class DiscoveryTests(unittest.TestCase):
         fetch = Mock()
         for country in COUNTRIES:
             result = self.search("lamp", country=country, platforms=["Google", "TikTok"], fetch=fetch)
-            self.assertEqual([name for name, _ in result["links"]], ["Google", "TikTok"])
+            self.assertEqual([name for name, _ in result["links"]], ["Google", "TikTok", "TikTok Creative Center"])
             self.assertIn(f"gl={country}", result["links"][0][1])
             self.assertEqual(result["products"], [])
         for kwargs in ({"category": "unknown"}, {"country": "unknown"}, {"mode": "unknown"},

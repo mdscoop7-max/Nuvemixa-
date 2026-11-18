@@ -1,7 +1,7 @@
 """Public research adapters. Each result retains the source that supports it."""
 from concurrent.futures import ThreadPoolExecutor, wait
 from functools import partial
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from html import unescape
 import json
@@ -27,9 +27,13 @@ SYNCEE_HELP = "https://help.syncee.com/en/articles/8925120-shipping-information"
 # Explicit company/brand location evidence, separate from the ship-from
 # warehouse in the marketplace product record.
 SYNCEE_SUPPLIER_ORIGINS = {
+    "221318": ("CN", "https://www.gflai.com/"),
     "234156": ("AU", "https://oliveoilskincare.com.au/policies/privacy-policy"),
     "253317": ("AU", "https://syncee.com/supplier/253317/nne-living"),
+    "312377": ("HU", "https://www.hoppline.eu/shop_contact.php?tab=shipping"),
+    "546145": ("GB", "https://cashymart.com/nb/pages/terms-of-services"),
     "727418": ("AU", "https://www.lifebay.com.au/pages/contact"),
+    "802498": ("US", "https://www.tips-usa.com/pdf_profile.cfm?RecordID=754BC7B3144883AED4D6869405BE32BC"),
     "105656": ("IT", "https://www.maiden-art.com/policies/legal-notice"),
     "279866": ("RO", "https://www.orderchamp.com/store/tomescu-st-cristian-pfa/listings/1842806604644353"),
 }
@@ -56,6 +60,64 @@ INTENTS = (
 def visible_text(html):
     html = re.sub(r"<(script|style)\b[^>]*>.*?</\1>", " ", html, flags=re.I | re.S)
     return " ".join(unescape(re.sub(r"<[^>]*>", " ", html)).split())
+
+
+def google_search_trends(fetch, country, read):
+    """Read the public Trending Now feed. Its traffic figures are approximate searches."""
+    url = "https://trends.google.com/trending/rss"
+    document = ET.fromstring(read(fetch, url, {"geo": country}, max_bytes=512_000))
+    if document.tag != "rss" or document.find("channel") is None:
+        raise ValueError("Onverwachte Google Trends-feed")
+    now = datetime.now(timezone.utc)
+    namespace = "{https://trends.google.com/trending/rss}"
+    for item in document.findall("./channel/item")[:100]:
+        title = (item.findtext("title") or "").strip()[:160]
+        volume = (item.findtext(namespace + "approx_traffic") or "").strip()
+        try:
+            observed = parsedate_to_datetime(item.findtext("pubDate") or "")
+        except (ValueError, TypeError, OverflowError):
+            continue
+        if not title or observed.tzinfo is None or not now - timedelta(days=7) <= observed <= now + timedelta(minutes=5):
+            continue
+        yield {
+            "title": title, "date": observed.date().isoformat(),
+            "indicator": volume if re.fullmatch(r"[\d,. ]{1,14}\+?", volume) else "",
+            "url": "https://trends.google.com/trending?" + urlencode({"geo": country, "q": title}),
+        }
+
+
+EDITORIAL_FEEDS = {
+    "beauty-care": ("Allure", "https://www.allure.com/feed/rss", {"shopping"}),
+    "home-living": ("The Kitchn", "https://www.thekitchn.com/main.rss", {"tools", "kitchen tools"}),
+}
+
+
+def editorial_feed(fetch, category, read):
+    source, feed, included = EDITORIAL_FEEDS[category]
+    document = ET.fromstring(read(fetch, feed, {}, max_bytes=512_000))
+    if document.tag != "rss" or document.find("channel") is None:
+        raise ValueError("Onverwachte publicatiefeed")
+    articles = []
+    for row in document.findall("./channel/item")[:40]:
+        tags = {(x.text or "").strip().casefold() for x in row.findall("category")}
+        if not included & tags or any("sponsor" in tag or "advertorial" in tag for tag in tags):
+            continue
+        title = (row.findtext("title") or "").strip()[:240]
+        address = urlsplit((row.findtext("link") or "").strip())
+        if (address.scheme != "https" or address.netloc != urlsplit(feed).netloc
+                or not re.fullmatch(r"/(?:[a-z0-9-]+/){0,3}[a-z0-9-]+/?", address.path) or not title):
+            continue
+        try:
+            published = parsedate_to_datetime(row.findtext("pubDate") or "").date()
+        except (ValueError, TypeError, OverflowError):
+            continue
+        if not date.today() - timedelta(days=90) <= published <= date.today():
+            continue
+        articles.append({
+            "title": title, "summary": "", "source": source, "kind": "Reviews en vergelijkingen",
+            "date": published.isoformat(), "date_label": "Publicatie", "url": address._replace(query="", fragment="").geturl(),
+        })
+    return articles[:10]
 
 
 def supplier(name, origin, kind, website, *, dropshipping=None, shipping=UNKNOWN, checked=None,
@@ -206,6 +268,11 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
         if include_description and result.get("dropshipping") is True:
             observed = date.today().isoformat()
             result["facts"]["direct_delivery"] = Fact(True, url, observed)
+        # Use a quote only when the route itself identifies its currency.
+        currency, cost = row.get("currency"), row.get("shippingCost")
+        if (include_description and isinstance(currency, str) and re.fullmatch(r"[A-Z]{3}", currency)
+                and type(cost) in (int, float) and 0 <= cost <= 1_000_000):
+            result["shipping_cost"] = f"{currency} {cost:.2f}"
         return {**result, "shipping": "Geverifieerd in deze productvermelding", "lead_time": time}
     # A list of destination countries excludes the selected country. An empty
     # list or unrecognized region must stay unconfirmed.
@@ -316,7 +383,9 @@ def syncee_search(fetch, query, country, categories, seeds, read, matches, relev
                 and product_matches(term, product["title"], description)):
             if not product_matches(term, product["title"]):
                 data["match_detail"] = "Specificaties in catalogus gecontroleerd"
-            results.append(({**profile, **data}, {**product, **data}))
+            company_terms = {key: data[key] for key in ("dropshipping", "dropshipping_source", "shipping", "shipping_nl")
+                             if key in data}
+            results.append(({**profile, **company_terms}, {**product, **data}))
     attempt["exact"] = len(results)
     attempt["rejected"]["productspecificaties of levering onbevestigd"] = len(selected) - len(results)
     return results

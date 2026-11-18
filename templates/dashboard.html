@@ -265,7 +265,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         {% if platform in research_options.selected_platforms %}checked{% endif %}>
         {{ platform }}</label>
       {% endfor %}
-      <small>Productcatalogi en Publicaties vullen de resultaten in dit dashboard. Google en sociale media bieden handmatige zoeklinks.</small>
+      <small>Productcatalogi en Publicaties vullen de resultaten. Google Trends controleert de actuele zoekinteresse in de modus Trends. Sociale platforms openen via zoeklinks.</small>
     </fieldset>
     <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
@@ -307,17 +307,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         <p><strong>Zo zoekt NUVEMIXA:</strong> {{ product_discovery.interpretation.queries|join(' · ') }}{% if product_discovery.interpretation.automatic %} — categorie automatisch herkend: {{ product_discovery.interpretation.categories|join(', ') }}{% endif %}</p>
       {% endif %}
       {% from '_supplier_logistics.html' import logistics, pending_notice %}
-      {% macro save_research_concept(item, source) %}
-      <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-save">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="titel" value="{{ item.title[:120] }}">
-        <input type="hidden" name="bron_url" value="{{ item.url }}">
-        <input type="hidden" name="bron_naam" value="{{ source }}">
-        <input type="hidden" name="leverancier" value="{{ source }}">
-        <input type="hidden" name="categorie" value="{{ item.category }}">
-        <button type="submit">Bewaar als conceptproduct</button>
-      </form>
-      {% endmacro %}
+      {% from '_dashboard_search_actions.html' import research_product_actions with context %}
       {{ pending_notice(product_discovery.pending_sources) }}
       {% if product_discovery.source_unavailable %}
         <details class="notice">
@@ -417,7 +407,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
             </details>
             {% endif %}
             {{ offer_assessment(item) }}
-            {{ save_research_concept(item, item.source) }}
+            {{ research_product_actions(item, item.source) }}
           </li>
           {% endfor %}
         </ul>
@@ -450,6 +440,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         </ul>
       {% endmacro %}
       <div id="nv-research-trends">
+        {% set trend_result = product_discovery %}
+        {% include "_dashboard_trend_signals.html" %}
         {% if product_discovery.trends %}
         <p>Recente lanceringen, tests en markt- of veiligheidssignalen uit publicaties. Marktvraag en verkoopvolume zijn onbekend.</p>
         {{ publications(product_discovery.trends) }}
@@ -515,9 +507,9 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
               {% for item in company.products %}
                 <li>
                   <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
-                  <small>{{ research_options.categories[item.category] }}{% if item.match_detail %} · {{ item.match_detail }}{% endif %}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}</small>
+                  <small>{{ research_options.categories[item.category] }}{% if item.match_detail %} · {{ item.match_detail }}{% endif %}{% if item.shipping %} · {{ item.shipping }}{% endif %}{% if item.warehouse and item.warehouse != 'Niet bevestigd' %} · Magazijn {{ item.warehouse }}{% endif %}{% if item.lead_time and item.lead_time != 'Niet bevestigd' %} · {{ item.lead_time }}{% endif %}{% if item.shipping_cost and item.shipping_cost != 'Niet bevestigd' %} · Verzending {{ item.shipping_cost }}{% endif %}</small>
                   {{ offer_assessment(item) }}
-                  {{ save_research_concept(item, company.name) }}
+                  {{ research_product_actions(item, company.name) }}
                 </li>
               {% endfor %}
               </ul>
@@ -667,7 +659,39 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 })();
 </script>
 {% endif %}
-<section class="panel">
+<section class="panel" id="nv-product-margin">
+<h2>Winstmarge per product</h2>
+<p>Gebruik kosten exclusief btw. Lege kosten blijven onbekend. Vul 0 in als een kostenpost aantoonbaar niet geldt.</p>
+<form action="{{ url_for('control', _anchor='nv-product-margin') }}" method="get" class="nv-admin-form">
+  <input type="hidden" name="section" value="onderzoek">
+  <input type="hidden" name="margin_run" value="1">
+  <input type="hidden" name="margin_method" value="scenario">
+  <label>Product <input name="margin_product" maxlength="120" value="{{ request.args.get('margin_product', '')[:120] }}"></label>
+  {% for key, label, required in [
+    ('selling_price', 'Verkoopprijs incl. btw (€)', true), ('purchase_cost', 'Inkoopprijs (€)', true),
+    ('vat_rate', 'Btw op verkoop (%)', true), ('shipping_cost', 'Verzending (€)', false),
+    ('advertising_cost', 'Advertenties per verkoop (€)', false), ('transaction_fee', 'Transactiekosten (€)', false),
+    ('platform_fee', 'Platformkosten per verkoop (€)', false), ('returns_reserve', 'Retourreserve (€)', false),
+    ('other_cost', 'Invoer en afhandeling (€)', false),
+  ] %}
+  <label>{{ label }} <input name="{{ key }}" type="number" min="0" max="{{ 100 if key == 'vat_rate' else 1000000 }}" step="0.01"
+    inputmode="decimal" value="{{ request.args.get(key, '') if request.args.get('margin_method') == 'scenario' else '' }}"
+    {% if required %}required{% else %}placeholder="Onbekend"{% endif %}></label>
+  {% endfor %}
+  <button type="submit">Bereken marge</button>
+</form>
+{% if margin_scenario %}
+<div class="admin-table-wrap"><table class="admin-table"><tbody>
+  <tr><th>Omzet exclusief btw</th><td>€ {{ margin_scenario.revenue_ex_vat }}</td></tr>
+  <tr><th>Btw in verkoopprijs</th><td>€ {{ margin_scenario.vat_amount }}</td></tr>
+  <tr><th>Inkoop</th><td>€ {{ margin_scenario.purchase }}</td></tr>
+  {% for label, amount in margin_scenario.entered_costs %}<tr><th>{{ label }}</th><td>€ {{ amount }}</td></tr>{% endfor %}
+  <tr><th>Brutowinst na inkoop</th><td>€ {{ margin_scenario.gross_profit }}{% if margin_scenario.gross_margin_pct is not none %} · {{ margin_scenario.gross_margin_pct }}%{% endif %}</td></tr>
+  <tr><th>Geschatte winst na ingevulde kosten</th><td>€ {{ margin_scenario.profit }}{% if margin_scenario.gross_margin_pct is not none %} · {{ margin_scenario.margin_pct }}%{% endif %}</td></tr>
+</tbody></table></div>
+{% if margin_scenario.missing_costs %}<p><strong>Ontbrekende kosten</strong> {{ margin_scenario.missing_costs|join(', ') }}. Deze bedragen zijn buiten de schatting gelaten.</p>{% endif %}
+{% endif %}
+<details {% if product_margin %}open{% endif %}><summary>Automatisch verkoopadvies met vaste aannames</summary>
 <h2>Automatisch verkoopadvies en winstmarge</h2>
 <p>Vul alleen de inkoopprijs exclusief btw in. NUVEMIXA berekent een indicatief verkoopadvies en alle kosten op basis van duidelijk vermelde aannames.</p>
 <form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
@@ -694,6 +718,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </tbody></table></div>
 <p class="integration-status">{{ product_margin.assumptions }}</p>
 {% endif %}
+</details>
 </section>
 <section class="panel"><details><summary><strong>Productdossier — eigen onderzoeksnotities (optioneel)</strong></summary>
 <p>Bewaar je onderzoek met een controleerbare bron. Bestaande dossiers blijven beschikbaar.</p>
@@ -924,7 +949,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 
 
 
-{% if section in ('onderzoek', 'leveranciers') %}
+{% if section in ('onderzoek', 'leveranciers', 'viral', 'internationaal', 'concepten') %}
 <style>
 .nv-search-progress{display:flex;align-items:center;gap:.6rem;margin:0;grid-column:1/-1}
 .nv-search-progress span:not([hidden]){width:1rem;height:1rem;border:2px solid currentColor;border-inline-end-color:transparent;border-radius:50%;animation:nv-search-spin .8s linear infinite}

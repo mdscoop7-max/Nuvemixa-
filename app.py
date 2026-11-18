@@ -2241,18 +2241,22 @@ def control():
 
     research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
     product_margin = None
+    margin_scenario = None
     product_margin_error = None
     if section == "onderzoek" and request.args.get("margin_run") == "1":
-        from nv_product_margin import automatic_margin
+        from nv_product_margin import automatic_margin, calculate_margin
         try:
-            product_margin = automatic_margin(request.args.get("purchase_cost", ""))
+            if request.args.get("margin_method") == "scenario":
+                margin_scenario = calculate_margin(request.args)
+            else:
+                product_margin = automatic_margin(request.args.get("purchase_cost", ""))
         except ValueError as exc:
             product_margin_error = str(exc)
     product_discovery = None
     research_options = {}
     if section == "onderzoek":
         from nv_product_discovery import (
-            ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, RESEARCH_CATEGORIES, discover,
+            ALL_PRODUCTS, COUNTRIES, EMPTY_RESULTS, FILTERS, MODES, PLATFORMS, RESEARCH_CATEGORIES, SUPPLIER_MODES, discover,
         )
 
         research_categories = {**{slug: meta["name"] for slug, meta in BASE_CATEGORIES.items()}, **RESEARCH_CATEGORIES}
@@ -2262,7 +2266,7 @@ def control():
         research_platforms = [
             "Publicaties" if value == "Bing" else value for value in request.args.getlist("research_platform")
         ]
-        research_filter = request.args.get("research_supplier_filter", "all")
+        research_filter = request.args.get("research_supplier_filter", "eu" if research_mode in SUPPLIER_MODES else "all")
         research_options = {
             "categories": {**research_categories, ALL_PRODUCTS: "All products"},
             "countries": COUNTRIES,
@@ -2409,11 +2413,12 @@ def control():
 
         research_error=research_error,
         product_discovery=product_discovery,
-        concept_view=nv_concepts.view() if section == 'concepten' and is_admin else None,
+        concept_view=nv_concepts.view(request.args.get("concept_q", "")) if section == 'concepten' and is_admin else None,
         partner_view=nv_partners.view(request.args) if section == 'partners' else None,
         source_coverage=nv_supplier_sources.coverage(request.args.get('research_country', 'NL') if request.args.get('research_country', 'NL') in COUNTRY_CODES_FALLBACK else 'NL') if section == 'onderzoek' else None,
         source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
+        margin_scenario=margin_scenario,
         product_margin_error=product_margin_error,
         research_options=research_options,
 

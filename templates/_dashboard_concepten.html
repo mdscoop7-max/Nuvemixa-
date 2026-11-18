@@ -23,6 +23,13 @@
     <form method="post" action="{{ url_for('nv_manage.concept_new') }}" class="nv-concept-form">{{ csrf() }}{{ fields(none) }}<button class="nv-blue-action" type="submit">Bewaar als concept</button></form>
   </details>
   <p>Vanuit <a href="/dashboard?section=onderzoek">Productonderzoek</a> bewaar je een gevonden product met de knop "Bewaar als conceptproduct".</p>
+  <form method="get" action="{{ url_for('control') }}" role="search" class="nv-admin-form" data-research-search="Conceptproducten zoeken...">
+    <input type="hidden" name="section" value="concepten">
+    <label>Zoek een concept<input type="search" name="concept_q" maxlength="100" value="{{ v.query }}" placeholder="Product, categorie, leverancier of SKU"></label>
+    <button type="submit">Zoeken</button>
+    <p class="nv-search-progress" role="status"><span hidden></span></p>
+    {% if v.query %}<a href="{{ url_for('control', section='concepten') }}">Toon alle concepten</a>{% endif %}
+  </form>
 
   {% for c in v.concepten %}
   <article class="nv-concept status-{{ c.status }}" id="concept-{{ c.id }}">
@@ -50,7 +57,7 @@
       <ul>{% for r in c.controle %}<li><strong>{{ r.stap }}</strong>: {{ {'ok':'in orde','let op':'let op','fout':'fout'}[r.status] }} — {{ r.tekst }}</li>{% endfor %}</ul>
     </details>
   </article>
-  {% else %}<p>Nog geen conceptproducten.</p>{% endfor %}
+  {% else %}<p>{{ 'Geen concepten gevonden. Probeer een kortere productnaam of zoek op leverancier.' if v.query else 'Nog geen conceptproducten.' }}</p>{% endfor %}
 </section>
 <style>
 .nv-concept-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:.8rem 0}

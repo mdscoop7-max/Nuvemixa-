@@ -19,6 +19,9 @@ PHRASES = (
     (r"\b(?:bluetooth[\s-]*(?:luidsprekers?|speakers?)|(?:draagbare )?bluetoothbox(?:en)?)\b", "bluetooth speaker"),
     (r"\b(?:led[\s-]*strips?|lichtstrips?)\b", "led lighting strip"),
     (r"\b(?:led[\s-]*(?:verlichting|lights?|lighting|lampen?))\b", "led lighting"),
+    (r"\b(?:kerst[\s-]*(?:lampjes|verlichting)|christmas (?:string |fairy )?lights?)\b", "christmas lights"),
+    (r"\b(?:sjaals?|scarves|scarfs)\b", "scarf"),
+    (r"\b(?:zijden|zijde)\b", "silk"),
     (r"\b(?:siliconen|silicone)\b", "silicone"),
     (r"\b(?:elektrisch(?:e)?|electric|sonic|sonisch(?:e)?)\b", "electric"),
     (r"\b(?:slimm?e? (?:wifi )?stekker|slim stopcontact|smart (?:socket|outlet|plug)|wifi (?:socket|outlet|stekker))\b", "smart plug"),
@@ -54,6 +57,8 @@ PRODUCTS = {
     "bluetooth speaker": ("bluetooth speaker", "portable bluetooth speaker", "bluetooth luidspreker"),
     "led lighting": ("led lighting", "LED lights", "LED strip", "ledverlichting"),
     "pet accessories": ("pet accessories", "pet supplies", "cat toys", "dog collars"),
+    "scarf": ("scarf", "sjaal", "scarves"),
+    "christmas lights": ("christmas lights", "christmas string lights", "kerstverlichting"),
     "argan oil": ("argan oil", "arganolie", "cosmetic argan oil", "argan olie"),
     "facial cleansing brush": ("facial cleansing brush", "gezichtsreinigingsborstel", "silicone face brush"),
     "smart plug": ("smart plug", "slimme stekker", "wifi energy monitoring plug"),
@@ -299,7 +304,15 @@ def offer_match(term, identity, description="", variant=""):
         subject_in_title |= "cream" in title.split()
     if subject == "table lamp" and "lamp" in title.split() and "portable" in title.split():
         subject_in_title |= "table" in body.split() and "floor lamp" not in title
-    if not subject_in_title or not exact_identity(query, title, subject):
+    identity_matches = exact_identity(query, title, subject)
+    if subject == "bluetooth speaker" and not identity_matches:
+        # Some catalogues put the model in the title and spell out the full
+        # product name at the start of the description.
+        identity_tokens = identity_words(query, subject)
+        identifiers = [word for word in query.split() if word in identity_tokens]
+        identity_matches = (len(identifiers) >= 2 and set(identifiers[1:]) <= words(title)
+                            and (body == query or body.startswith(query + " ")))
+    if not subject_in_title or not identity_matches:
         return "", ()
     if subject == "bluetooth speaker" and re.search(r"\b(?:portable |wireless )?bluetooth speaker (?:cables?|covers?|cases?|mounts?|straps?|stands?|bags?)\b", title):
         return "", ()
@@ -351,6 +364,8 @@ SUBJECT_CATEGORIES = {
     "pet accessories": ("pets",),
     "bluetooth speaker": ("gadgets",),
     "led lighting": ("smart-home", "home-living"),
+    "scarf": ("lifestyle-sport",),
+    "christmas lights": ("home-living",),
 }
 
 

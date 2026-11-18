@@ -24,7 +24,8 @@ from nv_research_intent import (
 from nv_research_safety import gtin, recent_alerts
 
 from nv_research_sources import (
-    FILTERS, UNKNOWN, cj_reference, hama_products, hurtel_products, publication_candidates,
+    EDITORIAL_FEEDS, FILTERS, UNKNOWN, cj_reference, editorial_feed, google_search_trends, hama_products, hurtel_products,
+    publication_candidates,
     android_publications, publication_kind, rss_publications, supplier, syncee_products, visible_text,
 )
 
@@ -61,6 +62,9 @@ COUNTRIES = {
     "GB": ("Verenigd Koninkrijk", "en", "GB"),
     "US": ("Verenigde Staten", "en", "US"),
     "CA": ("Canada", "en", "CA"),
+    "CN": ("China", "zh", "CN"),
+    "HK": ("Hongkong", "zh", "HK"),
+    "TW": ("Taiwan", "zh", "TW"),
     "AU": ("Australië", "en", "AU"),
     "NZ": ("Nieuw-Zeeland", "en", "NZ"),
     "JP": ("Japan", "ja", "JP"),
@@ -74,7 +78,8 @@ COUNTRIES = {
     "TR": ("Turkije", "tr", "TR"),
 }
 
-PLATFORMS = ("Productcatalogi", "Publicaties", "Google", "TikTok", "Instagram", "Facebook")
+MANUAL_PLATFORMS = ("Google", "TikTok", "Instagram", "Facebook", "YouTube Shorts", "Pinterest Trends")
+PLATFORMS = ("Productcatalogi", "Publicaties", "Google Trends", *MANUAL_PLATFORMS)
 RESEARCH_CATEGORIES = {"pets": "Huisdieren"}
 MODES = {
     "products": "Producten zoeken",
@@ -186,12 +191,12 @@ TRADE_PROFILES = {
     "Naissance": ("GB", "Groothandel"),
     "OpenELAB": ("CN", "Distributeur / zakelijke offertes"),
 }
-ORIGINS = {**{code: details[0] for code, details in COUNTRIES.items()}, "CN": "China"}
+ORIGINS = {code: details[0] for code, details in COUNTRIES.items()}
 CATEGORY_HINTS = {
     "gadgets": r"power ?bank|charger|usb|laptop stand|charging|headphones|earbuds|earphones|headset|bluetooth speaker|speaker|tracker|airtag|key finder|cable|armband|phone holder|smartwatch|smart watch|projector|ssd|webcam|drone|keyboard|mouse|tripod|gimbal|ring light|adapter|hub|action camera|dash ?cam",
     "smart-home": r"smart|wifi|zigbee|matter|curtain|hub|sensor|lighting|rgbicww|door lock|camera|doorbell|robot vacuum|robovac|homebase",
     "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty|trimmer|straightener|curling|nail|massager|massage|mirror|flosser|toothbrush|shaver|epilator|jewelry|brush|scalp|soap dispenser|dryer",
-    "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk",
+    "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk|kitchen|keuken|air ?fryer|blender|cookware|oven|koffiezet\w*",
     "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale",
     "pets": r"pet|pets|cat|cats|dog|dogs|huisdier|kat|hond",
 }
@@ -228,10 +233,54 @@ def research_links(term, platforms, country, language):
     urls = {
         "Google": f"https://www.google.com/search?safe=active&gl={country}&hl={language}&q={q}",
         "TikTok": "https://www.tiktok.com/search?q=" + q,
+        "TikTok Creative Center": "https://ads.tiktok.com/creative/creativeCenter",
         "Instagram": "https://www.instagram.com/explore/tags/" + quote("".join(normalize(term).split()), safe="") + "/",
         "Facebook": "https://www.facebook.com/search/top?q=" + q,
+        "YouTube Shorts": "https://www.youtube.com/results?search_query=" + quote(term + " shorts", safe=""),
+        "Pinterest Trends": "https://trends.pinterest.com/",
+        "Google Trends": "https://trends.google.com/trends/explore?geo=" + country + "&q=" + q,
     }
+    if "TikTok" in platforms:
+        platforms = (*platforms, "TikTok Creative Center")
     return [(platform, urls[platform]) for platform in platforms if platform in urls]
+
+
+def trend_scope(term):
+    clean = normalize(term)
+    if not re.search(r"\b(?:trending|viral|viraal|populair|popular|trends?)\b", clean):
+        return term, None
+    topic = re.sub(r"\b(?:trending|viral|viraal|populair(?:e)?|popular|trends?)\b", "", clean).strip()
+    broad = {
+        "beautyproducten": "beauty-care", "beauty producten": "beauty-care", "beauty products": "beauty-care",
+        "keukenproducten": "home-living", "keuken producten": "home-living", "kitchen products": "home-living",
+    }
+    if topic in broad:
+        return "", broad[topic]
+    if re.fullmatch(r"(?:tiktok|instagram|pinterest|youtube)(?:[ -]?(?:producten|products|reels|shorts))?", topic):
+        return "", "social"
+    return topic or term, None
+
+
+def google_trend_matches(fetch, country, term, categories, broad):
+    rows = []
+    for row in google_search_trends(fetch, country, read_source):
+        title = row["title"]
+        if UNSAFE.search(title):
+            continue
+        if broad and broad != "social":
+            if broad == "home-living" and not re.search(
+                r"\b(?:kitchen|keuken|air ?fryer|blender|pannen?|cookware|cookers?|oven|koffiezet\w*)\b", normalize(title),
+            ):
+                continue
+            category = broad if broad in categories and category_matches(broad, title) else None
+        else:
+            if not term or not product_matches(term, title):
+                continue
+            category = next((slug for slug in categories if slug in infer_categories(title)), None)
+            category = category or next((slug for slug in categories if category_matches(slug, title)), None)
+        if category and not any(previous["title"].casefold() == title.casefold() for previous in rows):
+            rows.append({**row, "category": categories[category], "source": "Google Trends"})
+    return rows[:12]
 
 
 USER_AGENT = "Mozilla/5.0 (compatible; NUVEMIXA-Research/1.0; +https://trendmix.onrender.com)"
@@ -740,18 +789,22 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         return {"error": "Selecteer minimaal één onderzoeksplatform."}
     fetch = fetch or requests.get
     name, language, _ = COUNTRIES[country]
+    original_term = term
+    term, broad = trend_scope(term) if mode == "trends" else (term, None)
     selected = categories if category == ALL_PRODUCTS else {category: categories[category]}
-    inferred = tuple(slug for slug in infer_categories(term) if slug in categories) if category == ALL_PRODUCTS else ()
+    inferred = ()
+    if category == ALL_PRODUCTS:
+        inferred = (broad,) if broad in categories else tuple(slug for slug in infer_categories(term) if slug in categories)
     if inferred:
         selected = {slug: categories[slug] for slug in inferred}
-    from_catalogues = "Productcatalogi" in platforms and mode != "news"
+    from_catalogues = "Productcatalogi" in platforms and mode != "news" and not broad
     product_mode = mode in PRODUCT_MODES
     trade_mode = from_catalogues and mode != "dropship" and (product_mode or supplier_filter != "dropship")
     dropship_mode = from_catalogues and mode in {"suppliers", "dropship", "trends", "niche", "products", "product"}
     if supplier_filter == "trade":
         dropship_mode = False
     sources = catalogue_sources(selected, country, product_mode) if trade_mode else []
-    topic = article_query(term) if term else SEEDS.get(category, "")
+    topic = article_query(term) if term else ("" if broad else SEEDS.get(category, ""))
     errors, attempts, names, pending = [], [], {}, []
     pool = ThreadPoolExecutor(max_workers=32)
     started = monotonic()
@@ -786,6 +839,11 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
         news_tasks = [submit(publisher, publications, reader, fetch, topic, term, country, language, selected)
                       for publisher, reader in readers
                       if topic and "Publicaties" in platforms and mode not in SUPPLIER_MODES]
+        if broad in EDITORIAL_FEEDS and broad in selected and "Publicaties" in platforms:
+            source = EDITORIAL_FEEDS[broad][0]
+            news_tasks.append(submit(source, editorial_feed, fetch, broad, read_source))
+        trend_task = (submit("Google Trends", google_trend_matches, fetch, country, term, selected, broad)
+                      if mode == "trends" and "Google Trends" in platforms and broad != "social" else None)
 
         if term and trade_mode:
             wait(product_tasks, timeout=2.5)
@@ -795,7 +853,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                 product_tasks.extend(submit(source.name, catalogue_items, source, term, mode, fetch, attempts,
                                             source_deadline - 0.25) for source in fallback)
 
-        all_tasks = product_tasks + news_tasks + [task for task in (hama_task, hurtel_task, dropship_task) if task]
+        all_tasks = product_tasks + news_tasks + [task for task in (hama_task, hurtel_task, dropship_task, trend_task) if task]
         wait(all_tasks, timeout=max(0, source_deadline - monotonic()))
         products = [item for task in product_tasks for item in collect(task, errors, names[task])]
         alternatives = [item for item in products if item.get("match_missing")]
@@ -819,6 +877,10 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
                 pending.append("Syncee")
             offers.extend(cj_reference(term, selected, matches))
         articles = [item for task in news_tasks for item in collect(task, errors, names[task])]
+        if broad in selected:
+            articles = [{**item, "scope": selected[broad] + " · Redactionele selectie",
+                         "category": selected[broad]} for item in articles if not UNSAFE.search(item["title"])]
+        search_trends = collect(trend_task, errors, "Google Trends") if trend_task else []
         codes = {item["gtin"] for item in products if item.get("gtin")} | {
             item["gtin"] for _, item in offers if item.get("gtin")
         }
@@ -861,10 +923,11 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
             for item in company["products"]
         ]
     return {
-        "term": term, "country_name": name, "category_name": categories.get(category, "All products"),
-        "links": research_links(" ".join(part for part in (term, categories.get(category)) if part),
+        "term": original_term, "country_name": name, "category_name": categories.get(category, "All products"),
+        "links": research_links(" ".join(part for part in (term or original_term, categories.get(category)) if part),
                                 platforms, country, language),
         "products": products, "suppliers": suppliers, "news": news, "trends": trends,
+        "search_trends": search_trends, "google_trends_checked": bool(trend_task),
         "supplier_products": sum(company["product_count"] for company in suppliers),
         "topic": topic,
         "interpretation": {"queries": candidate_queries(term), "categories": [categories[s] for s in selected],

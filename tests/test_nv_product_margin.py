@@ -19,6 +19,18 @@ class MarginTests(unittest.TestCase):
         self.assertEqual(result["total_cost"], "60.00")
         self.assertEqual(result["profit"], "40.00")
         self.assertEqual(result["margin_pct"], "40.00")
+        self.assertEqual(result["gross_profit"], "60.00")
+        self.assertEqual(result["gross_margin_pct"], "60.00")
+
+    def test_unknown_cost_differs_from_explicit_zero(self):
+        result = calculate_margin({
+            "selling_price": "121", "purchase_cost": "40", "vat_rate": "21",
+            "shipping_cost": "0", "advertising_cost": "", "transaction_fee": "1.50",
+        })
+        self.assertIn(("Verzending", "0.00"), result["entered_costs"])
+        self.assertIn("Advertenties", result["missing_costs"])
+        self.assertNotIn("Verzending", result["missing_costs"])
+        self.assertEqual(result["profit"], "58.50")
 
     def test_rejects_negative_nan_and_excess_precision(self):
         for invalid in ("-1", "NaN", "Infinity", "1.234", "1000001"):
