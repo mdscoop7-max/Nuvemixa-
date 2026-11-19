@@ -1194,6 +1194,7 @@ from nv_woo_bridge import (
 import nv_supplier_sources
 import nv_research_period
 import nv_product_rows
+import nv_stats_cache
 import nv_partners
 import nv_concepts
 from nv_dashboard_manager import bp as management_blueprint, staff_auth, staff_current, team_rows, coupon_rows, test_checkout_discount
@@ -2396,7 +2397,11 @@ def control():
 
     nv_customer_count, nv_customer_events, nv_customer_error = (
 
-        read_customer_activity(_CUSTOMER_DB) if (is_admin and section == "dashboard") or section == "klanten"
+        # Hoofdscherm: max. 60 s gecachet (alleen geslaagde reads); Klanten leest altijd live.
+        nv_stats_cache.cached("home:customers", lambda: read_customer_activity(_CUSTOMER_DB),
+                              ok=lambda value: value[2] is None)
+        if (is_admin and section == "dashboard")
+        else read_customer_activity(_CUSTOMER_DB) if section == "klanten"
 
         else (None, [], None)
 
@@ -2496,7 +2501,10 @@ def control():
         monitoring_probes=("WooCommerce", "Betalingen") if section == "monitoring" and read_configuration_present()
                           else ("Betalingen",),
         visitor_stats=visit_summary() if section in {"statistieken", "monitoring"} else None,
-        webshop_stats=webshop_visit_summary() if section in {"dashboard", "statistieken", "monitoring"} else None,
+        webshop_stats=(nv_stats_cache.cached("home:webshop_visits", webshop_visit_summary,
+                                             ok=lambda value: bool(value) and not (isinstance(value, dict) and value.get("error")))
+                       if section == "dashboard"
+                       else webshop_visit_summary() if section in {"statistieken", "monitoring"} else None),
         allowed=allowed,
         rights_labels=RIGHTS,
         account_rights=account_rights,
