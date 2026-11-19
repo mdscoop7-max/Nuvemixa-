@@ -30,3 +30,11 @@ def fresh_openai_guard(monkeypatch, tmp_path):
     nv_openai.reset_for_tests()
     yield
     nv_openai.reset_for_tests()
+
+
+@pytest.fixture(autouse=True)
+def fresh_stats_cache():
+    import nv_stats_cache
+    nv_stats_cache.clear()
+    yield
+    nv_stats_cache.clear()
