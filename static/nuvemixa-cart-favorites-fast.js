@@ -4,6 +4,18 @@
   'use strict';
   if (!window.fetch || !window.DOMParser) return;
 
+  // Put the compact assistant beside the header actions, never over a product image.
+  function placeAssistant() {
+    var button = document.querySelector('.tm-assist-fab');
+    var actions = document.querySelector('.tm-ref-actions, .tm-header-actions');
+    if (button && actions && button.parentNode !== actions) actions.appendChild(button);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', placeAssistant, {once:true});
+  } else {
+    placeAssistant();
+  }
+
   function wishlistBadge(count) {
     document.querySelectorAll('[data-wishlist-count]').forEach(function (badge) {
       badge.textContent = String(count);
@@ -87,7 +99,7 @@
       if (count) document.querySelectorAll('[data-cart-count]').forEach(function (badge) {
         badge.textContent = count.textContent;
       });
-      window.scrollTo({top:scrollPosition,behavior:'instant'});
+      window.scrollTo({top:scrollPosition,behavior:'auto'});
     }).catch(function () {
       window.location.reload();
     });
