@@ -76,7 +76,8 @@ def test_page_with_configuration_enables_the_button(administrator, configured):
 def test_missing_configuration_sends_nothing(administrator, monkeypatch):
     calls = install(monkeypatch, citations())
     response = post(administrator)
-    assert response.status_code == 503 and response.json["code"] == "not_configured"
+    assert response.status_code == 200 and response.json["code"] == "not_configured"
+    assert response.json["state"] == "unavailable" and response.json["fallback_url"].startswith("/dashboard?section=onderzoek")
     assert "OPENAI_API_KEY" in response.json["message"] and calls == []
 
 
@@ -145,7 +146,9 @@ def test_no_cited_source_gives_clear_empty_message(administrator, configured, mo
 def test_external_failures_get_specific_messages_without_secrets(administrator, configured, monkeypatch, error, code):
     install(monkeypatch, error=error)
     response = post(administrator)
-    assert response.status_code == 503 and response.json["code"] == code
+    # AI-fout = geen 503 meer: duidelijke melding plus link naar normaal zoeken.
+    assert response.status_code == 200 and response.json["code"] == code and response.json["state"] == "unavailable"
+    assert "Normaal zoeken werkt wel" in response.json["message"] and "research_mode=suppliers" in response.json["fallback_url"]
     assert response.json["results"] == [] and "fixture-key" not in response.get_data(as_text=True)
 
 
@@ -153,7 +156,7 @@ def test_external_failures_get_specific_messages_without_secrets(administrator, 
 def test_empty_or_broken_api_answers_are_reported(administrator, configured, monkeypatch, body, code):
     install(monkeypatch, body)
     response = post(administrator)
-    assert response.status_code == 503 and response.json["code"] == code
+    assert response.status_code == 200 and response.json["code"] == code and response.json["state"] == "unavailable"
 
 
 def test_identical_search_is_served_from_cache_without_a_second_call(administrator, configured, monkeypatch):
@@ -250,3 +253,47 @@ def test_missing_or_wrong_csrf_token_is_refused_for_an_admin_without_any_call(ad
     assert administrator.post(ROUTE, data={"query": "LED-lamp"}).status_code == 403
     assert administrator.post(ROUTE, data={"query": "LED-lamp", "_csrf_token": "fout"}).status_code == 403
     assert calls == [] and ai.usage_snapshot()["month_used"] == 0
+
+
+
+class _ErrorBody:
+    def __init__(self, payload): self.payload = payload
+    def read(self, *_): return self.payload
+    def close(self): pass
+
+
+def test_http_400_is_logged_safely_and_retried_with_a_simpler_request(administrator, configured, monkeypatch, caplog):
+    import io
+    attempts = []
+    body = json.dumps({"error": {"type": "invalid_request_error", "param": "tool_choice", "code": "unsupported_value",
+                                 "message": "Tool choice not supported with key sk-abcdefghijklmnop"}}).encode()
+
+    def fake(request, timeout):
+        data = json.loads(request.data)
+        attempts.append(data)
+        if len(attempts) == 1:
+            raise urllib.error.HTTPError("u", 400, "Bad Request", {}, io.BytesIO(body))
+        return Reply(citations("https://www.bigbuy.eu/nl/dropshipping"))
+
+    monkeypatch.setattr(ai.urllib.request, "urlopen", fake)
+    with caplog.at_level("WARNING"):
+        response = post(administrator)
+    assert response.status_code == 200 and response.json["ok"] is True
+    assert "tool_choice" in attempts[0] and "tool_choice" not in attempts[1] and "max_tool_calls" not in attempts[1]
+    log = caplog.text
+    assert "param=tool_choice" in log and "sk-abcdefghijklmnop" not in log and "fixture-key" not in log
+
+
+def test_repeated_http_400_ends_as_ai_unavailable_with_parameter(administrator, configured, monkeypatch):
+    import io
+    body = json.dumps({"error": {"type": "invalid_request_error", "param": "tools[0].filters", "message": "x"}}).encode()
+    attempts = []
+
+    def fake(request, timeout):
+        attempts.append(1)
+        raise urllib.error.HTTPError("u", 400, "Bad Request", {}, io.BytesIO(body))
+
+    monkeypatch.setattr(ai.urllib.request, "urlopen", fake)
+    response = post(administrator)
+    assert len(attempts) == 3 and response.status_code == 200 and response.json["state"] == "unavailable"
+    assert "tools[0].filters" in response.json["message"] and response.json["detail"]["param"] == "tools[0].filters"

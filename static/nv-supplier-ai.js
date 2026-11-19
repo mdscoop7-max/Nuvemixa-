@@ -121,6 +121,20 @@
           return;
         }
         if (!data.ok) {
+          if (data.state === "unavailable") {
+            step("AI niet beschikbaar; normaal zoeken blijft mogelijk.");
+            finish("AI niet beschikbaar");
+            fail(data.message || "AI niet beschikbaar.");
+            if (data.fallback_url && /^\/dashboard\?/.test(data.fallback_url)) {
+              var again = document.createElement("a");
+              again.href = data.fallback_url;
+              again.className = "nv-blue-action nv-ai-fallback";
+              again.textContent = "Normaal zoeken (zonder AI)";
+              errorBox.appendChild(document.createElement("br"));
+              errorBox.appendChild(again);
+            }
+            return;
+          }
           step("Zoekopdracht niet voltooid.");
           finish("Zoekopdracht niet voltooid");
           fail(data.message || "De zoekopdracht is mislukt.");
@@ -130,7 +144,7 @@
         if (meta.cached) step("Resultaat uit een eerdere identieke zoekopdracht (geen nieuwe AI-aanroep).");
         else step("AI-antwoord ontvangen. Bronnen gecontroleerd: " + meta.citations_received + " verwijzingen ontvangen, " + meta.sources_accepted + " geaccepteerd.");
         step("Resultaten worden weergegeven.");
-        finish(data.results.length ? data.results.length + " leverancier(s) gevonden" : "Klaar");
+        finish(data.results.length ? "AI actief · " + data.results.length + " leverancier(s) gevonden" : "AI actief · klaar");
         if (!data.results.length) fail(data.message || "Geen controleerbare bron gevonden.");
         data.results.forEach(function (item) { results.appendChild(card(item)); });
       })
