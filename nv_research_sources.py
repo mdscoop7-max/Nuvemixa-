@@ -17,7 +17,8 @@ from nv_research_safety import gtin
 
 UNKNOWN = "Niet bevestigd"
 FILTERS = {
-    "all": "Alle leveranciers",
+    "all": "Wereldwijd (alle landen)",
+    "nl": "Nederland",
     "eu": "Binnen EU",
     "international": "Buiten EU",
     "dropship": "Alleen dropshipping",

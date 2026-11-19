@@ -1,9 +1,24 @@
 {% from '_supplier_logistics.html' import logistics, pending_notice %}
 {% from '_dashboard_search_actions.html' import research_product_actions with context %}
-{% from '_product_rows.html' import product_rows with context %}
+{% from '_product_rows.html' import product_rows, supplier_rows with context %}
 {% set m = market_search %}
 {% set viral_page = m.kind == 'viral' %}
 {% macro dropship_badge(value) %}<span class="nv-badge {{ 'ok' if value == 'Bevestigd' else '' }}">Dropshipping: {{ value }}</span>{% endmacro %}
+{% macro supplier_details(company) %}
+  <div><strong>Zakelijke samenwerking</strong> {{ 'Bevestigd' if company.business is sameas true else 'Niet bevestigd' }} · <strong>Verzending naar {{ m.country_name }}</strong> {{ company.shipping }}</div>
+  <div><strong>Minimumafname</strong> {{ company.minimum }} · <strong>Inkoopprijs</strong> {{ company.purchase_price }}</div>
+  {{ logistics(company) }}
+  <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
+  <ul class="nv-research-articles">
+    {% for item in company.products %}
+    <li><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+      {% if item.shipping_cost and item.shipping_cost != 'Niet bevestigd' %}<small>Verzending {{ item.shipping_cost }}</small>{% endif %}
+      {{ research_product_actions(item, company.name) }}
+    </li>
+    {% endfor %}
+    {% for label, url in company.evidence %}<li><a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a></li>{% endfor %}
+  </ul>
+{% endmacro %}
 {% macro supplier_card(company, country) %}
 <article class="nv-supplier-card">
   <h4><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a></h4>
@@ -33,7 +48,7 @@
   {% for group, key in [('Binnen EU', 'eu'), ('Buiten EU', 'international'), ('Vestiging niet bevestigd', 'unknown')] %}
     {% set rows = suppliers|selectattr('region', 'equalto', key)|list %}
     {% if rows %}<h4>{{ group }} ({{ rows|length }})</h4>
-    <div class="nv-research-supplier-grid">{% for company in rows %}{{ supplier_card(company, m.form.country) }}{% endfor %}</div>{% endif %}
+    {% call(row) supplier_rows(m.supplier_rows_fn(rows), 'nv-ms-' ~ key) %}{{ supplier_details(row.company) }}{% endcall %}{% endif %}
   {% endfor %}
 {% endmacro %}
 {% macro publication_list(items) %}

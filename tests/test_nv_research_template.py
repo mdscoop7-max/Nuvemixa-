@@ -17,7 +17,8 @@ class ResearchTemplateRegression(unittest.TestCase):
         self.assertIn('name="section" value="onderzoek"', form)
         self.assertIn('name="research_platform" value="Productcatalogi"', form)
         self.assertIn('<option value="eu">Binnen EU</option>', form)
-        self.assertIn('<option value="all">Alle landen</option>', form)
+        self.assertIn('<option value="all">Wereldwijd (alle landen)</option>', form)
+        self.assertIn('<option value="nl">Nederland</option>', form)
         self.assertIn('role="status"', form)
 
     def test_screened_news_renders_and_unsafe_link_is_absent(self):
