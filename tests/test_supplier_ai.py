@@ -321,3 +321,15 @@ def test_filters_refusal_is_remembered_so_next_search_skips_it(administrator, co
     assert first.json["meta"]["variant"] == ai.REQUEST_VARIANTS[1]
     second = post(administrator, query="Yogamat")
     assert second.json["ok"] is True and len(attempts) == 3 and "filters" not in attempts[2]["tools"][0]
+
+
+def test_openai_tracking_parameter_does_not_reject_an_approved_citation():
+    response = {"output": [{"type": "message", "content": [{"type": "output_text", "annotations": [
+        {"type": "url_citation", "url": "https://www.bigbuy.eu/nl/dropshipping?utm_source=openai", "title": "BigBuy"},
+        {"type": "url_citation", "url": "https://www.bigbuy.eu/nl/zoek?q=lamp", "title": "Zoek"},
+        {"type": "url_citation", "url": "https://other.example/x?utm_source=openai", "title": "Ander"}]}]}]}
+    rejected = []
+    received, found = ai.extract_cited(response, ["bigbuy.eu"], rejected)
+    assert received == 3 and found["bigbuy.eu"]["href"] == "https://www.bigbuy.eu/nl/dropshipping"
+    assert "other.example" in rejected
+    assert ai.strip_tracking("https://a.example/p?q=1&utm_source=openai") == "https://a.example/p?q=1"
