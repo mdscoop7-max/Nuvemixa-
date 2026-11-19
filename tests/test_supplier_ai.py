@@ -279,7 +279,9 @@ def test_http_400_is_logged_safely_and_retried_with_a_simpler_request(administra
     with caplog.at_level("WARNING"):
         response = post(administrator)
     assert response.status_code == 200 and response.json["ok"] is True
-    assert "tool_choice" in attempts[0] and "tool_choice" not in attempts[1] and "max_tool_calls" not in attempts[1]
+    # Tweede poging: geen domeinfilter meer, wel nog gedwongen webzoeken en de domeinen als site:-zoekvragen.
+    assert "filters" in attempts[0]["tools"][0] and "filters" not in attempts[1]["tools"][0]
+    assert "site:" in attempts[1]["instructions"] and "bigbuy.eu" in attempts[1]["input"]
     log = caplog.text
     assert "param=tool_choice" in log and "sk-abcdefghijklmnop" not in log and "fixture-key" not in log
 
@@ -297,3 +299,25 @@ def test_repeated_http_400_ends_as_ai_unavailable_with_parameter(administrator, 
     response = post(administrator)
     assert len(attempts) == 3 and response.status_code == 200 and response.json["state"] == "unavailable"
     assert "tools[0].filters" in response.json["message"] and response.json["detail"]["param"] == "tools[0].filters"
+
+
+def test_filters_refusal_is_remembered_so_next_search_skips_it(administrator, configured, monkeypatch):
+    import io
+    monkeypatch.setattr(ai, "_filters_refused", set())
+    body = json.dumps({"error": {"type": "invalid_request_error", "param": "tools",
+                                 "message": "Parameter 'filters' not supported with model 'gpt-4.1-mini'."}}).encode()
+    attempts = []
+
+    def fake(request, timeout):
+        data = json.loads(request.data)
+        attempts.append(data)
+        if "filters" in data["tools"][0]:
+            raise urllib.error.HTTPError("u", 400, "Bad Request", {}, io.BytesIO(body))
+        return Reply(citations("https://www.bigbuy.eu/nl/dropshipping"))
+
+    monkeypatch.setattr(ai.urllib.request, "urlopen", fake)
+    first = post(administrator)
+    assert first.json["ok"] is True and len(attempts) == 2
+    assert first.json["meta"]["variant"] == ai.REQUEST_VARIANTS[1]
+    second = post(administrator, query="Yogamat")
+    assert second.json["ok"] is True and len(attempts) == 3 and "filters" not in attempts[2]["tools"][0]

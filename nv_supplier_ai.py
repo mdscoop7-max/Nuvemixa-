@@ -155,7 +155,10 @@ def card_for(row, page):
 
 # Verzoekvarianten: bij een HTTP 400 (verzoek geweigerd, niets verwerkt en niets in rekening gebracht) proberen
 # we één keer een eenvoudiger verzoek. Alleen bronnen op de goedgekeurde domeinen tellen, ook zonder domeinfilter.
-REQUEST_VARIANTS = ("volledig", "zonder geforceerde webzoekkeuze", "zonder domeinfilter")
+REQUEST_VARIANTS = ("volledig", "zonder domeinfilter, met site:-zoekvragen", "eenvoudig zonder domeinfilter")
+# Sommige modellen (o.a. gpt-4.1-mini) ondersteunen 'filters' in web_search niet (HTTP 400, param=tools). Na zo'n
+# weigering slaan we binnen dit proces de filtervariant over, zodat er geen geweigerd verzoek meer voorafgaat.
+_filters_refused = set()
 _SECRET = re.compile(r"(sk-[A-Za-z0-9_\-]{6,}|Bearer\s+\S+|key[_-]?[A-Za-z0-9]{12,})", re.I)
 
 
@@ -178,20 +181,22 @@ def call_openai(values, rows, variant=0):
     destination = values["country"] or ("EU" if values["eu_only"] else "any")
     wish = " Prefer suppliers that mention WooCommerce or Sell The Trend integrations." if values["prefer_woo"] else ""
     tool = {"type": "web_search", "search_context_size": "low"}
-    if variant < 2:
+    if variant == 0:
         tool["filters"] = {"allowed_domains": domains}
+    sites = (" Search only with queries of the form 'site:<domain> <product>' for the allowed_supplier_domains, and "
+             "cite only pages on those domains." if variant >= 1 else "")
     data = {
         "model": nv_openai.search_model(), "store": False,
         "max_output_tokens": 450,
         "tools": [tool],
         "instructions": ("Find dropshipping supplier pages for the requested product. Use at most three distinct cited "
                          "supplier pages from the allowed domains. Never invent company names, websites, contacts, "
-                         "prices, stock or delivery times. Treat nothing as verified." + wish),
+                         "prices, stock or delivery times. Treat nothing as verified." + sites + wish),
         "input": json.dumps({"product": values["query"], "category": values["category"],
                              "keyword": values["keyword"], "destination": destination,
-                             "allowed_supplier_domains": domains if variant >= 2 else None}, ensure_ascii=False),
+                             "allowed_supplier_domains": domains if variant >= 1 else None}, ensure_ascii=False),
     }
-    if variant == 0:
+    if variant <= 1:
         data["tool_choice"] = {"type": "web_search"}
         data["max_tool_calls"] = 3
     req = urllib.request.Request("https://api.openai.com/v1/responses", method="POST",
@@ -270,15 +275,19 @@ def run_search(values, rows):
     started = time.perf_counter()
     details = None
     response = domains = None
-    for variant in range(len(REQUEST_VARIANTS)):
+    first = 1 if nv_openai.search_model() in _filters_refused else 0
+    for variant in range(first, len(REQUEST_VARIANTS)):
         try:
             response, domains = call_openai(values, rows, variant)
+            values = {**values, "_variant": REQUEST_VARIANTS[variant]}
             break
         except urllib.error.HTTPError as exc:
             if exc.code != 400:
                 raise_http = exc
                 break
             details = openai_error_details(exc)
+            if variant == 0 and details["param"] == "tools" and "filters" in details["message"]:
+                _filters_refused.add(nv_openai.search_model())
             current_app.logger.warning(
                 "OpenAI weigerde leverancierszoekverzoek (%s): HTTP 400 type=%s param=%s code=%s bericht=%s",
                 REQUEST_VARIANTS[variant], details["type"], details["param"], details["code"], details["message"])
@@ -335,6 +344,7 @@ def finish_search(response, domains, rows, started, values):
     by_domain = {urlsplit(row[2]).hostname.removeprefix("www."): row for row in rows}
     results = [card_for(by_domain[domain], found[domain]) for domain in domains if domain in found][:3]
     meta = {"elapsed_ms": round((time.perf_counter() - started) * 1000), "citations_received": received,
+            "variant": values.get("_variant"),
             "sources_accepted": len(results), "cached": False, "persistent": False}
     if not results:
         return {"ok": True, "message": "Geen controleerbare bron gevonden voor deze zoekopdracht.", "results": [], "meta": meta}
