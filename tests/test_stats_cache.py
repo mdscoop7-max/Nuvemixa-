@@ -71,7 +71,7 @@ def test_margin_advice_in_browser_matches_server():
     node = shutil.which("node")
     if not node:
         pytest.skip("Node.js niet beschikbaar")
-    script = pathlib.Path(__file__).resolve().parents[1] / "static/nv-margin-live.js"
+    script = pathlib.Path(__file__).resolve().parents[1] / "static/nv-margin-core.js"
     code = ("global.window={};global.document={querySelectorAll:()=>[]};require(%r);const f=window.NVMarginAdvice;"
             "const o={};for(const p of ['10','12.5','0.99','39.95']){for(const v of [21,9]){const n=f(Math.round(Number(p)*100),v);"
             "o[p+'|'+v]=[n.selling,n.revenue,n.vat,n.fee,n.total,n.profit]}}console.log(JSON.stringify(o))") % str(script)
@@ -92,13 +92,13 @@ def test_margin_bar_percentages_give_the_chosen_margin():
     node = shutil.which("node")
     if not node:
         pytest.skip("Node.js niet beschikbaar")
-    script = pathlib.Path(__file__).resolve().parents[1] / "static/nv-margin-live.js"
+    script = pathlib.Path(__file__).resolve().parents[1] / "static/nv-margin-core.js"
     code = ("global.window={};global.document={querySelectorAll:()=>[]};require(%r);const f=window.NVMarginAdvice;"
             "const o={};for(const t of [15,20,25,30,35,40]){o[t]=f(1250,21,t).margin}console.log(JSON.stringify(o))") % str(script)
     margins = json.loads(subprocess.run([node, "-e", code], capture_output=True, text=True, check=True).stdout)
     for pct, margin in margins.items():
         assert abs(margin - int(pct)) < 0.2, (pct, margin)
-    page = (pathlib.Path(__file__).resolve().parents[1] / "templates/dashboard.html").read_text(encoding="utf-8")
-    form = page.split('id="nv-product-margin"', 1)[1].split("</form>", 1)[0]
+    page = (pathlib.Path(__file__).resolve().parents[1] / "templates/_margin_calculator.html").read_text(encoding="utf-8")
+    form = page.split("macro margin_form", 1)[1].split("</form>", 1)[0]
     assert form.index('name="margin_product"') < form.index('name="purchase_cost"') < form.index('name="target_margin"')
     assert form.index('name="target_margin"') < form.index("selling_price")

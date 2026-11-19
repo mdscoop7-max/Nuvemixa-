@@ -1,6 +1,6 @@
 {% set r = market_research %}
 {% if market_search %}{% include "_dashboard_market_search.html" %}{% endif %}
-<details class="panel nv-manual-block"><summary><strong>Handmatig onderzoek met voorbeeldproducten</strong></summary>
+<details class="panel nv-manual-block"><summary><strong>Handmatig onderzoek met voorbeeldproducten</strong> <small>(apart hulpmiddel met vaste voorbeelden; staat los van je zoekopdracht hierboven)</small></summary>
 {% set country, currency, locale, phase = r.markets[r.market] %}
 {% set planned_domain = 'NUVEMIXA.nl' if r.market in ('NL','BE','DE','FR','ES') else 'NUVEMIXA.com' %}
 <p>Gepland verkoopdomein voor {{ country }} · {{ planned_domain }}</p>
@@ -15,7 +15,7 @@
     {% endfor %}</select></label>
     <button type="submit">Onderzoek openen</button>
   </form>
-  <h2>{{ r.candidates[r.candidate][0] }} in {{ country }}</h2>
+  <h2>Voorbeeldproduct: {{ r.candidates[r.candidate][0] }} · {{ country }}</h2>
   <p>{{ r.candidates[r.candidate][1] }} · Testcatalogus EUR {{ r.candidates[r.candidate][2] }} · {{ locale }} · Fase {{ phase }}</p>
   <div class="nv-market-grid">
     <article>

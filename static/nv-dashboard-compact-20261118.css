@@ -227,3 +227,25 @@ body.nv-admin-ui main .nv-margin-live table.admin-table td{text-align:right}
 /* Bedragen in de margetabel nooit midden in het getal afbreken; labels mogen wel afbreken */
 body.nv-admin-ui main .nv-margin-live table.admin-table td,body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table td{white-space:nowrap;overflow-wrap:normal;word-break:normal}
 body.nv-admin-ui main .nv-margin-live table.admin-table th{overflow-wrap:break-word;hyphens:auto}
+/* AI: zichtbaar uitgesloten resultaten */
+body.nv-admin-ui main .nv-ai-excluded{margin-top:6px}
+body.nv-admin-ui main .nv-ai-excluded summary{cursor:pointer;font-weight:700;font-size:.84rem}
+body.nv-admin-ui main .nv-ai-excluded ul{margin:6px 0 4px 18px;padding:0;font-size:.82rem;overflow-wrap:anywhere}
+body.nv-admin-ui main .nv-srow__why{color:#0a6b5d;font-weight:600}
+/* Gedeelde margecalculator */
+body.nv-admin-ui main .nv-mcalc .nv-mcosts{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr));gap:8px 12px;border:1px solid #e3eaf4;border-radius:12px;padding:10px 12px;margin:4px 0}
+body.nv-admin-ui main .nv-mcalc .nv-mcosts legend{font-weight:700;font-size:.84rem;padding:0 4px}
+body.nv-admin-ui main .nv-mcalc .nv-mcosts legend small{font-weight:500;color:#64748b}
+body.nv-admin-ui main .nv-mcalc .nv-mcosts--std{background:#fffaf0;border-color:#f4dca6}
+body.nv-admin-ui main .nv-mcalc .nv-mcosts label{font-size:.78rem;min-width:0}
+body.nv-admin-ui main .nv-mcalc .nv-mcosts input{width:100%;min-width:0;box-sizing:border-box}
+body.nv-admin-ui main .nv-mcosts__reset{align-self:end;min-height:34px;font-size:.8rem}
+body.nv-admin-ui main .nv-mtag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.76rem;font-weight:700;margin-right:4px}
+body.nv-admin-ui main .nv-mtag--a{background:#fff4d6;color:#7a4b00;border:1px solid #f4c46a}
+body.nv-admin-ui main .nv-mtag--b{background:#e3f6f2;color:#0a6b5d;border:1px solid #bfe6dd}
+body.nv-admin-ui main .nv-msrc{display:inline-block;padding:0 6px;border-radius:999px;font-size:.66rem;font-weight:700;text-transform:none;letter-spacing:0}
+body.nv-admin-ui main .nv-msrc--aanname{background:#fff4d6;color:#7a4b00}
+body.nv-admin-ui main .nv-msrc--ingevuld,body.nv-admin-ui main .nv-msrc--nul{background:#e3f6f2;color:#0a6b5d}
+body.nv-admin-ui main .nv-margin-live tr.nv-mkey th,body.nv-admin-ui main .nv-margin-live tr.nv-mkey td{background:#f2f7ff;color:#0b2a55;font-weight:800}
+body.nv-admin-ui main .nv-mcalc button.nv-mcosts__reset{background:#fff;color:#0757bd;border:1px solid #cfdcf0;box-shadow:none;font-weight:700;padding:6px 12px;min-height:34px;justify-self:start}
+@media(max-width:560px){body.nv-admin-ui main .nv-mcalc .nv-mcosts{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 8px;padding:8px}}

@@ -78,6 +78,7 @@ def suppliers(companies):
             "phone": phone if PHONE.match(phone) else None, "contact_url": contact,
             "origin": company.get("origin_name") or UNKNOWN, "warehouse": company.get("warehouse_label"),
             "region": company.get("region") or "unknown", "dropship": dropship_label(company),
+            "scope_reason": company.get("scope_reason") if str(company.get("scope_reason") or "").startswith("Voldoet") else None,
             "dropship_source": company.get("dropshipping_source"), "shipping_nl": company.get("shipping_nl") or "Niet bevestigd",
             "products": company.get("product_count") or len(company.get("products") or []), "checked": company.get("checked"),
         })

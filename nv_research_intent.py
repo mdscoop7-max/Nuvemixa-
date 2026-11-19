@@ -2,6 +2,8 @@
 import re
 import unicodedata
 
+from nv_search_terms import GENERAL, categories_for, translate_word
+
 # First normalize vocabulary, then distinguish product identity from properties.
 PHRASES = (
     (r"\b(?:wi[\s-]*fi|wlan)\b", "wifi"),
@@ -181,7 +183,7 @@ def normalize(value):
                    lambda m: f"{m[1]} {'amp' if m[2].startswith('a') else m[2]}", value)
     for pattern, replacement in NORMALIZATIONS:
         value = pattern.sub(replacement, value)
-    return " ".join(ALIASES.get(word, word) for word in re.findall(r"[^\W_]+", value))
+    return " ".join(ALIASES.get(word) or translate_word(word) or word for word in re.findall(r"[^\W_]+", value))
 
 def words(value):
     return set(value.split()) - STOP_WORDS
@@ -189,9 +191,22 @@ def words(value):
 def has_phrase(text, phrase):
     return f" {phrase} " in f" {text} "
 
+def singular_forms(found):
+    """Engelse meervouden als enkelvoud meetellen (leashes → leash, cups → cup); alleen verruimend."""
+    extra = set()
+    for word in found:
+        if len(word) > 4 and word.endswith(("ches", "shes", "sses", "xes")):
+            extra.add(word[:-2])
+        elif len(word) > 4 and word.endswith("ies"):
+            extra.add(word[:-3] + "y")
+        elif len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+            extra.add(word[:-1])
+    return found | extra
+
+
 def matches(search, evidence):
     required = words(normalize(search))
-    return bool(required) and required.issubset(words(normalize(evidence)))
+    return bool(required) and required.issubset(singular_forms(words(normalize(evidence))))
 
 def power_bank_query(term):
     return {"power", "bank"}.issubset(words(normalize(term)))
@@ -245,6 +260,10 @@ def index_query(term):
         core = strip_modifiers(english).replace("usbc", "USB-C")
         return core if len(core.split()) >= 2 else english_query(term)
     variants = candidate_queries(term)
+    english = english_query(term)
+    # Engelstalige catalogi: liever de vertaalde zoekterm dan het Nederlandse origineel.
+    if variants and variants[0] == term and english and english.casefold() != term.casefold():
+        return english
     return variants[0] if variants else ""
 
 
@@ -423,6 +442,13 @@ def infer_categories(term):
     subjects = SUBJECT_CATEGORIES.get(subject_for(text))
     if subjects:
         return subjects
+    # Bekende Nederlandse woorddelen bepalen de categorie preciezer dan losse Engelse hints (chair ≠ hair).
+    raw = "".join(c for c in unicodedata.normalize("NFKD", (term or "").casefold()) if not unicodedata.combining(c))
+    tokens = [t for t in re.findall(r"[^\W_\d]+", raw) if t not in STOP_WORDS and t not in GENERAL and len(t) > 1]
+    per_token = [categories_for(t) for t in tokens]
+    from_vocabulary = tuple(dict.fromkeys(c for cats in per_token for c in cats))
+    if tokens and all(per_token):
+        return from_vocabulary
     found = []
     tokens = []
     for token in text.split():
@@ -440,4 +466,4 @@ def infer_categories(term):
             if (category != "pets" and len(plain) >= 4 and plain in flat) or has_phrase(text, hint):
                 found.append(category)
                 break
-    return tuple(dict.fromkeys(found))
+    return tuple(dict.fromkeys((*from_vocabulary, *found)))

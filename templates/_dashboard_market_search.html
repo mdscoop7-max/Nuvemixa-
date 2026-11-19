@@ -95,12 +95,15 @@
       <label>{{ 'Verkoopmarkt' if viral_page else 'Verkoopland' }}<select name="mland">{% for code, details in m.countries.items() %}<option value="{{ code }}"{% if m.form.country == code %} selected{% endif %}>{{ details[0] }}</option>{% endfor %}</select></label>
       <label>Productcategorie<select name="mcat"><option value="shop">Alle categorieën</option>{% for slug, name in m.categories.items() %}<option value="{{ slug }}"{% if m.form.category == slug %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label>Leverancier<select name="mregio">{% for key, name in m.regions.items() %}<option value="{{ key }}"{% if m.form.region == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Land volgens<select name="mbasis" title="Beide = vestigingsland of magazijnland; Vestiging = waar het bedrijf zit; Magazijn = waarvandaan wordt verzonden">{% for key, name in m.country_bases.items() %}<option value="{{ key }}"{% if m.form.basis == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label>Soort leverancier<select name="mtype">{% for key, name in m.supplier_types.items() %}<option value="{{ key }}"{% if m.form.supplier_type == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label>Periode<select name="mperiode">{% for key, name in m.periods.items() %}<option value="{{ key }}"{% if m.form.period == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       {% if viral_page %}
       <label>Bron<select name="mbron">{% for key, name in m.sources.items() %}<option value="{{ key }}"{% if m.form.source == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label class="nv-checkbox"><input type="checkbox" name="mgoogle" value="1"{% if m.form.google_trends %} checked{% endif %}> Actuele zoektrends uit Google Trends</label>
       {% endif %}
+      <input type="hidden" name="mai" value="0">
+      <label class="nv-checkbox"><input type="checkbox" name="mai" value="1"{% if m.form.ai %} checked{% endif %}> AI-hulp (zoekwoorden en relevantie)</label>
       <label class="nv-checkbox"><input type="checkbox" name="mnl" value="1"{% if m.form.ships_nl %} checked{% endif %}> Verzending naar Nederland bevestigd</label>
       <label class="nv-checkbox"><input type="checkbox" name="mdrop" value="1"{% if m.form.dropship_only %} checked{% endif %}> Alleen dropshipping bevestigd</label>
     </div>

@@ -49,7 +49,8 @@ def test_live_margin_and_search_history_scripts():
     history = (ROOT / "static/nv-search-history.js").read_text(encoding="utf-8")
     assert "localStorage" in history and "input.value = ''" in history
     page = (ROOT / "templates/dashboard.html").read_text(encoding="utf-8")
-    assert 'data-margin-live="#nv-margin-live"' in page and "nv-search-history.js" in page
+    assert "margin_form('onderzoek', 'nv-margin-live'" in page and "nv-search-history.js" in page
+    assert "margin_form('calculator', 'nv-calc-live'" in page and "nv-margin-core.js" in page
 
 
 def test_catalog_changes_are_cached_and_invalidated_on_save(monkeypatch):

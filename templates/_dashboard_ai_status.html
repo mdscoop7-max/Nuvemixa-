@@ -6,9 +6,16 @@
     {% if ai.keywords_en or ai.keywords_nl %} · Zoekwoorden: {{ (ai.keywords_nl + ai.keywords_en)|join(', ') }}{% endif %}
     {% if ai.used_query %} · Gezocht als: “{{ ai.used_query }}”{% endif %}
     {% if ai.category %} · Categorie: {{ ai.category }}{% endif %}
-    {% if ai.removed %} · {{ ai.removed }} niet-passende resultaten (accessoires/andere producten) verwijderd{% endif %}
+    {% if ai.removed %} · {{ ai.removed }} resultaat{{ 'en' if ai.removed != 1 }} uitgesloten als accessoire of ander product (hieronder te bekijken){% endif %}
   {% endif %}
   {% if ai.message %}<br><small>{{ ai.message }}</small>{% endif %}
+  {% if ai.excluded or ai.excluded_suppliers %}
+  <details class="nv-ai-excluded"><summary>Uitgesloten door AI ({{ ai.excluded|length }}{% if ai.excluded_suppliers %}, waarvan {{ ai.excluded_suppliers|length }} leverancier{{ 's' if ai.excluded_suppliers|length != 1 }} zonder overgebleven product{% endif %}) — bekijk en controleer</summary>
+    <ul>{% for item in ai.excluded %}<li>{% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}{% if item.source %} <small>· {{ item.source }}</small>{% endif %} <small>— {{ item.reason }}</small></li>{% endfor %}</ul>
+    {% if ai.excluded_suppliers %}<p><small>Leveranciers alleen met uitgesloten producten: {{ ai.excluded_suppliers|join(', ') }}.</small></p>{% endif %}
+    <p><small>Klopt een uitsluiting niet? Zoek opnieuw met AI uit: dan zie je alle bronresultaten.</small></p>
+  </details>
+  {% endif %}
   <br><small>AI kiest alleen zoekwoorden en filtert opgehaalde resultaten; producten, leveranciers en prijzen komen uitsluitend uit de bronnen.</small>
 </p>
 {% endif %}

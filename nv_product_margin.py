@@ -93,3 +93,92 @@ def automatic_margin(purchase_price, vat_rate="21"):
         "vat_rate": q(vat),
         "assumptions": "Indicatief Nederlands scenario: inkoop exclusief btw; 21% btw, € 4,95 verzending, € 3,00 reclame, € 1,00 retourreserve en € 0,35 + 2,5% transactiekosten. Verkoopadvies gebaseerd op circa 25% marge op omzet excl. btw. Geen geverifieerde marktprijs, leverancierskosten of belastingadvies."
     }
+
+
+# ---------------------------------------------------------------------------
+# Gedeelde rekenmodule voor 'Winstmarge per product' en 'Prijs & marge calculator'.
+# Exacte tegenhanger van static/nv-margin-core.js (zelfde floatberekening en afronding, getest op pariteit).
+# ---------------------------------------------------------------------------
+import math
+
+UNIFIED_COSTS = (
+    ("shipping", "shipping_cost", "std_shipping", "Verzend- en fulfilmentkosten"),
+    ("advertising", "advertising_cost", "std_advertising", "Advertentiekosten"),
+    ("returns", "returns_reserve", "std_returns", "Retourkosten"),
+    ("fee_fixed", "transaction_fee", "std_fee_fixed", "Betaalprovider vast"),
+    ("fee_pct", "transaction_pct", "std_fee_pct", "Betaalprovider %"),
+    ("platform", "platform_fee", "std_platform", "Platformkosten"),
+    ("other", "other_cost", "std_other", "Invoer- en overige kosten"),
+)
+UNIFIED_DEFAULTS = {"shipping": 495, "advertising": 300, "returns": 100, "fee_fixed": 35, "fee_pct": 2.5,
+                    "platform": 0, "other": 0}
+MARGIN_TARGETS = (15, 20, 25, 30, 35, 40)
+
+
+def _round_half_up(value):
+    return math.copysign(math.floor(abs(value) + 1e-9 + 0.5), value) if value else 0
+
+
+def _field(data, name, *, percent=False, limit=None):
+    raw = str(data.get(name, "") or "").strip()
+    if not raw:
+        return None
+    value = _amount(raw, name)
+    if limit is not None and value > limit:
+        raise ValueError("Waarde buiten bereik bij " + name)
+    return float(value) if percent else int(_round_half_up(float(value) * 100))
+
+
+def _figures(selling, purchase, used, factor):
+    fee = used["fee_fixed"] + selling * used["fee_pct"] / 100
+    revenue = selling / factor
+    costs = purchase + used["shipping"] + used["advertising"] + used["returns"] + used["platform"] + used["other"] + fee
+    profit = revenue - costs
+    return {"selling": int(_round_half_up(selling)), "revenue": int(_round_half_up(revenue)),
+            "vat": int(_round_half_up(selling - revenue)), "fee": int(_round_half_up(fee)),
+            "costs": int(_round_half_up(costs)), "gross": int(_round_half_up(revenue - purchase)),
+            "profit": int(_round_half_up(profit)),
+            "gross_pct": 100 * (revenue - purchase) / revenue if revenue else 0,
+            "margin": 100 * profit / revenue if revenue else 0}
+
+
+def unified_margin(data):
+    """Zelfde regels als NVMargin.compute. Lege werkelijke kosten = onbekend → zichtbare standaardaanname."""
+    purchase = _field(data, "purchase_cost")
+    if not purchase:
+        raise ValueError("Vul een inkoopprijs groter dan € 0 in.")
+    vat = _field(data, "vat_rate", percent=True, limit=100)
+    vat = 21.0 if vat is None else vat
+    try:
+        target = float(str(data.get("target_margin", "25") or "25").replace(",", "."))
+    except ValueError:
+        raise ValueError("Kies een geldige winstmarge.") from None
+    if not 0 <= target < 100:
+        raise ValueError("Kies een geldige winstmarge.")
+    used, sources, assumed = {}, {}, []
+    for key, actual_name, standard_name, label in UNIFIED_COSTS:
+        pct = key == "fee_pct"
+        actual = _field(data, actual_name, percent=pct, limit=99.99 if pct else None)
+        standard = _field(data, standard_name, percent=pct, limit=99.99 if pct else None)
+        standard = UNIFIED_DEFAULTS[key] if standard is None else standard
+        if actual is None:
+            used[key], sources[key] = standard, "aanname"
+            assumed.append(label)
+        else:
+            used[key], sources[key] = actual, ("nul" if actual == 0 else "ingevuld")
+    factor = 1 + vat / 100
+    denominator = (1 - target / 100) / factor - used["fee_pct"] / 100
+    if denominator <= 0:
+        raise ValueError("Deze marge is met deze betaalkosten en btw niet haalbaar.")
+    fixed = (purchase + used["shipping"] + used["advertising"] + used["returns"] + used["platform"]
+             + used["other"] + used["fee_fixed"])
+    advice = _figures(_round_half_up(fixed / denominator), purchase, used, factor)
+    result = {"kind": "A" if assumed else "B", "assumed": assumed, "used": used, "sources": sources,
+              "purchase": purchase, "vat": vat, "target": target, "advice": advice, "own": None}
+    own = _field(data, "selling_price")
+    if own:
+        figures = _figures(own, purchase, used, factor)
+        figures["reaches"] = own >= advice["selling"]
+        figures["short"] = max(0, advice["selling"] - own)
+        result["own"] = figures
+    return result

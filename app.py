@@ -2279,7 +2279,17 @@ def control():
     product_margin = None
     margin_scenario = None
     product_margin_error = None
-    if section == "onderzoek" and request.args.get("margin_run") == "1":
+    margin_unified = None
+    margin_unified_error = None
+    if (section in {"onderzoek", "calculator"} and request.args.get("margin_run") == "1"
+            and request.args.get("margin_method") == "unified"):
+        # Gedeelde rekenmodule (zelfde regels als static/nv-margin-core.js); werkt ook zonder JavaScript.
+        from nv_product_margin import unified_margin
+        try:
+            margin_unified = unified_margin(request.args)
+        except ValueError as exc:
+            margin_unified_error = str(exc)
+    elif section == "onderzoek" and request.args.get("margin_run") == "1":
         from nv_product_margin import automatic_margin, calculate_margin
         try:
             if request.args.get("margin_method") == "scenario":
@@ -2317,6 +2327,10 @@ def control():
             "empty_message": EMPTY_RESULTS,
             "supplier_filters": FILTERS,
             "supplier_filter": research_filter,
+            "country_bases": __import__("nv_product_discovery").COUNTRY_BASES,
+            "country_basis": (request.args.get("research_country_basis")
+                              if request.args.get("research_country_basis") in __import__("nv_product_discovery").COUNTRY_BASES
+                              else "either"),
             "periods": nv_research_period.CHOICES,
             "period": request.args.get("research_period", "slim"),
             # Schakelaar: verborgen '0' plus aangevinkte '1'. Zonder AI-configuratie toont ai_discover zelf 'uit'.
@@ -2333,7 +2347,8 @@ def control():
             general = research_category == "overig"  # Onderzoeksplatforms: 'Overig / Algemeen'
             search_args = dict(country=research_country, mode=research_mode, platforms=research_platforms,
                                category=ALL_PRODUCTS if general else research_category,
-                               categories=research_categories, supplier_filter=research_filter)
+                               categories=research_categories, supplier_filter=research_filter,
+                               country_basis=research_options["country_basis"])
             if general:
                 search_args["infer"] = False
             if research_options["ai_enabled"]:
@@ -2490,6 +2505,8 @@ def control():
         source_coverage=source_coverage,
         source_test=nv_supplier_sources.test_state() if section == 'onderzoek' else None,
         product_margin=product_margin,
+        margin_unified=margin_unified,
+        margin_unified_error=margin_unified_error,
         margin_scenario=margin_scenario,
         product_margin_error=product_margin_error,
         research_options=research_options,

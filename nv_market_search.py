@@ -8,6 +8,7 @@ from collections import Counter
 from datetime import date, timedelta
 
 from nv_ai_search import ai_discover as discover  # AI-ondersteund, valt terug op normaal zoeken
+from nv_product_discovery import COUNTRY_BASES, discover as plain_discover  # AI uitgezet door de gebruiker
 from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, MANUAL_PLATFORMS, RESEARCH_CATEGORIES
 
 REGIONS = {"all": "Wereldwijd", "nl": "Nederland", "eu": "Binnen EU", "international": "Buiten EU"}
@@ -59,17 +60,20 @@ def parse(kind, args, categories):
         "source": choice(args, "mbron", VIRAL_SOURCES, "all"),
         "google_trends": args.get("mgoogle") == "1",
         "run": args.get("mrun") == "1",
+        "basis": choice(args, "mbasis", COUNTRY_BASES, "either"),
+        # AI-schakelaar: verborgen '0' plus aangevinkte '1'; zonder parameter staat AI aan.
+        "ai": ("mai" not in args) or "1" in (args.getlist("mai") if hasattr(args, "getlist") else [args.get("mai")]),
     }
 
 
 def filter_suppliers(suppliers, form):
+    from nv_product_discovery import scope_reason, supplier_in_scope
     kept = []
     for company in suppliers:
-        if form["region"] == "nl":
-            if company.get("origin") != "NL":
+        if form["region"] != "all":
+            if not supplier_in_scope(company, form["region"], form.get("basis", "either")):
                 continue
-        elif form["region"] != "all" and company["region"] != form["region"]:
-            continue
+            company["scope_reason"] = scope_reason(company, form["region"], form.get("basis", "either"))
         role = company.get("role", "")
         if form["supplier_type"] == "dropship" and company.get("dropshipping") is not True:
             continue
@@ -145,6 +149,7 @@ def search_view(kind, categories, args, *, fetch=None):
     categories = {**categories, **RESEARCH_CATEGORIES}
     form = parse(kind, args, categories)
     view = {"kind": kind, "form": form, "categories": categories, "countries": COUNTRIES, "regions": REGIONS,
+            "country_bases": COUNTRY_BASES,
             "supplier_types": SUPPLIER_TYPES, "periods": PERIODS, "sources": VIRAL_SOURCES,
             "price_note": PRICE_NOTE, "trend_note": TREND_NOTE, "ran": False, "error": None,
             "products": [], "suppliers": [], "publications": [], "trends": [], "competitors": [],
@@ -164,9 +169,13 @@ def search_view(kind, categories, args, *, fetch=None):
     if kind == "viral" and form["google_trends"]:
         platforms.append("Google Trends")
     supplier_filter = {"dropship": "dropship", "wholesale": "trade", "manufacturer": "trade"}.get(form["supplier_type"], "all")
-    result = discover(form["q"], country=form["country"], mode="trends" if kind == "viral" else "products",
-                      platforms=platforms, fetch=fetch, category=form["category"],
-                      categories=categories, supplier_filter=supplier_filter)
+    search = discover if form["ai"] else plain_discover
+    result = search(form["q"], country=form["country"], mode="trends" if kind == "viral" else "products",
+                    platforms=platforms, fetch=fetch, category=form["category"],
+                    categories=categories, supplier_filter=supplier_filter)
+    if not form["ai"] and isinstance(result, dict) and not result.get("error"):
+        result["ai"] = {"state": "off", "label": "AI uitgezet", "removed": 0,
+                        "message": "AI is voor deze zoekopdracht uitgezet; alle bronresultaten worden getoond."}
     view["ran"] = True
     if result.get("error"):
         view["error"] = result["error"]

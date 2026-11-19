@@ -123,11 +123,24 @@ def editorial_feed(fetch, category, read):
     return articles[:10]
 
 
+UNREADABLE_NAME = "Naam niet leesbaar uit bron"
+_MEASURE_NAME = re.compile(r"^\s*[\d.,]+\s*(?:cm|mm|m|ml|l|L|g|kg|gr|w|W|v|V|mah|mAh|pcs|stuks?|x)?\s*$")
+
+
+def readable_name(name):
+    """Bedrijfsnaam uit een bron, of een eerlijke melding als de bron geen leesbare naam geeft (bijv. '0cm')."""
+    name = " ".join(str(name or "").split())
+    letters = sum(ch.isalpha() for ch in name)
+    if not name or _MEASURE_NAME.match(name) or letters < 1:
+        return UNREADABLE_NAME
+    return name
+
+
 def supplier(name, origin, kind, website, *, dropshipping=None, shipping=UNKNOWN, checked=None,
              integration=UNKNOWN, orders=UNKNOWN, returns=UNKNOWN, evidence=(), identity=None,
              identity_source=None, registration=None, business=None, dropshipping_source=None, minimum=UNKNOWN):
     return {
-        "name": name, "origin": origin, "kind": kind, "website": website,
+        "name": readable_name(name), "origin": origin, "kind": kind, "website": website,
         "identity": identity, "identity_source": identity_source, "registration": registration,
         "business": business, "dropshipping_source": dropshipping_source,
         "dropshipping": dropshipping, "shipping": shipping, "checked": checked or date.today().isoformat(),

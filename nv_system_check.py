@@ -191,11 +191,21 @@ def scan(items, categories, customer_db, integrations):
             "attention", "Metadata aanwezig; er is nog geen rapport opgeslagen.", "Voer een lokale SEO-controle uit.")
 
     def calculator():
-        source, _, _ = current_app.jinja_env.loader.get_source(current_app.jinja_env, "dashboard.html")
-        fields = ("buy", "shipping", "other", "fee", "vat", "manual", "margin")
-        if not all(f'id="calc-{field}"' in source for field in fields):
+        page, _, _ = current_app.jinja_env.loader.get_source(current_app.jinja_env, "dashboard.html")
+        form, _, _ = current_app.jinja_env.loader.get_source(current_app.jinja_env, "_margin_calculator.html")
+        fields = ("purchase_cost", "target_margin", "selling_price", "vat_rate", "shipping_cost", "transaction_pct",
+                  "std_fee_fixed", "std_fee_pct")
+        if (not all(f"'{field}'" in form or f'name="{field}"' in form for field in fields)
+                or "margin_form('calculator'" not in page or "nv-margin-core.js" not in page):
             return "error", "Verwachte calculatorvelden ontbreken.", "Herstel het dashboardtemplate."
-        return "works", "Alle zeven invoervelden gevonden. Browserberekening valt buiten deze scan.", ""
+        try:
+            from nv_product_margin import unified_margin
+            reference = unified_margin({"purchase_cost": "12.50", "target_margin": "35"})["advice"]["selling"]
+        except ValueError:
+            reference = None
+        if reference != 4256:
+            return "error", "Rekenmodule geeft niet de referentieprijs € 42,56.", "Controleer nv_product_margin.unified_margin."
+        return "works", "Gedeelde calculator compleet; referentie € 12,50 bij 35% = € 42,56.", ""
 
     run("Routes en navigatie", "Flask-router en menudefinities", routes, "Controleer route- en menuregistratie.")
     run("Templates en statische bestanden", "Jinja-templates en vaste lokale assetpaden", inspect_files, "Herstel het betreffende bestand.")
