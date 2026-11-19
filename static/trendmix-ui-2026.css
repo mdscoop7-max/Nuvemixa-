@@ -932,3 +932,15 @@ main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!import
 }
 
 .topline .topitems .nv-delivery-label { display: inline !important; }
+
+/* NUVEMIXA 2026-11-20: compactere AI-knop (zelfde stijl, kleiner formaat) */
+.tm-assist-fab{gap:6px!important;padding:7px 12px 7px 9px!important;min-height:40px;border-radius:16px!important;font-size:12px!important;box-shadow:0 6px 16px rgba(55,68,201,.28)!important}
+.tm-assist-fab > svg,.tm-assist-fab svg{width:18px!important;height:18px!important}
+.tm-assist-fab .tm-ai-brand{gap:5px!important;font-size:12px!important}
+.tm-assist-fab .tm-ai-brand b{font-size:12px!important}
+.tm-assist-fab .tm-ai-pill{min-width:22px!important;padding:2px 4px!important;border-radius:6px!important;font-size:9px!important}
+.tm-assist-fab .tm-ai-brand small{font-size:9px!important}
+@media(max-width:760px){
+  .tm-assist-fab{padding:6px 10px 6px 8px!important;right:12px!important}
+  .tm-assist-fab .tm-ai-brand small{display:none!important}
+}
