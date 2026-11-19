@@ -51,17 +51,46 @@
     <div class="nv-prow__name">
       {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">{{ row.name }}</a>{% else %}<strong>{{ row.name }}</strong>{% endif %}
       <small>{{ row.role }}{% if row.products %} · {{ row.products }} product{{ 'en' if row.products != 1 }}{% endif %}</small>
+      {% if row.shop_notice %}<small class="nv-srow__shop">{{ row.shop_notice }}</small>{% endif %}
+      {% if row.offers %}<ul class="nv-srow__offers">
+        {% for offer in row.offers[:2] %}<li><a href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">{{ offer.title }}</a>{% if offer.variants > 1 %} <small>({{ offer.variants }} varianten)</small>{% endif %}{% if offer.price %} <small>{{ offer.price }}</small>{% endif %}</li>{% endfor %}
+      </ul>
+      {% if row.offers|length > 2 %}<details class="nv-srow__more"><summary>Meer producten tonen ({{ row.offers|length - 2 }})</summary><ul class="nv-srow__offers">
+        {% for offer in row.offers[2:] %}<li><a href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">{{ offer.title }}</a>{% if offer.variants > 1 %} <small>({{ offer.variants }} varianten)</small>{% endif %}{% if offer.price %} <small>{{ offer.price }}</small>{% endif %}</li>{% endfor %}
+      </ul></details>{% endif %}{% endif %}
     </div>
     <div class="nv-prow__cell" data-label="Land"><strong>{{ row.origin }}</strong><small>Magazijn: {{ row.warehouse or 'niet bevestigd' }}</small>{% if row.scope_reason %}<small class="nv-srow__why">{{ row.scope_reason.split(' · ')[0] }}</small>{% endif %}</div>
     <div class="nv-prow__cell nv-srow__contact" data-label="Contact">
-      {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">Website</a>{% endif %}
+      {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">Website</a>{% endif %}{% if row.platform_url %} · <a href="{{ row.platform_url }}" target="_blank" rel="noopener noreferrer">Syncee-profiel</a>{% endif %}
       <small>E-mail: {% if row.email %}<a href="mailto:{{ row.email }}">{{ row.email }}</a>{% else %}niet gepubliceerd{% endif %}</small>
       <small>Telefoon: {% if row.phone %}<a href="tel:{{ row.phone|replace(' ', '') }}">{{ row.phone }}</a>{% else %}niet gepubliceerd{% endif %}{% if row.contact_url and not (row.email and row.phone) %} · <a href="{{ row.contact_url }}" target="_blank" rel="noopener noreferrer">contactpagina</a>{% endif %}</small>
     </div>
-    <div class="nv-prow__cell" data-label="Dropshipping"><span class="nv-prow__badge nv-prow__badge--{{ 'ok' if row.dropship == 'Bevestigd' else ('no' if row.dropship == 'Niet beschikbaar' else 'unk') }}">{{ row.dropship }}</span>{% if row.dropship_source %}<small><a href="{{ row.dropship_source }}" target="_blank" rel="noopener noreferrer">bron</a></small>{% endif %}<small>Naar NL: {{ row.shipping_nl }}</small></div>
+    <div class="nv-prow__cell" data-label="Dropshipping"><span class="nv-prow__badge nv-prow__badge--{{ 'ok' if row.dropship == 'Bevestigd' else ('no' if row.dropship == 'Niet beschikbaar' else 'unk') }}">{{ row.dropship }}</span>{% if row.dropship_source %}<small><a href="{{ row.dropship_source }}" target="_blank" rel="noopener noreferrer">bron</a></small>{% endif %}<small>Naar NL: {{ row.shipping_nl }}</small>{% if row.purchase_price %}<small class="nv-srow__price">Inkoop {{ row.purchase_price }}</small>{% endif %}</div>
     <div class="nv-prow__actions"><button type="button" class="nv-prow__btn" data-prow-toggle aria-expanded="false" aria-controls="{{ rid }}">Details</button></div>
     <div class="nv-prow__details" id="{{ rid }}" data-prow-details>{{ caller(row) if caller else '' }}</div>
   </div>
   {% endfor %}
 </div>
+{% endmacro %}
+
+{% macro supplier_summary(s) %}
+<dl class="nv-ssum" aria-label="Samenvatting leveranciersresultaten">
+  <div><dt>Producten</dt><dd>{{ s.products }}</dd></div>
+  <div><dt>Unieke leveranciers</dt><dd>{{ s.suppliers }}</dd></div>
+  <div><dt>Dropshipping bevestigd</dt><dd>{{ s.dropship }}</dd></div>
+  <div><dt>Levert naar NL</dt><dd>{{ s.ships_nl }}</dd></div>
+  <div><dt>Magazijn NL/EU</dt><dd>{{ s.warehouse_eu }}</dd></div>
+  <div><dt>Inkoopprijs bekend</dt><dd>{{ s.priced }}</dd></div>
+</dl>
+{% endmacro %}
+
+{% macro source_report(checked, unavailable, reasons, pending, link_only) %}
+<details class="nv-srcrep"><summary>Bronnen: {{ checked|length }} doorzocht{% if unavailable %} · {{ unavailable|length }} zonder antwoord{% endif %}{% if pending %} · {{ pending|length }} nog bezig{% endif %}{% if link_only %} · {{ link_only|length }} alleen link of account{% endif %}</summary>
+  <ul>
+    <li><strong>Doorzocht:</strong> {{ checked|join(', ') if checked else 'geen' }}.</li>
+    {% if unavailable %}<li><strong>Geen bruikbaar antwoord:</strong> {% for name in unavailable %}{{ name }}{% if reasons and reasons[name] %} ({{ reasons[name] }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}.</li>{% endif %}
+    {% if pending %}<li><strong>Nog bezig (pagina ververst vanzelf):</strong> {{ pending|join(', ') }}.</li>{% endif %}
+    {% if link_only %}<li><strong>Niet gekoppeld, alleen handmatig of met account:</strong> {{ link_only|join(', ') }}.</li>{% endif %}
+  </ul>
+</details>
 {% endmacro %}

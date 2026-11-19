@@ -1,6 +1,6 @@
 {% from '_supplier_logistics.html' import logistics, pending_notice %}
 {% from '_dashboard_search_actions.html' import research_product_actions with context %}
-{% from '_product_rows.html' import product_rows, supplier_rows with context %}
+{% from '_product_rows.html' import product_rows, supplier_rows, supplier_summary, source_report with context %}
 {% set m = market_search %}
 {% set viral_page = m.kind == 'viral' %}
 {% macro dropship_badge(value) %}<span class="nv-badge {{ 'ok' if value == 'Bevestigd' else '' }}">Dropshipping: {{ value }}</span>{% endmacro %}
@@ -45,6 +45,8 @@
 </article>
 {% endmacro %}
 {% macro supplier_groups(suppliers) %}
+  {{ supplier_summary(m.supplier_summary_fn(suppliers)) }}
+  {{ source_report(m.sources_checked, m.unavailable, m.unavailable_reasons, m.pending_sources, []) }}
   {% for group, key in [('Binnen EU', 'eu'), ('Buiten EU', 'international'), ('Vestiging niet bevestigd', 'unknown')] %}
     {% set rows = suppliers|selectattr('region', 'equalto', key)|list %}
     {% if rows %}<h4>{{ group }} ({{ rows|length }})</h4>

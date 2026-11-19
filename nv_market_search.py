@@ -155,7 +155,8 @@ def search_view(kind, categories, args, *, fetch=None):
             "products": [], "suppliers": [], "publications": [], "trends": [], "competitors": [],
             "opportunities": [], "risks": [], "pending_sources": [], "links": [], "unavailable": [], "sources_checked": [],
             "empty_message": "", "result": None, "ai": None, "rows": [],
-            "supplier_rows_fn": __import__("nv_product_rows").suppliers}
+            "supplier_rows_fn": __import__("nv_product_rows").suppliers,
+            "supplier_summary_fn": __import__("nv_product_rows").summary}
     if not form["run"]:
         return view
     if not form["q"]:

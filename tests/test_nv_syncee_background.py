@@ -60,7 +60,9 @@ def test_all_modules_share_one_syncee_job():
                for k in ("viral", "internationaal")]
     threads.append(threading.Thread(target=lambda: results.append(run(fetch))))
     [t.start() for t in threads]; [t.join() for t in threads]
-    assert len([c for c in calls if "/collections/" in c]) == 1
+    listings = [c for c in calls if "/collections/" in c]
+    # Meerdere NL/EN-zoekvarianten zijn toegestaan, maar elke variant wordt maar één keer opgevraagd.
+    assert listings and len(listings) == len(set(listings))
     assert len([c for c in calls if c == SYNCEE_PRODUCT]) == 1
     assert len(results) == 3
 

@@ -484,6 +484,9 @@
         </div>
         {% endif %}
         {% if product_discovery.suppliers %}
+        {% from '_product_rows.html' import supplier_summary, source_report with context %}
+        {{ supplier_summary(nv_supplier_summary(product_discovery.suppliers)) }}
+        {% if (product_discovery.suppliers|length) >= 3 %}{{ source_report(product_discovery.sources_checked, product_discovery.unavailable_sources, product_discovery.unavailable_reasons, product_discovery.pending_sources, []) }}{% endif %}
         <p>{% set supplier_count = product_discovery.suppliers|length %}{{ supplier_count }} unieke leverancier{{ 's' if supplier_count != 1 }} · {{ product_discovery.supplier_products }} productvermeldingen · {{ research_options.supplier_filters[research_options.supplier_filter] }}</p>
         <p>Controleer de zakelijke voorwaarden per product. Producten waarvan de bron verzending naar het doelland uitsluit, zijn weggelaten.</p>
         {% set groups = [
