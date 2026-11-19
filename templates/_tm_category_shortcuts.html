@@ -1,0 +1,19 @@
+{% from '_tm_icons.html' import tm_icon %}
+<section class="products categoryshowcase nv-category-shortcuts" id="collecties" aria-label="Verder winkelen per categorie">
+  <div class="heading"><div><h2 data-tm-tr data-tm-nl="Verder winkelen per categorie" data-tm-en="Continue shopping by category">Verder winkelen per categorie</h2><p class="categoryintro" data-tm-tr data-tm-nl="Kies meteen een andere collectie zonder terug naar boven te scrollen." data-tm-en="Choose another collection without scrolling back to the top.">Kies meteen een andere collectie zonder terug naar boven te scrollen.</p></div><a href="/shop" data-tm-tr data-tm-nl="Alle producten →" data-tm-en="All products →">Alle producten →</a></div>
+  <nav class="categorygrid" aria-label="Hoofdcategorieën">
+  {% for slug, title, color, icon in [
+    ('gadgets','Gadgets','blue','device'),
+    ('smart-home','Smart Home','orange','home'),
+    ('beauty-care','Beauty & Care','pink','beauty'),
+    ('home-living','Home & Living','home','home'),
+    ('lifestyle-sport','Lifestyle & Sport','purple','sport')
+  ] %}
+    <a href="/{{ slug }}" class="categorytile tile-{{ color }}" {% if request.path == '/' ~ slug %}aria-current="page"{% endif %}>
+      <span class="categoryart category-menu-icon" aria-hidden="true">{{ tm_icon(icon) }}</span>
+      <strong>{{ title }}</strong>
+      <span class="categorycta" data-tm-tr data-tm-nl="Bekijk producten →" data-tm-en="View products →">Bekijk producten →</span>
+    </a>
+  {% endfor %}
+  </nav>
+</section>
