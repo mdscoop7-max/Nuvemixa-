@@ -14,7 +14,28 @@ from nv_dashboard_manager import DB, bp, connect, management_result
 from nv_permissions import allowed
 
 
+# Snelheid: elke pagina (dashboard en webshop) las de cataloguswijzigingen opnieuw uit de database; elke
+# verbinding Render (Oregon) -> Neon (Frankfurt) kost seconden. Kort bewaren in het geheugen; save() leegt dit.
+CACHE_SECONDS = 30
+_changes_cache = {"at": 0.0, "value": None}
+
+
+def invalidate_changes():
+    _changes_cache.update(at=0.0, value=None)
+
+
 def catalog_changes():
+    import time
+    cached = _changes_cache["value"]
+    if cached is not None and time.monotonic() - _changes_cache["at"] < CACHE_SECONDS:
+        return list(cached[0]), list(cached[1])
+    value = _read_catalog_changes()
+    if not (has_request_context() and g.get("nv_catalog_read_failed")):
+        _changes_cache.update(at=time.monotonic(), value=(tuple(value[0]), tuple(value[1])))
+    return value
+
+
+def _read_catalog_changes():
     if not nv_dashboard_postgres.runtime_enabled() and not DB.is_file():
         return [], []
     try:
@@ -37,6 +58,7 @@ def catalog_changes():
 
 
 def save(db, kind, category, slug, payload):
+    invalidate_changes()
     db.execute(
         """INSERT INTO catalog_edits(kind,category,slug,payload) VALUES(?,?,?,?)
            ON CONFLICT(kind,category,slug) DO UPDATE SET payload=excluded.payload""",
@@ -157,4 +179,5 @@ def catalog():
     except (sqlite3.Error, OSError):
         current_app.logger.error("Lokale cataloguswijziging kon niet worden opgeslagen")
         return management_result(section, "De cataloguswijziging kon niet worden opgeslagen.")
+    invalidate_changes()  # na de commit: volgende pagina leest de nieuwe stand
     return management_result(section, "Cataloguswijziging opgeslagen.", success=True)

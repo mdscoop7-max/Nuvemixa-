@@ -2452,6 +2452,7 @@ def control():
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
         ai_status=__import__('nv_ai_search').safe_status(),
+        nv_supplier_rows=nv_product_rows.suppliers,
 
         supplier_error=supplier_error,
 

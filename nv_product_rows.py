@@ -55,3 +55,30 @@ def build(products, suppliers=None, categories=None):
         seen[key] = row
         rows.append(row)
     return rows
+
+
+EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[a-z]{2,}$", re.I)
+PHONE = re.compile(r"^\+?[0-9 ()./-]{6,24}$")
+
+
+def suppliers(companies):
+    """Compacte leveranciersrijen. E-mail en telefoon alleen als de bron ze werkelijk vermeldt."""
+    from nv_market_search import dropship_label
+
+    rows = []
+    for company in companies or []:
+        email = str(company.get("email") or "").strip()
+        phone = str(company.get("phone") or "").strip()
+        evidence = company.get("evidence") or ()
+        contact = next((url for label, url in evidence if "contact" in f"{label} {url}".casefold()), None)
+        contact = contact or (company.get("trade_url") if "contact" in str(company.get("trade_url") or "") else None)
+        rows.append({
+            "company": company, "name": company.get("name") or UNKNOWN, "role": company.get("role") or company.get("kind") or "",
+            "website": company.get("website") or "", "email": email if EMAIL.match(email) else None,
+            "phone": phone if PHONE.match(phone) else None, "contact_url": contact,
+            "origin": company.get("origin_name") or UNKNOWN, "warehouse": company.get("warehouse_label"),
+            "region": company.get("region") or "unknown", "dropship": dropship_label(company),
+            "dropship_source": company.get("dropshipping_source"), "shipping_nl": company.get("shipping_nl") or "Niet bevestigd",
+            "products": company.get("product_count") or len(company.get("products") or []), "checked": company.get("checked"),
+        })
+    return rows

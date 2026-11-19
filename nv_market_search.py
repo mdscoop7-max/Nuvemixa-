@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from nv_ai_search import ai_discover as discover  # AI-ondersteund, valt terug op normaal zoeken
 from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, MANUAL_PLATFORMS, RESEARCH_CATEGORIES
 
-REGIONS = {"all": "Wereldwijd", "eu": "Binnen EU", "international": "Buiten EU"}
+REGIONS = {"all": "Wereldwijd", "nl": "Nederland", "eu": "Binnen EU", "international": "Buiten EU"}
 SUPPLIER_TYPES = {
     "all": "Alle soorten", "dropship": "Dropshipping", "wholesale": "Groothandel", "manufacturer": "Fabrikant of merk",
 }
@@ -65,7 +65,10 @@ def parse(kind, args, categories):
 def filter_suppliers(suppliers, form):
     kept = []
     for company in suppliers:
-        if form["region"] != "all" and company["region"] != form["region"]:
+        if form["region"] == "nl":
+            if company.get("origin") != "NL":
+                continue
+        elif form["region"] != "all" and company["region"] != form["region"]:
             continue
         role = company.get("role", "")
         if form["supplier_type"] == "dropship" and company.get("dropshipping") is not True:
@@ -146,7 +149,8 @@ def search_view(kind, categories, args, *, fetch=None):
             "price_note": PRICE_NOTE, "trend_note": TREND_NOTE, "ran": False, "error": None,
             "products": [], "suppliers": [], "publications": [], "trends": [], "competitors": [],
             "opportunities": [], "risks": [], "pending_sources": [], "links": [], "unavailable": [], "sources_checked": [],
-            "empty_message": "", "result": None, "ai": None, "rows": []}
+            "empty_message": "", "result": None, "ai": None, "rows": [],
+            "supplier_rows_fn": __import__("nv_product_rows").suppliers}
     if not form["run"]:
         return view
     if not form["q"]:

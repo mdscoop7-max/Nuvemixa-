@@ -680,6 +680,8 @@ def unique_suppliers(offers, supplier_filter):
 
 def supplier_in_scope(profile, scope):
     origin = profile["origin"]
+    if scope == "nl":
+        return origin == "NL"
     if scope == "eu":
         return origin in EU
     if scope == "international":
@@ -748,7 +750,7 @@ def run_syncee(fetch, query, country, selected, term, alternates, budget, suppli
                               alternates=alternates, deadline=monotonic() + budget,
                               eligible=lambda profile: supplier_in_scope(profile, supplier_filter),
                               shortlist=(lambda profile: supplier_in_scope(profile, supplier_filter))
-                              if supplier_filter in {"eu", "international"} else None)
+                              if supplier_filter in {"nl", "eu", "international"} else None)
     return results, attempts
 
 

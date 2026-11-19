@@ -197,3 +197,21 @@ body.nv-admin-ui main .nv-rblock .nv-pchip--link b{color:#475569}
 @media(max-width:1100px){body.nv-admin-ui main .nv-pform{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}body.nv-admin-ui main .nv-pform .nv-pperiod,body.nv-admin-ui main .nv-pform > button{grid-column:auto}}
 @media(max-width:620px){body.nv-admin-ui main .nv-pform{grid-template-columns:minmax(0,1fr)}}
 @media(pointer:coarse),(max-width:760px){.nv-pperiod span{min-height:44px}}
+
+/* Zoekgeschiedenis */
+.nv-history{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px;grid-column:1/-1}
+.nv-history[hidden]{display:none}
+.nv-history__label{font-size:.74rem;font-weight:700;color:#64748b;margin-right:2px}
+body.nv-admin-ui main form .nv-history button.nv-history__chip,body.nv-admin-ui main form .nv-history button.nv-history__clear{
+  min-height:26px;padding:2px 10px;border-radius:999px;font-size:.76rem;font-weight:600;border:1px solid #dbe5f2;background:#f8fafd;color:#0b2a55;cursor:pointer;box-shadow:none}
+body.nv-admin-ui main form .nv-history button.nv-history__chip:hover{background:#eef4ff;border-color:#bcd2f3}
+body.nv-admin-ui main form .nv-history button.nv-history__clear{background:transparent;border-color:transparent;color:#64748b;text-decoration:underline}
+@media(pointer:coarse),(max-width:760px){body.nv-admin-ui main form .nv-history button.nv-history__chip,body.nv-admin-ui main form .nv-history button.nv-history__clear{min-height:40px}}
+/* Live margeberekening */
+.nv-margin-live{margin-top:8px}
+.nv-margin-wait{margin:0;font-size:.84rem;color:#64748b}
+.nv-margin-missing{margin:.4rem 0 0;padding:6px 10px;border-radius:8px;background:#fffbeb;border:1px solid #fde68a;color:#78350f;font-size:.84rem}
+/* Leveranciersrijen */
+.nv-srow{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr) auto}
+.nv-srow__contact a{font-weight:700}
+@media(max-width:900px){.nv-srow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.nv-srow > .nv-prow__name{grid-column:1/-1}}

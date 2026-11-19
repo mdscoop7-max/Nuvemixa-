@@ -129,7 +129,7 @@
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nv-control-modern-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='nv-dashboard-fixes-20261112.css') }}?v=20261112">
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-complete.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><link rel="stylesheet" href="{{ url_for('static',filename='nv-search-meter.css') }}?v=1"><link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-compact-20261118.css') }}?v=9"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-modern-20261117.css') }}?v=14"><link rel="stylesheet" href="{{ url_for('static',filename='nv-search-meter.css') }}?v=1"><link rel="stylesheet" href="{{ url_for('static',filename='nv-dashboard-compact-20261118.css') }}?v=10"><script src="{{ url_for('static',filename='nv-dashboard-modern-20261117.js') }}?v=1" defer></script></head>
 <body class="nv-admin-ui" data-ai-state="{{ ai_status.state if ai_status else 'off' }}"><a class="nv-skip" href="#nvMain">Naar hoofdinhoud</a><div class="layout">
 <aside class="sidebar nv26-sidebar" aria-label="Dashboardnavigatie">
 <a class="brand" href="/dashboard" aria-label="NUVEMIXA dashboard"><img class="nv-dashboard-logo" src="{{ url_for('static',filename='nuvemixa-logo-test.png',v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
@@ -524,24 +524,15 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         ] %}
         {% for group, suppliers in groups if suppliers %}
         <h4>{{ group }} ({{ suppliers|length }})</h4>
-        <div class="nv-research-supplier-grid">
-          {% for company in suppliers %}
-          <article class="nv-supplier-card">
-            <h4><a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }}</a></h4>
-            <p>{{ company.kind }} · {{ company.origin_name }}</p>
-            <div><strong>Dropshipping</strong> {{ 'Bevestigd' if company.dropshipping is sameas true else 'Niet beschikbaar' if company.dropshipping is sameas false else 'Niet bevestigd' }}
-              {% if company.dropshipping_source %}<a href="{{ company.dropshipping_source }}" target="_blank" rel="noopener noreferrer">Bron</a>{% endif %}
-            </div>
-            <div><strong>Zakelijke samenwerking</strong> {% if company.business is sameas true %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">Bevestigd</a>{% else %}Niet bevestigd{% endif %}</div>
-            <div><strong>Verzending naar {{ product_discovery.country_name }}</strong> {{ company.shipping }}</div>
-            {% if research_options.country != 'NL' %}<div><strong>Verzending naar Nederland</strong> {{ company.shipping_nl or 'Niet bevestigd' }}</div>{% endif %}
+        {% from '_product_rows.html' import supplier_rows with context %}
+        {% call(row) supplier_rows(nv_supplier_rows(suppliers), 'nv-sr' ~ loop.index) %}{% set company = row.company %}
+            <div><strong>Zakelijke samenwerking</strong> {% if company.business is sameas true %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">Bevestigd</a>{% else %}Niet bevestigd{% endif %} · <strong>Verzending naar {{ product_discovery.country_name }}</strong> {{ company.shipping }}</div>
             {{ logistics(company) }}
             {% if company.region == 'international' %}
             <p class="nv-supplier-context">Vraag de conformiteitsdocumentatie op voor het gekozen model.</p>
             {% endif %}
             <div><strong>Bron gecontroleerd</strong> <time datetime="{{ company.checked }}">{{ company.checked }}</time></div>
-            <details>
-              <summary>Bekijk {{ company.product_count }} product{{ 'en' if company.product_count != 1 }} en voorwaarden</summary>
+            <p><strong>Producten en voorwaarden</strong></p>
               <dl>
                 {% for label, key in [
                   ('Magazijn', 'warehouse'), ('Inkoopprijs', 'purchase_price'), ('Voorraad', 'stock'),
@@ -564,10 +555,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
               {% for label, url in company.evidence %}
               <a class="nv-supplier-source" href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a>
               {% endfor %}
-            </details>
-          </article>
-          {% endfor %}
-        </div>
+                  {% endcall %}
         {% endfor %}
         {% else %}
         <p>Geen leveranciersresultaten voor deze zoekopdracht en dit filter.</p>
@@ -710,7 +698,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <section class="panel" id="nv-product-margin">
 <h2>Winstmarge per product</h2>
 <p>Gebruik kosten exclusief btw. Lege kosten blijven onbekend. Vul 0 in als een kostenpost aantoonbaar niet geldt.</p>
-<form action="{{ url_for('control', _anchor='nv-product-margin') }}" method="get" class="nv-admin-form">
+<form action="{{ url_for('control', _anchor='nv-product-margin') }}" method="get" class="nv-admin-form" data-margin-live="#nv-margin-live">
   <input type="hidden" name="section" value="onderzoek">
   <input type="hidden" name="margin_run" value="1">
   <input type="hidden" name="margin_method" value="scenario">
@@ -728,6 +716,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
   {% endfor %}
   <button type="submit">Bereken marge</button>
 </form>
+<div id="nv-margin-live" class="admin-table-wrap nv-margin-live" aria-live="polite"></div>
 {% if margin_scenario %}
 <div class="admin-table-wrap"><table class="admin-table"><tbody>
   <tr><th>Omzet exclusief btw</th><td>€ {{ margin_scenario.revenue_ex_vat }}</td></tr>
@@ -829,8 +818,9 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
     <label>Vestigingsland
       <select name="research_supplier_filter">
         <option value="eu">Binnen EU</option>
-        <option value="all">Alle landen</option>
+        <option value="nl">Nederland</option>
         <option value="international">Buiten EU</option>
+        <option value="all">Wereldwijd (alle landen)</option>
       </select>
     </label>
     <button type="submit">Zoeken</button>
@@ -1016,4 +1006,6 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% endif %}
 <script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}" defer></script>
 <script src="{{ url_for('static',filename='nv-search-meter.js') }}?v=1" defer></script>
-<script src="{{ url_for('static',filename='nv-research-rows.js') }}?v=1" defer></script></body></html>
+<script src="{{ url_for('static',filename='nv-research-rows.js') }}?v=1" defer></script>
+<script src="{{ url_for('static',filename='nv-margin-live.js') }}?v=1" defer></script>
+<script src="{{ url_for('static',filename='nv-search-history.js') }}?v=1" defer></script></body></html>

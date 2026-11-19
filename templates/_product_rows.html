@@ -39,3 +39,29 @@
   {% endfor %}
 </div>
 {% endmacro %}
+
+{# Compacte leveranciersrijen. Gebruik: {% call(row) supplier_rows(rows, 'id-prefix') %}…details…{% endcall %} #}
+{% macro supplier_rows(rows, prefix) %}
+<div class="nv-prows nv-srows" role="list">
+  <div class="nv-prow nv-srow nv-prow--head" aria-hidden="true">
+    <span>Leverancier</span><span>Land</span><span>Contact</span><span>Dropshipping</span><span>Acties</span>
+  </div>
+  {% for row in rows %}{% set rid = prefix ~ '-' ~ loop.index %}
+  <div class="nv-prow nv-srow" role="listitem">
+    <div class="nv-prow__name">
+      {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">{{ row.name }}</a>{% else %}<strong>{{ row.name }}</strong>{% endif %}
+      <small>{{ row.role }}{% if row.products %} · {{ row.products }} product{{ 'en' if row.products != 1 }}{% endif %}</small>
+    </div>
+    <div class="nv-prow__cell" data-label="Land"><strong>{{ row.origin }}</strong><small>Magazijn: {{ row.warehouse or 'niet bevestigd' }}</small></div>
+    <div class="nv-prow__cell nv-srow__contact" data-label="Contact">
+      {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">Website</a>{% endif %}
+      <small>E-mail: {% if row.email %}<a href="mailto:{{ row.email }}">{{ row.email }}</a>{% else %}niet gepubliceerd{% endif %}</small>
+      <small>Telefoon: {% if row.phone %}<a href="tel:{{ row.phone|replace(' ', '') }}">{{ row.phone }}</a>{% else %}niet gepubliceerd{% endif %}{% if row.contact_url and not (row.email and row.phone) %} · <a href="{{ row.contact_url }}" target="_blank" rel="noopener noreferrer">contactpagina</a>{% endif %}</small>
+    </div>
+    <div class="nv-prow__cell" data-label="Dropshipping"><span class="nv-prow__badge nv-prow__badge--{{ 'ok' if row.dropship == 'Bevestigd' else ('no' if row.dropship == 'Niet beschikbaar' else 'unk') }}">{{ row.dropship }}</span>{% if row.dropship_source %}<small><a href="{{ row.dropship_source }}" target="_blank" rel="noopener noreferrer">bron</a></small>{% endif %}<small>Naar NL: {{ row.shipping_nl }}</small></div>
+    <div class="nv-prow__actions"><button type="button" class="nv-prow__btn" data-prow-toggle aria-expanded="false" aria-controls="{{ rid }}">Details</button></div>
+    <div class="nv-prow__details" id="{{ rid }}" data-prow-details>{{ caller(row) if caller else '' }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
