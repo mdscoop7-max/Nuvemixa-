@@ -993,3 +993,15 @@ main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!import
  .cart-page .checkout-page .checkout-summary,.cart-page .checkout-page .cart-total{max-width:100%!important}
  .cart-page .checkout-page .checkout-form input:not([type=checkbox]){min-width:0!important;font-size:16px!important}
 }
+
+/* NUVEMIXA wishlist badge and fast cart controls: scoped accessible enhancements. */
+.nv-favorites-link{position:relative!important;display:inline-flex!important;align-items:center!important;gap:5px!important}
+.nv-favorites-link .nv-fav-count,.tm-drawer-links .nv-fav-count{position:static;display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#ed3479;color:white!important;font-size:11px;font-weight:850;line-height:1}
+.nv-favorites-link .nv-fav-count[hidden],.tm-drawer-links .nv-fav-count[hidden]{display:none!important}
+.nv-favorites-link .tm-unified-icon{width:20px;height:20px}
+.cart-page .cart-actions form{position:relative;flex:0 0 auto}
+.cart-page .cart-actions button{cursor:pointer!important}
+.cart-page .cart-actions button:disabled{opacity:.55;cursor:wait!important}
+.cart-page .cart-actions b{font-variant-numeric:tabular-nums}
+@media(max-width:760px){.cart-page .cart-actions{gap:8px!important}.cart-page .cart-actions form:last-child{margin-left:8px!important}.cart-page .cart-actions button{min-width:44px!important;width:44px!important;height:44px!important}}
+@media(max-width:380px){.cart-page .cart-actions{gap:5px!important}}
