@@ -1,4 +1,5 @@
 <!doctype html>
+{% import "_margin_calculator.html" as mcalc with context %}
 <html lang="nl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -159,66 +160,12 @@
 {% if section in ("producten", "categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
 {% elif section == "calculator" %}
-<section class="panel" id="tm-calc"><h2>Productprijs & winst berekenen</h2><p>Vul de kosten per verkoop exclusief btw in. Gebruik 0 als een kostenpost aantoonbaar niet geldt. De btw en doelmarge zijn aanpasbare voorinstellingen.</p>
-<div class="calc-grid">
-<label>Inkoopprijs excl. btw (€)<input id="calc-buy" type="number" min="0" max="1000000" step=".01" required></label>
-<label>Verzend- en fulfilmentkosten excl. btw (€)<input id="calc-shipping" type="number" min="0" max="1000000" step=".01" required></label>
-<label>Advertentiekosten per verkoop excl. btw (€)<input id="calc-ads" type="number" min="0" max="1000000" step=".01" required></label>
-<label>Retourkosten per verkoop excl. btw (€), gemiddeld<input id="calc-returns" type="number" min="0" max="1000000" step=".01" required></label>
-<label>Invoer- en overige kosten per verkoop excl. btw (€)<input id="calc-other" type="number" min="0" max="1000000" step=".01" required></label>
-<label>Betaalproviderkosten (% verkoopprijs incl. btw)<input id="calc-fee" type="number" min="0" max="100" step=".01" required></label>
-<label>Btw op verkoop (%)<input id="calc-vat" type="number" min="0" max="100" step=".01" value="21" required></label>
-<label>Verkoopprijs incl. btw (€), optioneel<input id="calc-manual" type="number" min=".01" max="1000000" step=".01"></label>
-<label>Gewenste winstmarge na betaalprovider (%)<input id="calc-margin" type="number" min="0" max="99" step=".1" value="35"></label>
-</div>
-<div class="calc-results" aria-live="polite"><div><small>Verkoopprijs incl. btw</small><strong id="calc-price">—</strong></div><div><small>Verkoopprijs excl. btw</small><strong id="calc-net">—</strong></div><div><small>Brutowinst na inkoop</small><strong id="calc-gross-profit">—</strong></div><div><small>Geschatte winst na ingevoerde kosten</small><strong id="calc-profit">—</strong></div><div><small>Geschatte winstmarge na kosten</small><strong id="calc-actual-margin">—</strong></div></div>
-<p role="status" id="calc-status"></p>
-<p class="calc-footnote" id="calc-note">Indicatieve berekening. Geen fiscale of boekhoudkundige beoordeling. Controleer btw-regels per verkoopland en of leverancierskosten inclusief of exclusief btw zijn.</p>
+<section class="panel" id="tm-calc"><h2>Productprijs & winst berekenen</h2>
+<p>Dezelfde rekenmodule als “Winstmarge per product” bij Productonderzoek: vul de inkoopprijs in en kies de marge voor een voorlopige adviesprijs op basis van zichtbare standaardaannames. Vul werkelijke kosten in om de prijs op echte kosten te baseren. Kosten exclusief btw; lege kosten blijven onbekend, 0 betekent bewust geen kosten.</p>
+{{ mcalc.margin_form('calculator', 'nv-calc-live', request.args, show_product=False) }}
+<div id="nv-calc-live" class="admin-table-wrap nv-margin-live" aria-live="polite">{{ mcalc.margin_result(margin_unified, margin_unified_error) }}</div>
+<p class="calc-footnote">Indicatieve berekening. Geen fiscale of boekhoudkundige beoordeling. Controleer btw-regels per verkoopland en of leverancierskosten inclusief of exclusief btw zijn.</p>
 </section>
-<script>
-(function(){
-const root=document.getElementById('tm-calc');if(!root)return;
-const field=id=>document.getElementById(id);
-const num=id=>Number(field(id).value);
-const cents=id=>Math.round(num(id)*100);
-const fmt=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n/100);
-const outputs=['calc-price','calc-net','calc-gross-profit','calc-profit','calc-actual-margin'];
-function clear(message){
- outputs.forEach(id=>field(id).textContent='—');
- field('calc-status').textContent=message;
-}
-function calc(){
- const manual=field('calc-manual').value!=='';
- const inputs=[...root.querySelectorAll('input')].filter(input=>!manual||input.id!=='calc-margin');
- if(inputs.some(input=>!input.validity.valid)||(!manual&&field('calc-margin').value==='')){
-  clear('Vul de ontbrekende bedragen in of corrigeer de invoer. Vul 0 in voor kosten die niet gelden.');
-  return;
- }
- const cost=cents('calc-buy')+cents('calc-shipping')+cents('calc-ads')+cents('calc-returns')+cents('calc-other');
- const vat=num('calc-vat')/100, desired=num('calc-margin')/100, fee=num('calc-fee')/100;
- const denom=1-desired-fee*(1+vat);
- if(!manual&&(denom<=0||cost===0)){
-  clear('Vul een verkoopprijs in of pas de kosten en doelmarge aan.');
-  return;
- }
- let price=manual?cents('calc-manual'):Math.ceil(cost*(1+vat)/denom-1e-9);
- const netOf=gross=>Math.round(gross/(1+vat));
- const profitOf=gross=>netOf(gross)-cost-Math.round(gross*fee);
- if(!manual&&price&&profitOf(price)<netOf(price)*desired){
-  // Cover cent-rounding near the target, even for very small margins between price and costs.
-  price=Math.ceil((cost+1)*(1+vat)/denom);
- }
- const net=netOf(price),profit=profitOf(price),margin=net>0?100*profit/net:0;
- field('calc-status').textContent='';
- field('calc-price').textContent=fmt(price);
- field('calc-net').textContent=fmt(net);
- field('calc-gross-profit').textContent=fmt(net-cents('calc-buy'));
- field('calc-profit').textContent=fmt(profit);
- field('calc-actual-margin').textContent=margin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%';
-}
-root.querySelectorAll('input').forEach(input=>input.addEventListener('input',calc));calc();
-})();
-</script>
 {% elif section == "viral" %}
 {% include "_dashboard_viral.html" %}
 {% elif section == "concepten" %}
@@ -704,43 +651,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <section class="panel" id="nv-product-margin">
 <h2>Winstmarge per product</h2>
 <p>Vul eerst product en inkoopprijs in en kies de gewenste marge: de adviesprijs verschijnt direct. Gebruik kosten exclusief btw. Lege kosten blijven onbekend. Vul 0 in als een kostenpost aantoonbaar niet geldt.</p>
-<form action="{{ url_for('control', _anchor='nv-product-margin') }}" method="get" class="nv-admin-form" data-margin-live="#nv-margin-live">
-  <input type="hidden" name="section" value="onderzoek">
-  <input type="hidden" name="margin_run" value="1">
-  <input type="hidden" name="margin_method" value="scenario">
-  <label>Product <input name="margin_product" maxlength="120" value="{{ request.args.get('margin_product', '')[:120] }}"></label>
-  <label>Inkoopprijs excl. btw (€) <input name="purchase_cost" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" required
-    value="{{ request.args.get('purchase_cost', '') if request.args.get('margin_method') == 'scenario' else '' }}"></label>
-  <fieldset class="nv-pperiod nv-marginbar">
-    <legend>Gewenste winstmarge</legend>
-    {% set chosen = request.args.get('target_margin', '25') %}
-    {% for pct in ['15', '20', '25', '30', '35', '40'] %}<label><input type="radio" name="target_margin" value="{{ pct }}" {% if chosen == pct %}checked{% endif %}><span>{{ pct }}%</span></label>{% endfor %}
-  </fieldset>
-  {% for key, label, required in [
-    ('selling_price', 'Eigen verkoopprijs incl. btw (€)', true),
-    ('vat_rate', 'Btw op verkoop (%)', true), ('shipping_cost', 'Verzending (€)', false),
-    ('advertising_cost', 'Advertenties per verkoop (€)', false), ('transaction_fee', 'Transactiekosten (€)', false),
-    ('platform_fee', 'Platformkosten per verkoop (€)', false), ('returns_reserve', 'Retourreserve (€)', false),
-    ('other_cost', 'Invoer en afhandeling (€)', false),
-  ] %}
-  <label>{{ label }} <input name="{{ key }}" type="number" min="0" max="{{ 100 if key == 'vat_rate' else 1000000 }}" step="0.01"
-    inputmode="decimal" value="{{ request.args.get(key, '') if request.args.get('margin_method') == 'scenario' else '' }}"
-    {% if required %}required{% else %}placeholder="Onbekend"{% endif %}></label>
-  {% endfor %}
-  <button type="submit">Bereken marge</button>
-</form>
-<div id="nv-margin-live" class="admin-table-wrap nv-margin-live" aria-live="polite"></div>
-{% if margin_scenario %}
-<div class="admin-table-wrap"><table class="admin-table"><tbody>
-  <tr><th>Omzet exclusief btw</th><td>€ {{ margin_scenario.revenue_ex_vat }}</td></tr>
-  <tr><th>Btw in verkoopprijs</th><td>€ {{ margin_scenario.vat_amount }}</td></tr>
-  <tr><th>Inkoop</th><td>€ {{ margin_scenario.purchase }}</td></tr>
-  {% for label, amount in margin_scenario.entered_costs %}<tr><th>{{ label }}</th><td>€ {{ amount }}</td></tr>{% endfor %}
-  <tr><th>Brutowinst na inkoop</th><td>€ {{ margin_scenario.gross_profit }}{% if margin_scenario.gross_margin_pct is not none %} · {{ margin_scenario.gross_margin_pct }}%{% endif %}</td></tr>
-  <tr><th>Geschatte winst na ingevulde kosten</th><td>€ {{ margin_scenario.profit }}{% if margin_scenario.gross_margin_pct is not none %} · {{ margin_scenario.margin_pct }}%{% endif %}</td></tr>
-</tbody></table></div>
-{% if margin_scenario.missing_costs %}<p><strong>Ontbrekende kosten</strong> {{ margin_scenario.missing_costs|join(', ') }}. Deze bedragen zijn buiten de schatting gelaten.</p>{% endif %}
-{% endif %}
+{{ mcalc.margin_form('onderzoek', 'nv-margin-live', request.args) }}
+<div id="nv-margin-live" class="admin-table-wrap nv-margin-live" aria-live="polite">{{ mcalc.margin_result(margin_unified, margin_unified_error) }}</div>
 <details {% if product_margin %}open{% endif %}><summary>Automatisch verkoopadvies met vaste aannames</summary>
 <h2>Automatisch verkoopadvies en winstmarge</h2>
 <p>Vul alleen de inkoopprijs exclusief btw in. NUVEMIXA berekent een indicatief verkoopadvies en alle kosten op basis van duidelijk vermelde aannames.</p>
@@ -1027,5 +939,6 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 <script src="{{ url_for('static',filename='nv-dashboard-navigation.js') }}?v={{ nv_static_version('nv-dashboard-navigation.js') }}" defer></script>
 <script src="{{ url_for('static',filename='nv-search-meter.js') }}?v={{ nv_static_version('nv-search-meter.js') }}" defer></script>
 <script src="{{ url_for('static',filename='nv-research-rows.js') }}?v={{ nv_static_version('nv-research-rows.js') }}" defer></script>
+<script src="{{ url_for('static',filename='nv-margin-core.js') }}?v={{ nv_static_version('nv-margin-core.js') }}" defer></script>
 <script src="{{ url_for('static',filename='nv-margin-live.js') }}?v={{ nv_static_version('nv-margin-live.js') }}" defer></script>
 <script src="{{ url_for('static',filename='nv-search-history.js') }}?v={{ nv_static_version('nv-search-history.js') }}" defer></script></body></html>
