@@ -620,7 +620,7 @@ NON_EU_WAREHOUSES = {
     "thailand", "singapore", "switzerland", "norway", "new zealand", "mexico", "brazil", "united arab emirates",
     "uae", "ukraine", "israel", "south africa", "malaysia", "indonesia", "philippines", "pakistan", "serbia",
 }
-COUNTRY_BASES = {"either": "Vestiging of magazijn", "origin": "Alleen vestigingsland", "warehouse": "Alleen magazijnland"}
+COUNTRY_BASES = {"either": "Beide", "origin": "Vestiging", "warehouse": "Magazijn"}
 
 
 def warehouse_class(value):

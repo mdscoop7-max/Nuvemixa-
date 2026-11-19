@@ -219,7 +219,7 @@
         </select>
       </label>
       <label>Land volgens
-        <select name="research_country_basis" title="Vestigingsland = waar het bedrijf zit; magazijnland = waarvandaan wordt verzonden">
+        <select name="research_country_basis" title="Beide = vestigingsland of magazijnland; Vestiging = waar het bedrijf zit; Magazijn = waarvandaan wordt verzonden">
           {% for value, name in ro.country_bases.items() %}<option value="{{ value }}" {% if ro.country_basis == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
         </select>
       </label>
@@ -765,10 +765,10 @@
       </select>
     </label>
     <label>Land volgens
-      <select name="research_country_basis">
-        <option value="either">Vestiging of magazijn</option>
-        <option value="origin">Alleen vestigingsland</option>
-        <option value="warehouse">Alleen magazijnland</option>
+      <select name="research_country_basis" title="Beide = vestigingsland of magazijnland; Vestiging = waar het bedrijf zit; Magazijn = waarvandaan wordt verzonden">
+        <option value="either">Beide</option>
+        <option value="origin">Vestiging</option>
+        <option value="warehouse">Magazijn</option>
       </select>
     </label>
     <button type="submit">Zoeken</button>
