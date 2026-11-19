@@ -56,7 +56,8 @@ def test_cart_and_checkout_test_flow():
     assert product["name"].encode() in response.data
     response = client.get("/afrekenen")
     assert response.status_code == 200
-    assert b"Testmodus" in response.data
+    assert b"Demonstratie: er wordt geen bestelling of betaling verwerkt." in response.data
+    assert b"Testmodus: WooCommerce is nog niet gekoppeld" not in response.data
 
 
 def test_catalog_is_exactly_100_products():
@@ -382,3 +383,74 @@ def test_extended_english_labels_across_website():
         response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         assert "trendmix-english-labels.js" in response.get_data(as_text=True)
+
+
+def test_ajax_favorites_toggle_returns_badge_count():
+    client = app.test_client()
+    first, second = load_all_products()[:2]
+    first_id, second_id = str(first["id"]), str(second["id"])
+    for product_id, expected_count, expected_saved in (
+        (first_id, 1, True),
+        (second_id, 2, True),
+        (first_id, 1, False),
+    ):
+        result = secure_post(
+            client, "/wishlist", data={"product_id": product_id},
+            headers={"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"},
+        )
+        assert result.status_code == 200
+        payload = result.get_json()
+        assert payload["count"] == expected_count
+        assert payload["saved"] is expected_saved
+    response = client.get("/")
+    assert b'data-wishlist-count' in response.data
+    assert b'nuvemixa-cart-favorites-fast.js' in response.data
+
+
+def test_cart_ajax_quantity_still_changes_totals_without_new_endpoints():
+    client = app.test_client()
+    product = load_all_products()[0]
+    product_id = str(product["id"])
+    secure_post(client, "/winkelwagen", data={"action": "add", "product_id": product_id})
+    for qty in (2, 3):
+        result = secure_post(
+            client, "/winkelwagen",
+            data={"action": "change", "product_id": product_id, "delta": "1"},
+            headers={"X-Requested-With": "XMLHttpRequest"},
+            follow_redirects=True,
+        )
+        assert result.status_code == 200
+        with client.session_transaction() as data:
+            assert data["trendmix_cart"][0]["qty"] == qty
+    assert b'cart-actions' in result.data
+    assert b'data-cart-count' in result.data
+
+
+def test_single_header_and_category_navigation_after_products():
+    client = app.test_client()
+    homepage = client.get("/").get_data(as_text=True)
+    assert homepage.count('class="tm-header-actions nv-main-actions"') == 1
+    assert 'aria-label="Direct naar de hoofdcategorieën"' in homepage
+    assert 'class="nv-after-products"' in homepage
+    assert homepage.index('id="producten"') < homepage.index('class="nv-after-products"') < homepage.index('id="collecties"')
+    assert 'Checkout in testfase' not in homepage.split('<header class="header wrap">')[0]
+    assert 'Levering volgens productinformatie' not in homepage.split('<header class="header wrap">')[0]
+    assert 'data-wishlist-count' in homepage
+    assert 'data-cart-count' in homepage
+    assert homepage.count('id="tmGlobalLanguage"') == 1
+    for route in ("/shop", "/wishlist", "/winkelwagen", "/contact"):
+        html = client.get(route, follow_redirects=True).get_data(as_text=True)
+        assert 'data-wishlist-count' in html, route
+        assert html.count('id="tmGlobalLanguage"') == 1, route
+
+
+def test_all_category_pages_offer_five_shortcuts_after_products():
+    client = app.test_client()
+    for path in ("/shop", "/gadgets", "/smart-home", "/beauty-care", "/home-living", "/lifestyle-sport"):
+        html = client.get(path).get_data(as_text=True)
+        assert 'aria-label="Verder winkelen per categorie"' in html, path
+        assert html.index('id="producten"') < html.index('id="collecties"') if path != "/shop" else 'id="collecties"' in html
+        for slug in ("gadgets", "smart-home", "beauty-care", "home-living", "lifestyle-sport"):
+            assert f'href="/{slug}"' in html, (path, slug)
+        assert html.count('id="tmGlobalLanguage"') == 1, path
+        assert 'Checkout in testfase' not in html.split('<header class="header wrap">')[0], path
