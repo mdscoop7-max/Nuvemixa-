@@ -101,6 +101,8 @@
       <label>Bron<select name="mbron">{% for key, name in m.sources.items() %}<option value="{{ key }}"{% if m.form.source == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
       <label class="nv-checkbox"><input type="checkbox" name="mgoogle" value="1"{% if m.form.google_trends %} checked{% endif %}> Actuele zoektrends uit Google Trends</label>
       {% endif %}
+      <input type="hidden" name="mai" value="0">
+      <label class="nv-checkbox"><input type="checkbox" name="mai" value="1"{% if m.form.ai %} checked{% endif %}> AI-hulp (zoekwoorden en relevantie)</label>
       <label class="nv-checkbox"><input type="checkbox" name="mnl" value="1"{% if m.form.ships_nl %} checked{% endif %}> Verzending naar Nederland bevestigd</label>
       <label class="nv-checkbox"><input type="checkbox" name="mdrop" value="1"{% if m.form.dropship_only %} checked{% endif %}> Alleen dropshipping bevestigd</label>
     </div>

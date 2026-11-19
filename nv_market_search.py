@@ -8,6 +8,7 @@ from collections import Counter
 from datetime import date, timedelta
 
 from nv_ai_search import ai_discover as discover  # AI-ondersteund, valt terug op normaal zoeken
+from nv_product_discovery import discover as plain_discover  # AI uitgezet door de gebruiker
 from nv_product_discovery import ALL_PRODUCTS, COUNTRIES, MANUAL_PLATFORMS, RESEARCH_CATEGORIES
 
 REGIONS = {"all": "Wereldwijd", "nl": "Nederland", "eu": "Binnen EU", "international": "Buiten EU"}
@@ -59,6 +60,8 @@ def parse(kind, args, categories):
         "source": choice(args, "mbron", VIRAL_SOURCES, "all"),
         "google_trends": args.get("mgoogle") == "1",
         "run": args.get("mrun") == "1",
+        # AI-schakelaar: verborgen '0' plus aangevinkte '1'; zonder parameter staat AI aan.
+        "ai": ("mai" not in args) or "1" in (args.getlist("mai") if hasattr(args, "getlist") else [args.get("mai")]),
     }
 
 
@@ -164,9 +167,13 @@ def search_view(kind, categories, args, *, fetch=None):
     if kind == "viral" and form["google_trends"]:
         platforms.append("Google Trends")
     supplier_filter = {"dropship": "dropship", "wholesale": "trade", "manufacturer": "trade"}.get(form["supplier_type"], "all")
-    result = discover(form["q"], country=form["country"], mode="trends" if kind == "viral" else "products",
-                      platforms=platforms, fetch=fetch, category=form["category"],
-                      categories=categories, supplier_filter=supplier_filter)
+    search = discover if form["ai"] else plain_discover
+    result = search(form["q"], country=form["country"], mode="trends" if kind == "viral" else "products",
+                    platforms=platforms, fetch=fetch, category=form["category"],
+                    categories=categories, supplier_filter=supplier_filter)
+    if not form["ai"] and isinstance(result, dict) and not result.get("error"):
+        result["ai"] = {"state": "off", "label": "AI uitgezet", "removed": 0,
+                        "message": "AI is voor deze zoekopdracht uitgezet; alle bronresultaten worden getoond."}
     view["ran"] = True
     if result.get("error"):
         view["error"] = result["error"]
