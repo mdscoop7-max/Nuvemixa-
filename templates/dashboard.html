@@ -697,14 +697,21 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 {% endif %}
 <section class="panel" id="nv-product-margin">
 <h2>Winstmarge per product</h2>
-<p>Gebruik kosten exclusief btw. Lege kosten blijven onbekend. Vul 0 in als een kostenpost aantoonbaar niet geldt.</p>
+<p>Vul eerst product en inkoopprijs in en kies de gewenste marge: de adviesprijs verschijnt direct. Gebruik kosten exclusief btw. Lege kosten blijven onbekend. Vul 0 in als een kostenpost aantoonbaar niet geldt.</p>
 <form action="{{ url_for('control', _anchor='nv-product-margin') }}" method="get" class="nv-admin-form" data-margin-live="#nv-margin-live">
   <input type="hidden" name="section" value="onderzoek">
   <input type="hidden" name="margin_run" value="1">
   <input type="hidden" name="margin_method" value="scenario">
   <label>Product <input name="margin_product" maxlength="120" value="{{ request.args.get('margin_product', '')[:120] }}"></label>
+  <label>Inkoopprijs excl. btw (€) <input name="purchase_cost" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" required
+    value="{{ request.args.get('purchase_cost', '') if request.args.get('margin_method') == 'scenario' else '' }}"></label>
+  <fieldset class="nv-pperiod nv-marginbar">
+    <legend>Gewenste winstmarge</legend>
+    {% set chosen = request.args.get('target_margin', '25') %}
+    {% for pct in ['15', '20', '25', '30', '35', '40'] %}<label><input type="radio" name="target_margin" value="{{ pct }}" {% if chosen == pct %}checked{% endif %}><span>{{ pct }}%</span></label>{% endfor %}
+  </fieldset>
   {% for key, label, required in [
-    ('selling_price', 'Verkoopprijs incl. btw (€)', true), ('purchase_cost', 'Inkoopprijs (€)', true),
+    ('selling_price', 'Eigen verkoopprijs incl. btw (€)', true),
     ('vat_rate', 'Btw op verkoop (%)', true), ('shipping_cost', 'Verzending (€)', false),
     ('advertising_cost', 'Advertenties per verkoop (€)', false), ('transaction_fee', 'Transactiekosten (€)', false),
     ('platform_fee', 'Platformkosten per verkoop (€)', false), ('returns_reserve', 'Retourreserve (€)', false),
