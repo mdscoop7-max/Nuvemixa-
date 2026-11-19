@@ -467,6 +467,22 @@
         {% endif %}
       </div>
       <div id="nv-research-suppliers">
+        {% if (product_discovery.suppliers|length) < 3 %}
+        {% set cat_names = (product_discovery.interpretation.categories if product_discovery.interpretation else []) %}
+        {% set link_only = [] %}
+        {% for slug, row in (source_coverage or {}).items() if research_options.categories.get(slug) in cat_names %}
+          {% for link in row.links if link.name not in link_only %}{% set _ = link_only.append(link.name ~ ' (' ~ link.access_label ~ ')') %}{% endfor %}
+        {% endfor %}
+        <div class="notice nv-few-suppliers" role="status">
+          <p><strong>Weinig leveranciers gevonden ({{ product_discovery.suppliers|length }}).</strong> Dit zegt iets over de huidige brondekking, niet over het product.</p>
+          <ul>
+            <li><strong>Doorzocht:</strong> {{ product_discovery.sources_checked|join(', ') if product_discovery.sources_checked else 'geen' }}.</li>
+            {% if product_discovery.unavailable_sources %}<li><strong>Geen bruikbaar antwoord:</strong> {% for name in product_discovery.unavailable_sources %}{{ name }} ({{ product_discovery.unavailable_reasons[name] }}){{ ', ' if not loop.last }}{% endfor %}.</li>{% endif %}
+            {% if product_discovery.pending_sources %}<li><strong>Nog bezig (pagina ververst vanzelf):</strong> {{ product_discovery.pending_sources|join(', ') }}.</li>{% endif %}
+            {% if link_only %}<li><strong>Niet gekoppeld, alleen handmatig of met account:</strong> {{ link_only|unique|join(', ') }}.</li>{% endif %}
+          </ul>
+        </div>
+        {% endif %}
         {% if product_discovery.suppliers %}
         <p>{% set supplier_count = product_discovery.suppliers|length %}{{ supplier_count }} unieke leverancier{{ 's' if supplier_count != 1 }} · {{ product_discovery.supplier_products }} productvermeldingen · {{ research_options.supplier_filters[research_options.supplier_filter] }}</p>
         <p>Controleer de zakelijke voorwaarden per product. Producten waarvan de bron verzending naar het doelland uitsluit, zijn weggelaten.</p>

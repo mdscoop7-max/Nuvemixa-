@@ -11,6 +11,7 @@ AI voegt nooit producten, leveranciers, prijzen, verkoopcijfers of trendcijfers 
 draait exact dezelfde normale zoekopdracht.
 """
 import re
+from concurrent.futures import ThreadPoolExecutor
 from time import monotonic
 
 import nv_openai
@@ -65,6 +66,7 @@ KEEP_WORDS = frozenset("refill refills navulling navulverpakking bulk pack packs
 MAX_REJECT_SHARE = 0.6   # wil AI meer dan dit deel uitsluiten, dan is het oordeel te onzeker: alles blijft staan
 MAX_EXCLUDED_SHOWN = 40
 
+_EARLY_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ai-search")
 REQUEST_BUDGET = 24.0   # seconden voor de hele zoekopdracht; gunicorn breekt af na 30 s
 FILTER_MIN_LEFT = 3.0    # alleen filteren als er nog genoeg tijd over is
 
@@ -171,6 +173,12 @@ def ai_discover(term, *args, categories, **kwargs):
             result["ai"] = info
         return result
     hints = None
+    # Snelheid: verandert de AI-hulp de zoekterm en categorie toch niet (term hoeft niet vertaald te worden en de
+    # categorie is gekozen of herkend), dan zoeken de bronnen al terwijl AI de zoekwoorden bepaalt.
+    early = None
+    if not _needs_translation(term) and (kwargs.get("category", "shop") != "shop" or not kwargs.get("infer", True)
+                                         or infer_categories(term)):
+        early = _EARLY_POOL.submit(discover, term, *args, categories=categories, **kwargs)
     try:
         hints = expand(term, categories)
     except nv_openai.AIUnavailable as exc:
@@ -189,7 +197,10 @@ def ai_discover(term, *args, categories, **kwargs):
         if (hints["category"] and kwargs.get("category", "shop") == "shop" and kwargs.get("infer", True)
                 and not infer_categories(search_term)):
             kwargs = {**kwargs, "category": hints["category"]}
-    result = discover(search_term, *args, categories=categories, **kwargs)
+    if early is not None and search_term == term:
+        result = early.result()
+    else:
+        result = discover(search_term, *args, categories=categories, **kwargs)
     if not isinstance(result, dict) or result.get("error"):
         return result
     result["term"] = term

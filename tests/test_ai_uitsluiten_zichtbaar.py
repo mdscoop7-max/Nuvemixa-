@@ -76,3 +76,36 @@ def test_ai_off_uses_plain_search_and_never_calls_openai(monkeypatch):
     view = nv_market_search.search_view("internationaal", CATS,
                                         MultiDict([("mrun", "1"), ("mq", "bluetooth speaker"), ("mai", "0")]))
     assert seen["plain"] == "bluetooth speaker" and view["ai"]["state"] == "off"
+
+
+def test_sources_start_while_ai_chooses_keywords_when_term_needs_no_translation(monkeypatch):
+    import time
+    monkeypatch.setenv("OPENAI_API_KEY", "fixture-key")
+    seen = []
+
+    def slow_expand(term, categories):
+        time.sleep(0.6)
+        return {"category": "", "keywords_en": [], "keywords_nl": [], "exclude": []}
+
+    def slow_discover(term, *args, **kwargs):
+        seen.append(term)
+        time.sleep(0.6)
+        return {"term": term, "error": None, "products": [], "alternatives": [], "suppliers": []}
+
+    monkeypatch.setattr(nv_ai_search, "expand", slow_expand)
+    monkeypatch.setattr(nv_ai_search, "discover", slow_discover)
+    started = time.monotonic()
+    nv_ai_search.ai_discover("bluetooth speaker", categories=CATS, category="gadgets")
+    assert time.monotonic() - started < 1.0 and seen == ["bluetooth speaker"]
+
+
+def test_dutch_term_that_needs_translation_still_waits_for_ai(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "fixture-key")
+    seen = []
+    monkeypatch.setattr(nv_ai_search, "expand", lambda term, categories: {
+        "category": "", "keywords_en": ["portable speaker"], "keywords_nl": [], "exclude": []})
+    monkeypatch.setattr(nv_ai_search, "reject_ids", lambda *a, **k: set())
+    monkeypatch.setattr(nv_ai_search, "discover", lambda term, *a, **k: seen.append(term) or {
+        "term": term, "error": None, "products": [], "alternatives": [], "suppliers": []})
+    nv_ai_search.ai_discover("draagbare muziekbox", categories=CATS)
+    assert seen == ["portable speaker"]
