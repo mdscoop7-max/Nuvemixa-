@@ -16,7 +16,7 @@
       <input type="search" name="q" value="{{ search_query|default('') }}" placeholder="Zoek naar producten, merken of specificaties" data-i18n-placeholder="searchProducts" aria-label="Zoek producten">
       <button type="submit" aria-label="Zoeken"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
     </form>
-    <div class="tm-ref-actions"><a href="/account" aria-label="Account">{{ tm_icon('user') }} <small>Account</small></a><a href="/wishlist" aria-label="Favorieten">{{ tm_icon('heart') }} <small>Favorieten</small></a></div>
+    <div class="tm-ref-actions"><a href="/account" aria-label="Account">{{ tm_icon('user') }} <small>Account</small></a><a href="/wishlist" class="nv-favorites-link" aria-label="Favorieten">{{ tm_icon('heart') }} <small>Favorieten</small><span class="nv-fav-count" data-wishlist-count {% if not wishlist_count %}hidden{% endif %}>{{ wishlist_count }}</span></a></div>
     <a class="cart-link" href="/winkelwagen" aria-label="Winkelwagen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2 12h11l2-8H6M9 20a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg><span data-cart-count>{{ cart_count|default(0) }}</span></a>
   </div>
   <nav class="main-nav" data-mobile-nav aria-label="Hoofdnavigatie">
