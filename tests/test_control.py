@@ -424,3 +424,21 @@ def test_cart_ajax_quantity_still_changes_totals_without_new_endpoints():
             assert data["trendmix_cart"][0]["qty"] == qty
     assert b'cart-actions' in result.data
     assert b'data-cart-count' in result.data
+
+
+def test_single_header_and_category_navigation_after_products():
+    client = app.test_client()
+    homepage = client.get("/").get_data(as_text=True)
+    assert homepage.count('class="tm-header-actions nv-main-actions"') == 1
+    assert 'aria-label="Direct naar de hoofdcategorieën"' in homepage
+    assert 'class="nv-after-products"' in homepage
+    assert homepage.index('id="producten"') < homepage.index('class="nv-after-products"') < homepage.index('id="collecties"')
+    assert 'Checkout in testfase' not in homepage.split('<header class="header wrap">')[0]
+    assert 'Levering volgens productinformatie' not in homepage.split('<header class="header wrap">')[0]
+    assert 'data-wishlist-count' in homepage
+    assert 'data-cart-count' in homepage
+    assert homepage.count('id="tmGlobalLanguage"') == 1
+    for route in ("/shop", "/wishlist", "/winkelwagen", "/contact"):
+        html = client.get(route, follow_redirects=True).get_data(as_text=True)
+        assert 'data-wishlist-count' in html, route
+        assert html.count('id="tmGlobalLanguage"') == 1, route
