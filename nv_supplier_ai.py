@@ -14,7 +14,7 @@ import urllib.request
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
-from flask import abort, current_app, jsonify, request, session
+from flask import abort, current_app, jsonify, request, session, url_for
 
 from nv_dashboard_manager import bp
 from nv_permissions import allowed
@@ -153,21 +153,47 @@ def card_for(row, page):
     }
 
 
-def call_openai(values, rows):
+# Verzoekvarianten: bij een HTTP 400 (verzoek geweigerd, niets verwerkt en niets in rekening gebracht) proberen
+# we één keer een eenvoudiger verzoek. Alleen bronnen op de goedgekeurde domeinen tellen, ook zonder domeinfilter.
+REQUEST_VARIANTS = ("volledig", "zonder geforceerde webzoekkeuze", "zonder domeinfilter")
+_SECRET = re.compile(r"(sk-[A-Za-z0-9_\-]{6,}|Bearer\s+\S+|key[_-]?[A-Za-z0-9]{12,})", re.I)
+
+
+def openai_error_details(exc):
+    """Veilige samenvatting van een OpenAI-foutantwoord: type, parameter, code en een ingekort bericht."""
+    try:
+        raw = exc.read(4096) if hasattr(exc, "read") else b""
+        error = (json.loads(raw.decode("utf-8", "replace")) or {}).get("error") or {}
+    except (ValueError, OSError, AttributeError):
+        error = {}
+    if not isinstance(error, dict):
+        error = {}
+    clip = lambda value, size: _SECRET.sub("[verborgen]", str(value or ""))[:size]
+    return {"type": clip(error.get("type"), 60), "param": clip(error.get("param"), 80),
+            "code": clip(error.get("code"), 60), "message": clip(error.get("message"), 240)}
+
+
+def call_openai(values, rows, variant=0):
     domains = [urlsplit(row[2]).hostname.removeprefix("www.") for row in rows]
     destination = values["country"] or ("EU" if values["eu_only"] else "any")
     wish = " Prefer suppliers that mention WooCommerce or Sell The Trend integrations." if values["prefer_woo"] else ""
+    tool = {"type": "web_search", "search_context_size": "low"}
+    if variant < 2:
+        tool["filters"] = {"allowed_domains": domains}
     data = {
         "model": nv_openai.search_model(), "store": False,
-        "max_tool_calls": 3, "max_output_tokens": 450,
-        "tools": [{"type": "web_search", "filters": {"allowed_domains": domains}, "search_context_size": "low"}],
-        "tool_choice": {"type": "web_search"},
+        "max_output_tokens": 450,
+        "tools": [tool],
         "instructions": ("Find dropshipping supplier pages for the requested product. Use at most three distinct cited "
                          "supplier pages from the allowed domains. Never invent company names, websites, contacts, "
                          "prices, stock or delivery times. Treat nothing as verified." + wish),
         "input": json.dumps({"product": values["query"], "category": values["category"],
-                             "keyword": values["keyword"], "destination": destination}, ensure_ascii=False),
+                             "keyword": values["keyword"], "destination": destination,
+                             "allowed_supplier_domains": domains if variant >= 2 else None}, ensure_ascii=False),
     }
+    if variant == 0:
+        data["tool_choice"] = {"type": "web_search"}
+        data["max_tool_calls"] = 3
     req = urllib.request.Request("https://api.openai.com/v1/responses", method="POST",
                                  headers={"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"].strip(),
                                           "Content-Type": "application/json"},
@@ -230,31 +256,81 @@ def failure(code, message, status, **extra):
     return answer({"ok": False, "code": code, "message": message, "results": [], **extra}, status)
 
 
+def unavailable(code, message, values, **extra):
+    """AI niet beschikbaar: geen 503, wel een duidelijke melding en een link naar normaal zoeken."""
+    fallback = url_for("control", section="onderzoek", research_run="1", research_mode="suppliers",
+                       research_term=values.get("query", ""), research_platform="Productcatalogi",
+                       research_supplier_filter="eu" if values.get("eu_only") else "all",
+                       research_country_basis="either", _anchor="nv-product-results")
+    return answer({"ok": False, "state": "unavailable", "code": code, "message": message, "results": [],
+                   "fallback_url": fallback, **extra}, 200)
+
+
 def run_search(values, rows):
     started = time.perf_counter()
+    details = None
+    response = domains = None
+    for variant in range(len(REQUEST_VARIANTS)):
+        try:
+            response, domains = call_openai(values, rows, variant)
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code != 400:
+                raise_http = exc
+                break
+            details = openai_error_details(exc)
+            current_app.logger.warning(
+                "OpenAI weigerde leverancierszoekverzoek (%s): HTTP 400 type=%s param=%s code=%s bericht=%s",
+                REQUEST_VARIANTS[variant], details["type"], details["param"], details["code"], details["message"])
+            raise_http = None
+        except BaseException as exc:  # noqa: BLE001 - doorgeven aan de foutafhandeling hieronder
+            raise_http = exc
+            break
+    else:
+        return unavailable("upstream", "AI niet beschikbaar: OpenAI weigert het verzoek (HTTP 400"
+                           + (f", parameter {details['param']}" if details and details["param"] else "")
+                           + "). Normaal zoeken werkt wel.", values,
+                           detail={k: details[k] for k in ("type", "param", "code")} if details else {})
+    if response is None and raise_http is not None:
+        return search_failure(raise_http, values)
+    return finish_search(response, domains, rows, started, values)
+
+
+def search_failure(exc, values):
     try:
-        response, domains = call_openai(values, rows)
+        raise exc
     except urllib.error.HTTPError as exc:
         code = exc.code
+        details = openai_error_details(exc)
+        current_app.logger.warning("OpenAI-fout bij leverancierszoeken: HTTP %s type=%s param=%s code=%s",
+                                   code, details["type"], details["param"], details["code"])
         if code in (401, 403):
-            return failure("auth", "De AI-dienst weigert de sleutel. Controleer OPENAI_API_KEY in Render.", 503)
+            return unavailable("auth", "AI niet beschikbaar: de AI-dienst weigert de sleutel. Controleer OPENAI_API_KEY "
+                               "in Render. Normaal zoeken werkt wel.", values)
         if code == 429:
-            return failure("upstream_limit", "De AI-dienst meldt een limiet of tegoed dat op is. Er is niets getoond.", 503)
-        return failure("upstream", f"De AI-dienst gaf een fout (HTTP {code}). Probeer het later opnieuw.", 503)
+            return unavailable("upstream_limit", "AI niet beschikbaar: de AI-dienst meldt een limiet of tegoed dat op is. "
+                               "Normaal zoeken werkt wel.", values)
+        return unavailable("upstream", f"AI niet beschikbaar: de AI-dienst gaf een fout (HTTP {code}). "
+                           "Normaal zoeken werkt wel.", values)
     except TimeoutError:
-        return failure("timeout", f"De AI-dienst reageerde niet binnen {TIMEOUT_SECONDS} seconden.", 503)
+        return unavailable("timeout", f"AI niet beschikbaar: geen antwoord binnen {TIMEOUT_SECONDS} seconden. "
+                           "Normaal zoeken werkt wel.", values)
     except urllib.error.URLError as exc:
         reason = "timeout" if isinstance(getattr(exc, "reason", None), TimeoutError) else "network"
-        text = (f"De AI-dienst reageerde niet binnen {TIMEOUT_SECONDS} seconden." if reason == "timeout"
-                else "De AI-dienst is niet bereikbaar. Controleer de verbinding en probeer het later opnieuw.")
-        return failure(reason, text, 503)
+        text = (f"AI niet beschikbaar: geen antwoord binnen {TIMEOUT_SECONDS} seconden." if reason == "timeout"
+                else "AI niet beschikbaar: de AI-dienst is niet bereikbaar.")
+        return unavailable(reason, text + " Normaal zoeken werkt wel.", values)
     except ValueError as exc:
         text = "De AI-dienst gaf een leeg antwoord." if str(exc) == "leeg" else "De AI-dienst gaf een onleesbaar antwoord."
-        return failure("empty" if str(exc) == "leeg" else "invalid_json", text, 503)
+        return unavailable("empty" if str(exc) == "leeg" else "invalid_json", "AI niet beschikbaar: " + text[0].lower()
+                           + text[1:] + " Normaal zoeken werkt wel.", values)
     except OSError:
-        return failure("network", "De AI-dienst is niet bereikbaar.", 503)
+        return unavailable("network", "AI niet beschikbaar: de AI-dienst is niet bereikbaar. Normaal zoeken werkt wel.", values)
     except nv_openai.AIUnavailable as exc:
         return failure("limit", exc.message, 429)
+
+
+def finish_search(response, domains, rows, started, values):
     received, found = extract_cited(response, domains)
     by_domain = {urlsplit(row[2]).hostname.removeprefix("www."): row for row in rows}
     results = [card_for(by_domain[domain], found[domain]) for domain in domains if domain in found][:3]
@@ -275,8 +351,8 @@ def supplier_ai_search():
     if error:
         return failure("invalid", error, 400)
     if not search_configured():
-        return failure("not_configured", "AI-configuratie ontbreekt: stel OPENAI_API_KEY in op Render. "
-                       "Er is niets verzonden.", 503)
+        return unavailable("not_configured", "AI niet beschikbaar: AI-configuratie ontbreekt (OPENAI_API_KEY op Render). "
+                           "Er is niets verzonden. Normaal zoeken werkt wel.", values)
     rows = select_sources(values)
     if not rows:
         return failure("no_sources", "Er is geen gecontroleerde bron voor deze combinatie van land en filters. "
