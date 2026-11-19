@@ -442,3 +442,15 @@ def test_single_header_and_category_navigation_after_products():
         html = client.get(route, follow_redirects=True).get_data(as_text=True)
         assert 'data-wishlist-count' in html, route
         assert html.count('id="tmGlobalLanguage"') == 1, route
+
+
+def test_all_category_pages_offer_five_shortcuts_after_products():
+    client = app.test_client()
+    for path in ("/shop", "/gadgets", "/smart-home", "/beauty-care", "/home-living", "/lifestyle-sport"):
+        html = client.get(path).get_data(as_text=True)
+        assert 'aria-label="Verder winkelen per categorie"' in html, path
+        assert html.index('id="producten"') < html.index('id="collecties"') if path != "/shop" else 'id="collecties"' in html
+        for slug in ("gadgets", "smart-home", "beauty-care", "home-living", "lifestyle-sport"):
+            assert f'href="/{slug}"' in html, (path, slug)
+        assert html.count('id="tmGlobalLanguage"') == 1, path
+        assert 'Checkout in testfase' not in html.split('<header class="header wrap">')[0], path
