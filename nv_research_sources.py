@@ -386,9 +386,18 @@ def syncee_products(fetch, query, country, categories, seeds, read, matches, rel
         if deadline is not None and monotonic() >= deadline:
             break
         attempt = {"source": "Syncee", "query": variant, "raw": None}
-        result = syncee_search(fetch, variant, country, categories, seeds, read, matches, relevant,
-                               term, product_matches, attempt, deadline=deadline, shortlist=shortlist,
-                               skip_sellers=checked)
+        try:
+            result = syncee_search(fetch, variant, country, categories, seeds, read, matches, relevant,
+                                   term, product_matches, attempt, deadline=deadline, shortlist=shortlist,
+                                   skip_sellers=checked)
+        except (requests.RequestException, ValueError, OSError) as error:
+            # Een trage of mislukte extra zoekvariant mag eerder gevonden resultaten niet wegnemen.
+            if not offers:
+                raise
+            attempt["error"] = type(error).__name__
+            if attempts is not None:
+                attempts.append(attempt)
+            break
         if attempts is not None:
             attempts.append(attempt)
         for profile, item in result:
