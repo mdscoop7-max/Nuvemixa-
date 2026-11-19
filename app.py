@@ -798,7 +798,7 @@ def verify_form_csrf():
 
 def inject_helpers():
 
-    return {"slugify": slugify, "cart_count": cart_count(), "format_eur": format_eur, "wishlist_ids": set(session.get("trendmix_wishlist", [])), "csrf_token": csrf_token}
+    return {"slugify": slugify, "cart_count": cart_count(), "format_eur": format_eur, "wishlist_ids": set(session.get("trendmix_wishlist", [])), "wishlist_count": len(session.get("trendmix_wishlist", [])), "csrf_token": csrf_token}
 
 
 
@@ -1095,6 +1095,8 @@ def wishlist():
 
         safe_referrer = referrer.startswith(request.host_url.rstrip("/") + "/")
 
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"ok": True, "count": len(saved), "saved": bool(product_id and product_id in saved), "product_id": product_id})
         return redirect(referrer if safe_referrer else url_for("wishlist"))
 
     wishlist_products = [item for product_id in saved if (item := find_product(product_id))]
