@@ -56,7 +56,8 @@ def test_cart_and_checkout_test_flow():
     assert product["name"].encode() in response.data
     response = client.get("/afrekenen")
     assert response.status_code == 200
-    assert b"Testmodus" in response.data
+    assert b"Demonstratie: er wordt geen bestelling of betaling verwerkt." in response.data
+    assert b"Testmodus: WooCommerce is nog niet gekoppeld" not in response.data
 
 
 def test_catalog_is_exactly_100_products():
