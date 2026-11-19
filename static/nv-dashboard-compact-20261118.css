@@ -215,3 +215,12 @@ body.nv-admin-ui main form .nv-history button.nv-history__clear{background:trans
 .nv-srow{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr) auto}
 .nv-srow__contact a{font-weight:700}
 @media(max-width:900px){.nv-srow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.nv-srow > .nv-prow__name{grid-column:1/-1}}
+
+/* Margecalculator: resultaattabel past in smalle vensters (geen eigen scrollbalk, geen afgekapte tekst).
+   Alleen deze resultaten; andere beheertabellen houden hun minimale breedte. */
+body.nv-admin-ui main .nv-margin-live{overflow-x:visible}
+body.nv-admin-ui main .nv-margin-live table.admin-table,body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table{min-width:0;width:100%}
+body.nv-admin-ui main .nv-margin-live table.admin-table th,body.nv-admin-ui main .nv-margin-live table.admin-table td,
+body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table th,body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table td{white-space:normal;overflow-wrap:anywhere}
+body.nv-admin-ui main .nv-margin-live table.admin-table td{text-align:right}
+@media(max-width:560px){body.nv-admin-ui main .nv-margin-live table.admin-table th,body.nv-admin-ui main .nv-margin-live table.admin-table td{padding:8px 10px;font-size:.84rem}}
