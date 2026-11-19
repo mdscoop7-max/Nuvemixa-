@@ -197,7 +197,7 @@ CATEGORY_HINTS = {
     "smart-home": r"smart|wifi|zigbee|matter|curtain|hub|sensor|lighting|rgbicww|door lock|camera|doorbell|robot vacuum|robovac|homebase",
     "beauty-care": r"serum|cream|skin|shampoo|retinal|mask|face|facial|hair|body|argan oil|oil|beauty|trimmer|straightener|curling|nail|massager|massage|mirror|flosser|toothbrush|shaver|epilator|jewelry|brush|scalp|soap dispenser|dryer",
     "home-living": r"lamp|chair|sofa|cushion|vase|table|rug|carpet|shelf|lighting|storage|furniture|organizer|organiser|cable management|box|basket|mirror|desk|kitchen|keuken|air ?fryer|blender|cookware|oven|koffiezet\w*",
-    "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale",
+    "lifestyle-sport": r"yoga|mat|bolster|block|towel|handdoek|legging|fitness|dumbbell|hiking|sport|resistance band|training|bottle|jump rope|skipping rope|kettlebell|massage gun|bag|backpack|luggage|armband|running|foam roller|scale|sunglasses|sunglass|zonnebril|zonnebrillen|eyewear|polarized",
     "pets": r"pet|pets|cat|cats|dog|dogs|huisdier|kat|hond",
 }
 SEEDS = {"gadgets": "headphones", "smart-home": "security camera", "beauty-care": "serum",
@@ -686,6 +686,9 @@ def unique_suppliers(offers, supplier_filter, country_basis="either"):
         if profile.get("dropshipping") is True and profile.get("dropshipping_source"):
             company["dropshipping"] = True
             company["dropshipping_source"] = profile["dropshipping_source"]
+        for field in ("own_website", "phone", "email"):
+            if profile.get(field) and not company.get(field):
+                company[field] = profile[field]
         company["evidence"] = tuple(dict.fromkeys((*company["evidence"], *profile["evidence"])))
 
     filtered = []
@@ -699,11 +702,23 @@ def unique_suppliers(offers, supplier_filter, country_basis="either"):
         company["product_count"] = len(company["products"])
         company["products"] = sorted(company["products"].values(),
                                      key=lambda product: not product.get("shipping", "").startswith("Geverifieerd"))
+        prices = [(item["facts"]["purchase"].value, item["facts"]["purchase"].unit) for item in company["products"]
+                  if isinstance(item.get("facts"), dict) and item["facts"].get("purchase") is not None]
+        if prices and len({unit for _, unit in prices}) == 1:
+            low = min(value for value, _ in prices)
+            company["purchase_price"] = (f"{prices[0][1]} {low:.2f}".replace(".", ",")
+                                         + (" (vanaf, via Syncee)" if len(prices) > 1 else " (via Syncee)"))
+            company["purchase_known"] = True
         filtered.append(company)
+    # Bruikbaarheid eerst: bevestigde dropshipping, levering naar NL, magazijn in NL/EU, gevestigd in de EU,
+    # zakelijk, en bij gelijkstand de leverancier met de meeste passende producten.
     return sorted(filtered, key=lambda company: (
-        company.get("shipping_nl") != "Bevestigd",
         company.get("dropshipping") is not True,
+        company.get("shipping_nl") != "Bevestigd",
+        not ({"nl", "eu"} & set(company.get("warehouse_classes") or ())),
+        _origin_class(company) not in {"nl", "eu"},
         company.get("business") is not True,
+        -company.get("product_count", 0),
     ))
 
 

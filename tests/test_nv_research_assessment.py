@@ -65,7 +65,9 @@ def test_identity_aliases_group_offers_without_merging_distinct_companies():
     regional = {"url": "https://eu.ugreen.com/products/a", "gtin": shared}
     other = {"url": "https://eu.ugreen.com/products/b"}
     companies = unique_suppliers([(main, first), (alias, regional), (alias, other), (dealer, first), (another, first)], "all")
-    assert [c["product_count"] for c in companies] == [2, 1, 1]
+    assert sorted(c["product_count"] for c in companies) == [1, 1, 2]
+    # Gevestigd in de EU (NL-dealers) gaat bij gelijke dropshipping- en NL-leverstatus voor gevestigd buiten de EU.
+    assert [c["origin"] for c in companies][-1] == "CN"
     assert company_key(dealer) != company_key(another)
     assert company_key(main) == company_key(alias)
     a = supplier("Same name Ltd", None, "Marketplace", "https://syncee.com/supplier/17/alias")

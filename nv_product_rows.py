@@ -17,8 +17,12 @@ def _price(item):
     for key, label in (("purchase", "Inkoop"), ("market_price", "Verkoopprijs")):
         fact = facts.get(key)
         value = getattr(fact, "value", None)
-        if fact is not None and getattr(fact, "unit", "") == "EUR" and value not in (None, True, False, ""):
-            return f"{label} € {str(value).replace('.', ',')}"
+        unit = getattr(fact, "unit", "")
+        if fact is not None and value not in (None, True, False, "") and re.fullmatch(r"[A-Z]{3}", unit or ""):
+            amount = f"{float(value):.2f}".replace(".", ",") if isinstance(value, (int, float)) else str(value).replace(".", ",")
+            symbol = "€ " if unit == "EUR" else unit + " "
+            source = " (via Syncee)" if "syncee.com" in str(getattr(fact, "source", "")) else ""
+            return f"{label} {symbol}{amount}{source}"
     return None
 
 
@@ -74,12 +78,50 @@ def suppliers(companies):
         contact = contact or (company.get("trade_url") if "contact" in str(company.get("trade_url") or "") else None)
         rows.append({
             "company": company, "name": company.get("name") or UNKNOWN, "role": company.get("role") or company.get("kind") or "",
-            "website": company.get("website") or "", "email": email if EMAIL.match(email) else None,
+            "website": company.get("own_website") or company.get("website") or "",
+            "platform_url": company.get("website") if company.get("own_website") else None,
+            "purchase_price": company.get("purchase_price") if company.get("purchase_known") else None,
+            "email": email if EMAIL.match(email) else None,
             "phone": phone if PHONE.match(phone) else None, "contact_url": contact,
             "origin": company.get("origin_name") or UNKNOWN, "warehouse": company.get("warehouse_label"),
             "region": company.get("region") or "unknown", "dropship": dropship_label(company),
             "scope_reason": company.get("scope_reason") if str(company.get("scope_reason") or "").startswith("Voldoet") else None,
             "dropship_source": company.get("dropshipping_source"), "shipping_nl": company.get("shipping_nl") or "Niet bevestigd",
             "products": company.get("product_count") or len(company.get("products") or []), "checked": company.get("checked"),
+            "shop_notice": (None if company.get("dropshipping") is True or company.get("role") in {
+                "Dropshippingleverancier", "Leverancier via marktplaats", "Marktplaats of platform", "Groothandel"}
+                else "Winkel of merk — geen bevestigde dropshipper"),
+            "offers": offer_groups(company.get("products") or []),
         })
     return rows
+
+
+def offer_groups(products):
+    """Producten van één leverancier, varianten (zelfde naam, andere kleur/maat) samengevoegd."""
+    groups = {}
+    for item in products:
+        if not isinstance(item, dict) or not item.get("url"):
+            continue
+        key = re.sub(r"\b(?:zwart|wit|blauw|rood|groen|grijs|roze|black|white|blue|red|green|grey|gray|pink|"
+                     r"xs|s|m|l|xl|xxl|small|medium|large)\b", " ", _norm(item.get("title"))).split()
+        group = groups.setdefault(" ".join(key) or item["url"], {"title": item.get("title") or item["url"],
+                                                               "url": item["url"], "price": _price(item), "variants": 0})
+        group["variants"] += 1
+        group["price"] = group["price"] or _price(item)
+    return list(groups.values())
+
+
+def summary(companies, products=None):
+    """Telling boven de leveranciersresultaten. Meer producten van dezelfde leverancier telt niet als extra leverancier."""
+    companies = list(companies or [])
+    if products is None:
+        products = sum(c.get("product_count") or len(c.get("products") or []) for c in companies)
+    return {
+        "products": products,
+        "suppliers": len(companies),
+        "dropship": sum(1 for c in companies if c.get("dropshipping") is True and c.get("dropshipping_source")),
+        "ships_nl": sum(1 for c in companies if c.get("shipping_nl") == "Bevestigd"),
+        "warehouse_eu": sum(1 for c in companies if {"nl", "eu"} & set(c.get("warehouse_classes") or ())),
+        "priced": sum(1 for c in companies for item in c.get("products") or []
+                      if isinstance(item, dict) and isinstance(item.get("facts"), dict) and item["facts"].get("purchase")),
+    }

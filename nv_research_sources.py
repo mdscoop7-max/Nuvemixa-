@@ -234,6 +234,58 @@ def hurtel_products(fetch, term, country, categories, seeds, read, index_query, 
     return [(profile, item) for item in list(rows.values())[:10]]
 
 
+_SYNCEE_SUPPLIER = "https://entry.syncee.com/syncee-user-service/Supplier?userId="
+_DOMAIN = re.compile(r"^(?:https?://)?((?:[a-z0-9-]+\.)+[a-z]{2,})(?:/.*)?$", re.I)
+
+
+def _own_website(value):
+    match = _DOMAIN.match(str(value or "").strip())
+    if not match or "syncee." in match[1].casefold():
+        return None
+    return "https://" + match[1].casefold()
+
+
+def syncee_offer_facts(states, product, url):
+    """Openbare aanbiedingsgegevens van een Syncee-product: inkoopprijs (alleen als de verkoper prijzen toont, met
+    valuta), en het openbare verkopersprofiel (bedrijfsnaam, eigen website, openbaar telefoonnummer, zakelijk
+    e-mailadres alleen op het eigen websitedomein, hoofdmagazijn). Niets wordt afgeleid of aangevuld."""
+    out = {}
+    owner = str(product.get("USER_ID") or "")
+    record = next((entry.get("b") for entry in states.values() if isinstance(entry, dict)
+                   and entry.get("u") == _SYNCEE_SUPPLIER + owner), None) if owner else None
+    if isinstance(record, list):
+        record = record[0] if record and isinstance(record[0], dict) else None
+    record = record if isinstance(record, dict) else {}
+    currency = record.get("paymentCurrency")
+    currency = currency if isinstance(currency, str) and re.fullmatch(r"[A-Z]{3}", currency) else None
+    settings = product.get("SETTINGS") if isinstance(product.get("SETTINGS"), dict) else {}
+    prices = [v.get("PRICE") for v in product.get("VARIANTS") or [] if isinstance(v, dict)]
+    prices = [float(p) for p in prices if type(p) in (int, float) and 0 < p < 100_000]
+    if currency and prices and settings.get("showPrices") is True:
+        out["purchase"] = Fact(round(min(prices), 2), url, date.today().isoformat(), unit=currency)
+        out["purchase_label"] = f"{currency} {min(prices):.2f}".replace(".", ",") + (" (vanaf)" if len(set(prices)) > 1 else "")
+    out["currency"] = currency
+    website = _own_website(record.get("website"))
+    if website:
+        out["own_website"] = website
+    name = record.get("companyName")
+    if isinstance(name, str) and 1 < len(name.strip()) <= 120:
+        out["company_name"] = visible_text(name.strip())
+    code, number = record.get("publicPhoneCode"), record.get("publicPhoneNumber")
+    if isinstance(code, str) and isinstance(number, str) and re.fullmatch(r"\+\d{1,4}", code) \
+            and re.fullmatch(r"[\d ]{5,15}", number):
+        out["phone"] = f"{code} {number.strip()}"
+    email = record.get("contactEmail")
+    if website and isinstance(email, str) and re.fullmatch(r"[^@\s]{1,64}@[A-Za-z0-9.-]{3,190}", email):
+        domain = urlsplit(website).hostname.removeprefix("www.")
+        if email.split("@", 1)[1].casefold().removeprefix("www.") == domain:
+            out["email"] = email
+    warehouse = record.get("mainWarehouseLocation")
+    if isinstance(warehouse, str) and warehouse.strip():
+        out["main_warehouse"] = warehouse.strip()[:80]
+    return out
+
+
 def syncee_product_details(fetch, url, country, read, *, include_description=False):
     try:
         html = read(fetch, url, {}, max_bytes=4_000_000).decode("utf-8")
@@ -242,12 +294,17 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
             return {}
         product_id = urlsplit(url).path.split("/")[2]
         endpoint = "https://entry.syncee.com/syncee-product-service/api/v1/products/" + product_id
-        product = next((entry["b"] for entry in json.loads(state[1]).values()
+        states = json.loads(state[1])
+        product = next((entry["b"] for entry in states.values()
                         if isinstance(entry, dict) and entry.get("u") == endpoint), {})
         if not isinstance(product, dict) or product.get("ID") != product_id:
             return {}
     except (requests.RequestException, ValueError, OSError, KeyError, AttributeError):
         return {}
+    try:
+        offer = syncee_offer_facts(states, product, url)
+    except (ValueError, TypeError, AttributeError):
+        offer = {}
 
     rows = [row for row in product.get("SHIPPING", []) or [] if isinstance(row, dict)
             and isinstance(row.get("locations"), list)]
@@ -256,6 +313,12 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
     warehouse = settings.get("warehouseLocation") if isinstance(settings, dict) else None
     warehouse = warehouse[:80] if isinstance(warehouse, str) and warehouse.strip() else UNKNOWN
     result = {"warehouse": warehouse}
+    if include_description:
+        for key in ("own_website", "phone", "email", "company_name", "main_warehouse", "purchase_label"):
+            if offer.get(key):
+                result[key] = offer[key]
+        if offer.get("purchase"):
+            result.setdefault("facts", {})["purchase"] = offer["purchase"]
     if include_description:
         # The platform's explicit listing label is product evidence. Generic
         # marketing elsewhere on the site is not a confirmation for this SKU.
@@ -270,7 +333,7 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
         if public_name and (record_name == public_name or record_name.startswith(public_name + " ")):
             result["dropshipping"] = True
             result["dropshipping_source"] = url
-            result["facts"] = {"dropshipping": Fact(True, url, date.today().isoformat())}
+            result.setdefault("facts", {})["dropshipping"] = Fact(True, url, date.today().isoformat())
         result["shipping_nl"] = delivery_status(destinations, "NL")
         result["catalogue_id"] = ("syncee", product_id)
     description = product.get("DESCRIPTION")
@@ -285,7 +348,7 @@ def syncee_product_details(fetch, url, country, read, *, include_description=Fal
             observed = date.today().isoformat()
             result["facts"]["direct_delivery"] = Fact(True, url, observed)
         # Use a quote only when the route itself identifies its currency.
-        currency, cost = row.get("currency"), row.get("shippingCost")
+        currency, cost = row.get("currency") or offer.get("currency"), row.get("shippingCost")
         if (include_description and isinstance(currency, str) and re.fullmatch(r"[A-Z]{3}", currency)
                 and type(cost) in (int, float) and 0 <= cost <= 1_000_000):
             result["shipping_cost"] = f"{currency} {cost:.2f}"
@@ -306,29 +369,38 @@ def delivery_status(destinations, country):
     return UNKNOWN
 
 
+SYNCEE_VARIANTS = 4        # NL- en EN-zoekvarianten per product, binnen de tijdslimiet
+SYNCEE_SELLERS = 10        # unieke verkopers per zoekvariant met een detailcontrole
+SYNCEE_SECOND = 4          # alleen de best passende verkopers krijgen een tweede product gecontroleerd
+SYNCEE_ENOUGH = 12         # genoeg unieke, bruikbare verkopers: stop met extra varianten
+
+
 def syncee_products(fetch, query, country, categories, seeds, read, matches, relevant, *, term, product_matches,
                     attempts=None, alternates=(), deadline=None, eligible=None, shortlist=None):
     queries = {}
     for variant in (query, *alternates):
         queries.setdefault(variant.casefold(), variant)
     offers = {}
-    for variant in list(queries.values())[:3]:
+    checked = set()   # verkopers die al een detailcontrole kregen: geen dubbele verzoeken per variant
+    for variant in list(queries.values())[:SYNCEE_VARIANTS]:
         if deadline is not None and monotonic() >= deadline:
             break
         attempt = {"source": "Syncee", "query": variant, "raw": None}
         result = syncee_search(fetch, variant, country, categories, seeds, read, matches, relevant,
-                               term, product_matches, attempt, deadline=deadline, shortlist=shortlist)
+                               term, product_matches, attempt, deadline=deadline, shortlist=shortlist,
+                               skip_sellers=checked)
         if attempts is not None:
             attempts.append(attempt)
         for profile, item in result:
             offers.setdefault(item["url"], (profile, item))
-        if any(eligible is None or eligible(profile) for profile, _ in result):
+        usable = {profile["website"] for profile, _ in offers.values() if eligible is None or eligible(profile)}
+        if len(usable) >= SYNCEE_ENOUGH:
             break
     return list(offers.values())
 
 
 def syncee_search(fetch, query, country, categories, seeds, read, matches, relevant,
-                  term, product_matches, attempt, deadline=None, shortlist=None):
+                  term, product_matches, attempt, deadline=None, shortlist=None, skip_sellers=None):
     candidates = {}
     if deadline is not None:
         # De bron mag nooit langer duren dan de zoekopdracht zelf: lees binnen dezelfde tijdslimiet.
@@ -341,7 +413,7 @@ def syncee_search(fetch, query, country, categories, seeds, read, matches, relev
                 {}, max_bytes=4_000_000).decode("utf-8")
     cards = re.findall(r"<app-product-card\b[^>]*>(.*?)</app-product-card>", body, re.S)
     attempt["raw"] = len(cards)
-    for card in cards[:60]:
+    for card in cards[:120]:
         product = re.search(r'href="(/product/[0-9_]+/[a-z0-9-]+)"[^>]*>\s*<div[^>]+class="h5 title cursor-pointer"[^>]*>([^<]{1,300})</div>', card)
         seller = re.search(r'href="(/supplier/[0-9]+/[a-z0-9-]+)"[^>]*>([^<]{1,140})</a>', card)
         if not product or not seller:
@@ -373,12 +445,18 @@ def syncee_search(fetch, query, country, categories, seeds, read, matches, relev
     # visible as a lead, unless the route is expressly unavailable.
     results = []
     ranked = [sorted(seller.values(), key=lambda offer: not product_matches(term, offer[1]["title"]))
-              for seller in candidates.values()]
-    ranked.sort(key=lambda seller: not product_matches(term, seller[0][1]["title"]))
-    selected = [offer for seller in ranked[:6] for offer in seller[:2]]
+              for url, seller in candidates.items() if skip_sellers is None or url not in skip_sellers]
+    # Specialisten eerst: een verkoper met meerdere passende producten gaat voor een algemene winkel met één treffer.
+    ranked.sort(key=lambda seller: (not product_matches(term, seller[0][1]["title"]),
+                                    -sum(product_matches(term, offer[1]["title"]) for offer in seller)))
+    ranked = ranked[:SYNCEE_SELLERS]
+    selected = [seller[0] for seller in ranked] + [seller[1] for seller in ranked[:SYNCEE_SECOND] if len(seller) > 1]
+    if skip_sellers is not None:
+        skip_sellers.update(offer[0]["website"] for offer in selected)
+    attempt["sellers"] = len(candidates)
     attempt["rejected"] = {
-        "productlink, categorie of zoekvariant past niet": min(len(cards), 60) - sum(map(len, candidates.values())),
-        "controlelimiet per leverancier of bron": max(0, len(cards) - 60) + sum(map(len, candidates.values())) - len(selected),
+        "productlink, categorie of zoekvariant past niet": min(len(cards), 120) - sum(map(len, candidates.values())),
+        "controlelimiet per leverancier of bron": max(0, len(cards) - 120) + sum(map(len, candidates.values())) - len(selected),
     }
     if not selected:
         attempt["exact"] = 0
@@ -399,8 +477,8 @@ def syncee_search(fetch, query, country, categories, seeds, read, matches, relev
                 and product_matches(term, product["title"], description)):
             if not product_matches(term, product["title"]):
                 data["match_detail"] = "Specificaties in catalogus gecontroleerd"
-            company_terms = {key: data[key] for key in ("dropshipping", "dropshipping_source", "shipping", "shipping_nl")
-                             if key in data}
+            company_terms = {key: data[key] for key in ("dropshipping", "dropshipping_source", "shipping", "shipping_nl",
+                                                       "own_website", "phone", "email") if key in data}
             results.append(({**profile, **company_terms}, {**product, **data}))
     attempt["exact"] = len(results)
     attempt["rejected"]["productspecificaties of levering onbevestigd"] = len(selected) - len(results)
