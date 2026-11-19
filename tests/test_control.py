@@ -383,3 +383,44 @@ def test_extended_english_labels_across_website():
         response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         assert "trendmix-english-labels.js" in response.get_data(as_text=True)
+
+
+def test_ajax_favorites_toggle_returns_badge_count():
+    client = app.test_client()
+    first, second = load_all_products()[:2]
+    first_id, second_id = str(first["id"]), str(second["id"])
+    for product_id, expected_count, expected_saved in (
+        (first_id, 1, True),
+        (second_id, 2, True),
+        (first_id, 1, False),
+    ):
+        result = secure_post(
+            client, "/wishlist", data={"product_id": product_id},
+            headers={"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"},
+        )
+        assert result.status_code == 200
+        payload = result.get_json()
+        assert payload["count"] == expected_count
+        assert payload["saved"] is expected_saved
+    response = client.get("/")
+    assert b'data-wishlist-count' in response.data
+    assert b'nuvemixa-cart-favorites-fast.js' in response.data
+
+
+def test_cart_ajax_quantity_still_changes_totals_without_new_endpoints():
+    client = app.test_client()
+    product = load_all_products()[0]
+    product_id = str(product["id"])
+    secure_post(client, "/winkelwagen", data={"action": "add", "product_id": product_id})
+    for qty in (2, 3):
+        result = secure_post(
+            client, "/winkelwagen",
+            data={"action": "change", "product_id": product_id, "delta": "1"},
+            headers={"X-Requested-With": "XMLHttpRequest"},
+            follow_redirects=True,
+        )
+        assert result.status_code == 200
+        with client.session_transaction() as data:
+            assert data["trendmix_cart"][0]["qty"] == qty
+    assert b'cart-actions' in result.data
+    assert b'data-cart-count' in result.data
