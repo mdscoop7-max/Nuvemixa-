@@ -7,7 +7,7 @@
   </div>
   <form method="get" class="nv-partner-form" role="search" data-research-search="Partners zoeken..." data-search-phases="Partners zoeken...|Resultaten voorbereiden...">
     <input type="hidden" name="section" value="partners">
-    <label>Productnaam of zoekwoord <input name="q" value="{{ v.form.q }}" maxlength="80" placeholder="bijvoorbeeld parfum, slimme sloten, kamerplanten"></label>
+    <label>Productnaam of zoekwoord <input type="search" name="q" value="{{ v.form.q }}" maxlength="80" placeholder="bijvoorbeeld parfum, slimme sloten, kamerplanten"></label>
     <label>Categorie <select name="cat"><option value="">Alle</option>{% for k, n in v.categories.items() %}<option value="{{ k }}" {{ 'selected' if v.form.cat == k }}>{{ n }}</option>{% endfor %}</select></label>
     <label>Doelland <select name="land"><option value="">Alle</option>{% for c, n in [('NL','Nederland'),('BE','België'),('DE','Duitsland'),('FR','Frankrijk'),('ES','Spanje'),('IT','Italië'),('PL','Polen'),('GB','Verenigd Koninkrijk')] %}<option value="{{ c }}" {{ 'selected' if v.form.land == c }}>{{ n }}</option>{% endfor %}</select></label>
     <label>Leverancierstype <select name="type"><option value="">Alle</option>{% for k, n in v.types.items() %}<option value="{{ k }}" {{ 'selected' if v.form.type == k }}>{{ n }}</option>{% endfor %}</select></label>

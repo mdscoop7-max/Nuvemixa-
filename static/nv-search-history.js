@@ -2,7 +2,7 @@
  * zoekopdrachten als kleine knoppen onder het veld, met suggesties tijdens het typen en een wisknop. */
 (() => {
   'use strict';
-  const MAX = 8;
+  const MAX = 10;
   const store = {
     get(key) { try { return JSON.parse(localStorage.getItem(key) || '[]').filter(v => typeof v === 'string'); } catch (e) { return []; } },
     set(key, list) { try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) { /* opslag niet beschikbaar */ } },
@@ -19,8 +19,9 @@
     const key = 'nv-zoekgeschiedenis:' + [section ? section.value : params.get('section') || 'dashboard',
       block ? block.value : '', input.name].join(':');
     // Leeg zoekveld bij openen (niet na een uitgevoerde zoekopdracht, dan blijft de term zichtbaar bij de resultaten).
-    if (!ran) input.value = '';
-    window.addEventListener('pageshow', event => { if (event.persisted && !ran) input.value = ''; });
+    const shown = ran || Boolean(params.get(input.name));
+    if (!shown) input.value = '';
+    window.addEventListener('pageshow', event => { if (event.persisted && !shown) input.value = ''; });
     const list = document.createElement('datalist');
     list.id = 'nv-history-' + (++counter);
     input.setAttribute('list', list.id);
