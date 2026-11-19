@@ -19,20 +19,23 @@ class StoragePathTests(unittest.TestCase):
             self.assertEqual(nv_storage_paths.two_fa_directory(), nv_storage_paths.BASE_DIR)
 
     def test_data_directory_sets_independent_defaults(self):
-        with patch.dict(os.environ, {"NUVEMIXA_DATA_DIR": r"C:\test-data"}, clear=True):
-            self.assertEqual(
-                nv_storage_paths.database_path("CUSTOMER_DB", "nuvemixa_customers.sqlite3"),
-                Path(r"C:\test-data") / "nuvemixa_customers.sqlite3",
-            )
-            self.assertEqual(
-                nv_storage_paths.database_path("DASHBOARD_DB", "nuvemixa_dashboard.sqlite3"),
-                Path(r"C:\test-data") / "nuvemixa_dashboard.sqlite3",
-            )
-            self.assertEqual(
-                nv_storage_paths.database_path("ADMIN_DB", "nuvemixa_admin.sqlite3"),
-                Path(r"C:\test-data") / "nuvemixa_admin.sqlite3",
-            )
-            self.assertEqual(nv_storage_paths.two_fa_directory(), Path(r"C:\test-data"))
+        # Use a native absolute path on Windows and Linux CI runners.
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with patch.dict(os.environ, {"NUVEMIXA_DATA_DIR": str(root)}, clear=True):
+                self.assertEqual(
+                    nv_storage_paths.database_path("CUSTOMER_DB", "nuvemixa_customers.sqlite3"),
+                    root / "nuvemixa_customers.sqlite3",
+                )
+                self.assertEqual(
+                    nv_storage_paths.database_path("DASHBOARD_DB", "nuvemixa_dashboard.sqlite3"),
+                    root / "nuvemixa_dashboard.sqlite3",
+                )
+                self.assertEqual(
+                    nv_storage_paths.database_path("ADMIN_DB", "nuvemixa_admin.sqlite3"),
+                    root / "nuvemixa_admin.sqlite3",
+                )
+                self.assertEqual(nv_storage_paths.two_fa_directory(), root)
 
     def test_explicit_and_legacy_database_paths_are_honored(self):
         with patch.dict(
