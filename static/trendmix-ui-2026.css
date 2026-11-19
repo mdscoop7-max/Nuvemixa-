@@ -977,3 +977,19 @@ main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!import
 @media(max-width:760px) {
   .tm-assist-fab {padding:9px 11px!important;font-size:11px!important;}
 }
+
+/* Compact assistant placement and checkout mobile legibility. */
+.cart-page .checkout-page .checkout-item{font-size:15px!important;font-weight:650!important;align-items:center!important}
+.cart-page .checkout-page .checkout-item>span{font-weight:750!important;min-width:0!important}
+.cart-page .checkout-page .nv-demo-note{margin:5px 0!important;font-size:12px!important;line-height:1.5!important;color:#344b66!important}
+.tm-assist-fab{width:45px!important;height:45px!important;min-width:45px!important;min-height:45px!important;border-radius:50%!important;justify-content:center!important;padding:0!important}
+.tm-assist-fab span{display:none!important}
+@media(max-width:760px){
+ /* The existing mobile menu already contains the accessible assistant action.
+    Hide the duplicate floating button so it cannot cover products, checkout, or dock. */
+ .tm-assist-fab{display:none!important}
+ .cart-page .checkout-page .checkout-item{gap:8px!important;flex-wrap:wrap!important;font-size:14px!important}
+ .cart-page .checkout-page .checkout-item>strong{margin-left:auto!important}
+ .cart-page .checkout-page .checkout-summary,.cart-page .checkout-page .cart-total{max-width:100%!important}
+ .cart-page .checkout-page .checkout-form input:not([type=checkbox]){min-width:0!important;font-size:16px!important}
+}
