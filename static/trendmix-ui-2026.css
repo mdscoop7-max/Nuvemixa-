@@ -1005,3 +1005,8 @@ main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!import
 .cart-page .cart-actions b{font-variant-numeric:tabular-nums}
 @media(max-width:760px){.cart-page .cart-actions{gap:8px!important}.cart-page .cart-actions form:last-child{margin-left:8px!important}.cart-page .cart-actions button{min-width:44px!important;width:44px!important;height:44px!important}}
 @media(max-width:380px){.cart-page .cart-actions{gap:5px!important}}
+
+/* Desktop AI trigger is an in-flow header action, not a floating product overlay. */
+.tm-ref-actions .tm-assist-fab,.tm-header-actions .tm-assist-fab{position:static!important;inset:auto!important;right:auto!important;bottom:auto!important;z-index:auto!important;flex:none!important;margin:0!important;transform:none!important}
+.tm-ref-actions .tm-assist-fab{margin-left:5px!important}
+@media(max-width:760px){.tm-ref-actions .tm-assist-fab,.tm-header-actions .tm-assist-fab{display:none!important}}
