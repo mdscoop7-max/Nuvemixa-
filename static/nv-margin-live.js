@@ -10,8 +10,9 @@
   // Automatisch verkoopadvies uit alleen de inkoopprijs: exact dezelfde vaste aannames als
   // nv_product_margin.automatic_margin op de server (indicatief, duidelijk vermeld, geen echte kosten).
   const roundHalfUp = value => Math.sign(value) * Math.round(Math.abs(value) + 1e-9);
-  function adviceNumbers(purchaseCents, vatPct) {
-    const shipping = 495, advertising = 300, returns = 100, fixed = 35, pctFee = 0.025, target = 0.25;
+  function adviceNumbers(purchaseCents, vatPct, targetPct) {
+    const shipping = 495, advertising = 300, returns = 100, fixed = 35, pctFee = 0.025;
+    const target = (targetPct === undefined ? 25 : targetPct) / 100;
     const factor = 1 + vatPct / 100;
     const denominator = (1 - target) / factor - pctFee;
     const selling = roundHalfUp((purchaseCents + shipping + advertising + returns + fixed) / denominator);
@@ -23,8 +24,8 @@
       fee: roundHalfUp(fee), total: roundHalfUp(total), profit: roundHalfUp(profit), margin: revenue ? 100 * profit / revenue : 0};
   }
   window.NVMarginAdvice = adviceNumbers;
-  function advice(out, purchaseCents, vatPct) {
-    const n = adviceNumbers(purchaseCents, vatPct);
+  function advice(out, purchaseCents, vatPct, targetPct) {
+    const n = adviceNumbers(purchaseCents, vatPct, targetPct);
     const rows = [['Inkoopprijs excl. btw', eur(purchaseCents)], ['Adviesverkoopprijs incl. btw', eur(n.selling)],
       ['Omzet excl. btw', eur(n.revenue)], ['Btw in verkoopprijs', eur(n.vat)], ['Geschatte verzending', eur(n.shipping)],
       ['Geschatte reclamekosten', eur(n.advertising)], ['Geschatte transactiekosten', eur(n.fee)],
@@ -32,7 +33,7 @@
       ['Geschatte winst per verkoop', eur(n.profit)], ['Geschatte winstmarge', pct(n.margin)]];
     const title = document.createElement('p');
     title.className = 'nv-margin-title';
-    title.innerHTML = '<strong>Automatisch verkoopadvies</strong> (vaste aannames)';
+    title.innerHTML = '<strong>Automatisch verkoopadvies</strong> voor ' + targetPct + '% winstmarge (vaste aannames)';
     const table = document.createElement('table');
     table.className = 'admin-table';
     const body = table.createTBody();
@@ -43,7 +44,7 @@
     }
     const note = document.createElement('p');
     note.className = 'nv-margin-missing';
-    note.textContent = 'Indicatief scenario: ' + String(vatPct).replace('.', ',') + '% btw, € 4,95 verzending, € 3,00 reclame, € 1,00 retourreserve en € 0,35 + 2,5% transactiekosten; verkoopadvies op circa 25% marge over de omzet excl. btw. Dit zijn aannames, geen bevestigde leverancierskosten. Vul een verkoopprijs in om met je eigen bedragen te rekenen.';
+    note.textContent = 'Indicatief scenario: ' + String(vatPct).replace('.', ',') + '% btw, € 4,95 verzending, € 3,00 reclame, € 1,00 retourreserve en € 0,35 + 2,5% transactiekosten; verkoopadvies op ' + targetPct + '% marge over de omzet excl. btw. Dit zijn aannames, geen bevestigde leverancierskosten. Vul een verkoopprijs in om met je eigen bedragen te rekenen.';
     out.replaceChildren(title, table, note);
   }
   for (const form of document.querySelectorAll('form[data-margin-live]')) {
@@ -51,17 +52,18 @@
     if (!out) continue;
     const field = name => form.elements[name];
     const cents = name => Math.round(Number(String(field(name).value).replace(',', '.')) * 100);
+    const target = () => { const r = form.querySelector('input[name="target_margin"]:checked'); return r ? Number(r.value) : 25; };
     const run = () => {
       const purchaseInput = field('purchase_cost'), sellingInput = field('selling_price');
       if (purchaseInput && purchaseInput.value !== '' && purchaseInput.validity.valid && Number(purchaseInput.value) > 0
           && (!sellingInput || sellingInput.value === '')) {
         advice(out, cents('purchase_cost'), field('vat_rate') && field('vat_rate').value !== '' && field('vat_rate').validity.valid
-          ? Number(String(field('vat_rate').value).replace(',', '.')) : 21);
+          ? Number(String(field('vat_rate').value).replace(',', '.')) : 21, target());
         return;
       }
       const required = ['selling_price', 'purchase_cost', 'vat_rate'].map(field);
       if (required.some(input => !input || input.value === '')) {
-        out.innerHTML = '<p class="nv-margin-wait">Vul een inkoopprijs in voor een automatisch verkoopadvies, of vul ook verkoopprijs en btw in voor je eigen berekening.</p>';
+        out.innerHTML = '<p class="nv-margin-wait">Vul een inkoopprijs in: het verkoopadvies voor de gekozen marge verschijnt direct. Vul daarna eventueel je eigen verkoopprijs en btw in.</p>';
         return;
       }
       const all = [...form.querySelectorAll('input[type=number]')];
@@ -91,6 +93,15 @@
         const tr = body.insertRow();
         const th = document.createElement('th'); th.textContent = label; tr.append(th);
         tr.insertCell().textContent = value;
+      }
+      const goal = target(), factor = 1 + vat / 100;
+      if (goal < 100) {
+        const needed = roundHalfUp(factor * costs / (1 - goal / 100));
+        const tr = body.insertRow();
+        const th = document.createElement('th'); th.textContent = 'Verkoopprijs voor ' + goal + '% marge';
+        tr.append(th);
+        tr.insertCell().textContent = eur(needed) + (missing.length ? ' (op basis van ingevulde kosten)' : '') +
+          (selling >= needed ? ' · jouw prijs haalt dit' : ' · jouw prijs is ' + eur(needed - selling) + ' te laag');
       }
       out.replaceChildren(table);
       const note = document.createElement('p');

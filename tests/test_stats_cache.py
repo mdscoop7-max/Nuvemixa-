@@ -81,3 +81,24 @@ def test_margin_advice_in_browser_matches_server():
         server = automatic_margin(price, vat)
         assert values == [round(float(server[k]) * 100) for k in
                           ("selling", "revenue_ex_vat", "vat", "platform", "total_cost", "profit")], key
+
+
+def test_margin_bar_percentages_give_the_chosen_margin():
+    import json
+    import pathlib
+    import shutil
+    import subprocess
+    import pytest
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js niet beschikbaar")
+    script = pathlib.Path(__file__).resolve().parents[1] / "static/nv-margin-live.js"
+    code = ("global.window={};global.document={querySelectorAll:()=>[]};require(%r);const f=window.NVMarginAdvice;"
+            "const o={};for(const t of [15,20,25,30,35,40]){o[t]=f(1250,21,t).margin}console.log(JSON.stringify(o))") % str(script)
+    margins = json.loads(subprocess.run([node, "-e", code], capture_output=True, text=True, check=True).stdout)
+    for pct, margin in margins.items():
+        assert abs(margin - int(pct)) < 0.2, (pct, margin)
+    page = (pathlib.Path(__file__).resolve().parents[1] / "templates/dashboard.html").read_text(encoding="utf-8")
+    form = page.split('id="nv-product-margin"', 1)[1].split("</form>", 1)[0]
+    assert form.index('name="margin_product"') < form.index('name="purchase_cost"') < form.index('name="target_margin"')
+    assert form.index('name="target_margin"') < form.index("selling_price")
