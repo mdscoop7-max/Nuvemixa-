@@ -1,7 +1,8 @@
 /* Live weergave van de gedeelde prijs- en margecalculator (Productonderzoek én de calculatorpagina).
  * Rekent uitsluitend via NVMargin.compute (static/nv-margin-core.js), dezelfde regels als de server
  * (nv_product_margin.unified_margin). Een leeg kostenveld blijft ONBEKEND: het wordt NIET als € 0 meegeteld,
- * maar vervangen door de zichtbare standaardaanname en apart vermeld. Een ingevulde 0 is een bewuste keuze. */
+ * maar vervangen door de zichtbare standaardaanname en apart vermeld. Een ingevulde 0 is een bewuste keuze.
+ * Bovenaan staat alleen de samenvatting; de volledige tabel zit in 'Uitgebreide rekentabel'. */
 (() => {
   'use strict';
   const core = window.NVMargin;
@@ -13,40 +14,42 @@
     fee_fixed: 'transaction_fee', fee_pct: 'transaction_pct', platform: 'platform_fee', other: 'other_cost'};
   const STANDARD = {shipping: 'std_shipping', advertising: 'std_advertising', returns: 'std_returns',
     fee_fixed: 'std_fee_fixed', fee_pct: 'std_fee_pct', platform: 'std_platform', other: 'std_other'};
-  const LABELS = {shipping: 'Verzend- en fulfilmentkosten', advertising: 'Advertentiekosten', returns: 'Retourkosten',
+  const LABELS = {shipping: 'Verzendkosten (verkoper)', advertising: 'Advertentiekosten', returns: 'Retourkosten',
     platform: 'Platformkosten', other: 'Invoer- en overige kosten'};
 
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+
   function table(rows) {
-    const t = document.createElement('table');
-    t.className = 'admin-table';
+    const t = el('table', 'admin-table');
     const body = t.createTBody();
     for (const [label, value, source, key] of rows) {
       const tr = body.insertRow();
       if (key) tr.className = 'nv-mkey';
-      const th = document.createElement('th');
-      th.textContent = label;
-      if (source) {
-        const tag = document.createElement('small');
-        tag.className = 'nv-msrc nv-msrc--' + source;
-        tag.textContent = source;
-        th.append(' ', tag);
-      }
+      const th = el('th', '', label);
+      if (source) th.append(' ', el('small', 'nv-msrc nv-msrc--' + source, source));
       tr.append(th);
       tr.insertCell().textContent = value;
     }
     return t;
   }
 
-  function paragraph(className, html) {
-    const p = document.createElement('p');
-    p.className = className;
-    p.innerHTML = html;
-    return p;
+  function tile(label, value, note, key) {
+    const box = el('div', key ? 'nv-msum__key' : '');
+    box.append(el('span', '', label), el('strong', '', value));
+    if (note) box.append(el('small', '', note));
+    return box;
   }
 
   for (const form of document.querySelectorAll('form[data-margin-live]')) {
     const out = document.querySelector(form.dataset.marginLive);
     if (!out) continue;
+    const summary = out.querySelector('[data-margin-summary]') || out;
+    const tableBox = out.querySelector('[data-margin-table]');
     const field = name => form.elements[name];
     const value = (name, percent) => {
       const input = field(name);
@@ -55,14 +58,25 @@
       return percent ? n : Math.round(n * 100);
     };
     const target = () => { const r = form.querySelector('input[name="target_margin"]:checked'); return r ? Number(r.value) : 25; };
+    const shippingSelect = form.querySelector('[data-margin-shipping]');
+    const ownShipping = form.querySelector('[data-margin-own-shipping]');
+    const syncShipping = () => {
+      if (ownShipping && shippingSelect) ownShipping.hidden = shippingSelect.value !== 'own';
+    };
+    const wait = text => { summary.replaceChildren(el('p', 'nv-margin-wait', text)); if (tableBox) tableBox.replaceChildren(); };
+
     const run = () => {
+      syncShipping();
       const purchaseInput = field('purchase_cost');
       if (!purchaseInput || purchaseInput.value === '') {
-        out.innerHTML = '<p class="nv-margin-wait">Vul een inkoopprijs in: de voorlopige adviesprijs voor de gekozen marge verschijnt direct.</p>';
+        wait('Vul een inkoopprijs in en kies een marge: de voorlopige adviesprijs verschijnt direct.');
         return;
       }
       if ([...form.querySelectorAll('input[type=number]')].some(input => !input.validity.valid)) {
-        out.innerHTML = '<p class="nv-margin-wait" role="alert">Controleer de ingevulde bedragen (geen negatieve waarden, maximaal 2 decimalen, binnen het bereik).</p>';
+        const p = el('p', 'nv-margin-wait', 'Controleer de ingevulde bedragen (geen negatieve waarden, maximaal 2 decimalen, binnen het bereik).');
+        p.setAttribute('role', 'alert');
+        summary.replaceChildren(p);
+        if (tableBox) tableBox.replaceChildren();
         return;
       }
       const actual = {}, standard = {};
@@ -73,42 +87,61 @@
       }
       const vat = value('vat_rate', true);
       const r = core.compute({purchase: value('purchase_cost'), vat: vat === null ? 21 : vat, target: target(),
-        own: value('selling_price'), actual, standard});
-      if (r.error) { out.innerHTML = ''; out.append(paragraph('nv-margin-wait', '')); out.firstChild.textContent = r.error; return; }
+        own: value('selling_price'), actual, standard,
+        shippingChoice: shippingSelect ? shippingSelect.value : 'own', customerShipping: value('customer_shipping') || 0});
+      if (r.error) { wait(r.error); return; }
       const a = r.advice;
       const missing = [];
       for (const label of r.assumed) missing.push(label);
-      const title = paragraph('nv-margin-title', '');
-      const tag = document.createElement('span');
-      tag.className = 'nv-mtag nv-mtag--' + r.kind.toLowerCase();
-      tag.textContent = r.kind === 'A' ? 'A · Voorlopige adviesprijs' : 'B · Berekening met werkelijke kosten';
-      title.append(tag, ' voor ' + r.target + '% winstmarge');
-      const rows = [['Inkoopprijs excl. btw', eur(r.purchase)], ['Adviesprijs incl. btw', eur(a.selling), null, true],
-        ['Verkoopprijs excl. btw', eur(a.revenue)], ['Btw-bedrag (' + num(r.vat) + '%)', eur(a.vat)]];
+
+      // Samenvatting (altijd zichtbaar)
+      const title = el('p', 'nv-margin-title');
+      title.append(el('span', 'nv-mtag nv-mtag--' + r.kind.toLowerCase(),
+        r.kind === 'A' ? 'A · Voorlopige adviesprijs' : 'B · Berekening met werkelijke kosten'), ' voor ' + r.target + '% winstmarge');
+      const tiles = el('div', 'nv-msum');
+      tiles.append(
+        tile('Adviesverkoopprijs incl. btw', eur(a.selling),
+          a.customer ? '+ ' + eur(a.customer) + ' verzending klant = ' + eur(a.total) : 'excl. btw ' + eur(a.revenue), true),
+        tile('Btw-bedrag', eur(a.vat)), tile('Geschatte winst', eur(a.profit)), tile('Winstmarge', pct(a.margin)));
+      const used = el('p', 'nv-msum__costs');
+      used.append(el('small', '', 'Gebruikt: verzending ' + eur(r.used.shipping) + ' (' + r.sources.shipping + ') · advertenties ' +
+        eur(r.used.advertising) + ' (' + r.sources.advertising + ') · retouren ' + eur(r.used.returns) + ' (' + r.sources.returns +
+        ') · betaalprovider ' + eur(r.used.fee_fixed) + ' + ' + num(r.used.fee_pct) + '%'));
+      const parts = [title, tiles, used];
+      if (r.own) {
+        const own = el('p', 'nv-msum__own');
+        own.append(el('strong', '', 'Jouw prijs ' + eur(r.own.selling) + ':'), ' winst ' + eur(r.own.profit) + ' · ' + pct(r.own.margin) +
+          ' — ' + (r.own.reaches ? 'haalt het doel' : eur(r.own.short) + ' te laag voor ' + r.target + '%'));
+        parts.push(own);
+      }
+      parts.push(el('p', 'nv-margin-missing', missing.length
+        ? 'Voorlopige berekening: ' + missing.length + ' kostenpost' + (missing.length !== 1 ? 'en' : '') + ' op aanname' +
+          (missing.some(label => label.includes('nog onbekend')) ? ', verzendkosten nog onbekend' : '') +
+          '. Onbekende kosten zijn NIET als € 0 meegeteld; details in de uitgebreide rekentabel.'
+        : 'Alle kosten zijn werkelijk ingevuld. Indicatieve berekening, geen fiscaal advies.'));
+      summary.replaceChildren(...parts);
+
+      // Uitgebreide rekentabel
+      if (!tableBox) return;
+      const rows = [['Inkoopprijs excl. btw', eur(r.purchase)], ['Adviesverkoopprijs incl. btw', eur(a.selling), null, true]];
+      if (a.customer) rows.push(['Verzendkosten aan klant incl. btw', eur(a.customer)], ['Totaal dat de klant betaalt', eur(a.total)]);
+      rows.push(['Omzet excl. btw', eur(a.revenue)], ['Btw-bedrag (' + num(r.vat) + '%)', eur(a.vat)]);
       for (const key of ['shipping', 'advertising', 'returns']) rows.push([LABELS[key], eur(r.used[key]), r.sources[key]]);
       rows.push(['Betaalproviderkosten (' + eur(r.used.fee_fixed) + ' + ' + num(r.used.fee_pct) + '%)', eur(a.fee)]);
       for (const key of ['platform', 'other']) rows.push([LABELS[key], eur(r.used[key]), r.sources[key]]);
       rows.push(['Totale kosten incl. inkoop', eur(a.costs)], ['Brutowinst (na inkoop)', eur(a.gross) + ' · ' + pct(a.gross_pct)],
         ['Geschatte nettowinst', eur(a.profit) + ' · ' + pct(a.margin), null, true]);
-      const parts = [title, table(rows)];
+      const tableParts = [table(rows)];
       if (r.own) {
         const o = r.own;
-        const ownTitle = paragraph('nv-margin-title', '');
-        const strong = document.createElement('strong');
-        strong.textContent = 'Jouw verkoopprijs ' + eur(o.selling);
-        ownTitle.append(strong);
-        parts.push(ownTitle, table([['Verkoopprijs excl. btw', eur(o.revenue)], ['Btw-bedrag', eur(o.vat)],
+        const ownTitle = el('p', 'nv-margin-title');
+        ownTitle.append(el('strong', '', 'Jouw verkoopprijs ' + eur(o.selling)));
+        tableParts.push(ownTitle, table([['Omzet excl. btw', eur(o.revenue)], ['Btw-bedrag', eur(o.vat)],
           ['Betaalproviderkosten', eur(o.fee)], ['Brutowinst (na inkoop)', eur(o.gross) + ' · ' + pct(o.gross_pct)],
           ['Geschatte nettowinst', eur(o.profit) + ' · ' + pct(o.margin), null, true],
           ['Doel ' + r.target + '%', o.reaches ? 'Jouw prijs haalt dit' : 'Jouw prijs is ' + eur(o.short) + ' te laag']]));
       }
-      const note = paragraph('nv-margin-missing', '');
-      note.textContent = missing.length
-        ? 'Voorlopig: ' + missing.length + ' kostenpost' + (missing.length !== 1 ? 'en' : '') + ' op standaardaanname (' + missing.join(', ') +
-          '). Onbekende kosten zijn NIET als € 0 meegeteld maar als zichtbare aanname. Vul de werkelijke kosten in voor uitkomst B.'
-        : 'Alle kosten zijn werkelijk ingevuld. Indicatieve berekening, geen fiscaal advies.';
-      parts.push(note);
-      out.replaceChildren(...parts);
+      tableBox.replaceChildren(...tableParts);
     };
     const reset = form.querySelector('[data-margin-reset]');
     if (reset) reset.addEventListener('click', () => {
@@ -118,6 +151,9 @@
     form.addEventListener('input', run);
     form.addEventListener('change', run);
     form.addEventListener('submit', event => { event.preventDefault(); run(); });
+    // Zonder JavaScript is 'Bereken' nodig; met JavaScript rekent alles direct.
+    const submit = form.querySelector('.nv-mcalc__submit');
+    if (submit) submit.hidden = true;
     run();
   }
 })();

@@ -2281,8 +2281,10 @@ def control():
     product_margin_error = None
     margin_unified = None
     margin_unified_error = None
+    # Oude links (margin_run zonder methode, of de vroegere automatische berekening) rekenen voortaan ook via de
+    # gedeelde rekenmodule, zodat bladwijzers blijven werken en er maar één berekening bestaat.
     if (section in {"onderzoek", "calculator"} and request.args.get("margin_run") == "1"
-            and request.args.get("margin_method") == "unified"):
+            and request.args.get("margin_method") in {None, "", "unified", "automatic"}):
         # Gedeelde rekenmodule (zelfde regels als static/nv-margin-core.js); werkt ook zonder JavaScript.
         from nv_product_margin import unified_margin
         try:

@@ -669,34 +669,7 @@
 <p>Vul eerst product en inkoopprijs in en kies de gewenste marge: de adviesprijs verschijnt direct. Gebruik kosten exclusief btw. Lege kosten blijven onbekend. Vul 0 in als een kostenpost aantoonbaar niet geldt.</p>
 {{ mcalc.margin_form('onderzoek', 'nv-margin-live', request.args) }}
 <div id="nv-margin-live" class="admin-table-wrap nv-margin-live" aria-live="polite">{{ mcalc.margin_result(margin_unified, margin_unified_error) }}</div>
-<details {% if product_margin %}open{% endif %}><summary>Automatisch verkoopadvies met vaste aannames</summary>
-<h2>Automatisch verkoopadvies en winstmarge</h2>
-<p>Vul alleen de inkoopprijs exclusief btw in. NUVEMIXA berekent een indicatief verkoopadvies en alle kosten op basis van duidelijk vermelde aannames.</p>
-<form action="{{ url_for('control') }}" method="get" class="nv-admin-form">
-<input type="hidden" name="section" value="onderzoek">
-<input type="hidden" name="margin_run" value="1">
-<label>Inkoopprijs excl. btw (€)
-<input type="number" name="purchase_cost" min="0.01" max="1000000" step="0.01" required inputmode="decimal" placeholder="Bijvoorbeeld 12,50" value="{{ request.args.get('purchase_cost','')|e }}"></label>
-<button type="submit">Bereken automatisch</button>
-</form>
-{% if product_margin_error %}<div class="notice" role="alert">{{ product_margin_error }}</div>{% endif %}
-{% if product_margin %}
-<div class="admin-table-wrap"><table class="admin-table"><tbody>
-<tr><th>Inkoopprijs excl. btw</th><td>€ {{ product_margin.purchase }}</td></tr>
-<tr><th>Adviesverkoopprijs incl. btw</th><td><strong>€ {{ product_margin.selling }}</strong></td></tr>
-<tr><th>Omzet excl. btw</th><td>€ {{ product_margin.revenue_ex_vat }}</td></tr>
-<tr><th>Btw in verkoopprijs</th><td>€ {{ product_margin.vat }}</td></tr>
-<tr><th>Geschatte verzending</th><td>€ {{ product_margin.shipping }}</td></tr>
-<tr><th>Geschatte reclamekosten</th><td>€ {{ product_margin.advertising }}</td></tr>
-<tr><th>Geschatte transactiekosten</th><td>€ {{ product_margin.platform }}</td></tr>
-<tr><th>Geschatte retourreserve</th><td>€ {{ product_margin.returns }}</td></tr>
-<tr><th>Totale kosten incl. inkoop</th><td>€ {{ product_margin.total_cost }}</td></tr>
-<tr><th>Geschatte winst per verkoop</th><td><strong>€ {{ product_margin.profit }}</strong></td></tr>
-<tr><th>Geschatte winstmarge</th><td><strong>{{ product_margin.margin_pct }}%</strong></td></tr>
-</tbody></table></div>
-<p class="integration-status">{{ product_margin.assumptions }}</p>
-{% endif %}
-</details>
+
 </section>
 <section class="panel"><details><summary><strong>Productdossier — eigen onderzoeksnotities (optioneel)</strong></summary>
 <p>Bewaar je onderzoek met een controleerbare bron. Bestaande dossiers blijven beschikbaar.</p>

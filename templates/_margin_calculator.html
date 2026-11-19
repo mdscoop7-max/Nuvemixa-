@@ -1,10 +1,13 @@
 {# Gedeelde prijs- en margecalculator voor Productonderzoek ('Winstmarge per product') en de pagina
-   'Prijs & marge calculator'. Rekenregels: static/nv-margin-core.js = nv_product_margin.unified_margin. #}
+   'Prijs & marge calculator'. Rekenregels: static/nv-margin-core.js = nv_product_margin.unified_margin.
+   Bovenaan alleen het nodige; alle kostenvelden achter 'Kosten en berekening bekijken', de volledige tabel achter
+   'Uitgebreide rekentabel'. Zonder JavaScript rekent de server met dezelfde regels (knop Bereken). #}
 {% macro eur(cents) %}{{ ('€ %.2f' % (cents / 100)).replace('.', ',') }}{% endmacro %}
 {% macro pct(value) %}{{ ('%.2f' % value).replace('.', ',') }}%{% endmacro %}
 
 {% macro margin_form(section, live_id, args, show_product=True) %}
-{% set filled = args.get('margin_method') == 'unified' %}
+{% set filled = args.get('margin_run') == '1' and args.get('margin_method') in (none, '', 'unified', 'automatic') %}
+{% set choice = args.get('shipping_choice', 'standard') if filled else 'standard' %}
 <form action="{{ url_for('control', _anchor='nv-product-margin' if section == 'onderzoek' else 'tm-calc') }}" method="get"
       class="nv-admin-form nv-mcalc" data-margin-live="#{{ live_id }}">
   <input type="hidden" name="section" value="{{ section }}">
@@ -18,43 +21,79 @@
     {% set chosen = args.get('target_margin', '25') %}
     {% for p in ['15', '20', '25', '30', '35', '40'] %}<label><input type="radio" name="target_margin" value="{{ p }}" {% if chosen == p %}checked{% endif %}><span>{{ p }}%</span></label>{% endfor %}
   </fieldset>
-  <label>Eigen verkoopprijs incl. btw (€), optioneel <input name="selling_price" type="number" min="0.01" max="1000000" step="0.01" inputmode="decimal"
-    value="{{ args.get('selling_price', '') if filled else '' }}" placeholder="Leeg = alleen adviesprijs"></label>
-  <label>Btw op verkoop (%) <input name="vat_rate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="{{ (args.get('vat_rate', '21') if filled else '21') or '21' }}"></label>
-  <fieldset class="nv-mcosts">
-    <legend>Werkelijke kosten per verkoop, excl. btw <small>(leeg = onbekend: dan geldt de standaardaanname; 0 = bewust geen kosten)</small></legend>
-    {% for name, label, step, maxv in [
-      ('shipping_cost', 'Verzend- en fulfilmentkosten (€)', '0.01', 1000000), ('advertising_cost', 'Advertentiekosten (€)', '0.01', 1000000),
-      ('returns_reserve', 'Retourkosten (€)', '0.01', 1000000), ('transaction_fee', 'Betaalprovider vast (€)', '0.01', 1000000),
-      ('transaction_pct', 'Betaalprovider (% van prijs incl. btw)', '0.01', 99.99), ('platform_fee', 'Platformkosten (€)', '0.01', 1000000),
-      ('other_cost', 'Invoer- en overige kosten (€)', '0.01', 1000000)] %}
-    <label>{{ label }} <input name="{{ name }}" type="number" min="0" max="{{ maxv }}" step="{{ step }}" inputmode="decimal" placeholder="Onbekend" value="{{ args.get(name, '') if filled else '' }}"></label>
-    {% endfor %}
-  </fieldset>
-  <fieldset class="nv-mcosts nv-mcosts--std">
-    <legend>Standaardaannames <small>(zichtbaar en aanpasbaar; gelden alleen voor kosten die je hierboven leeg laat)</small></legend>
-    {% for name, label, default, maxv in [
-      ('std_shipping', 'Verzending (€)', '4.95', 1000000), ('std_advertising', 'Advertenties (€)', '3.00', 1000000),
-      ('std_returns', 'Retour (€)', '1.00', 1000000), ('std_fee_fixed', 'Betaalprovider vast (€)', '0.35', 1000000),
-      ('std_fee_pct', 'Betaalprovider (%)', '2.5', 99.99), ('std_platform', 'Platform (€)', '0.00', 1000000),
-      ('std_other', 'Invoer/overig (€)', '0.00', 1000000)] %}
-    <label>{{ label }} <input name="{{ name }}" type="number" min="0" max="{{ maxv }}" step="0.01" inputmode="decimal" value="{{ (args.get(name, default) if filled else default) or default }}" data-default="{{ default }}"></label>
-    {% endfor %}
-    <button type="button" class="nv-mcosts__reset" data-margin-reset>Standaardwaarden herstellen</button>
-  </fieldset>
-  <button type="submit">Bereken</button>
+  <div class="nv-mship">
+    <label>Verzendkosten voor jou (verkoper)
+      <select name="shipping_choice" data-margin-shipping>
+        <option value="standard" {% if choice == 'standard' %}selected{% endif %}>Standaard Nederland (aanname)</option>
+        <option value="free" {% if choice == 'free' %}selected{% endif %}>Geen verzendkosten voor mij (€ 0)</option>
+        <option value="own" {% if choice == 'own' %}selected{% endif %}>Eigen bedrag invoeren</option>
+        <option value="unknown" {% if choice == 'unknown' %}selected{% endif %}>Nog onbekend</option>
+      </select>
+    </label>
+    <label data-margin-own-shipping>Eigen verzendbedrag excl. btw (€)
+      <input name="shipping_cost" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" placeholder="bijv. 6,50"
+             value="{{ args.get('shipping_cost', '') if filled else '' }}"></label>
+    <p class="nv-mship__note"><small>Standaard = aanpasbare aanname, geen bevestigd tarief. € 0 betekent: verzending kost jóu niets. Wat de klant voor verzending betaalt, stel je apart in onder “Kosten en berekening bekijken”.</small></p>
+  </div>
+  <details class="nv-mmore">
+    <summary>Kosten en berekening bekijken</summary>
+    <div class="nv-mmore__grid">
+      <label>Eigen verkoopprijs incl. btw (€), optioneel <input name="selling_price" type="number" min="0.01" max="1000000" step="0.01" inputmode="decimal"
+        value="{{ args.get('selling_price', '') if filled else '' }}" placeholder="Leeg = alleen adviesprijs"></label>
+      <label>Btw op verkoop (%) <input name="vat_rate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="{{ (args.get('vat_rate', '21') if filled else '21') or '21' }}"></label>
+      <label>Verzendkosten aan klant incl. btw (€) <input name="customer_shipping" type="number" min="0" max="1000000" step="0.01" inputmode="decimal"
+        value="{{ (args.get('customer_shipping', '0') if filled else '0') or '0' }}"><small>0 = gratis verzending voor de klant; jouw eigen verzendkosten blijven meetellen.</small></label>
+    </div>
+    <fieldset class="nv-mcosts">
+      <legend>Werkelijke kosten per verkoop, excl. btw <small>(leeg = onbekend: dan geldt de standaardaanname; 0 = bewust geen kosten)</small></legend>
+      {% for name, label, maxv in [
+        ('advertising_cost', 'Advertentiekosten (€)', 1000000), ('returns_reserve', 'Retourkosten (€)', 1000000),
+        ('transaction_fee', 'Betaalprovider vast (€)', 1000000), ('transaction_pct', 'Betaalprovider (% van prijs incl. btw)', 99.99),
+        ('platform_fee', 'Platformkosten (€)', 1000000), ('other_cost', 'Invoer- en overige kosten (€)', 1000000)] %}
+      <label>{{ label }} <input name="{{ name }}" type="number" min="0" max="{{ maxv }}" step="0.01" inputmode="decimal" placeholder="Onbekend" value="{{ args.get(name, '') if filled else '' }}"></label>
+      {% endfor %}
+    </fieldset>
+    <fieldset class="nv-mcosts nv-mcosts--std">
+      <legend>Standaardaannames <small>(zichtbaar en aanpasbaar; gelden alleen voor kosten die onbekend zijn)</small></legend>
+      {% for name, label, default, maxv in [
+        ('std_shipping', 'Verzending NL (€)', '4.95', 1000000), ('std_advertising', 'Advertenties (€)', '3.00', 1000000),
+        ('std_returns', 'Retour (€)', '1.00', 1000000), ('std_fee_fixed', 'Betaalprovider vast (€)', '0.35', 1000000),
+        ('std_fee_pct', 'Betaalprovider (%)', '2.5', 99.99), ('std_platform', 'Platform (€)', '0.00', 1000000),
+        ('std_other', 'Invoer/overig (€)', '0.00', 1000000)] %}
+      <label>{{ label }} <input name="{{ name }}" type="number" min="0" max="{{ maxv }}" step="0.01" inputmode="decimal" value="{{ (args.get(name, default) if filled else default) or default }}" data-default="{{ default }}"></label>
+      {% endfor %}
+      <button type="button" class="nv-mcosts__reset" data-margin-reset>Standaardwaarden herstellen</button>
+    </fieldset>
+  </details>
+  <button type="submit" class="nv-mcalc__submit">Bereken</button>
 </form>
 {% endmacro %}
 
-{% macro margin_result(r, error=None) %}
+{% macro margin_summary(r, error=None) %}
 {% if error %}<p class="nv-margin-wait" role="alert">{{ error }}</p>
 {% elif r %}
-{% set labels = {'shipping': 'Verzend- en fulfilmentkosten', 'advertising': 'Advertentiekosten', 'returns': 'Retourkosten', 'platform': 'Platformkosten', 'other': 'Invoer- en overige kosten'} %}
 <p class="nv-margin-title"><span class="nv-mtag nv-mtag--{{ r.kind|lower }}">{{ 'A · Voorlopige adviesprijs' if r.kind == 'A' else 'B · Berekening met werkelijke kosten' }}</span> voor {{ r.target|int }}% winstmarge</p>
+<div class="nv-msum">
+  <div class="nv-msum__key"><span>Adviesverkoopprijs incl. btw</span><strong>{{ eur(r.advice.selling) }}</strong>{% if r.advice.customer %}<small>+ {{ eur(r.advice.customer) }} verzending klant = {{ eur(r.advice.total) }}</small>{% else %}<small>excl. btw {{ eur(r.advice.revenue) }}</small>{% endif %}</div>
+  <div><span>Btw-bedrag</span><strong>{{ eur(r.advice.vat) }}</strong></div>
+  <div><span>Geschatte winst</span><strong>{{ eur(r.advice.profit) }}</strong></div>
+  <div><span>Winstmarge</span><strong>{{ pct(r.advice.margin) }}</strong></div>
+</div>
+<p class="nv-msum__costs"><small>Gebruikt: verzending {{ eur(r.used.shipping) }} ({{ r.sources.shipping }}) · advertenties {{ eur(r.used.advertising) }} ({{ r.sources.advertising }}) · retouren {{ eur(r.used.returns) }} ({{ r.sources.returns }}) · betaalprovider {{ eur(r.used.fee_fixed) }} + {{ ('%g' % r.used.fee_pct).replace('.', ',') }}%</small></p>
+{% if r.own %}<p class="nv-msum__own"><strong>Jouw prijs {{ eur(r.own.selling) }}:</strong> winst {{ eur(r.own.profit) }} · {{ pct(r.own.margin) }} — {{ 'haalt het doel' if r.own.reaches else eur(r.own.short) ~ ' te laag voor ' ~ (r.target|int) ~ '%' }}</p>{% endif %}
+<p class="nv-margin-missing">{% if r.assumed %}Voorlopige berekening: {{ r.assumed|length }} kostenpost{{ 'en' if r.assumed|length != 1 }} op aanname{% if 'Verzend- en fulfilmentkosten (nog onbekend)' in r.assumed %}, verzendkosten nog onbekend{% endif %}. Onbekende kosten zijn NIET als € 0 meegeteld; details in de uitgebreide rekentabel.{% else %}Alle kosten zijn werkelijk ingevuld. Indicatieve berekening, geen fiscaal advies.{% endif %}</p>
+{% endif %}
+{% endmacro %}
+
+{% macro margin_table(r) %}
+{% if r %}
+{% set labels = {'shipping': 'Verzendkosten (verkoper)', 'advertising': 'Advertentiekosten', 'returns': 'Retourkosten', 'platform': 'Platformkosten', 'other': 'Invoer- en overige kosten'} %}
 <table class="admin-table"><tbody>
   <tr><th>Inkoopprijs excl. btw</th><td>{{ eur(r.purchase) }}</td></tr>
-  <tr class="nv-mkey"><th>Adviesprijs incl. btw</th><td>{{ eur(r.advice.selling) }}</td></tr>
-  <tr><th>Verkoopprijs excl. btw</th><td>{{ eur(r.advice.revenue) }}</td></tr>
+  <tr class="nv-mkey"><th>Adviesverkoopprijs incl. btw</th><td>{{ eur(r.advice.selling) }}</td></tr>
+  {% if r.advice.customer %}<tr><th>Verzendkosten aan klant incl. btw</th><td>{{ eur(r.advice.customer) }}</td></tr>
+  <tr><th>Totaal dat de klant betaalt</th><td>{{ eur(r.advice.total) }}</td></tr>{% endif %}
+  <tr><th>Omzet excl. btw</th><td>{{ eur(r.advice.revenue) }}</td></tr>
   <tr><th>Btw-bedrag ({{ ('%g' % r.vat).replace('.', ',') }}%)</th><td>{{ eur(r.advice.vat) }}</td></tr>
   {% for key in ['shipping', 'advertising', 'returns'] %}<tr><th>{{ labels[key] }} <small class="nv-msrc nv-msrc--{{ r.sources[key] }}">{{ r.sources[key] }}</small></th><td>{{ eur(r.used[key]) }}</td></tr>{% endfor %}
   <tr><th>Betaalproviderkosten ({{ eur(r.used.fee_fixed) }} + {{ ('%g' % r.used.fee_pct).replace('.', ',') }}%)</th><td>{{ eur(r.advice.fee) }}</td></tr>
@@ -66,7 +105,7 @@
 {% if r.own %}
 <p class="nv-margin-title"><strong>Jouw verkoopprijs {{ eur(r.own.selling) }}</strong></p>
 <table class="admin-table"><tbody>
-  <tr><th>Verkoopprijs excl. btw</th><td>{{ eur(r.own.revenue) }}</td></tr>
+  <tr><th>Omzet excl. btw</th><td>{{ eur(r.own.revenue) }}</td></tr>
   <tr><th>Btw-bedrag</th><td>{{ eur(r.own.vat) }}</td></tr>
   <tr><th>Betaalproviderkosten</th><td>{{ eur(r.own.fee) }}</td></tr>
   <tr><th>Brutowinst (na inkoop)</th><td>{{ eur(r.own.gross) }} · {{ pct(r.own.gross_pct) }}</td></tr>
@@ -74,6 +113,11 @@
   <tr><th>Doel {{ r.target|int }}%</th><td>{{ 'Jouw prijs haalt dit' if r.own.reaches else 'Jouw prijs is ' ~ eur(r.own.short) ~ ' te laag' }}</td></tr>
 </tbody></table>
 {% endif %}
-<p class="nv-margin-missing">{% if r.assumed %}Voorlopig: {{ r.assumed|length }} kostenpost{{ 'en' if r.assumed|length != 1 }} op standaardaanname ({{ r.assumed|join(', ') }}). Onbekende kosten zijn NIET als € 0 meegeteld maar als zichtbare aanname. Vul de werkelijke kosten in voor uitkomst B.{% else %}Alle kosten zijn werkelijk ingevuld. Indicatieve berekening, geen fiscaal advies.{% endif %}</p>
 {% endif %}
+{% endmacro %}
+
+{# Resultaatblok: samenvatting altijd zichtbaar, volledige tabel achter 'Uitgebreide rekentabel'. #}
+{% macro margin_result(r, error=None) %}
+<div data-margin-summary>{% if r or error %}{{ margin_summary(r, error) }}{% else %}<p class="nv-margin-wait">Vul een inkoopprijs in en kies een marge: de voorlopige adviesprijs verschijnt direct.</p>{% endif %}</div>
+<details class="nv-mtable"><summary>Uitgebreide rekentabel</summary><div data-margin-table>{{ margin_table(r) }}</div></details>
 {% endmacro %}

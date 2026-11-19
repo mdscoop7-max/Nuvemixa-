@@ -249,3 +249,27 @@ body.nv-admin-ui main .nv-msrc--ingevuld,body.nv-admin-ui main .nv-msrc--nul{bac
 body.nv-admin-ui main .nv-margin-live tr.nv-mkey th,body.nv-admin-ui main .nv-margin-live tr.nv-mkey td{background:#f2f7ff;color:#0b2a55;font-weight:800}
 body.nv-admin-ui main .nv-mcalc button.nv-mcosts__reset{background:#fff;color:#0757bd;border:1px solid #cfdcf0;box-shadow:none;font-weight:700;padding:6px 12px;min-height:34px;justify-self:start}
 @media(max-width:560px){body.nv-admin-ui main .nv-mcalc .nv-mcosts{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 8px;padding:8px}}
+/* Calculator: eenvoudige indeling (samenvatting bovenaan, details inklapbaar) */
+body.nv-admin-ui main .nv-mcalc .nv-mship{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:8px 12px;align-items:end}
+body.nv-admin-ui main .nv-mcalc .nv-mship select,body.nv-admin-ui main .nv-mcalc .nv-mship input{width:100%;min-width:0;box-sizing:border-box}
+body.nv-admin-ui main .nv-mcalc .nv-mship__note{grid-column:1/-1;margin:0;color:#64748b}
+body.nv-admin-ui main .nv-mcalc [hidden]{display:none!important}
+body.nv-admin-ui main .nv-mcalc details.nv-mmore{grid-column:1/-1;border:1px solid #e3eaf4;border-radius:12px;padding:8px 12px;background:#fbfdff}
+body.nv-admin-ui main .nv-mcalc details.nv-mmore>summary,body.nv-admin-ui main details.nv-mtable>summary{cursor:pointer;font-weight:700;font-size:.86rem;color:#0757bd}
+body.nv-admin-ui main .nv-mmore__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:8px 12px;margin:10px 0 6px}
+body.nv-admin-ui main .nv-mmore__grid input{width:100%;min-width:0;box-sizing:border-box}
+body.nv-admin-ui main .nv-mmore__grid small{display:block;color:#64748b;font-weight:500}
+body.nv-admin-ui main .nv-msum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0}
+body.nv-admin-ui main .nv-msum>div{border:1px solid #e3eaf4;border-radius:12px;padding:8px 10px;background:#fff;min-width:0}
+body.nv-admin-ui main .nv-msum span{display:block;font-size:.72rem;font-weight:700;color:#64748b}
+body.nv-admin-ui main .nv-msum strong{display:block;font-size:1.2rem;color:#0b2a55;white-space:nowrap}
+body.nv-admin-ui main .nv-msum small{display:block;font-size:.72rem;color:#64748b;overflow-wrap:anywhere}
+body.nv-admin-ui main .nv-msum__key{background:#f2f7ff!important;border-color:#bcd3f5!important}
+body.nv-admin-ui main .nv-msum__costs,body.nv-admin-ui main .nv-msum__own{margin:4px 0;font-size:.84rem;overflow-wrap:anywhere}
+body.nv-admin-ui main details.nv-mtable{margin-top:8px}
+@media(max-width:700px){body.nv-admin-ui main .nv-msum{grid-template-columns:repeat(2,minmax(0,1fr))}body.nv-admin-ui main .nv-msum strong{font-size:1.05rem}}
+body.nv-admin-ui main form.nv-mcalc .nv-mship select{width:100%;max-width:none;font-size:.9rem;font-weight:600;min-height:40px}
+body.nv-admin-ui main form.nv-mcalc .nv-mship{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end}
+body.nv-admin-ui main form.nv-mcalc .nv-mship>label{flex:1 1 280px;min-width:0}
+body.nv-admin-ui main form.nv-mcalc .nv-mship__note{flex:1 1 100%}
+body.nv-admin-ui main form.nv-mcalc button.nv-mcosts__reset{background:#fff!important;color:#0757bd!important;border:1px solid #cfdcf0!important;box-shadow:none!important;min-height:36px!important;padding:6px 12px!important;font-size:.8rem!important}
