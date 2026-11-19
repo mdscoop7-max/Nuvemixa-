@@ -11,7 +11,9 @@
 {% if w.enabled and not w.persistent %}
 <p class="notice" role="alert">Opslag is SQLite op de dashboardhost. Op Render verdwijnen die gegevens bij een herstart of nieuwe deployment. Stel <code>NUVEMIXA_DASHBOARD_DATABASE_URL</code> in voor permanente opslag.</p>
 {% endif %}
-{% if w.periods %}
+{% if not w.enabled %}
+<div class="nv-visit-totals nv-visit-totals--none">{% for label in ['Vandaag', 'Deze week', 'Deze maand', 'Totaal'] %}<div><span>{{ label }}</span><strong>Nog geen meting</strong><small>tracking niet geactiveerd</small></div>{% endfor %}</div>
+{% elif w.periods %}
 <div class="nv-visit-totals">
   {% for label, visitors, views in w.periods %}
   <div><span>{{ label }}</span><strong>{{ visitors }}</strong><small>{{ views }} paginaweergaven</small></div>

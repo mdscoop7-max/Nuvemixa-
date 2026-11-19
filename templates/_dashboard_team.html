@@ -4,10 +4,12 @@
 {% for category, message in get_flashed_messages(with_categories=true) %}
 <p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
 {% endfor %}
-<p>De vaste beheerder behoudt toegang via de bestaande inloginstellingen. Vink per medewerker aan welke onderdelen toegankelijk zijn. Beheerders hebben alle rechten.</p>
-{% if staff_error %}
+{% if not staff_login_enabled %}
+<p>Het formulier voor medewerkersaccounts is verborgen zolang medewerkerstoegang bewust uit staat. Dit dashboard is alleen voor de eigenaar. Bestaande accounts blijven ongewijzigd bewaard.</p>
+{% elif staff_error %}
 <p class="notice" role="alert">{{ staff_error }}</p>
 {% else %}
+<p>De vaste beheerder behoudt toegang via de bestaande inloginstellingen. Vink per medewerker aan welke onderdelen toegankelijk zijn. Beheerders hebben alle rechten.</p>
 {% macro details_fields(account=none) %}
 <label>Naam<input name="name" required maxlength="80" value="{{ account.name if account else '' }}"></label>
 <label>Gebruikersnaam<input name="username" required minlength="3" maxlength="64" pattern="[A-Za-z0-9._\-]{3,64}" value="{{ account.username or '' if account else '' }}"></label>

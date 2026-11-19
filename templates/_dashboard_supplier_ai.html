@@ -12,7 +12,7 @@
 <label class="nv-checkbox"><input type="checkbox" name="eu_only" value="1" checked> Alleen Europese leveranciers (EU)</label>
 <label class="nv-checkbox"><input type="checkbox" name="prefer_woo" value="1"> Voorkeur voor dropshipping met WooCommerce (wordt niet gegarandeerd, alleen getoond als bevestigd)</label>
 <button type="submit" id="nv-ai-submit" {% if not supplier_ai.configured %}disabled{% endif %}>Zoeken met AI</button>
-<p class="nv-ai-usage">Gebruik deze maand: {{ supplier_ai.usage.month_used }} van {{ supplier_ai.usage.month_limit }} zoekopdrachten. Vandaag: {{ supplier_ai.usage.day_used }} van {{ supplier_ai.usage.day_limit }}. De teller staat in het geheugen van de server en begint na een herstart opnieuw; stel het harde maandbudget ook in bij OpenAI.</p>
+<p class="nv-ai-usage">Gebruik deze maand: {{ supplier_ai.usage.month_used }} van {{ supplier_ai.usage.month_limit }} zoekopdrachten. Vandaag: {{ supplier_ai.usage.day_used }} van {{ supplier_ai.usage.day_limit }}. Deze aantallen zijn een extra limiet speciaal voor AI-leverancierszoeken; ze worden in het servergeheugen geteld en beginnen na een herstart opnieuw. De kosten van álle AI-zoekfuncties samen worden blijvend bijgehouden in de dashboarddatabase (interne maandschatting). Het budget in je OpenAI-project blijft de echte, harde grens.</p>
 </form>
 <div id="nv-ai-progress" class="nv-ai-progress" hidden aria-live="polite">
 <div class="nv-ai-head"><span class="nv-ai-spinner" aria-hidden="true"></span><strong id="nv-ai-status">AI zoekt leveranciers…</strong><span id="nv-ai-timer" class="nv-ai-timer">0 s</span></div>

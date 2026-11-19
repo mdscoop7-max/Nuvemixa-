@@ -56,7 +56,7 @@
 {% for r in publicatie.rijen %}<tr><td>{{ r.stap }}</td><td class="{{ 'st-ok' if r.status == 'ok' else ('st-let' if r.status == 'let op' else 'st-fout') }}">{{ {'ok':'In orde','let op':'Let op','fout':'Fout'}[r.status] }}</td><td>{{ r.tekst }}</td></tr>{% endfor %}
 </tbody></table></div></section>
 
-<section class="panel"><h2>Voorbeeld voor WooCommerce <span class="badge">TESTDATA</span></h2>
+<section class="panel"><h2>Voorbeeld voor WooCommerce {% if c.bron == 'concept' %}<span class="badge">JOUW CONCEPT · NIET VERZONDEN</span>{% else %}<span class="badge">TESTDATA</span>{% endif %}</h2>
 <p>Dit zou worden verstuurd, altijd als concept (<code>draft</code>). Niets is verzonden.</p>
 <pre>{{ publicatie.voorbeeld }}</pre></section>
 

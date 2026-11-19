@@ -99,7 +99,7 @@
 <div class="nv27-two">
 {% if is_admin and webshop_stats %}{% set w = webshop_stats %}
 <article class="nv27-card" style="--c:#0f9d8a"><header><h3><svg class="ic"><use href="#i-users"/></svg>Webshopbezoekers</h3><span class="nv27-chip{% if not w.enabled or w.error %} warn{% endif %}">{{ 'Meting actief' if w.enabled and not w.error else ('Meting fout' if w.error else 'Niet geactiveerd') }}</span></header>
-{% if w.periods %}<div class="nv27-visits">{% for label, visitors, views in w.periods %}<div><span>{{ label }}</span><strong>{{ visitors }}</strong></div>{% endfor %}</div>
+{% if w.periods and w.enabled %}<div class="nv27-visits">{% for label, visitors, views in w.periods %}<div><span>{{ label }}</span><strong>{{ visitors }}</strong></div>{% endfor %}</div>
 <p class="nv27-note">Alle bezoekers uit elk land, geteld per dag. Echte meting, geen voorbeeldcijfers.</p>
 {% else %}<p>Er zijn nog geen bezoekers geteld. Zet <code>NUVEMIXA_WEBSHOP_TRACKING=true</code> op de dashboardhost en plaats het meetscript op de webshop. Dan verschijnen hier de bezoekers per dag, week, maand en totaal.</p>{% endif %}
 <a class="go" href="/dashboard?section=statistieken">Alle bezoekcijfers →</a></article>

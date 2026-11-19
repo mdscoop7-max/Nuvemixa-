@@ -57,3 +57,12 @@ def test_market_search_uses_same_rules_and_basis_switch():
     assert [c["name"] for c in kept] == ["KYRO Beauty"]
     assert kept[0]["scope_reason"].startswith("Voldoet via magazijn")
     assert nv_market_search.parse("internationaal", {}, {})["basis"] == "either"
+
+
+@pytest.mark.parametrize("raw,expected", [("0cm", "Naam niet leesbaar uit bron"), ("12 cm", "Naam niet leesbaar uit bron"),
+                                          ("", "Naam niet leesbaar uit bron"), ("42", "Naam niet leesbaar uit bron"),
+                                          ("3M", "3M"), ("O2", "O2"), ("KYRO Beauty", "KYRO Beauty")])
+def test_unreadable_supplier_names_are_not_invented(raw, expected):
+    from nv_research_sources import readable_name, supplier
+    assert readable_name(raw) == expected
+    assert supplier(raw, None, "x", "https://x")["name"] == expected
