@@ -107,7 +107,10 @@ def connection_status(now=None):
     partial = len(missing) < len(_REQUIRED)
     return {"state": "not_configured", "label": "Niet ingesteld", "tone": "off",
             "detail": ("Onvolledig. Ontbreekt: " + ", ".join(missing) + ".") if partial
-                      else "Er is nog geen WooCommerce-koppeling ingesteld.", "missing": missing}
+                      else ("Er is nog geen WooCommerce-koppeling ingesteld. Nodig op Render (alleen de namen; de waarden "
+                            "stel je zelf in): " + ", ".join(missing) + ". Gebruik een WooCommerce REST API-sleutel met "
+                            "alleen leesrechten; NUVEMIXA_WOO_HOST is de hostnaam van de webshop als extra slot."),
+            "missing": missing}
 
 
 def read_recent_orders():

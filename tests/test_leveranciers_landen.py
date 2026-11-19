@@ -67,3 +67,10 @@ def test_catalog_changes_are_cached_and_invalidated_on_save(monkeypatch):
     cm.catalog_changes()
     assert len(reads) == 2
     cm.invalidate_changes()
+
+
+def test_search_history_keeps_ten_and_covers_partner_search():
+    history = (ROOT / "static/nv-search-history.js").read_text(encoding="utf-8")
+    assert "const MAX = 10;" in history and "params.get(input.name)" in history
+    partners = (ROOT / "templates/_dashboard_partners.html").read_text(encoding="utf-8")
+    assert 'input type="search" name="q"' in partners
