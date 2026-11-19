@@ -84,22 +84,29 @@
       var next = parsed.querySelector('main.cart-page');
       if (!current || !next) throw new Error('Winkelwagen niet gevonden');
       var productId = form.querySelector('input[name="product_id"]').value;
-      var scrollPosition = window.scrollY;
-      current.innerHTML = next.innerHTML;
-      var newRow = Array.from(current.querySelectorAll('.cart-row')).find(function (candidate) {
+      // Update the cart panel, not the whole page: keep its heading, navigation,
+      // scroll context and surrounding layout stable on repeated + / - clicks.
+      var currentPanel = current.querySelector('.cart-panel');
+      var nextPanel = next.querySelector('.cart-panel');
+      if (!currentPanel || !nextPanel) throw new Error('Winkelwagenpaneel niet gevonden');
+      var beforeY = row.getBoundingClientRect().top;
+      var activeDelta = form.querySelector('input[name="delta"]').value;
+      currentPanel.innerHTML = nextPanel.innerHTML;
+      var newRow = Array.from(currentPanel.querySelectorAll('.cart-row')).find(function (candidate) {
         var field = candidate.querySelector('input[name="product_id"]');
         return field && field.value === productId;
       });
       if (newRow) {
-        var plus = newRow.querySelector('input[name="delta"][value="1"]');
-        var focus = plus && plus.form && plus.form.querySelector('button');
+        var activeField = newRow.querySelector('input[name="delta"][value="' + activeDelta + '"]');
+        var focus = activeField && activeField.form && activeField.form.querySelector('button');
         if (focus) focus.focus({preventScroll:true});
+        var afterY = newRow.getBoundingClientRect().top;
+        if (Math.abs(afterY - beforeY) > 1) window.scrollBy(0, afterY - beforeY);
       }
       var count = parsed.querySelector('[data-cart-count]');
       if (count) document.querySelectorAll('[data-cart-count]').forEach(function (badge) {
         badge.textContent = count.textContent;
       });
-      window.scrollTo({top:scrollPosition,behavior:'auto'});
     }).catch(function () {
       window.location.reload();
     });
