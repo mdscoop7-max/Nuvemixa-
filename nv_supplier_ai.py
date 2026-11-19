@@ -225,7 +225,20 @@ def call_openai(values, rows, variant=0):
         raise ValueError("json") from exc
 
 
-def extract_cited(response, domains):
+_TRACKING = re.compile(r"^(?:utm_[a-z]+|ref|ref_src|gclid|fbclid)$", re.I)
+
+
+def strip_tracking(url):
+    """OpenAI voegt aan citaties standaard '?utm_source=openai' toe. Alleen trackingparameters vallen weg;
+    een URL met andere queryparameters blijft geweigerd."""
+    parsed = urlsplit(url)
+    if not parsed.query:
+        return url
+    kept = [part for part in parsed.query.split("&") if part and not _TRACKING.match(part.split("=", 1)[0])]
+    return parsed._replace(query="&".join(kept)).geturl()
+
+
+def extract_cited(response, domains, rejected=None):
     """Alleen werkelijk geciteerde pagina's op toegestane domeinen; één kaart per domein."""
     received, found = 0, {}
     for item in response.get("output", []) or []:
@@ -239,7 +252,7 @@ def extract_cited(response, domains):
                     continue
                 received += 1
                 try:
-                    url = source(ref.get("url", ""))
+                    url = strip_tracking(source(ref.get("url", "")))
                     parsed = urlsplit(url)
                 except (ValueError, AttributeError):
                     continue
@@ -247,6 +260,8 @@ def extract_cited(response, domains):
                 domain = next((d for d in domains if host == d or host.endswith("." + d)), None)
                 if domain and len(url) <= 240 and not parsed.query and not parsed.fragment:
                     found.setdefault(domain, {"href": url, "title": clean(ref.get("title"), 120)})
+                elif rejected is not None and host:
+                    rejected.append(host[:80] if not domain else host[:60] + " (url-vorm)")
     return received, found
 
 
@@ -340,11 +355,16 @@ def search_failure(exc, values):
 
 
 def finish_search(response, domains, rows, started, values):
-    received, found = extract_cited(response, domains)
+    rejected = []
+    received, found = extract_cited(response, domains, rejected)
+    if rejected:
+        # Alleen hostnamen: geen volledige URL's, sleutels of zoektermen in de log.
+        current_app.logger.info("AI-leverancierszoeken: %s citatie(s) buiten goedgekeurde domeinen: %s",
+                                len(rejected), ", ".join(sorted(set(rejected))[:8]))
     by_domain = {urlsplit(row[2]).hostname.removeprefix("www."): row for row in rows}
     results = [card_for(by_domain[domain], found[domain]) for domain in domains if domain in found][:3]
     meta = {"elapsed_ms": round((time.perf_counter() - started) * 1000), "citations_received": received,
-            "variant": values.get("_variant"),
+            "variant": values.get("_variant"), "rejected_hosts": sorted(set(rejected))[:8],
             "sources_accepted": len(results), "cached": False, "persistent": False}
     if not results:
         return {"ok": True, "message": "Geen controleerbare bron gevonden voor deze zoekopdracht.", "results": [], "meta": meta}
