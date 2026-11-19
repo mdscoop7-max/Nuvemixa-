@@ -224,3 +224,6 @@ body.nv-admin-ui main .nv-margin-live table.admin-table th,body.nv-admin-ui main
 body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table th,body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table td{white-space:normal;overflow-wrap:anywhere}
 body.nv-admin-ui main .nv-margin-live table.admin-table td{text-align:right}
 @media(max-width:560px){body.nv-admin-ui main .nv-margin-live table.admin-table th,body.nv-admin-ui main .nv-margin-live table.admin-table td{padding:8px 10px;font-size:.84rem}}
+/* Bedragen in de margetabel nooit midden in het getal afbreken; labels mogen wel afbreken */
+body.nv-admin-ui main .nv-margin-live table.admin-table td,body.nv-admin-ui main #nv-product-margin .admin-table-wrap table.admin-table td{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+body.nv-admin-ui main .nv-margin-live table.admin-table th{overflow-wrap:break-word;hyphens:auto}
