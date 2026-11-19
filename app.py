@@ -1243,6 +1243,26 @@ from nv_customer_activity import record_customer_activity, read_customer_activit
 
 
 
+import hashlib as _nv_hashlib
+
+_NV_STATIC_VERSIONS = {}
+
+
+def nv_static_version(filename):
+    """Inhoudsversie voor statische bestanden: de server cachet ze 7 dagen ('immutable'), dus elke
+    wijziging moet een nieuwe URL krijgen, anders blijft de browser het oude bestand gebruiken."""
+    if filename not in _NV_STATIC_VERSIONS:
+        try:
+            data = (Path(app.static_folder) / filename).read_bytes()
+            _NV_STATIC_VERSIONS[filename] = _nv_hashlib.sha256(data).hexdigest()[:10]
+        except OSError:
+            _NV_STATIC_VERSIONS[filename] = "0"
+    return _NV_STATIC_VERSIONS[filename]
+
+
+app.jinja_env.globals["nv_static_version"] = nv_static_version
+
+
 @app.context_processor
 def dashboard_return_link():
     endpoint = request.endpoint

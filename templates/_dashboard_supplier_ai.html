@@ -43,5 +43,5 @@
 @media (prefers-reduced-motion:reduce){.nv-ai-spinner{animation:none}}
 @media (max-width:520px){.nv-ai-card dl{grid-template-columns:1fr}.nv-ai-card dt{margin-top:6px}}
 </style>
-<script src="{{ url_for('static', filename='nv-supplier-ai.js') }}" defer></script>
+<script src="{{ url_for('static', filename='nv-supplier-ai.js') }}?v={{ nv_static_version('nv-supplier-ai.js') }}" defer></script>
 {% endif %}
