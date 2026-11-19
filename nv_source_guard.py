@@ -167,6 +167,11 @@ def job(key, submit):
             future = entry[0]
             if not (future.done() and (future.cancelled() or future.exception())):
                 return future
+            # Een mislukte taak wordt één keer teruggegeven, zodat de pagina de fout toont in plaats van
+            # eindeloos 'nog bezig'. Pas bij de volgende aanvraag start een nieuwe poging.
+            if not entry[2]:
+                _jobs[key] = (future, entry[1], True)
+                return future
         future = submit()
-        _jobs[key] = (future, time.monotonic() + CACHE_TTL)
+        _jobs[key] = (future, time.monotonic() + CACHE_TTL, False)
         return future
