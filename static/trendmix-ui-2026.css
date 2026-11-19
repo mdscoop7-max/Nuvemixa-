@@ -1082,3 +1082,25 @@ main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!import
  .header.wrap .tm-locale-flags .tm-locale-trigger{min-width:91px!important}
  .nv-after-products a{flex-basis:100%}
 }
+
+/* Same approved compact color cards after shop/category product listings. */
+.nv-category-shortcuts{margin-top:22px;margin-bottom:28px}
+.nv-category-shortcuts .categorygrid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:clamp(8px,1.1vw,14px)!important}
+.nv-category-shortcuts .categorytile{--nv-tile:#0866f5;--nv-soft:#eef5ff;--nv-edge:#aecfff;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:9px!important;min-height:145px!important;padding:14px 9px!important;border:1px solid var(--nv-edge)!important;border-radius:16px!important;background:var(--nv-soft)!important;color:#142944!important;text-align:center!important;box-shadow:0 5px 15px #18365912!important}
+.nv-category-shortcuts .tile-orange{--nv-tile:#eb650a;--nv-soft:#fff4eb;--nv-edge:#ffc595}
+.nv-category-shortcuts .tile-pink{--nv-tile:#d61e76;--nv-soft:#fff0f7;--nv-edge:#f5a9ca}
+.nv-category-shortcuts .tile-home{--nv-tile:#087acb;--nv-soft:#eaf7ff;--nv-edge:#9bd6fa}
+.nv-category-shortcuts .tile-purple{--nv-tile:#7138d8;--nv-soft:#f4edff;--nv-edge:#c8a6ff}
+.nv-category-shortcuts .categorytile .categoryart,.nv-category-shortcuts .categorytile.has-catalog-image .categoryart{position:relative!important;display:grid!important;place-items:center!important;flex:none!important;width:44px!important;height:44px!important;min-height:44px!important;max-height:44px!important;border-radius:12px!important;background:color-mix(in srgb,var(--nv-tile) 13%,white)!important;background-image:none!important;color:var(--nv-tile)!important;box-shadow:none!important}
+.nv-category-shortcuts .categorytile .categoryart:before{display:none!important}
+.nv-category-shortcuts .categorytile .categoryart svg{width:25px!important;height:25px!important;display:block!important;color:var(--nv-tile)!important}
+.nv-category-shortcuts .categorytile strong{font-size:clamp(12px,1.3vw,15px)!important;line-height:1.2!important;color:#10223b!important}
+.nv-category-shortcuts .categorytile .categorycta{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:42px!important;margin-top:auto!important;padding:9px!important;border-radius:999px!important;background:var(--nv-tile)!important;color:white!important;font-size:12px!important;font-weight:800!important;text-align:center!important;line-height:1.2!important}
+.nv-category-shortcuts .categorytile[aria-current=page]{outline:2px solid var(--nv-tile)!important;outline-offset:2px!important}
+.nv-category-shortcuts .categorytile:focus-visible{outline:3px solid #efa822!important;outline-offset:3px!important}
+@media(max-width:760px){
+ .nv-category-shortcuts .categorygrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ .nv-category-shortcuts .categorytile{min-height:133px!important;padding:12px 8px!important}
+ .nv-category-shortcuts .categorytile .categorycta{font-size:11px!important}
+}
+@media(max-width:350px){.nv-category-shortcuts .categorygrid{grid-template-columns:1fr!important}}
