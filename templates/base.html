@@ -22,7 +22,7 @@
 {% include '_tm_topbar_language.html' %}
 <form class="search" action="/shop" method="get" role="search"><input name="q" type="search" value="{{ search|default('') }}" placeholder="Zoek producten..." aria-label="Zoek producten"><button type="submit">Zoeken</button></form><a class="offer" href="/aanbiedingen">Aanbiedingen</a></header>
 {% include '_tm_category_nav.html' %}
-<main class="wrap legacy-main">{% block content %}{% endblock %}</main>
+<main class="wrap legacy-main">{% block content %}{% endblock %}{% if request.path == '/shop' %}{% include '_tm_category_shortcuts.html' %}{% endif %}</main>
 {% include '_footer.html' %}
 {% block extra_js %}{% endblock %}
 </body></html>
