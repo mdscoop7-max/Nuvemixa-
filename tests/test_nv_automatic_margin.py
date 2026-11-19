@@ -17,9 +17,11 @@ class SingleInputMarginTests(unittest.TestCase):
                 automatic_margin(price)
     def test_dashboard_has_only_one_required_margin_input(self):
         html = Path("templates/dashboard.html").read_text(encoding="utf-8")
-        block = html.split("<h2>Automatisch verkoopadvies en winstmarge</h2>")[1].split("</section>")[0]
-        self.assertEqual(block.count('type="number"'), 1)
-        self.assertIn("Bereken automatisch", block)
+        form = Path("templates/_margin_calculator.html").read_text(encoding="utf-8")
+        block = form.split("macro margin_form", 1)[1].split("</form>", 1)[0]
+        # Eén gedeelde calculator: alleen de inkoopprijs is verplicht; geen tweede rekenblok op Productonderzoek.
+        self.assertEqual(block.count(" required"), 1)
+        self.assertNotIn("Automatisch verkoopadvies met vaste aannames", html)
         self.assertIn("Productdossier — eigen onderzoeksnotities (optioneel)", html)
         Environment().parse(html)
 

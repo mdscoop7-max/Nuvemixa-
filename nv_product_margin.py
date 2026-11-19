@@ -129,13 +129,18 @@ def _field(data, name, *, percent=False, limit=None):
     return float(value) if percent else int(_round_half_up(float(value) * 100))
 
 
-def _figures(selling, purchase, used, factor):
-    fee = used["fee_fixed"] + selling * used["fee_pct"] / 100
-    revenue = selling / factor
+SHIPPING_CHOICES = ("standard", "free", "own", "unknown")
+
+
+def _figures(selling, purchase, used, factor, customer=0):
+    total = selling + customer
+    fee = used["fee_fixed"] + total * used["fee_pct"] / 100
+    revenue = total / factor
     costs = purchase + used["shipping"] + used["advertising"] + used["returns"] + used["platform"] + used["other"] + fee
     profit = revenue - costs
-    return {"selling": int(_round_half_up(selling)), "revenue": int(_round_half_up(revenue)),
-            "vat": int(_round_half_up(selling - revenue)), "fee": int(_round_half_up(fee)),
+    return {"selling": int(_round_half_up(selling)), "customer": int(_round_half_up(customer)),
+            "total": int(_round_half_up(total)), "revenue": int(_round_half_up(revenue)),
+            "vat": int(_round_half_up(total - revenue)), "fee": int(_round_half_up(fee)),
             "costs": int(_round_half_up(costs)), "gross": int(_round_half_up(revenue - purchase)),
             "profit": int(_round_half_up(profit)),
             "gross_pct": 100 * (revenue - purchase) / revenue if revenue else 0,
@@ -155,15 +160,23 @@ def unified_margin(data):
         raise ValueError("Kies een geldige winstmarge.") from None
     if not 0 <= target < 100:
         raise ValueError("Kies een geldige winstmarge.")
+    choice = str(data.get("shipping_choice", "") or "own")
+    choice = choice if choice in SHIPPING_CHOICES else "own"
+    customer = _field(data, "customer_shipping") or 0
     used, sources, assumed = {}, {}, []
     for key, actual_name, standard_name, label in UNIFIED_COSTS:
         pct = key == "fee_pct"
         actual = _field(data, actual_name, percent=pct, limit=99.99 if pct else None)
+        if key == "shipping" and choice == "free":
+            actual = 0
+        elif key == "shipping" and choice in {"standard", "unknown"}:
+            actual = None
         standard = _field(data, standard_name, percent=pct, limit=99.99 if pct else None)
         standard = UNIFIED_DEFAULTS[key] if standard is None else standard
         if actual is None:
-            used[key], sources[key] = standard, "aanname"
-            assumed.append(label)
+            unknown = key == "shipping" and choice == "unknown"
+            used[key], sources[key] = standard, ("onbekend" if unknown else "aanname")
+            assumed.append(label + " (nog onbekend)" if unknown else label)
         else:
             used[key], sources[key] = actual, ("nul" if actual == 0 else "ingevuld")
     factor = 1 + vat / 100
@@ -172,12 +185,16 @@ def unified_margin(data):
         raise ValueError("Deze marge is met deze betaalkosten en btw niet haalbaar.")
     fixed = (purchase + used["shipping"] + used["advertising"] + used["returns"] + used["platform"]
              + used["other"] + used["fee_fixed"])
-    advice = _figures(_round_half_up(fixed / denominator), purchase, used, factor)
+    total = _round_half_up(fixed / denominator)
+    if total - customer <= 0:
+        raise ValueError("De verzendkosten die de klant betaalt dekken al alle kosten; controleer de bedragen.")
+    advice = _figures(total - customer, purchase, used, factor, customer)
     result = {"kind": "A" if assumed else "B", "assumed": assumed, "used": used, "sources": sources,
-              "purchase": purchase, "vat": vat, "target": target, "advice": advice, "own": None}
+              "purchase": purchase, "vat": vat, "target": target, "advice": advice, "own": None,
+              "shipping_choice": choice, "customer": customer}
     own = _field(data, "selling_price")
     if own:
-        figures = _figures(own, purchase, used, factor)
+        figures = _figures(own, purchase, used, factor, customer)
         figures["reaches"] = own >= advice["selling"]
         figures["short"] = max(0, advice["selling"] - own)
         result["own"] = figures

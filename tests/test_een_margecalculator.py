@@ -21,6 +21,14 @@ CASES = [
      "advertising_cost": "3", "returns_reserve": "1", "transaction_fee": "0.29", "transaction_pct": "1.5",
      "platform_fee": "0", "other_cost": "0"},
     {"purchase_cost": "12.50", "target_margin": "30", "shipping_cost": "0", "selling_price": "24.99"},
+    {"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": "standard"},
+    {"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": "free"},
+    {"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": "own", "shipping_cost": "6.50"},
+    {"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": "unknown"},
+    {"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": "standard", "customer_shipping": "4.95",
+     "selling_price": "34.95"},
+    {"purchase_cost": "8", "target_margin": "25", "shipping_choice": "own", "shipping_cost": "3.10",
+     "customer_shipping": "2.50", "std_fee_pct": "1.9"},
 ]
 
 
@@ -39,7 +47,8 @@ def js_inputs(case):
             standard[key] = s
     vat = val("vat_rate", True)
     return {"purchase": val("purchase_cost"), "vat": 21 if vat is None else vat, "target": float(case["target_margin"]),
-            "own": val("selling_price"), "actual": actual, "standard": standard}
+            "own": val("selling_price"), "actual": actual, "standard": standard,
+            "shippingChoice": case.get("shipping_choice", "own"), "customerShipping": val("customer_shipping") or 0}
 
 
 @pytest.fixture(scope="module")
@@ -57,7 +66,7 @@ def browser_results():
 @pytest.mark.parametrize("index", range(len(CASES)))
 def test_browser_and_server_calculate_identically(browser_results, index):
     server, browser = unified_margin(CASES[index]), browser_results[index]
-    for key in ("selling", "revenue", "vat", "fee", "costs", "gross", "profit"):
+    for key in ("selling", "customer", "total", "revenue", "vat", "fee", "costs", "gross", "profit"):
         assert server["advice"][key] == browser["advice"][key], key
     assert abs(server["advice"]["margin"] - browser["advice"]["margin"]) < 1e-9
     assert server["kind"] == browser["kind"] and server["assumed"] == browser["assumed"]
@@ -106,3 +115,32 @@ def test_both_pages_show_the_same_result(administrator):
     for html in (onderzoek, calculator):
         assert 'name="std_fee_fixed"' in html and 'value="0.35"' in html and 'name="target_margin" value="40"' in html
         assert "A · Voorlopige adviesprijs" in html
+
+
+@pytest.mark.parametrize("choice,extra,price,source", [
+    ("standard", {}, 4256, "aanname"), ("free", {}, 3290, "nul"),
+    ("own", {"shipping_cost": "6.50"}, 4559, "ingevuld"), ("unknown", {}, 4256, "onbekend"),
+])
+def test_shipping_choice_changes_advice_and_label(choice, extra, price, source):
+    r = unified_margin({"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": choice, **extra})
+    assert r["advice"]["selling"] == price and r["sources"]["shipping"] == source
+    assert abs(r["advice"]["margin"] - 35) < 0.05
+    if choice == "unknown":
+        assert any("nog onbekend" in label for label in r["assumed"])
+
+
+def test_customer_shipping_is_revenue_not_free_for_seller():
+    r = unified_margin({"purchase_cost": "12.50", "target_margin": "35", "shipping_choice": "standard",
+                        "customer_shipping": "4.95"})
+    # Klant betaalt € 4,95 verzending: productprijs daalt, totaal blijft gelijk; verkoper betaalt nog steeds verzending.
+    assert r["advice"]["selling"] == 3761 and r["advice"]["total"] == 4256 and r["used"]["shipping"] == 495
+    with pytest.raises(ValueError):
+        unified_margin({"purchase_cost": "1", "target_margin": "15", "shipping_choice": "free", "customer_shipping": "500"})
+
+
+def test_new_layout_on_both_pages(administrator):
+    for section in ("onderzoek", "calculator"):
+        html = administrator.get(f"/dashboard?section={section}").get_data(as_text=True)
+        assert 'name="shipping_choice"' in html and "Geen verzendkosten voor mij (€ 0)" in html
+        assert "Kosten en berekening bekijken" in html and "Uitgebreide rekentabel" in html
+        assert 'name="customer_shipping"' in html
