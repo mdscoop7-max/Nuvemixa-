@@ -271,6 +271,11 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           {% for value, name in ro.supplier_filters.items() %}<option value="{{ value }}" {% if ro.supplier_filter == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
         </select>
       </label>
+      <label>Land volgens
+        <select name="research_country_basis" title="Vestigingsland = waar het bedrijf zit; magazijnland = waarvandaan wordt verzonden">
+          {% for value, name in ro.country_bases.items() %}<option value="{{ value }}" {% if ro.country_basis == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </label>
       <label>Periode
         <select name="research_period">
           {% for value, name in ro.periods.items() %}<option value="{{ value }}" {% if ro.period == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
@@ -504,6 +509,7 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
           <input type="hidden" name="research_country" value="{{ research_options.country }}">
           <input type="hidden" name="research_category" value="{{ research_options.category }}">
           <input type="hidden" name="research_supplier_filter" value="{{ research_options.supplier_filter }}">
+          <input type="hidden" name="research_country_basis" value="{{ research_options.country_basis }}">
           <input type="hidden" name="research_term" value="{{ product_discovery.topic }}">
           <input type="hidden" name="research_platform" value="Publicaties">
           {% for platform in research_options.selected_platforms if platform != "Publicaties" %}
@@ -570,8 +576,8 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         <p>Probeer ook {% for query in product_discovery.supplier_suggestions %}
           <a href="{{ url_for('control', section='onderzoek', research_run=1, research_mode=research_options.mode,
             research_category=research_options.category, research_country=research_options.country,
-            research_supplier_filter=research_options.supplier_filter, research_platform=research_options.selected_platforms,
-            research_term=query) }}">{{ query }}</a>{{ ', ' if not loop.last }}{% endfor %}.
+            research_supplier_filter=research_options.supplier_filter, research_country_basis=research_options.country_basis,
+            research_platform=research_options.selected_platforms, research_term=query) }}">{{ query }}</a>{{ ', ' if not loop.last }}{% endfor %}.
         </p>
         {% endif %}
         {% endif %}
@@ -822,12 +828,19 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
         <option value="dropship">Dropshippingpartners</option>
       </select>
     </label>
-    <label>Vestigingsland
+    <label>Land
       <select name="research_supplier_filter">
         <option value="eu">Binnen EU</option>
         <option value="nl">Nederland</option>
         <option value="international">Buiten EU</option>
         <option value="all">Wereldwijd (alle landen)</option>
+      </select>
+    </label>
+    <label>Land volgens
+      <select name="research_country_basis">
+        <option value="either">Vestiging of magazijn</option>
+        <option value="origin">Alleen vestigingsland</option>
+        <option value="warehouse">Alleen magazijnland</option>
       </select>
     </label>
     <button type="submit">Zoeken</button>

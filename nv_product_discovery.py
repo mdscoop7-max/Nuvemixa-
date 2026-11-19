@@ -612,17 +612,41 @@ EU_WAREHOUSES = {
 }
 
 
+NL_WAREHOUSES = {"netherlands", "the netherlands", "nederland", "holland", "nl"}
+# Alleen bekende landen buiten de EU tellen als "buiten EU"; een onbekende tekst ("Worldwide") blijft onbekend.
+NON_EU_WAREHOUSES = {
+    "united kingdom", "uk", "great britain", "england", "china", "hong kong", "united states", "usa", "us",
+    "australia", "canada", "turkey", "türkiye", "india", "japan", "south korea", "korea", "taiwan", "vietnam",
+    "thailand", "singapore", "switzerland", "norway", "new zealand", "mexico", "brazil", "united arab emirates",
+    "uae", "ukraine", "israel", "south africa", "malaysia", "indonesia", "philippines", "pakistan", "serbia",
+}
+COUNTRY_BASES = {"either": "Vestiging of magazijn", "origin": "Alleen vestigingsland", "warehouse": "Alleen magazijnland"}
+
+
+def warehouse_class(value):
+    name = str(value or "").strip().casefold()
+    if name in NL_WAREHOUSES:
+        return "nl"
+    if name in EU_WAREHOUSES:
+        return "eu"
+    if name in NON_EU_WAREHOUSES:
+        return "international"
+    return "unknown"
+
+
 def logistics(company):
     """Magazijn en aandachtspunten uitsluitend uit bevestigde productgegevens; geen kosten of levertijden verzinnen."""
     values = {}
-    for item in company["products"].values():
+    products = company["products"].values() if isinstance(company["products"], dict) else company["products"]
+    for item in products:
         value = str(item.get("warehouse") or "").strip()
         if value and value != UNKNOWN:
-            values.setdefault(value, "eu" if value.casefold() in EU_WAREHOUSES else "international")
-    lead = next((str(item["lead_time"]) for item in company["products"].values()
+            values.setdefault(value, {"nl": "eu"}.get(warehouse_class(value), warehouse_class(value)))
+    lead = next((str(item["lead_time"]) for item in products
                  if item.get("lead_time") and item["lead_time"] != UNKNOWN), None)
+    classes = {warehouse_class(value) for value in values}
     if not values:
-        return {"warehouse_label": None, "warehouse_region": "unknown", "lead_time_note": lead,
+        return {"warehouse_label": None, "warehouse_region": "unknown", "lead_time_note": lead, "warehouse_classes": set(),
                 "logistics_notes": ["Magazijnland niet bevestigd: levertijd, invoerrechten en btw zijn onbekend en "
                                     "moeten bij de leverancier worden nagevraagd."]}
     outside = [name for name, region in values.items() if region == "international"]
@@ -634,11 +658,15 @@ def logistics(company):
     if inside:
         notes.append("Magazijn binnen de EU (" + ", ".join(inside) + "): controleer levertijd, retourvoorwaarden "
                      "en btw-afhandeling bij de leverancier. Bedragen en termijnen zijn niet bevestigd.")
-    return {"warehouse_label": ", ".join(values), "warehouse_region": "international" if outside else "eu",
+    unknown = [name for name, region in values.items() if region == "unknown"]
+    if unknown:
+        notes.append("Magazijnland niet eenduidig (" + ", ".join(unknown) + "): telt niet als EU of buiten EU.")
+    region = "international" if outside else "eu" if inside else "unknown"
+    return {"warehouse_label": ", ".join(values), "warehouse_region": region, "warehouse_classes": classes,
             "lead_time_note": lead, "logistics_notes": notes}
 
 
-def unique_suppliers(offers, supplier_filter):
+def unique_suppliers(offers, supplier_filter, country_basis="either"):
     companies = {}
     shipping_nl = ("Niet beschikbaar", UNKNOWN, "Bevestigd")
     for profile, item in offers:
@@ -662,10 +690,11 @@ def unique_suppliers(offers, supplier_filter):
 
     filtered = []
     for company in companies.values():
-        if not supplier_in_scope(company, supplier_filter):
+        company.update(logistics(company))
+        if not supplier_in_scope(company, supplier_filter, country_basis):
             continue
         company["origin_name"] = ORIGINS.get(company["origin"], UNKNOWN)
-        company.update(logistics(company))
+        company["scope_reason"] = scope_reason(company, supplier_filter, country_basis)
         company["role"] = supplier_role(company)
         company["product_count"] = len(company["products"])
         company["products"] = sorted(company["products"].values(),
@@ -678,19 +707,51 @@ def unique_suppliers(offers, supplier_filter):
     ))
 
 
-def supplier_in_scope(profile, scope):
-    origin = profile["origin"]
+def _origin_class(profile):
+    origin = profile.get("origin")
+    if not origin:
+        # Oudere/vereenvoudigde records hebben alleen een regio (eu/international), nooit 'unknown' als EU.
+        return {"eu": "eu", "international": "international"}.get(profile.get("region"), "unknown")
+    return "nl" if origin == "NL" else "eu" if origin in EU else "international"
+
+
+def _matches_class(found, scope):
     if scope == "nl":
-        return origin == "NL"
+        return found == "nl"
     if scope == "eu":
-        return origin in EU
-    if scope == "international":
-        return bool(origin and origin not in EU)
+        return found in {"nl", "eu"}
+    return found == "international"
+
+
+def supplier_in_scope(profile, scope, country_basis="either"):
+    """Landfilter op vestigingsland en/of bevestigd magazijnland. Onbekend telt nooit als NL, EU of buiten EU."""
+    if scope in {"nl", "eu", "international"}:
+        by_origin = _matches_class(_origin_class(profile), scope)
+        by_warehouse = any(_matches_class(found, scope) for found in profile.get("warehouse_classes") or ())
+        if country_basis == "origin":
+            return by_origin
+        if country_basis == "warehouse":
+            return by_warehouse
+        return by_origin or by_warehouse
     if scope == "dropship":
         return profile.get("dropshipping") is True and bool(profile.get("dropshipping_source"))
     if scope == "trade":
         return profile.get("business") is True
     return True
+
+
+def scope_reason(company, scope, country_basis="either"):
+    """Korte uitleg waarom een leverancier aan het landfilter voldoet (of welk land bekend is)."""
+    origin = ORIGINS.get(company.get("origin"), "") if company.get("origin") else ""
+    warehouse = company.get("warehouse_label")
+    parts = [f"Vestiging: {origin}" if origin else "Vestiging onbekend",
+             f"magazijn: {warehouse}" if warehouse else "magazijn onbekend"]
+    if scope in {"nl", "eu", "international"}:
+        label = {"nl": "Nederland", "eu": "binnen de EU", "international": "buiten de EU"}[scope]
+        by_origin = _matches_class(_origin_class(company), scope)
+        basis = "vestiging" if by_origin and country_basis != "warehouse" else "magazijn"
+        return f"Voldoet via {basis} ({label}) · " + " · ".join(parts)
+    return " · ".join(parts)
 
 
 def catalogue_sources(categories, country, product_mode, *, fallback=False):
@@ -743,21 +804,24 @@ SOURCE_WINDOW = 12  # seconden die een zoekopdracht maximaal op bronnen wacht
 _SYNCEE_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="syncee")
 
 
-def run_syncee(fetch, query, country, selected, term, alternates, budget, supplier_filter):
+def run_syncee(fetch, query, country, selected, term, alternates, budget, supplier_filter, country_basis="either"):
     attempts = []
+    # Het magazijnland is pas na het ophalen bekend: alleen bij 'alleen vestigingsland' vooraf op land selecteren.
+    by_origin = country_basis == "origin" or supplier_filter not in {"nl", "eu", "international"}
     results = syncee_products(fetch, query, country, selected, SEEDS, read_source, matches, relevance_for(term),
                               term=term, product_matches=product_matches, attempts=attempts,
                               alternates=alternates, deadline=monotonic() + budget,
-                              eligible=lambda profile: supplier_in_scope(profile, supplier_filter),
-                              shortlist=(lambda profile: supplier_in_scope(profile, supplier_filter))
-                              if supplier_filter in {"nl", "eu", "international"} else None)
+                              eligible=lambda profile: supplier_in_scope(profile, supplier_filter, "origin"),
+                              shortlist=(lambda profile: supplier_in_scope(profile, supplier_filter, "origin"))
+                              if by_origin and supplier_filter in {"nl", "eu", "international"} else None)
     return results, attempts
 
 
-def start_syncee(fetch, query, country, selected, term, alternates, supplier_filter):
-    key = ("syncee", query, country, tuple(sorted(selected)), tuple(alternates), term, supplier_filter)
+def start_syncee(fetch, query, country, selected, term, alternates, supplier_filter, country_basis="either"):
+    key = ("syncee", query, country, tuple(sorted(selected)), tuple(alternates), term, supplier_filter, country_basis)
     return nv_source_guard.job(key, lambda: _SYNCEE_POOL.submit(
-        run_syncee, fetch, query, country, selected, term, alternates, SYNCEE_BACKGROUND, supplier_filter))
+        run_syncee, fetch, query, country, selected, term, alternates, SYNCEE_BACKGROUND, supplier_filter,
+        country_basis))
 
 
 def collect(future, errors, source):
@@ -784,10 +848,10 @@ def product_groups(items):
 
 
 def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
-             category=ALL_PRODUCTS, categories, supplier_filter="all", infer=True):
+             category=ALL_PRODUCTS, categories, supplier_filter="all", infer=True, country_basis="either"):
     term = (term or "").strip()[:100]
     if ((category != ALL_PRODUCTS and category not in categories) or mode not in MODES
-            or country not in COUNTRIES or supplier_filter not in FILTERS):
+            or country not in COUNTRIES or supplier_filter not in FILTERS or country_basis not in COUNTRY_BASES):
         return {"error": "Kies een geldige webshopcategorie, zoektype, doelland en leverancierfilter."}
     if term and (not (set(normalize(term).split()) - STOP_WORDS) or UNSAFE.search(term)):
         return {"error": EMPTY_RESULTS}
@@ -846,7 +910,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
             if variants[:1] == (term,) and english_query(term).casefold() != term.casefold():
                 variants = (*variants[1:], term)
             dropship_task = start_syncee(fetch, index_query(term) if term else SEEDS[category], country, selected,
-                                         term, variants, "all" if product_mode else supplier_filter)
+                                         term, variants, "all" if product_mode else supplier_filter, country_basis)
         if dropship_task:
             names[dropship_task] = "Syncee"
         readers = [("TechRadar", publication_candidates)]
@@ -923,7 +987,7 @@ def discover(term, country="NL", mode="trends", platforms=None, fetch=None, *,
               and item["kind"] in {
         "Lanceringen en varianten", "Markt en niche", "Veiligheid en terugroepacties", "Reviews en vergelijkingen",
     }][:8]
-    suppliers = unique_suppliers(offers, supplier_filter)
+    suppliers = unique_suppliers(offers, supplier_filter, country_basis)
     by_url = {item["url"]: profile for profile, item in offers}
     products = [assess_listing(item, by_url.get(item["url"]), country, news, alerts, safety_weeks) for item in products]
     attempts = tuple(attempts)

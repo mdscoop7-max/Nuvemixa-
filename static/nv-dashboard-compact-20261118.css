@@ -231,3 +231,4 @@ body.nv-admin-ui main .nv-margin-live table.admin-table th{overflow-wrap:break-w
 body.nv-admin-ui main .nv-ai-excluded{margin-top:6px}
 body.nv-admin-ui main .nv-ai-excluded summary{cursor:pointer;font-weight:700;font-size:.84rem}
 body.nv-admin-ui main .nv-ai-excluded ul{margin:6px 0 4px 18px;padding:0;font-size:.82rem;overflow-wrap:anywhere}
+body.nv-admin-ui main .nv-srow__why{color:#0a6b5d;font-weight:600}

@@ -2317,6 +2317,10 @@ def control():
             "empty_message": EMPTY_RESULTS,
             "supplier_filters": FILTERS,
             "supplier_filter": research_filter,
+            "country_bases": __import__("nv_product_discovery").COUNTRY_BASES,
+            "country_basis": (request.args.get("research_country_basis")
+                              if request.args.get("research_country_basis") in __import__("nv_product_discovery").COUNTRY_BASES
+                              else "either"),
             "periods": nv_research_period.CHOICES,
             "period": request.args.get("research_period", "slim"),
             # Schakelaar: verborgen '0' plus aangevinkte '1'. Zonder AI-configuratie toont ai_discover zelf 'uit'.
@@ -2333,7 +2337,8 @@ def control():
             general = research_category == "overig"  # Onderzoeksplatforms: 'Overig / Algemeen'
             search_args = dict(country=research_country, mode=research_mode, platforms=research_platforms,
                                category=ALL_PRODUCTS if general else research_category,
-                               categories=research_categories, supplier_filter=research_filter)
+                               categories=research_categories, supplier_filter=research_filter,
+                               country_basis=research_options["country_basis"])
             if general:
                 search_args["infer"] = False
             if research_options["ai_enabled"]:

@@ -52,7 +52,7 @@
       {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">{{ row.name }}</a>{% else %}<strong>{{ row.name }}</strong>{% endif %}
       <small>{{ row.role }}{% if row.products %} · {{ row.products }} product{{ 'en' if row.products != 1 }}{% endif %}</small>
     </div>
-    <div class="nv-prow__cell" data-label="Land"><strong>{{ row.origin }}</strong><small>Magazijn: {{ row.warehouse or 'niet bevestigd' }}</small></div>
+    <div class="nv-prow__cell" data-label="Land"><strong>{{ row.origin }}</strong><small>Magazijn: {{ row.warehouse or 'niet bevestigd' }}</small>{% if row.scope_reason %}<small class="nv-srow__why">{{ row.scope_reason.split(' · ')[0] }}</small>{% endif %}</div>
     <div class="nv-prow__cell nv-srow__contact" data-label="Contact">
       {% if row.website %}<a href="{{ row.website }}" target="_blank" rel="noopener noreferrer">Website</a>{% endif %}
       <small>E-mail: {% if row.email %}<a href="mailto:{{ row.email }}">{{ row.email }}</a>{% else %}niet gepubliceerd{% endif %}</small>
