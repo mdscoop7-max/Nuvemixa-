@@ -102,7 +102,7 @@
     var oc = document.createElement('style');
     oc.textContent = 'html,body{overflow-x:clip}'
       /* desktop: dezelfde originele hero-afbeeldingen tonen als op mobiel (geen losse teksthero) */
-      + '@media (min-width:992px){html body main.wrap>.tm-new-hero img,html body main.wrap>.tm-offers-hero>img,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero>img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;border-radius:22px}html body main .tm-desktop-hero-copy{display:none!important}}';
+      + '@media (min-width:992px){html body main.wrap>.tm-new-hero,html body main.wrap>.tm-offers-hero,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero{height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}html body main.wrap>.tm-new-hero>a{display:block!important;width:100%!important;height:auto!important;min-height:0!important}html body main.wrap>.tm-new-hero img,html body main.wrap>.tm-offers-hero>img,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero>img{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;margin:0!important;object-fit:contain!important;border-radius:22px}html body main .tm-desktop-hero-copy{display:none!important}}';
     document.head.appendChild(oc);
   } catch (e) {}
 
