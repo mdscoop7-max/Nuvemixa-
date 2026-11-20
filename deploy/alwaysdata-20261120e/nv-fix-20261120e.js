@@ -172,6 +172,7 @@
       var stack = document.elementsFromPoint(Math.min(40, innerWidth / 4), 30) || [];
       for (var i = 0; i < stack.length; i++) {
         var el = stack[i]; if (el === document.documentElement || el === document.body) break;
+        if (/^(IMG|SVG|PICTURE|A|BUTTON)$/i.test(el.tagName) || el.getBoundingClientRect().width < innerWidth * 0.6) continue;
         var cs = getComputedStyle(el);
         if (cs.position === 'fixed' && el.getBoundingClientRect().height > 200) continue;
         var bg = cs.backgroundImage !== 'none' ? cs.backgroundImage : '';
