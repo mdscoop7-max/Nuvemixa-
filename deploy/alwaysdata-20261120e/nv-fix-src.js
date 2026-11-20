@@ -90,7 +90,7 @@
     var sv = document.getElementById('nv-services-e'); if (sv && sv.getAttribute('lang') !== L) sv.setAttribute('lang', L);
     if (document.title) { var tt = lookup(document.title.trim(), map); if (tt !== undefined && tt !== document.title) document.title = tt; }
     var dl = document.getElementById('nv-eu-landen');
-    if (dl && dl.getAttribute('data-l') !== L) {
+    if (false && dl && dl.getAttribute('data-l') !== L) {
       dl.setAttribute('data-l', L);
       dl.innerHTML = EU[L].map(function (c) { return '<option value="' + c + '"></option>'; }).join('');
     }
@@ -98,7 +98,13 @@
 
   try { Array.prototype.forEach.call(document.querySelectorAll('img[data-nv-nl]'), function (im) { while (im.firstChild) im.removeChild(im.firstChild); }); } catch (e) {}
 
-  try { var oc = document.createElement('style'); oc.textContent = 'html,body{overflow-x:clip}'; document.head.appendChild(oc); } catch (e) {}
+  try {
+    var oc = document.createElement('style');
+    oc.textContent = 'html,body{overflow-x:clip}'
+      /* desktop: dezelfde originele hero-afbeeldingen tonen als op mobiel (geen losse teksthero) */
+      + '@media (min-width:992px){html body main.wrap>.tm-new-hero img,html body main.wrap>.tm-offers-hero>img,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero>img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;border-radius:22px}html body main .tm-desktop-hero-copy{display:none!important}}';
+    document.head.appendChild(oc);
+  } catch (e) {}
 
   /* ---------- 1) infoblok overal ---------- */
   function placeServices() {
@@ -159,11 +165,12 @@
 
   /* ---------- 4) land vrij invullen ---------- */
   function freeCountry() {
+    var ci = document.querySelector('input[name="country"][list]'); if (ci) ci.removeAttribute('list');
     var sel = document.querySelector('select[name="country"]'); if (!sel) return;
     var inp = document.createElement('input');
     inp.type = 'text'; inp.name = 'country'; inp.id = sel.id || 'f-country';
     inp.required = sel.required; inp.autocomplete = 'country-name'; inp.maxLength = 100; inp.minLength = 2;
-    inp.setAttribute('list', 'nv-eu-landen'); inp.className = (sel.className || '') + ' nv-country-input';
+    inp.className = (sel.className || '') + ' nv-country-input';
     inp.setAttribute('data-nv-ph-nl', 'Bijv. Nederland'); inp.setAttribute('data-nv-ph-en', 'E.g. Netherlands');
     var cur = sel.value && sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].text : '';
     inp.value = cur;
