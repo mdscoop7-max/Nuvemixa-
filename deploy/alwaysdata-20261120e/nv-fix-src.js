@@ -103,6 +103,8 @@
     oc.textContent = 'html,body{overflow-x:clip}'
       /* desktop: dezelfde originele hero-afbeeldingen tonen als op mobiel (geen losse teksthero) */
       + '@media (min-width:992px){html body main.wrap>.tm-new-hero,html body main.wrap>.tm-offers-hero,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero{height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}html body main.wrap>.tm-new-hero>a{display:block!important;width:100%!important;height:auto!important;min-height:0!important}html body main.wrap>.tm-new-hero img,html body main.wrap>.tm-offers-hero>img,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero>img{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;margin:0!important;object-fit:contain!important;border-radius:22px}html body main .tm-desktop-hero-copy{display:none!important}}'
+      /* Favorieten-knop naast Account en Cart (desktop) */
+      + 'html body .tm-header-actions>a.nv-fav-btn:not(#nv-x){background:linear-gradient(135deg,#fb7185,#e11d48)!important;color:#fff!important;border-color:rgba(255,255,255,.55)!important}html body .tm-header-actions>a.nv-fav-btn svg:not(#nv-x){stroke:#fff!important;fill:none!important}@media (max-width:991px){html body .tm-header-actions>a.nv-fav-btn{display:none!important}}@media (min-width:992px){html body>div.topline:not(#nv-x) .topitems>a[href="/wishlist"]:not(#nv-x){display:none!important}html body>div.topline:not(#nv-x) .topitems>span:nth-last-of-type(1):not(#nv-x){border-right:0!important}}'
       /* bovenbalk desktop: optie C (wit, rode lijn boven, rode icoontjes, geen dubbele Account/Cart) */
       + '@media (min-width:992px){html body>div.topline:not(#nv-x){background:#fff!important;border-image:none!important;border-top:3px solid #e11d48!important;border-bottom:1px solid #e5e9f2!important;box-shadow:none!important}html body>div.topline:not(#nv-x) .topitems:not(#nv-x){gap:0!important}html body>div.topline:not(#nv-x) .topitems>span:not(#nv-x),html body>div.topline:not(#nv-x) .topitems>a:not(#nv-x){color:#0f1b33!important;font-weight:600!important;font-size:13.5px!important;opacity:1!important;text-shadow:none!important;padding:0 16px!important;border-right:1px solid #d9e1ef!important;line-height:22px!important}html body>div.topline:not(#nv-x) .topitems>span:first-child:not(#nv-x){padding-left:0!important}html body>div.topline:not(#nv-x) .topitems>a[href="/wishlist"]:not(#nv-x){border-right:0!important}html body>div.topline:not(#nv-x) .topitems>span svg:not(#nv-x),html body>div.topline:not(#nv-x) .topitems>a svg:not(#nv-x){color:#e11d48!important;stroke:#e11d48!important}html body>div.topline:not(#nv-x) .topitems>a[href="/account"]:not(#nv-x),html body>div.topline:not(#nv-x) .topitems>a[href="/winkelwagen"]:not(#nv-x){display:none!important}html body>div.topline:not(#nv-x) .tm-locale-trigger:not(#nv-x){background:#fff!important;border:1.5px solid #c9d5ea!important;box-shadow:none!important}html body>div.topline:not(#nv-x) .tm-locale-trigger *:not(#nv-x):not(img){color:#1d4ed8!important}}';
     document.head.appendChild(oc);
@@ -221,10 +223,24 @@
   document.addEventListener('touchstart', prefetch, { passive: true, capture: true });
   document.addEventListener('mouseover', prefetch, { passive: true, capture: true });
 
+
+  /* ---------- Favorieten-knop in de kop (desktop) ---------- */
+  function favButton() {
+    var box = document.querySelector('.tm-header-actions'); if (!box || box.querySelector('.nv-fav-btn')) return;
+    var cart = box.querySelector('a[href="/winkelwagen"]');
+    var en = lang() === 'en';
+    var a = document.createElement('a');
+    a.className = 'tm-header-action nv-fav-btn'; a.href = '/wishlist';
+    a.setAttribute('aria-label', en ? 'Favourites' : 'Favorieten');
+    a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 5.6a5.4 5.4 0 0 0-7.6 0l-.8.8-.8-.8a5.4 5.4 0 0 0-7.6 7.6L12 21l8.4-7.8a5.4 5.4 0 0 0 0-7.6z"></path></svg><span class="tm-action-text" data-nv-nl="Favorieten" data-nv-en="Favourites">' + (en ? 'Favourites' : 'Favorieten') + '</span>';
+    if (cart && cart.nextSibling) box.insertBefore(a, cart.nextSibling); else box.appendChild(a);
+  }
+
   /* ---------- starten ---------- */
   function run() {
     try { freeCountry(); } catch (e) {}
     try { placeServices(); } catch (e) {}
+    try { favButton(); } catch (e) {}
     try { translate(document.body); } catch (e) {}
     try { alignCart(); } catch (e) {}
   }
