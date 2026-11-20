@@ -6,7 +6,7 @@
     {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
   </a>
   <div class="product-body">
-    <div class="product-card-meta"><span class="product-category" data-category-name="{{ product.category_slug }}">{{ product.category_name }}</span><span class="product-card-stock" data-i18n="testCollection">Testcollectie</span></div>
+    <div class="product-card-meta"><span class="product-category" data-category-name="{{ product.category_slug }}">{{ product.category_name }}</span></div>
     <h3><a href="{{ product.product_url }}" data-tm-product-nl="{{ product.name }}" data-tm-product-en="{{ product.en_name }}">{{ product.name }}</a></h3>
     <div class="product-bottom">
       <strong>{{ format_eur(product.price) }}</strong>

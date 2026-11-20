@@ -14,7 +14,7 @@
       [
         "Functionele opslag bij NUVEMIXA",
         [
-          "NUVEMIXA gebruikt tijdens de testfase functionele opslag om de gekozen taal en onderdelen van de winkelwagen en favorieten te onthouden. De taalvoorkeur kan lokaal in je browser worden opgeslagen; een sessiecookie kan helpen om de winkelwagen te beveiligen. Dit soort opslag ondersteunt gevraagde functies en betekent niet dat je ook akkoord gaat met reclame of profilering."
+          "De taalvoorkeur kan lokaal in je browser worden opgeslagen; een sessiecookie kan helpen om de winkelwagen te beveiligen. Dit soort opslag ondersteunt gevraagde functies en betekent niet dat je ook akkoord gaat met reclame of profilering."
         ]
       ],
       [
@@ -26,7 +26,7 @@
       [
         "Analyses van de website",
         [
-          "Statistieken kunnen helpen om trage pagina's, technische fouten en onduidelijke navigatie te herkennen. De gekozen analysetool en de instellingen bepalen of voorafgaande toestemming vereist is. Voorlopig is er geen definitief besluit genomen over een analysetool. Als we deze functie toevoegen, controleren we eerst welke informatie wordt verzameld en hoe de privacy wordt beschermd."
+          "Statistieken kunnen helpen om trage pagina's, technische fouten en onduidelijke navigatie te herkennen. De gekozen analysetool en de instellingen bepalen of voorafgaande toestemming vereist is. Als we deze functie toevoegen, controleren we eerst welke informatie wordt verzameld en hoe de privacy wordt beschermd."
         ]
       ],
       [
@@ -50,7 +50,7 @@
       [
         "Bewaartermijnen en de huidige status",
         [
-          "Hoe lang gegevens bewaard blijven verschilt per techniek en per browser of dienstverlener. Een sessiecookie werkt anders dan een blijvende lokale taalvoorkeur. Vóór commerciële opening controleren we de daadwerkelijke cookies en opslagobjecten, hun doelen, de aanbieders en de bewaartermijnen. Het definitieve overzicht publiceren we zodra de externe diensten zijn gekoppeld."
+          "Hoe lang gegevens bewaard blijven verschilt per techniek en per browser of dienstverlener. Een sessiecookie werkt anders dan een blijvende lokale taalvoorkeur. Het definitieve overzicht publiceren we zodra de externe diensten zijn gekoppeld."
         ]
       ],
       [
@@ -75,7 +75,7 @@
       [
         "Functional storage at NUVEMIXA",
         [
-          "During testing, NUVEMIXA uses functional storage to remember your chosen language and parts of your shopping cart and favourites. Your language preference may be stored locally in your browser; a session cookie may help secure the cart. This storage supports requested features and does not constitute agreement to advertising or profiling."
+          "Your language preference may be stored locally in your browser; a session cookie may help secure the cart. This storage supports requested features and does not constitute agreement to advertising or profiling."
         ]
       ],
       [
@@ -111,13 +111,13 @@
       [
         "Retention periods and current status",
         [
-          "The length of time information is kept depends on the technology, browser and service provider. A session cookie works differently from a persistent local language preference. Before commercial launch, we will review the actual cookies and storage items used, their purposes, providers and retention periods. We will publish a final inventory once external services are connected."
+          "The length of time information is kept depends on the technology, browser and service provider. A session cookie works differently from a persistent local language preference. We will publish a final inventory once external services are connected."
         ]
       ],
       [
         "Privacy rights and updates",
         [
-          "Technical information may be personal data if it can identify someone directly or indirectly. Additional requirements regarding lawful bases, security and privacy rights may then apply. Please consult our Privacy Policy. This cookies page will be updated when new payment, supplier, email or analytics services are connected. Full business and contact details will be published before commercial launch."
+          "Technical information may be personal data if it can identify someone directly or indirectly. Additional requirements regarding lawful bases, security and privacy rights may then apply. Please consult our Privacy Policy. This cookies page will be updated when new payment, supplier, email or analytics services are connected."
         ]
       ]
     ]

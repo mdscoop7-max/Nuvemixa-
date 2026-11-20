@@ -56,7 +56,7 @@ def test_cart_and_checkout_test_flow():
     assert product["name"].encode() in response.data
     response = client.get("/afrekenen")
     assert response.status_code == 200
-    assert b"Testmodus" in response.data
+    assert "Online bestellen is binnenkort mogelijk".encode() in response.data
 
 
 def test_catalog_is_exactly_100_products():

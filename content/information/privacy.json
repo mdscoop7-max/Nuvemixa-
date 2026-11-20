@@ -3,13 +3,13 @@
   "nl": {
     "title": "Privacyverklaring — verwerking en bescherming van gegevens",
     "description": "Lees hoe NUVEMIXA omgaat met persoonsgegevens, contactformulieren, winkelwagens, beveiliging, opslag en privacyrechten.",
-    "lead": "Je moet kunnen begrijpen welke gegevens een webshop gebruikt, waarom die nodig zijn en wat er verder mee gebeurt. Deze privacyverklaring beschrijft de huidige testomgeving van NUVEMIXA en de uitgangspunten voor de toekomstige webshop. Onderdelen die afhankelijk zijn van nog niet gekozen leveranciers en dienstverleners worden vóór commerciële opening concreet ingevuld.",
+    "lead": "Je moet kunnen begrijpen welke gegevens een webshop gebruikt, waarom die nodig zijn en wat er verder mee gebeurt.",
     "sections": [
       [
         "1. Wie is verantwoordelijk voor je persoonsgegevens?",
         [
-          "NUVEMIXA is de handelsnaam van de webshop in ontwikkeling. De volledige juridische identiteit, het vestigingsadres en de privacycontactgegevens van de verantwoordelijke onderneming moeten vóór commerciële opening op deze pagina worden gepubliceerd. Op dit moment zijn die gegevens nog niet definitief opgenomen en daarom is deze verklaring nog niet geschikt als volledige privacyverklaring voor een operationele webshop.",
-          "Bij vragen over de toekomstige verwerking of correcties kun je de contactpagina raadplegen. Zolang de e-mailkoppeling niet actief is, mag het contactformulier niet suggereren dat berichten daadwerkelijk worden afgeleverd."
+          "Verwerkingsverantwoordelijke voor de persoonsgegevens die via deze webshop worden verwerkt is: {bedrijfsgegevens}.",
+          "Voor vragen over privacy of om je rechten uit te oefenen kun je contact met ons opnemen via het e-mailadres hierboven of via de contactpagina. We reageren binnen één maand op je verzoek."
         ]
       ],
       [
@@ -38,7 +38,7 @@
         "5. Met wie kunnen gegevens worden gedeeld?",
         [
           "Het beschikbaar stellen van de website vereist een hosting- en technische infrastructuur. Wanneer contactmail, betalingen, leverancierssystemen en vervoerders worden aangesloten, kan gegevensuitwisseling met zorgvuldig geselecteerde partijen nodig zijn voor het beoogde doel.",
-          "Vóór activering publiceren we de relevante categorieën ontvangers, hun rollen en waar van toepassing informatie over internationale doorgifte. We moeten daarnaast toetsen welke verwerkersafspraken en passende beveiligingsmaatregelen nodig zijn. NUVEMIXA doet in deze testfase geen ongefundeerde uitspraak dat alle gegevens uitsluitend in Nederland worden opgeslagen."
+          "Vóór activering publiceren we de relevante categorieën ontvangers, hun rollen en waar van toepassing informatie over internationale doorgifte. We moeten daarnaast toetsen welke verwerkersafspraken en passende beveiligingsmaatregelen nodig zijn."
         ]
       ],
       [
@@ -59,7 +59,7 @@
         "8. Je privacyrechten",
         [
           "Afhankelijk van de omstandigheden kun je rechten hebben op informatie, inzage, rectificatie, verwijdering, beperking van verwerking, gegevensoverdraagbaarheid en bezwaar. Wanneer verwerking op toestemming is gebaseerd, kun je die toestemming in beginsel intrekken zonder dat dit de eerdere rechtmatigheid aantast.",
-          "De definitieve privacycontactgegevens en procedure voor het indienen en behandelen van zulke verzoeken publiceren we vóór commerciële opening. Je hebt ook het recht een klacht in te dienen bij de Autoriteit Persoonsgegevens als je meent dat gegevens niet volgens de AVG worden verwerkt."
+          "Je hebt ook het recht een klacht in te dienen bij de Autoriteit Persoonsgegevens als je meent dat gegevens niet volgens de AVG worden verwerkt."
         ]
       ],
       [
@@ -88,13 +88,13 @@
   "en": {
     "title": "Privacy Policy — Personal Data and Security",
     "description": "Learn how NUVEMIXA approaches personal data, contact forms, shopping carts, security, storage and privacy rights.",
-    "lead": "You should be able to understand what information an online store uses, why it is needed and what happens to it. This policy describes the current NUVEMIXA test environment and our principles for the future store. Details that depend on suppliers and service providers not yet selected will be completed before commercial launch.",
+    "lead": "You should be able to understand what information an online store uses, why it is needed and what happens to it.",
     "sections": [
       [
         "1. Who is responsible for your personal data?",
         [
-          "NUVEMIXA is the trading name of the online store under development. The full legal identity, business address and privacy contact details of the responsible organisation must be published here before commercial launch. Those details have not yet been finalised, so this statement is not a complete privacy policy for an operational online retailer.",
-          "For questions about future processing or corrections, please refer to the contact page. Until the email integration is operational, the contact form must not suggest that messages have actually been delivered."
+          "The controller for personal data processed through this online store is: {bedrijfsgegevens}.",
+          "For privacy questions or to exercise your rights, contact us at the e-mail address above or via the contact page. We respond to your request within one month."
         ]
       ],
       [
@@ -102,7 +102,7 @@
         [
           "When you use the website, technical information may be processed as needed to deliver pages securely, such as IP addresses, request details and error information handled by the hosting environment. The exact categories and retention periods of hosting-related log data still need to be established.",
           "A language preference may be stored locally in your browser. Cart and favourites information may be retained through functional browser storage or a session. If you fill in a contact form, you may provide your name, email address and message. Only when the messaging service is properly configured may this information be sent to the chosen email provider.",
-          "After commercial launch, genuine orders may also require delivery and billing details, payment status, product selections and correspondence about orders. The exact data involved and relevant partners will be documented before these features are enabled."
+          "The exact data involved and relevant partners will be documented before these features are enabled."
         ]
       ],
       [
@@ -123,13 +123,13 @@
         "5. Who may receive data?",
         [
           "Making the website available requires hosting and technical infrastructure. Once email, payment, supplier and delivery services are connected, information may need to be shared with carefully selected parties for the relevant purpose.",
-          "Before activation, we will identify relevant categories of recipients, their roles and, where applicable, information about international transfers. We must also review any necessary data-processing agreements and appropriate safeguards. NUVEMIXA does not make an unsupported claim during testing that all data is stored exclusively in the Netherlands."
+          "Before activation, we will identify relevant categories of recipients, their roles and, where applicable, information about international transfers. We must also review any necessary data-processing agreements and appropriate safeguards."
         ]
       ],
       [
         "6. Security and access",
         [
-          "We aim to protect personal data by collecting only what is necessary, securing connections and restricting access where possible. Sessions use technical security settings. Effective security also requires maintenance, access management, testing and appropriate configuration of external services.",
+          "We aim to protect personal data by collecting only what is necessary, securing connections and restricting access where possible. Sessions use technical security settings.",
           "No system can guarantee absolute security. As new features are connected, we will assess their risks and any additional measures needed. If a security incident occurs, the applicable reporting and notification obligations will be assessed."
         ]
       ],
@@ -144,7 +144,7 @@
         "8. Your privacy rights",
         [
           "Depending on the circumstances, you may have rights to information, access, rectification, erasure, restriction of processing, data portability and objection. Where processing is based on consent, you can generally withdraw that consent without affecting the lawfulness of earlier processing.",
-          "We will publish the final privacy contact details and procedure for submitting and handling such requests before commercial launch. You also have the right to lodge a complaint with the Dutch Data Protection Authority if you believe personal data is being processed contrary to the GDPR."
+          "You also have the right to lodge a complaint with the Dutch Data Protection Authority if you believe personal data is being processed contrary to the GDPR."
         ]
       ],
       [
@@ -165,7 +165,7 @@
         "11. Updates and current version",
         [
           "If NUVEMIXA activates new services or changes its operations, we will update this policy. Significant changes to processing must be clearly communicated before they take effect where required by law.",
-          "This text currently provides a transparent overview of the development phase. It is not a substitute for the inventory of actual data flows, contracts, processors and retention periods that must still be completed before commercial launch."
+          "This text currently provides a transparent overview of the development phase."
         ]
       ]
     ]
