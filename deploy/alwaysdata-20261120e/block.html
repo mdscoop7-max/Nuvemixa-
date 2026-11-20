@@ -1,0 +1,27 @@
+
+{% raw %}<!-- NUVEMIXA 2026-11-20e: infoblok overal, winkelwagen gelijk aan account, volledige NL/EN, land vrij invullen, sneller navigeren -->
+<style>
+#nv-services-e{box-sizing:border-box;width:100%;max-width:1200px;margin:22px auto 26px;word-break:normal;overflow-wrap:normal;hyphens:auto;-webkit-hyphens:auto;padding:18px 16px;border:1px solid #e1e8f4;border-radius:22px;background:#f4f7fd;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 14px}
+#nv-services-e[hidden]{display:none!important}
+body>#nv-services-e{width:calc(100% - 24px)}
+#nv-services-e *{word-break:normal;overflow-wrap:normal}
+#nv-services-e .nv-svc{display:flex;align-items:center;gap:12px;min-width:0;text-decoration:none!important;color:inherit!important;border-radius:14px}
+#nv-services-e .nv-svc:focus-visible{outline:3px solid #ffba51;outline-offset:3px}
+#nv-services-e .nv-ico{flex:0 0 46px;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff}
+#nv-services-e .nv-ico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#nv-services-e .nv-g{background:#16a34a}#nv-services-e .nv-p{background:#7c3aed}#nv-services-e .nv-b{background:#2563eb}#nv-services-e .nv-o{background:#ea580c}
+#nv-services-e .nv-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+#nv-services-e strong{font:700 15px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#0f1b33}
+#nv-services-e small{font:400 13px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#4b5b73}
+@media(max-width:760px){#nv-services-e{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 8px;padding:16px 12px;margin:18px auto 22px}#nv-services-e .nv-svc{gap:9px}#nv-services-e .nv-ico{flex-basis:40px;width:40px;height:40px;border-radius:12px}#nv-services-e .nv-ico svg{width:21px;height:21px}#nv-services-e strong{font-size:13.5px}#nv-services-e small{font-size:12px}}
+@media(max-width:340px){#nv-services-e{grid-template-columns:1fr}}
+.nv-country-input{width:100%;box-sizing:border-box}
+</style>
+<section id="nv-services-e" lang="nl" class="nv-services-all" aria-label="Service" hidden>
+  <a class="nv-svc" href="/bestellen"><span class="nv-ico nv-g"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><span class="nv-txt"><strong data-nv-nl="Leverinformatie" data-nv-en="Delivery information">Leverinformatie</strong><small data-nv-nl="Bekijk de voorwaarden per product" data-nv-en="See the terms per product">Bekijk de voorwaarden per product</small></span></a>
+  <a class="nv-svc" href="/retouren"><span class="nv-ico nv-p"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6"/><path d="M4.5 10A8 8 0 1 1 6 17.3"/></svg></span><span class="nv-txt"><strong data-nv-nl="Retourinformatie" data-nv-en="Returns information">Retourinformatie</strong><small data-nv-nl="Duidelijk vóór je bestelt" data-nv-en="Clear before you order">Duidelijk vóór je bestelt</small></span></a>
+  <a class="nv-svc" href="/bestellen"><span class="nv-ico nv-b"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span class="nv-txt"><strong data-nv-nl="Bestellen" data-nv-en="Ordering">Bestellen</strong><small data-nv-nl="Binnenkort mogelijk" data-nv-en="Coming soon">Binnenkort mogelijk</small></span></a>
+  <a class="nv-svc" href="/contact"><span class="nv-ico nv-o"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h3v5H5a1 1 0 0 1-1-1zM20 14h-3v5h2a1 1 0 0 0 1-1z"/><path d="M17 19c0 1-2 2-4 2"/></svg></span><span class="nv-txt"><strong data-nv-nl="Klantenservice" data-nv-en="Customer service">Klantenservice</strong><small data-nv-nl="Neem contact op" data-nv-en="Contact us">Neem contact op</small></span></a>
+</section>
+<script src="/static/nv-fix-20261120e.js?v=20261120e"></script>
+<div id="nv-ready-20261120e" hidden></div>{% endraw %}
