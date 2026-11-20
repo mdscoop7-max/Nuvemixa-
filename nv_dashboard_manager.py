@@ -308,7 +308,7 @@ def coupon_rows():
     today = coupon_today()
     with connect() as db:
         return [dict(row, status=coupon_status(row, today))
-                for row in db.execute("SELECT * FROM coupons ORDER BY id DESC")]
+                for row in db.execute("SELECT * FROM coupons WHERE code NOT LIKE '~deleted~%' ORDER BY id DESC")]
 
 
 def amount_in_cents(value):
@@ -394,14 +394,20 @@ def coupons():
                     abort(400)
                 ids = sorted(set(int(item) for item in raw_ids))
                 placeholders = ",".join("?" for _ in ids)
-                deleted = db.execute(f"DELETE FROM coupons WHERE id IN ({placeholders})", ids)
+                deleted = db.execute(
+                    f"UPDATE coupons SET active=0, code='~deleted~' || id WHERE id IN ({placeholders}) AND code NOT LIKE '~deleted~%'",
+                    ids,
+                )
                 if deleted.rowcount != len(ids):
                     abort(404)
             elif operation == "delete":
                 coupon_id = request.form.get("id", type=int)
                 if coupon_id is None:
                     abort(400)
-                deleted = db.execute("DELETE FROM coupons WHERE id=?", (coupon_id,))
+                deleted = db.execute(
+                    "UPDATE coupons SET active=0, code='~deleted~' || id WHERE id=? AND code NOT LIKE '~deleted~%'",
+                    (coupon_id,),
+                )
                 if deleted.rowcount != 1:
                     abort(404)
             elif operation in {"disable", "enable"}:
