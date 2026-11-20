@@ -102,7 +102,7 @@
     var oc = document.createElement('style');
     oc.textContent = 'html,body{overflow-x:clip}'
       /* desktop: dezelfde originele hero-afbeeldingen tonen als op mobiel (geen losse teksthero) */
-      + '@media (min-width:992px){html body main.wrap>.tm-new-hero,html body main.wrap>.tm-offers-hero,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero{height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}html body main.wrap>.tm-new-hero>a{display:block!important;width:100%!important;height:auto!important;min-height:0!important}html body main.wrap>.tm-new-hero img,html body main.wrap>.tm-offers-hero>img,html body main.wrap.legacy-main .page-section.shop-page>.tm-shop-hero>img{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;margin:0!important;object-fit:contain!important;border-radius:22px}html body main .tm-desktop-hero-copy{display:none!important}}'
+      + '@media (min-width:992px){html body main.wrap>.tm-new-hero:not(#nv-x),html body main .tm-offers-hero:not(#nv-x),html body .page-section.shop-page>.tm-shop-hero:not(#nv-x){position:relative!important;height:clamp(380px,34.5vw,460px)!important;min-height:0!important;max-height:none!important;border-radius:22px!important;overflow:hidden!important;background:#0b0f1f!important;padding:0!important;display:block!important;margin-top:16px!important;margin-bottom:16px!important}html body main.wrap>.tm-new-hero:not(#nv-x)>a{position:absolute!important;inset:0!important;display:block!important;height:100%!important;width:100%!important}html body main.wrap>.tm-new-hero:not(#nv-x) img,html body main .tm-offers-hero:not(#nv-x) img,html body .page-section.shop-page>.tm-shop-hero:not(#nv-x) img{display:block!important;position:absolute!important;right:0!important;left:auto!important;top:50%!important;transform:translateY(-50%)!important;width:166.7%!important;max-width:none!important;height:auto!important;max-height:none!important;margin:0!important;border-radius:0!important;object-fit:contain!important;z-index:0!important}html body main.wrap>.tm-new-hero:not(#nv-x)::after,html body main .tm-offers-hero:not(#nv-x)::after,html body .page-section.shop-page>.tm-shop-hero:not(#nv-x)::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#0b0f1f 0%,rgba(11,15,31,.92) 34%,rgba(11,15,31,.35) 58%,rgba(11,15,31,0) 75%);pointer-events:none}html body main.wrap>.tm-new-hero:not(#nv-x) .tm-desktop-hero-copy,html body main .tm-offers-hero:not(#nv-x) .tm-desktop-hero-copy,html body .page-section.shop-page>.tm-shop-hero:not(#nv-x) .tm-desktop-hero-copy{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;position:absolute!important;left:0!important;top:0!important;bottom:0!important;z-index:2!important;width:46%!important;padding:0 0 0 56px!important;background:none!important;margin:0!important;transform:none!important}html body main.wrap>.tm-new-hero:not(#nv-x) .tm-desktop-hero-copy h2,html body main.wrap>.tm-new-hero:not(#nv-x) .tm-desktop-hero-copy p,html body main.wrap>.tm-new-hero:not(#nv-x) .tm-desktop-hero-copy .tm-desktop-brand,html body main .tm-offers-hero:not(#nv-x) .tm-desktop-hero-copy h2,html body main .tm-offers-hero:not(#nv-x) .tm-desktop-hero-copy p,html body main .tm-offers-hero:not(#nv-x) .tm-desktop-hero-copy .tm-desktop-brand,html body .page-section.shop-page>.tm-shop-hero:not(#nv-x) .tm-desktop-hero-copy h2,html body .page-section.shop-page>.tm-shop-hero:not(#nv-x) .tm-desktop-hero-copy p,html body .page-section.shop-page>.tm-shop-hero:not(#nv-x) .tm-desktop-hero-copy .tm-desktop-brand{color:#fff!important;opacity:1!important}html body .page-section.shop-page>.tm-shop-hero:not(#nv-x) img{top:auto!important;bottom:-4%!important;transform:none!important}}'
       /* Favorieten-knop naast Account en Cart (desktop) */
       + 'html body .tm-header-actions>a.nv-fav-btn:not(#nv-x){background:linear-gradient(135deg,#fb7185,#e11d48)!important;color:#fff!important;border-color:rgba(255,255,255,.55)!important}html body .tm-header-actions>a.nv-fav-btn svg:not(#nv-x){stroke:#fff!important;fill:none!important}@media (max-width:991px){html body .tm-header-actions>a.nv-fav-btn{display:none!important}}@media (min-width:992px){html body>div.topline:not(#nv-x) .topitems>a[href="/wishlist"]:not(#nv-x){display:none!important}html body>div.topline:not(#nv-x) .topitems>span:nth-last-of-type(1):not(#nv-x){border-right:0!important}}'
       /* bovenbalk desktop: optie C (wit, rode lijn boven, rode icoontjes, geen dubbele Account/Cart) */
@@ -236,11 +236,34 @@
     if (cart && cart.nextSibling) box.insertBefore(a, cart.nextSibling); else box.appendChild(a);
   }
 
+
+  /* ---------- desktop-hero: tekstblok voor de homepage, "sport" in Lifestyle & Sport ---------- */
+  function heroCopy() {
+    var hero = document.querySelector('main.wrap > .tm-new-hero');
+    if (hero && !hero.querySelector('.tm-desktop-hero-copy')) {
+      var holder = hero.querySelector('a') || hero;
+      var d = document.createElement('div'); d.className = 'tm-desktop-hero-copy nv-home-copy'; d.setAttribute('aria-hidden', 'true');
+      d.innerHTML = '<span class="tm-desktop-brand">NUVEMIXA</span><span class="tm-desktop-tag">GADGETS</span>'
+        + '<h2 data-nv-nl="Unieke gadgets voor een slimmer leven" data-nv-en="Unique gadgets for smarter living">Unieke gadgets voor een slimmer leven</h2>'
+        + '<p data-nv-nl="Bijzondere gadgets die je dagelijks leven makkelijker en leuker maken." data-nv-en="Special gadgets that make everyday life easier and more fun.">Bijzondere gadgets die je dagelijks leven makkelijker en leuker maken.</p>'
+        + '<span class="tm-desktop-cta" data-nv-nl="Bekijk Gadgets →" data-nv-en="Explore Gadgets →">Bekijk Gadgets →</span>';
+      holder.appendChild(d);
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.tm-desktop-hero-copy h2'), function (h) {
+      if (h.hasAttribute('data-nv-nl')) return;
+      if (/actieve levensstijl|active lifestyle/i.test(h.textContent) && !/sport/i.test(h.textContent)) {
+        h.setAttribute('data-nv-nl', 'De perfecte uitrusting voor sport en een actieve levensstijl');
+        h.setAttribute('data-nv-en', 'The perfect gear for sport and an active lifestyle');
+      }
+    });
+  }
+
   /* ---------- starten ---------- */
   function run() {
     try { freeCountry(); } catch (e) {}
     try { placeServices(); } catch (e) {}
     try { favButton(); } catch (e) {}
+    try { heroCopy(); } catch (e) {}
     try { translate(document.body); } catch (e) {}
     try { alignCart(); } catch (e) {}
   }
