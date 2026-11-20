@@ -22,6 +22,7 @@ DEFAULT_RIGHTS = frozenset({"product_view", "calculator", "stats"})
 SECTIONS = {
     "producten": ("product_view", "product_add", "product_edit"),
     "categorieen": ("product_view", "category_manage"),
+    "extra-producten": ("product_add",),
     "afbeeldingen": ("product_view", "image_manage"),
     "kortingen": ("discount_view", "discount_manage"),
     "bestellingen": ("order_view",),

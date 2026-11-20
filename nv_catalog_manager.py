@@ -86,6 +86,29 @@ def validated_product(form, existing):
     }
 
 
+def validated_extra(form, existing):
+    """Extra product: dezelfde basiscontroles plus inkoopprijs, afbeelding, korte tekst en zichtbaarheid.
+    Alleen wat jij invult wordt opgeslagen; er wordt niets aangevuld of verzonnen."""
+    product = validated_product(form, existing)
+    cost = form.get("cost_price", "").strip()
+    if cost and not re.fullmatch(r"\d{1,7}([.,]\d{1,2})?", cost):
+        raise ValueError("Controleer de inkoopprijs.")
+    image = form.get("image", "").strip()
+    if image and not valid_image(image):
+        raise ValueError("Gebruik een geldige HTTPS-afbeeldingslink of een bestaand lokaal afbeeldingsbestand.")
+    short = form.get("short_description", "").strip()
+    if len(short) > 300:
+        raise ValueError("De korte omschrijving mag maximaal 300 tekens zijn.")
+    product["cost_price"] = float(Decimal(cost.replace(",", "."))) if cost else 0
+    product["short_description"] = short
+    if image:
+        images = [image] + [url for url in existing.get("images") or [] if url != image]
+        product.update(image=image, images=images, image_verified=False)
+    product["hidden"] = form.get("visible") != "1"
+    product["extra"] = True
+    return product
+
+
 def valid_image(url):
     if not 1 <= len(url) <= 1500 or re.search(r"[\s\\]", url):
         return False
@@ -101,12 +124,13 @@ def valid_image(url):
 def catalog():
     CATEGORIES, catalog_items, slugify = current_app.extensions["nuvemixa_catalog_api"]
     section = request.form.get("section")
-    if section not in {"producten", "categorieen", "afbeeldingen"}:
+    if section not in {"producten", "categorieen", "afbeeldingen", "extra-producten"}:
         abort(400)
     category = request.form.get("category", "")
     slug = request.form.get("slug", "")
     permission = {"categorieen": "category_manage", "afbeeldingen": "image_manage",
-                  "producten": "product_edit" if slug else "product_add"}[section]
+                  "producten": "product_edit" if slug else "product_add",
+                  "extra-producten": "product_edit" if slug else "product_add"}[section]
     if not allowed(permission):
         abort(403)
     try:
@@ -160,8 +184,14 @@ def catalog():
                         images.append(url)
                     changes["images"] = images
                     changes["image_verified"] = False
+                elif section == "extra-producten" and request.form.get("op") == "visibility":
+                    if existing is None or not changes.get("extra"):
+                        abort(404)
+                    changes["hidden"] = request.form.get("visible") != "1"
                 else:
-                    updated = validated_product(request.form, changes)
+                    if section == "extra-producten" and slug and not changes.get("extra"):
+                        abort(404)  # alleen zelf toegevoegde producten zijn hier te bewerken
+                    updated = (validated_extra if section == "extra-producten" else validated_product)(request.form, changes)
                     if not slug:
                         slug = slugify(updated["name"])[:100]
                         if not slug or any(item["category_slug"] == category and item["slug"] == slug
@@ -180,4 +210,7 @@ def catalog():
         current_app.logger.error("Lokale cataloguswijziging kon niet worden opgeslagen")
         return management_result(section, "De cataloguswijziging kon niet worden opgeslagen.")
     invalidate_changes()  # na de commit: volgende pagina leest de nieuwe stand
+    if section == "extra-producten":
+        state = "zichtbaar in de webshop" if not changes.get("hidden") else "opgeslagen als concept (niet zichtbaar in de webshop)"
+        return management_result(section, f"Product {state}.", success=True)
     return management_result(section, "Cataloguswijziging opgeslagen.", success=True)
