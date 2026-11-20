@@ -50,7 +50,7 @@
   }
   function trText(node, map) {
     var raw = node.nodeValue; if (!raw) return;
-    var t = raw.trim(); if (t.length < 2 || t.length > 220) return;
+    var t = raw.trim(); if (t.length < 2 || t.length > 600) return;
     var r = lookup(t, map);
     if (r !== undefined && r !== t) {
       var c = node.__nvc = (node.__nvc || 0) + 1; if (c > 6) return; /* nooit eindeloos heen-en-weer */
