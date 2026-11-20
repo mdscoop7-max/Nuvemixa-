@@ -100,14 +100,13 @@
         {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
       </div>
 
-      <p class="detail-description" data-tm-product-nl="{{ product.short_description }}" data-tm-product-en="{{ product.en_short_description }}">{{ product.short_description }}</p>
-      <p class="detail-test-note">Demo-product en testprijs. Definitieve productfoto, prijs, voorraad en specificaties worden vóór commerciële livegang met de leverancier bevestigd.</p><div class="detail-confidence"><span data-i18n="clearProductInfo">{{ tm_icon('check') }} Duidelijke productinformatie</span><span data-i18n="testCollection">Testcollectie</span><span data-i18n="returnPolicy">Retourvoorwaarden vóór livegang</span></div>
+      <p class="detail-description" data-tm-product-nl="{{ product.short_description }}" data-tm-product-en="{{ product.en_short_description }}">{{ product.short_description }}</p><div class="detail-confidence"><span data-i18n="clearProductInfo">{{ tm_icon('check') }} Duidelijke productinformatie</span><span data-i18n="returnPolicy">14 dagen bedenktijd</span></div>
 
       <div class="product-availability">
         <strong class="{% if product.stock_status == 'in_stock' %}stock-good{% elif product.stock_status == 'out_of_stock' %}stock-bad{% else %}stock-unknown{% endif %}">
           {% if product.stock_status == "in_stock" %}Op voorraad
           {% elif product.stock_status == "out_of_stock" %}Niet op voorraad
-          {% else %}<span data-i18n="stockUnconfirmed">Voorraad nog niet gekoppeld</span>{% endif %}
+          {% else %}<span data-i18n="stockUnconfirmed">Beschikbaarheid wordt bij bestelling bevestigd</span>{% endif %}
         </strong>
         <span><span data-i18n="deliveryTime">Levertijd</span>: {% if product.delivery_time and product.delivery_time != "Wordt bevestigd bij leverancier" %}<span>{{ product.delivery_time }}</span>{% else %}<span data-i18n="deliveryUnconfirmed">Wordt bevestigd bij leverancier</span>{% endif %}</span>
       </div>

@@ -27,7 +27,7 @@
 <div class="empty-state"><h3 data-i18n="cartEmpty">Je winkelwagen is leeg</h3><p data-i18n="cartEmptyText">Voeg producten toe vanuit een collectie.</p></div>
 {% endif %}
 <div class="cart-total modern-total"><span><small>Overzicht</small><strong data-i18n="total">Totaal</strong></span><strong>{{ format_eur(cart_total) }}</strong></div>
-{% if cart %}<div class="cart-checkout-box"><div><small data-i18n="testCheckout">Checkout in testfase</small><strong>{{ format_eur(cart_total) }}</strong></div><a class="btn btn-dark checkout-button" href="/afrekenen" data-i18n="checkout">Naar afrekenen →</a></div>{% endif %}
+{% if cart %}<div class="cart-checkout-box"><div><small data-i18n="testCheckout">Totaal</small><strong>{{ format_eur(cart_total) }}</strong></div><a class="btn btn-dark checkout-button" href="/afrekenen" data-i18n="checkout">Naar afrekenen →</a></div>{% endif %}
 </section></main>
 {% include '_footer.html' %}
 </body></html>

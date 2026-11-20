@@ -44,7 +44,7 @@ def general_answer(q,lang,products,categories,live):
         return (tr(
             "Na een bestelling kun je normaal de bevestiging, levering en retourregels controleren. "
             "Deze chat heeft geen toegang tot persoonlijke bestellingen, betalingen of tracking. "
-            "Deel hier geen bestelnummer of adres. "+("Individuele statusvragen vereisen een beveiligde klantenservicekoppeling." if live else "NUVEMIXA zit nog in de testfase; echte bestellingen zijn momenteel niet mogelijk."),
+            "Deel hier geen bestelnummer of adres. "+("Individuele statusvragen vereisen een beveiligde klantenservicekoppeling." if live else "Online bestellen bij NUVEMIXA is binnenkort mogelijk; er worden nu nog geen bestellingen verwerkt."),
             "After ordering, check your confirmation, delivery details and return policy. "
             "This chat cannot look up personal orders, payments or tracking. Do not share order numbers or addresses. "
             +("A secure customer service connection is needed for order status." if live else "NUVEMIXA is currently a test shop with no live orders.")
@@ -58,8 +58,8 @@ def general_answer(q,lang,products,categories,live):
                    "Delivery times, destinations and shipping fees are not yet confirmed by suppliers. These details will be published before sales."),
                 links((tr("Bestellen en levering","Ordering and delivery"),"/bestellen")))
     if re.search(r"betaal|betalen|checkout|winkelwagen|bestel|order|payment|cart",t):
-        return (tr("De winkelwagen en checkout zijn nog in testfase. Er worden momenteel geen echte bestellingen of betalingen verwerkt. Na commerciële opening worden bevestigingen en instructies voor verdere ondersteuning beschikbaar.",
-                   "Checkout and cart are in testing. Real orders and payments are not active yet. Order confirmation and after-sales support will be provided once the shop launches."),
+        return (tr("Online bestellen bij NUVEMIXA is binnenkort mogelijk. Er worden nu nog geen bestellingen of betalingen verwerkt.",
+                   "Online ordering at NUVEMIXA will be available soon. No orders or payments are processed yet."),
                 links((tr("Bestellen","Ordering"),"/bestellen"),(tr("Winkelwagen","Cart"),"/winkelwagen")))
     if re.search(r"contact|service|medewerker|klacht|email|e-mail|telefoon|support",t):
         return (tr("Voor persoonlijke hulp is er de contactpagina. Het versturen van e-mails is op deze website momenteel niet gekoppeld; het formulier kan dus nog geen berichten afleveren.",
@@ -100,7 +100,7 @@ def ai_answer(question,lang,products):
     if not key:return None
     catalog=[{"name":p["name"],"category":p["category"],"test_price":p["price"],"description":p["description"],"specifications":p["specs"]} for p in products]
     system=("You are NUVEMIXA product and customer support. Answer in Dutch unless user asks in English. "
-            "Use only these verified site facts: NUVEMIXA is in test mode, has no live checkout, payments or personal order access; "
+            "Use only these verified site facts: NUVEMIXA has no live checkout yet (say ordering will be available soon; never use the words test phase), payments or personal order access; "
             "prices, stock, photos, specifications and delivery times are provisional. No shipping costs or supplier commitments are confirmed. "
             "Returns info /retouren, shipping /bestellen, privacy /privacy, support /contact, all products /shop. "
             "Do not promise personal order tracking or pretend support is online. Never invent information or claim certainty. "
