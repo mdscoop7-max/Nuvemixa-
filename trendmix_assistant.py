@@ -121,6 +121,14 @@ def catalog_items(catalog,categories):
             items.append({"name":name,"category":categories[slug]["name"],"price":price,"url":"/"+slug+"/"+ps})
     return items
 
+def clean_answer(text):
+    """Geen verzonnen domeinen of Markdown in de chatbubbel: absolute links worden paden, ** en []() verdwijnen."""
+    text=str(text).strip()
+    text=re.sub(r"\[([^\]]{1,80})\]\(([^)\s]{1,200})\)",r"\1 (\2)",text)
+    text=re.sub(r"https?://[A-Za-z0-9.-]+(/[^\s)]*)?",lambda m:m.group(1) or "/",text)
+    text=text.replace("**","").replace("__","")
+    return text[:1800]
+
 def ai_answer(question,lang,products,all_items=()):
     import nv_openai
     if not nv_openai.configured():return None
@@ -128,7 +136,8 @@ def ai_answer(question,lang,products,all_items=()):
     overview=[{"name":p["name"],"category":p["category"],"price_eur":p["price"],"url":p["url"]} for p in all_items][:120]
     system=("You are the friendly NUVEMIXA shop assistant (Dutch web shop with gadgets, smart home, beauty & care, home & living, lifestyle & sport). "
             "Answer in English if the user writes English, otherwise in Dutch. Answer every question helpfully: greetings, product advice, comparisons, gift ideas, budgets, general product knowledge. "
-            "For recommendations use ONLY products from the catalog lists below and mention their price and link path. "
+            "For recommendations use ONLY products from the catalog lists below and mention their price and the exact relative link path from the data (for example /gadgets/smartwatch); never write a domain name or full URL, and do not use Markdown. "
+            "Only mention product features that appear in the data; otherwise keep the description general. "
             "Shop facts: online ordering is not open yet (say it will be available soon; never say test phase); no payments or personal order access; "
             "prices, stock, photos, specifications and delivery times are provisional; shipping costs and delivery times are not confirmed. "
             "Pages: returns /retouren, ordering and delivery /bestellen, privacy /privacy, contact /contact, all products /shop. "
@@ -141,7 +150,7 @@ def ai_answer(question,lang,products,all_items=()):
     try:
         result=nv_openai.post("chat/completions",data,timeout=12,max_bytes=40000,estimate_usd=0.004)
         answer=result["choices"][0]["message"]["content"]
-        return str(answer).strip()[:1800] if answer else None
+        return clean_answer(answer) if answer else None
     except (nv_openai.AIUnavailable,ValueError,KeyError,IndexError,TypeError):
         return None
 

@@ -53,3 +53,9 @@ def test_ai_unavailable_falls_back(monkeypatch):
         raise nv_openai.AIUnavailable("limit", "limiet")
     monkeypatch.setattr(nv_openai, "post", boom)
     assert ta.ai_answer("hoi", "nl", [], []) is None
+
+
+def test_ai_answer_never_shows_invented_domains_or_markdown():
+    out = ta.clean_answer("1. **Oordopjes** - €24.95 [Bekijk hier](https://nuvemixa.nl/gadgets/oordopjes) of https://example.com")
+    assert "nuvemixa.nl" not in out and "example.com" not in out and "**" not in out
+    assert "/gadgets/oordopjes" in out
