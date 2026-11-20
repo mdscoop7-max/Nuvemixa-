@@ -1,0 +1,16 @@
+{% set done = livegang|selectattr('ok')|list|length %}
+<section class="panel nv-live" aria-label="Livegang-checklist">
+<h2>Livegang-checklist <small>· {{ done }} van {{ livegang|length }} klaar</small></h2>
+<p>Wat er nodig is om dashboard en webshop echt te laten werken met WooCommerce. Het dashboard toont alleen <strong>of</strong> een instelling op Render is ingevuld, nooit de waarde. Sleutels en wachtwoorden vul je zelf in bij Render → je service → <em>Environment</em>; daarna is een nieuwe deploy nodig. Niets op deze pagina zet zelf iets aan.</p>
+<ol class="nv-live-steps">
+{% for s in livegang %}
+<li class="{{ 'ok' if s.ok else 'todo' }}">
+  <div class="nv-live-head"><strong>{{ s.title }}</strong><span class="nv-live-badge">{{ 'Klaar' if s.ok else 'Nog te doen' }}</span></div>
+  <p class="nv-live-who">{{ s.who }}</p>
+  <p>{{ s.note }}</p>
+  {% if s.vars %}<ul class="nv-live-vars">{% for v in s.vars %}<li class="{{ 'ok' if v.ok else 'todo' }}"><code>{{ v.name }}</code> {{ '✓ ingevuld' if v.ok else ('— optioneel' if v.optional else '✗ ontbreekt') }}</li>{% endfor %}</ul>{% endif %}
+</li>
+{% endfor %}
+</ol>
+<p class="nv-live-order"><strong>Volgorde:</strong> 1 bedrijfsgegevens → 2 contact-e-mail → 3 alleen-lezen koppeling → 4 (optioneel) concepten → 5 betalen in WooCommerce testen → 6 als laatste de bestelschakelaars aan. Zet bestellingen pas aan na een geslaagde proefbestelling.</p>
+</section>

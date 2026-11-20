@@ -905,6 +905,7 @@
     <iframe title="WooCommerce en leveranciers binnen NUVEMIXA" src="/admin/commerce?embedded=1" loading="eager" referrerpolicy="same-origin"></iframe>
   </div>
 </section>
+{% if livegang %}{% include "_dashboard_livegang.html" %}{% endif %}
 {% elif section == 'publicatie' and is_admin %}
 {% include "_dashboard_publicatie.html" %}
 {% elif section == 'talen' %}

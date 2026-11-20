@@ -2265,6 +2265,10 @@ def control():
 
 
 
+    livegang = None
+    if section == "woocommerce" and is_admin:
+        import nv_livegang
+        livegang = nv_livegang.checklist()
     extra_groups = None
     if section == "extra-producten":
         extra_groups = [{"key": key, "name": meta.get("name", key),
@@ -2483,6 +2487,7 @@ def control():
 
         filtered_products=filtered_products,
         extra_groups=extra_groups,
+        livegang=livegang,
 
         section=section,
 
