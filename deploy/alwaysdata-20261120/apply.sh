@@ -13,7 +13,7 @@ grep -q "register_trendmix_assistant(app, *products, *CATEGORIES, *live_orders_e
   || { echo "STOP: app.py roept de assistent anders aan; niets gewijzigd."; exit 1; }
 
 mkdir -p /home/nuvemixa/backups
-tar -czf "$BACKUP" --exclude=nuvemixa/.venv --exclude=nuvemixa/__pycache__ -C /home/nuvemixa/www nuvemixa
+tar -czf "$BACKUP" --exclude=nuvemixa/.venv --exclude=nuvemixa/__pycache__ --exclude=nuvemixa/wsgi.py -C /home/nuvemixa/www nuvemixa
 tar -tzf "$BACKUP" >/dev/null
 echo "Back-up gemaakt en gecontroleerd: $BACKUP"
 
@@ -25,7 +25,7 @@ test -s "$TMP/trendmix_assistant.py" && grep -q "def clean_answer" "$TMP/trendmi
 restore() {
   echo "FOUT: back-up wordt teruggezet..."
   tar -xzf "$BACKUP" -C /home/nuvemixa/www
-  touch "$APP/wsgi.py"
+  touch "$APP/wsgi.py" 2>/dev/null || true
   echo "Back-up teruggezet; de webshop is weer zoals voor deze update."
 }
 trap restore ERR
@@ -44,9 +44,9 @@ for t in templates/*.html; do
 done
 
 .venv/bin/python -m compileall -q app.py trendmix_assistant.py nv_openai.py
-.venv/bin/python -c 'from wsgi import application; assert application is not None; print("WSGI import OK")'
+.venv/bin/python -c 'from app import app as application; assert application is not None; print("App import OK")'
 .venv/bin/python - <<'PY'
-from wsgi import application
+from app import app as application
 c = application.test_client()
 for path in ("/", "/gadgets", "/gadgets/bluetooth-speaker", "/winkelwagen", "/contact"):
     r = c.get(path)
@@ -56,6 +56,6 @@ assert r.status_code == 200 and r.get_json().get("ok"), r.get_data(as_text=True)
 print("Pagina's en assistent OK")
 PY
 trap - ERR
-touch wsgi.py
+touch wsgi.py 2>/dev/null || echo "Let op: herstart de site in het Alwaysdata-beheer om de update te laden."
 rm -rf "$TMP"
-echo "KLAAR: webshop bijgewerkt. Terugzetten kan met: tar -xzf $BACKUP -C /home/nuvemixa/www && touch $APP/wsgi.py"
+echo "KLAAR: webshop bijgewerkt. Terugzetten kan met: tar -xzf $BACKUP -C /home/nuvemixa/www en herstart de site"
