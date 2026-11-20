@@ -289,3 +289,10 @@ details.nv-srcrep ul{margin:.35rem 0 0 1rem;padding:0}
 .nv-srow__shop{color:var(--nv-warn,#b26a00)}
 .nv-srow__price{font-weight:600}
 .nv-register-tag{display:inline-block;font-size:.72rem;font-weight:600;vertical-align:middle;padding:.15rem .5rem;border-radius:999px;border:1px solid currentColor;opacity:.8;margin-left:.4rem}
+/* Extra producten per categorie */
+.nv-xp-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:.5rem;margin-top:.5rem}
+.nv-xp-sum a{display:block;text-decoration:none;color:inherit;border:1px solid rgba(127,127,127,.25);border-radius:10px;padding:.5rem .7rem;min-width:0}
+.nv-xp-sum span{display:block;font-size:.78rem;opacity:.8}
+.nv-xp-sum strong{font-size:1.1rem}
+.nv-xp-state{font-size:.78rem;font-weight:700;color:#8a5a00}
+.nv-xp-state.on{color:#0a6b5d}

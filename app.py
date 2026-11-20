@@ -198,8 +198,12 @@ def catalog_snapshot():
         items.setdefault(category, [])
     index = {(category, raw.get("slug") or slugify(raw["name"])): i
              for category, rows in items.items() for i, raw in enumerate(rows)}
+    # Extra producten die nog als concept (verborgen) staan, zie je alleen in het dashboard, niet in de webshop.
+    show_hidden = has_request_context() and request.path.startswith(("/dashboard", "/admin"))
     for category, slug, changes in product_edits:
         if category not in items:
+            continue
+        if changes.get("hidden") and not show_hidden:
             continue
         position = index.get((category, slug))
         if position is None:
@@ -2144,7 +2148,7 @@ def control():
         "concepten": "Kandidaten en concepten",
         "viral": "Viral Product Finder",
 
-        "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "categorieen": "Categorieën",
+        "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "extra-producten": "Extra producten", "categorieen": "Categorieën",
 
         "bestellingen": "Bestellingen", "klanten": "Klanten", "accountbeheer": "Accountbeheer", "kortingen": "Kortingen & acties",
 
@@ -2185,6 +2189,7 @@ def control():
         "producten": "Zoek en bekijk producten, prijzen en voorraad in de testcatalogus.",
 
         "categorieen": "Bekijk de productgroepen en hun catalogusaantallen.",
+        "extra-producten": "Voeg per hoofdcategorie extra producten toe. Nieuwe producten staan eerst als concept en zijn pas in de webshop te zien als jij ze zichtbaar zet.",
 
         "bestellingen": "Bestellingen zodra een echte orderbron is gekoppeld.",
 
@@ -2255,6 +2260,13 @@ def control():
             )]
 
 
+
+    extra_groups = None
+    if section == "extra-producten":
+        extra_groups = [{"key": key, "name": meta.get("name", key),
+                         "base": sum(1 for p in all_products if p["category_slug"] == key and not p.get("extra")),
+                         "extra": [p for p in all_products if p["category_slug"] == key and p.get("extra")]}
+                        for key, meta in CATEGORIES.items()]
 
     merchant_report = (merchant_audit(catalog_items(), app.static_folder)
                        if section in {"google-shopping", "monitoring"} else None)
@@ -2466,6 +2478,7 @@ def control():
         products=featured_products,
 
         filtered_products=filtered_products,
+        extra_groups=extra_groups,
 
         section=section,
 

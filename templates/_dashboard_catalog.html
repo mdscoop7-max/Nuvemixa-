@@ -55,11 +55,7 @@
 </form>
 {% if search and not filtered_products %}<p>Geen catalogusproducten voor deze zoekterm. Probeer de productnaam, het merk of een kortere zoekterm.</p>{% endif %}
 {% if section == "producten" and allowed("product_add") %}
-<details class="panel-after"><summary>Product toevoegen</summary>
-<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
-{{ hidden(section) }}{{ product_fields() }}
-<button type="submit">Product opslaan</button>
-</form></details>
+<p><a href="{{ url_for('control', section='extra-producten') }}">+ Extra producten toevoegen per categorie</a></p>
 {% endif %}
 {% if section == "afbeeldingen" or allowed("product_view", "product_edit") %}
 {% for product in filtered_products %}
