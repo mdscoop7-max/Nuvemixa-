@@ -79,6 +79,13 @@
 {% if not product.hidden %}<a href="{{ product.product_url }}?dashboard_from=extra-producten">Bekijk productpagina</a>{% endif %}
 </form>
 {{ extra_form(product, g.key) }}
+{% if is_admin %}
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-xp-delete" onsubmit="return confirm('Extra product ' + {{ product.name|tojson }} + ' definitief verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="section" value="extra-producten"><input type="hidden" name="category" value="{{ g.key }}"><input type="hidden" name="slug" value="{{ product.slug }}"><input type="hidden" name="op" value="delete">
+<button type="submit" class="nv-secondary" style="color:#b42318;border-color:#b42318">Verwijderen</button>
+</form>
+{% endif %}
 </details>
 {% else %}<p>Nog geen extra producten in {{ g.name }}. <a href="{{ url_for('control', section='extra-producten', categorie=g.key) }}">Product toevoegen aan {{ g.name }}</a></p>
 {% endfor %}
