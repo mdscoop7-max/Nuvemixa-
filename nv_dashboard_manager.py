@@ -365,6 +365,8 @@ def create_percentage_coupon(db, percent, starts=None, ends=None):
 @bp.post("/admin/nv/coupons")
 def coupons():
     operation = request.form.get("op", "create")
+    if operation == "delete" and not admin():
+        abort(403)
     if not (allowed("discount_view", "discount_manage") if operation == "preview" else allowed("discount_manage")):
         abort(403)
     if operation == "create":
@@ -386,6 +388,13 @@ def coupons():
         with connect() as db:
             if operation == "create":
                 code = create_percentage_coupon(db, int(percentage), starts, ends)
+            elif operation == "delete":
+                coupon_id = request.form.get("id", type=int)
+                if coupon_id is None:
+                    abort(400)
+                deleted = db.execute("DELETE FROM coupons WHERE id=?", (coupon_id,))
+                if deleted.rowcount != 1:
+                    abort(404)
             elif operation in {"disable", "enable"}:
                 updated = db.execute("UPDATE coupons SET active=? WHERE id=?",
                                      (int(operation == "enable"), request.form.get("id", type=int)))
@@ -414,4 +423,4 @@ def coupons():
             return management_result("kortingen", "Geen unieke code beschikbaar. Probeer opnieuw.")
         flash(code, "coupon_created")
         return redirect(url_for("control", section="kortingen"), code=303)
-    return management_result("kortingen", "Kortingsactie opgeslagen.", success=True)
+    return management_result("kortingen", "Kortingscode verwijderd." if operation == "delete" else "Kortingsactie opgeslagen.", success=True)
