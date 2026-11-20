@@ -768,6 +768,10 @@ def verify_form_csrf():
     if request.endpoint in ("trendmix_assistant", "webshop_visits.webshop_visit"):
         return
 
+    if request.endpoint == "nv_manage.catalog" and allowed("product_add", "product_edit", "image_manage"):
+        # Alleen voor ingelogde beheerders: ruimte voor één productfoto (max. 5 MB) bij 'Extra producten'.
+        request.max_content_length = 6 * 1024 * 1024
+
     origin = request.headers.get("Origin")
     app.logger.warning(
         "CSRF REQUEST DIAG: host=%r origin=%r endpoint=%r",

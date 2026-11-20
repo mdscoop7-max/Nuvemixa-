@@ -1,51 +1,87 @@
 {% for category, message in get_flashed_messages(with_categories=true) %}
 <p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
 {% endfor %}
-{% macro extra_fields(product=none) %}
-<label>Productnaam<input name="name" required maxlength="160" value="{{ product.name if product else '' }}"></label>
-<label>Verkoopprijs incl. btw (€)<input name="price" type="number" min="0" max="9999999.99" step="0.01" required value="{{ product.price if product else '' }}"></label>
-<label>Inkoopprijs (€, optioneel)<input name="cost_price" type="number" min="0" max="9999999.99" step="0.01" value="{{ product.cost_price if product and product.cost_price else '' }}"></label>
-<label>Voorraadstatus<select name="stock_status">
-{% for key, label in stock_labels.items() %}<option value="{{ key }}"{% if product and product.stock_status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
-</select></label>
-<label>Aantal op voorraad<input name="stock_quantity" type="number" min="0" max="99999999" step="1" value="{{ product.stock_quantity if product and product.stock_quantity is not none else '' }}"></label>
-<label>Afbeeldingslink (https, optioneel)<input name="image" maxlength="1500" placeholder="https://… of /static/…" value="{{ product.image if product and product.image else '' }}"></label>
-<label>Korte omschrijving<input name="short_description" maxlength="300" value="{{ product.short_description if product else '' }}"></label>
-<label>Productbeschrijving<textarea name="description" rows="3" maxlength="4000">{{ product.description if product else '' }}</textarea></label>
-<label class="nv-check"><input type="checkbox" name="visible" value="1"{% if product and not product.hidden %} checked{% endif %}> Direct zichtbaar in de webshop</label>
+{% set targets = [15, 20, 25, 30, 35, 40] %}
+{% macro extra_form(product=none, category=none) %}
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" enctype="multipart/form-data" class="nv-xp-form" data-xp-form>
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten">
+{% if product %}<input type="hidden" name="category" value="{{ category }}"><input type="hidden" name="slug" value="{{ product.slug }}">{% endif %}
+<div class="nv-xp-grid">
+<div class="nv-xp-steps">
+  {% if not product %}
+  <fieldset><legend><span>1</span> Categorie</legend>
+    <div class="nv-xp-cats">{% for g in extra_groups %}<label><input type="radio" name="category" value="{{ g.key }}" required{% if g.key == (category or extra_groups[0].key) %} checked{% endif %}> {{ g.name }}</label>{% endfor %}</div>
+  </fieldset>
+  {% endif %}
+  <fieldset><legend><span>{{ 1 if product else 2 }}</span> Foto</legend>
+    <label class="nv-xp-drop" data-xp-drop>
+      <input type="file" name="image_file" accept="image/jpeg,image/png,image/webp,image/gif" data-xp-file>
+      <strong>Klik om een foto te kiezen</strong> of sleep hem hierheen<br><small>JPG, PNG of WebP · max. 5 MB · wordt automatisch verkleind</small>
+    </label>
+    <details class="nv-xp-alt"{% if product and product.image and not product.image.startswith('/img/extra/') %} open{% endif %}><summary>Of plak een afbeeldingslink</summary>
+      <label>Afbeeldingslink (https)<input name="image" maxlength="1500" placeholder="https://…" value="{{ product.image if product and product.image else '' }}" data-xp-link></label>
+    </details>
+  </fieldset>
+  <fieldset><legend><span>{{ 2 if product else 3 }}</span> Naam en tekst</legend>
+    <label>Productnaam *<input name="name" required maxlength="160" placeholder="Bijv. Draagbare mini-blender" value="{{ product.name if product else '' }}" data-xp-name></label>
+    <label>Korte omschrijving <small>(1 zin, zichtbaar in de productlijst)</small><input name="short_description" maxlength="300" placeholder="Bijv. Oplaadbare blender voor smoothies onderweg." value="{{ product.short_description if product else '' }}" data-xp-short></label>
+    <label>Uitgebreide beschrijving<textarea name="description" rows="5" maxlength="4000" placeholder="Wat is het, voor wie, belangrijkste eigenschappen, afmetingen, wat zit er in de doos.">{{ product.description if product else '' }}</textarea></label>
+  </fieldset>
+  <fieldset><legend><span>{{ 3 if product else 4 }}</span> Prijs</legend>
+    <div class="nv-xp-two">
+      <label>Inkoopprijs (€)<input name="cost_price" type="number" inputmode="decimal" min="0" max="9999999.99" step="0.01" placeholder="0,00" value="{{ product.cost_price if product and product.cost_price else '' }}" data-xp-cost></label>
+      <label>Verkoopprijs incl. btw (€) *<input name="price" type="number" inputmode="decimal" min="0" max="9999999.99" step="0.01" required placeholder="0,00" value="{{ product.price if product else '' }}" data-xp-price></label>
+    </div>
+    <div class="nv-xp-advice" data-xp-advice hidden>
+      <span>Gewenste marge:</span>
+      {% for t in targets %}<button type="button" class="nv-xp-chip{{ ' on' if t == 30 }}" data-xp-target="{{ t }}">{{ t }}%</button>{% endfor %}
+      <p>Adviesprijs: <strong data-xp-advice-price>—</strong> <button type="button" class="nv-xp-use" data-xp-use>Gebruik deze prijs</button></p>
+    </div>
+    <p class="nv-xp-margin" data-xp-margin aria-live="polite"></p>
+    <div class="nv-xp-two">
+      <label>Voorraadstatus<select name="stock_status">{% for key, label in stock_labels.items() %}<option value="{{ key }}"{% if product and product.stock_status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>Aantal op voorraad <small>(optioneel)</small><input name="stock_quantity" type="number" min="0" max="99999999" step="1" value="{{ product.stock_quantity if product and product.stock_quantity is not none else '' }}"></label>
+    </div>
+  </fieldset>
+  <label class="nv-check nv-xp-visible"><input type="checkbox" name="visible" value="1"{% if product and not product.hidden %} checked{% endif %}> Direct zichtbaar in de webshop <small>(anders eerst als concept)</small></label>
+  <button type="submit" class="nv-xp-save nv-blue-action">{{ 'Wijzigingen opslaan' if product else 'Product opslaan' }}</button>
+</div>
+<aside class="nv-xp-preview" aria-label="Voorbeeld in de webshop">
+  <small>Voorbeeld in de webshop</small>
+  <div class="nv-xp-card">
+    <div class="nv-xp-img" data-xp-img>{% if product and product.image %}<img src="{{ product.image }}" alt="">{% else %}<span>Nog geen foto</span>{% endif %}</div>
+    <strong data-xp-pname>{{ product.name if product else 'Productnaam' }}</strong>
+    <p data-xp-pshort>{{ product.short_description if product and product.short_description else 'Korte omschrijving' }}</p>
+    <b data-xp-pprice>{{ format_eur(product.price) if product else '€ 0,00' }}</b>
+  </div>
+</aside>
+</div>
+</form>
 {% endmacro %}
 
 <section class="panel">
-<h2>Extra producten per categorie</h2>
-<p>Elke hoofdcategorie heeft een vaste basisselectie van 20 producten. Hier voeg je daar eigen producten aan toe. Een nieuw product staat standaard als <strong>concept</strong>: alleen zichtbaar in het dashboard, niet in de webshop. Zet het pas zichtbaar als naam, prijs en afbeelding kloppen. Er wordt niets naar WooCommerce of Alwaysdata gestuurd.</p>
+<h2>Nieuw product toevoegen</h2>
+<p>Vul de stappen in; rechts zie je meteen hoe het product in de webshop staat. Een nieuw product wordt eerst als <strong>concept</strong> bewaard (alleen zichtbaar in het dashboard), tenzij je “Direct zichtbaar” aanvinkt. Er wordt niets naar WooCommerce of Alwaysdata gestuurd.</p>
 <div class="nv-xp-sum">
 {% for g in extra_groups %}<a href="#xp-{{ g.key }}"><span>{{ g.name }}</span><strong>{{ g.base }} + {{ g.extra|length }}</strong></a>{% endfor %}
 </div>
+{{ extra_form(category=request.args.get('categorie')) }}
 </section>
 
 {% for g in extra_groups %}
 <section class="panel" id="xp-{{ g.key }}">
 <h2>{{ g.name }} <small>· {{ g.base }} basisproducten · {{ g.extra|length }} extra ({{ g.extra|selectattr('hidden')|list|length }} concept)</small></h2>
-<details class="panel-after"><summary>+ Product toevoegen aan {{ g.name }}</summary>
-<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
-<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="category" value="{{ g.key }}">
-{{ extra_fields() }}
-<button type="submit">Product opslaan</button>
-</form></details>
 {% for product in g.extra %}
-<details class="panel-after"><summary><strong>{{ product.name }}</strong> · {{ format_eur(product.price) }}{% if product.cost_price %} · inkoop {{ format_eur(product.cost_price) }}{% endif %} · <span class="nv-xp-state{{ ' on' if not product.hidden }}">{{ 'Concept (verborgen)' if product.hidden else 'Zichtbaar in webshop' }}</span></summary>
-{% if not product.hidden %}<p><a href="{{ product.product_url }}?dashboard_from=extra-producten">Bekijk productpagina</a></p>{% endif %}
-<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
-<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="category" value="{{ g.key }}"><input type="hidden" name="slug" value="{{ product.slug }}">
-{{ extra_fields(product) }}
-<button type="submit">Wijzigingen opslaan</button>
-</form>
-<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-admin-form">
+<details class="panel-after"><summary>{% if product.image %}<img class="nv-xp-thumb" src="{{ product.image }}" alt="" width="40" height="40" loading="lazy">{% endif %}<strong>{{ product.name }}</strong> · {{ format_eur(product.price) }}{% if product.cost_price %} · inkoop {{ format_eur(product.cost_price) }}{% endif %} · <span class="nv-xp-state{{ ' on' if not product.hidden }}">{{ 'Concept (verborgen)' if product.hidden else 'Zichtbaar in webshop' }}</span></summary>
+<form method="post" action="{{ url_for('nv_manage.catalog') }}" class="nv-xp-toggle">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="category" value="{{ g.key }}"><input type="hidden" name="slug" value="{{ product.slug }}"><input type="hidden" name="op" value="visibility"><input type="hidden" name="visible" value="{{ '1' if product.hidden else '0' }}">
 <button type="submit" class="nv-secondary">{{ 'Zichtbaar maken in webshop' if product.hidden else 'Verbergen (terug naar concept)' }}</button>
+{% if not product.hidden %}<a href="{{ product.product_url }}?dashboard_from=extra-producten">Bekijk productpagina</a>{% endif %}
 </form>
+{{ extra_form(product, g.key) }}
 </details>
-{% else %}<p>Nog geen extra producten in {{ g.name }}.</p>
+{% else %}<p>Nog geen extra producten in {{ g.name }}. <a href="{{ url_for('control', section='extra-producten', categorie=g.key) }}">Product toevoegen aan {{ g.name }}</a></p>
 {% endfor %}
 </section>
 {% endfor %}
+<script src="{{ url_for('static', filename='nv-extra-producten.js') }}?v={{ nv_static_version('nv-extra-producten.js') }}" defer></script>

@@ -44,7 +44,8 @@ def _read_catalog_changes():
             if not exists:
                 return [], []
             order = "position" if nv_dashboard_postgres.runtime_enabled() else "rowid"
-            rows = db.execute(f"SELECT kind, category, slug, payload FROM catalog_edits ORDER BY {order}")
+            rows = db.execute(f"SELECT kind, category, slug, payload FROM catalog_edits "
+                             f"WHERE kind IN ('category','product') ORDER BY {order}")
             categories, products = [], []
             for row in rows:
                 target = categories if row["kind"] == "category" else products
@@ -86,6 +87,71 @@ def validated_product(form, existing):
     }
 
 
+IMAGE_MAX_BYTES = 5 * 1024 * 1024
+IMAGE_MAX_SIDE = 1200
+
+
+def processed_upload(upload):
+    """Productfoto van je computer: alleen echte JPG/PNG/WebP/GIF, verkleind tot max. 1200 px en opgeslagen als WebP.
+    Geeft (sleutel, base64-data) terug of None als er geen bestand is gekozen."""
+    if upload is None or not upload.filename:
+        return None
+    data = upload.read(IMAGE_MAX_BYTES + 1)
+    if not data:
+        return None
+    if len(data) > IMAGE_MAX_BYTES:
+        raise ValueError("De foto is groter dan 5 MB. Kies een kleinere foto.")
+    import base64
+    import hashlib
+    import io
+    from PIL import Image, ImageOps, UnidentifiedImageError
+    try:
+        with Image.open(io.BytesIO(data)) as source:
+            if source.format not in {"JPEG", "PNG", "WEBP", "GIF", "MPO"}:
+                raise ValueError("Gebruik een JPG-, PNG- of WebP-foto.")
+            if source.width * source.height > 40_000_000:
+                raise ValueError("De foto is te groot (te veel pixels).")
+            image = ImageOps.exif_transpose(source)
+            image = image.convert("RGBA" if "A" in image.getbands() else "RGB")
+            image.thumbnail((IMAGE_MAX_SIDE, IMAGE_MAX_SIDE))
+            out = io.BytesIO()
+            image.save(out, "WEBP", quality=82, method=4)
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
+        raise ValueError("Dit bestand is geen bruikbare foto.") from None
+    webp = out.getvalue()
+    return hashlib.sha256(webp).hexdigest()[:24], base64.b64encode(webp).decode("ascii")
+
+
+def stored_image(key):
+    """WebP-bytes van een geüploade productfoto, of None."""
+    import base64
+    if not re.fullmatch(r"[0-9a-f]{24}", key or ""):
+        return None
+    try:
+        with nv_dashboard_postgres.read_db(DB, timeout=3) as db:
+            if not nv_dashboard_postgres.table_exists(db, "catalog_edits"):
+                return None
+            row = db.execute("SELECT payload FROM catalog_edits WHERE kind='image' AND category='upload' AND slug=?",
+                             (key,)).fetchone()
+    except (sqlite3.Error, OSError):
+        return None
+    if not row:
+        return None
+    return base64.b64decode(json.loads(row[0])["data"])
+
+
+@bp.get("/img/extra/<key>.webp")
+def extra_image(key):
+    from flask import Response
+    data = stored_image(key)
+    if data is None:
+        abort(404)
+    response = Response(data, mimetype="image/webp")
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
 def validated_extra(form, existing):
     """Extra product: dezelfde basiscontroles plus inkoopprijs, afbeelding, korte tekst en zichtbaarheid.
     Alleen wat jij invult wordt opgeslagen; er wordt niets aangevuld of verzonnen."""
@@ -94,7 +160,7 @@ def validated_extra(form, existing):
     if cost and not re.fullmatch(r"\d{1,7}([.,]\d{1,2})?", cost):
         raise ValueError("Controleer de inkoopprijs.")
     image = form.get("image", "").strip()
-    if image and not valid_image(image):
+    if image and not (valid_image(image) or re.fullmatch(r"/img/extra/[0-9a-f]{24}\.webp", image)):
         raise ValueError("Gebruik een geldige HTTPS-afbeeldingslink of een bestaand lokaal afbeeldingsbestand.")
     short = form.get("short_description", "").strip()
     if len(short) > 300:
@@ -192,6 +258,14 @@ def catalog():
                     if section == "extra-producten" and slug and not changes.get("extra"):
                         abort(404)  # alleen zelf toegevoegde producten zijn hier te bewerken
                     updated = (validated_extra if section == "extra-producten" else validated_product)(request.form, changes)
+                    if section == "extra-producten":
+                        upload = processed_upload(request.files.get("image_file"))
+                        if upload:
+                            key, data = upload
+                            save(db, "image", "upload", key, {"mime": "image/webp", "data": data})
+                            url = f"/img/extra/{key}.webp"
+                            updated.update(image=url, images=[url] + [u for u in updated.get("images") or [] if u != url],
+                                           image_verified=False)
                     if not slug:
                         slug = slugify(updated["name"])[:100]
                         if not slug or any(item["category_slug"] == category and item["slug"] == slug
