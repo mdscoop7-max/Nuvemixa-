@@ -29,12 +29,22 @@
 <label>Einddatum (optioneel)<input name="ends" type="date"></label>
 <button type="submit">Kortingscode maken</button>
 </form>{% endif %}
+<style>
+.nv-coupon-btn{border-radius:10px!important;padding:9px 12px!important;font-weight:700;cursor:pointer}.nv-coupon-toggle{background:#1766be!important;color:#fff!important;border:1px solid #14569f!important}.nv-coupon-delete{background:#b42318!important;color:#fff!important;border:1px solid #912018!important}.nv-coupon-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.nv-coupon-actions form{margin:0}.nv-coupon-check{width:18px;height:18px;accent-color:#1766be;cursor:pointer}.nv-coupon-bulk{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:14px 0}.nv-coupon-bulk button:disabled{opacity:.45;cursor:not-allowed}
+</style>
+{% if is_admin and coupons %}
+<form id="nv-coupon-bulk" method="post" action="{{ url_for('nv_manage.coupons') }}" onsubmit="return window.confirm('Alle geselecteerde kortingscodes definitief verwijderen?');">
+{{ fields('delete_selected') }}
+<div class="nv-coupon-bulk"><label><input type="checkbox" class="nv-coupon-check" id="nv-coupon-all"> Alles selecteren</label><button type="submit" class="nv-coupon-btn nv-coupon-delete">🗑 Geselecteerde verwijderen</button></div>
+</form>
+<script>document.addEventListener('DOMContentLoaded',function(){const all=document.getElementById('nv-coupon-all');const boxes=[...document.querySelectorAll('[data-coupon-select]')];if(!all)return;const sync=()=>{all.checked=boxes.length>0&&boxes.every(b=>b.checked);all.indeterminate=boxes.some(b=>b.checked)&&!all.checked;};all.addEventListener('change',()=>{boxes.forEach(b=>b.checked=all.checked);sync();});boxes.forEach(b=>b.addEventListener('change',sync));document.getElementById('nv-coupon-bulk').addEventListener('submit',e=>{if(!boxes.some(b=>b.checked)){e.preventDefault();window.alert('Selecteer eerst een kortingscode.');}});});</script>
+{% endif %}
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>Code</th><th>Waarde</th><th>Begin</th><th>Einde</th><th>Status</th><th>Actie</th></tr></thead>
+<thead><tr>{% if is_admin %}<th>Selecteer</th>{% endif %}<th>Code</th><th>Waarde</th><th>Begin</th><th>Einde</th><th>Status</th><th>Actie</th></tr></thead>
 <tbody>{% for coupon in coupons %}
-<tr><td>{{ coupon.code }}</td><td>{{ ('%g%%'|format(coupon.amount)) if coupon.kind == 'percent' else format_eur(coupon.amount) }}</td><td>{{ coupon.starts or '—' }}</td><td>{{ coupon.ends or '—' }}</td><td>{{ coupon.status }}</td>
-<td>{% if allowed("discount_manage") %}<form method="post" action="{{ url_for('nv_manage.coupons') }}">{{ fields('disable' if coupon.active else 'enable') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit">{{ 'Deactiveren' if coupon.active else 'Activeren' }}</button></form>{% if is_admin %}<form method="post" action="{{ url_for('nv_manage.coupons') }}" onsubmit="return confirm('Kortingscode ' + {{ coupon.code|tojson }} + ' definitief verwijderen?');">{{ fields('delete') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit" style="color:#b42318;border-color:#b42318">Verwijderen</button></form>{% endif %}{% endif %}</td></tr>
-{% else %}<tr><td colspan="6">Er zijn nog geen kortingsacties.</td></tr>{% endfor %}</tbody>
+<tr>{% if is_admin %}<td><input type="checkbox" class="nv-coupon-check" name="ids" value="{{ coupon.id }}" form="nv-coupon-bulk" data-coupon-select aria-label="Selecteer kortingscode {{ coupon.code }}"></td>{% endif %}<td>{{ coupon.code }}</td><td>{{ ('%g%%'|format(coupon.amount)) if coupon.kind == 'percent' else format_eur(coupon.amount) }}</td><td>{{ coupon.starts or '—' }}</td><td>{{ coupon.ends or '—' }}</td><td>{{ coupon.status }}</td>
+<td><div class="nv-coupon-actions">{% if allowed("discount_manage") %}<form method="post" action="{{ url_for('nv_manage.coupons') }}">{{ fields('disable' if coupon.active else 'enable') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit" class="nv-coupon-btn nv-coupon-toggle">{{ 'Deactiveren' if coupon.active else 'Activeren' }}</button></form>{% if is_admin %}<form method="post" action="{{ url_for('nv_manage.coupons') }}" onsubmit="return window.confirm('Deze kortingscode definitief verwijderen?');">{{ fields('delete') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit" class="nv-coupon-btn nv-coupon-delete">🗑 Verwijderen</button></form>{% endif %}{% endif %}</div></td></tr>
+{% else %}<tr><td colspan="{{ 7 if is_admin else 6 }}">Er zijn nog geen kortingsacties.</td></tr>{% endfor %}</tbody>
 </table></div>
 <details><summary>Bereken een testkorting</summary>
 <form method="post" action="{{ url_for('nv_manage.coupons') }}" class="nv-admin-form">
