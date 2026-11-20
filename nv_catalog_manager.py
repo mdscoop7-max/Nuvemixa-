@@ -10,7 +10,7 @@ import nv_dashboard_postgres
 from urllib.parse import urlsplit
 
 from flask import abort, current_app, g, has_request_context, request
-from nv_dashboard_manager import DB, bp, connect, management_result
+from nv_dashboard_manager import DB, bp, connect, management_result, require_admin
 from nv_permissions import allowed
 
 
@@ -49,7 +49,10 @@ def _read_catalog_changes():
             categories, products = [], []
             for row in rows:
                 target = categories if row["kind"] == "category" else products
-                target.append((row["category"], row["slug"], json.loads(row["payload"])))
+                payload = json.loads(row["payload"])
+                if payload.get("deleted"):
+                    continue
+                target.append((row["category"], row["slug"], payload))
             return categories, products
     except (sqlite3.Error, OSError, ValueError):
         if has_request_context():
@@ -194,6 +197,11 @@ def catalog():
         abort(400)
     category = request.form.get("category", "")
     slug = request.form.get("slug", "")
+    deleting_extra = section == "extra-producten" and request.form.get("op") == "delete"
+    if deleting_extra and not (slug and category):
+        abort(400)
+    if deleting_extra and not current_app.extensions["nuvemixa_admin_checker"]():
+        abort(403)
     permission = {"categorieen": "category_manage", "afbeeldingen": "image_manage",
                   "producten": "product_edit" if slug else "product_add",
                   "extra-producten": "product_edit" if slug else "product_add"}[section]
@@ -234,7 +242,20 @@ def catalog():
                     (category, slug),
                 ).fetchone()
                 changes = json.loads(row[0]) if row else {}
-                if section == "afbeeldingen":
+                if deleting_extra:
+                    # Only locally added products; never delete a built-in catalogue product.
+                    if (existing is None or not changes.get("extra")
+                            or not str(changes.get("id", "")).startswith("tm-local-")):
+                        abort(404)
+                    changes["deleted"] = True
+                    # This restricted Neon account has UPDATE rights but no DELETE rights.
+                    deleted = db.execute(
+                        "UPDATE catalog_edits SET payload=? WHERE kind='product' AND category=? AND slug=?",
+                        (json.dumps(changes, ensure_ascii=False), category, slug),
+                    )
+                    if deleted.rowcount != 1:
+                        abort(404)
+                elif section == "afbeeldingen":
                     if existing is None:
                         abort(404)
                     url = request.form.get("image", "").strip()
@@ -284,6 +305,8 @@ def catalog():
         current_app.logger.error("Lokale cataloguswijziging kon niet worden opgeslagen")
         return management_result(section, "De cataloguswijziging kon niet worden opgeslagen.")
     invalidate_changes()  # na de commit: volgende pagina leest de nieuwe stand
+    if deleting_extra:
+        return management_result(section, "Extra product verwijderd.", success=True)
     if section == "extra-producten":
         state = "zichtbaar in de webshop" if not changes.get("hidden") else "opgeslagen als concept (niet zichtbaar in de webshop)"
         return management_result(section, f"Product {state}.", success=True)

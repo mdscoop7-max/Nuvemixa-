@@ -308,7 +308,7 @@ def coupon_rows():
     today = coupon_today()
     with connect() as db:
         return [dict(row, status=coupon_status(row, today))
-                for row in db.execute("SELECT * FROM coupons ORDER BY id DESC")]
+                for row in db.execute("SELECT * FROM coupons WHERE substr(code,1,9) != '~deleted~' ORDER BY id DESC")]
 
 
 def amount_in_cents(value):
@@ -365,6 +365,8 @@ def create_percentage_coupon(db, percent, starts=None, ends=None):
 @bp.post("/admin/nv/coupons")
 def coupons():
     operation = request.form.get("op", "create")
+    if operation in {"delete", "delete_selected"} and not admin():
+        abort(403)
     if not (allowed("discount_view", "discount_manage") if operation == "preview" else allowed("discount_manage")):
         abort(403)
     if operation == "create":
@@ -386,6 +388,28 @@ def coupons():
         with connect() as db:
             if operation == "create":
                 code = create_percentage_coupon(db, int(percentage), starts, ends)
+            elif operation == "delete_selected":
+                raw_ids = request.form.getlist("ids")
+                if not raw_ids or len(raw_ids) > 200 or any(not re.fullmatch(r"[1-9][0-9]*", item) for item in raw_ids):
+                    abort(400)
+                ids = sorted(set(int(item) for item in raw_ids))
+                placeholders = ",".join("?" for _ in ids)
+                deleted = db.execute(
+                    f"UPDATE coupons SET active=0, code='~deleted~' || id WHERE id IN ({placeholders}) AND substr(code,1,9) != '~deleted~'",
+                    ids,
+                )
+                if deleted.rowcount != len(ids):
+                    abort(404)
+            elif operation == "delete":
+                coupon_id = request.form.get("id", type=int)
+                if coupon_id is None:
+                    abort(400)
+                deleted = db.execute(
+                    "UPDATE coupons SET active=0, code='~deleted~' || id WHERE id=? AND substr(code,1,9) != '~deleted~'",
+                    (coupon_id,),
+                )
+                if deleted.rowcount != 1:
+                    abort(404)
             elif operation in {"disable", "enable"}:
                 updated = db.execute("UPDATE coupons SET active=? WHERE id=?",
                                      (int(operation == "enable"), request.form.get("id", type=int)))
@@ -414,4 +438,4 @@ def coupons():
             return management_result("kortingen", "Geen unieke code beschikbaar. Probeer opnieuw.")
         flash(code, "coupon_created")
         return redirect(url_for("control", section="kortingen"), code=303)
-    return management_result("kortingen", "Kortingsactie opgeslagen.", success=True)
+    return management_result("kortingen", "Geselecteerde kortingscodes verwijderd." if operation == "delete_selected" else ("Kortingscode verwijderd." if operation == "delete" else "Kortingsactie opgeslagen."), success=True)

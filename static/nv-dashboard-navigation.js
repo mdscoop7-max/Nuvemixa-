@@ -95,7 +95,10 @@
       form.setAttribute('aria-busy', 'true');
     });
     const parent = form.closest('details');
-    if (!parent) continue;
+    // No automatic Back button for Extra producten or destructive actions: avoids duplicates.
+    if (!parent || form.querySelector('input[name="section"][value="extra-producten"]')
+        || form.querySelector('input[name="op"][value="delete"]')
+        || form.querySelector('input[name="op"][value="delete_selected"]')) continue;
     const back = document.createElement('button');
     back.type = 'button';
     back.className = 'nv-form-back';
