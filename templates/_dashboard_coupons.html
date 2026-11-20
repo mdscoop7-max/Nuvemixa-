@@ -33,7 +33,7 @@
 <thead><tr><th>Code</th><th>Waarde</th><th>Begin</th><th>Einde</th><th>Status</th><th>Actie</th></tr></thead>
 <tbody>{% for coupon in coupons %}
 <tr><td>{{ coupon.code }}</td><td>{{ ('%g%%'|format(coupon.amount)) if coupon.kind == 'percent' else format_eur(coupon.amount) }}</td><td>{{ coupon.starts or '—' }}</td><td>{{ coupon.ends or '—' }}</td><td>{{ coupon.status }}</td>
-<td>{% if allowed("discount_manage") %}<form method="post" action="{{ url_for('nv_manage.coupons') }}">{{ fields('disable' if coupon.active else 'enable') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit">{{ 'Deactiveren' if coupon.active else 'Activeren' }}</button></form>{% endif %}</td></tr>
+<td>{% if allowed("discount_manage") %}<form method="post" action="{{ url_for('nv_manage.coupons') }}">{{ fields('disable' if coupon.active else 'enable') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit">{{ 'Deactiveren' if coupon.active else 'Activeren' }}</button></form>{% if is_admin %}<form method="post" action="{{ url_for('nv_manage.coupons') }}" onsubmit="return confirm('Kortingscode ' + {{ coupon.code|tojson }} + ' definitief verwijderen?');">{{ fields('delete') }}<input type="hidden" name="id" value="{{ coupon.id }}"><button type="submit" style="color:#b42318;border-color:#b42318">Verwijderen</button></form>{% endif %}{% endif %}</td></tr>
 {% else %}<tr><td colspan="6">Er zijn nog geen kortingsacties.</td></tr>{% endfor %}</tbody>
 </table></div>
 <details><summary>Bereken een testkorting</summary>
