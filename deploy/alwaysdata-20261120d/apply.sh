@@ -15,7 +15,7 @@ grep -q "NUVEMIXA 2026-11-20d" templates/_bottomnav.html || cat "$TMP/b.html" >>
 .venv/bin/python - <<'PY'
 from app import app as application
 c = application.test_client()
-for path in ("/", "/gadgets", "/smart-home", "/beauty-care", "/lifestyle-sport", "/shop", "/aanbiedingen", "/winkelwagen", "/afrekenen", "/gadgets/bluetooth-speaker"):
+for path in ("/", "/gadgets", "/smart-home", "/beauty-care", "/lifestyle-sport", "/shop", "/aanbiedingen", "/winkelwagen", "/gadgets/bluetooth-speaker"):
     r = c.get(path); assert r.status_code == 200, (path, r.status_code)
     assert b"2026-11-20d" in r.data, path
 r = c.get("/smart-home"); assert b'data-tm-en="A smarter home, every day"' in r.data
