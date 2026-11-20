@@ -62,7 +62,7 @@
     root = root || document.body; if (!root) return;
     /* eigen elementen met vaste NL/EN-teksten */
     var own = root.querySelectorAll ? root.querySelectorAll('[data-nv-nl]') : [];
-    for (var i = 0; i < own.length; i++) { var want = own[i].getAttribute('data-nv-' + L); if (want !== null && own[i].textContent !== want) own[i].textContent = want; }
+    for (var i = 0; i < own.length; i++) { if (/^(IMG|SOURCE|PICTURE|VIDEO|IFRAME|LINK|META|SCRIPT|INPUT)$/.test(own[i].nodeName) || /^(\/|https?:)/.test(own[i].getAttribute('data-nv-nl') || '')) continue; var want = own[i].getAttribute('data-nv-' + L); if (want !== null && own[i].textContent !== want) own[i].textContent = want; }
     var ph = root.querySelectorAll ? root.querySelectorAll('[data-nv-ph-nl]') : [];
     for (i = 0; i < ph.length; i++) { var pv = ph[i].getAttribute('data-nv-ph-' + L) || ''; if (ph[i].getAttribute('placeholder') !== pv) ph[i].setAttribute('placeholder', pv); }
     var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -89,6 +89,8 @@
       dl.innerHTML = EU[L].map(function (c) { return '<option value="' + c + '"></option>'; }).join('');
     }
   }
+
+  try { Array.prototype.forEach.call(document.querySelectorAll('img[data-nv-nl]'), function (im) { while (im.firstChild) im.removeChild(im.firstChild); }); } catch (e) {}
 
   /* ---------- 1) infoblok overal ---------- */
   function placeServices() {
