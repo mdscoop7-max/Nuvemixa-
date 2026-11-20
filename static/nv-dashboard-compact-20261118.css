@@ -332,3 +332,16 @@ details.nv-srcrep ul{margin:.35rem 0 0 1rem;padding:0}
 .nv-xp-thumb{width:40px;height:40px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:.4rem}
 .nv-xp-toggle{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin:.6rem 0}
 .nv-xp-steps textarea{font-family:inherit;line-height:1.45}
+/* Livegang-checklist */
+.nv-live-steps{list-style:none;padding:0;margin:.75rem 0;display:grid;gap:.6rem;counter-reset:live}
+.nv-live-steps>li{counter-increment:live;border:1px solid rgba(127,127,127,.25);border-left:5px solid #d98a14;border-radius:10px;padding:.7rem .9rem;min-width:0}
+.nv-live-steps>li.ok{border-left-color:#0a6b5d}
+.nv-live-head{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between;align-items:center}
+.nv-live-head strong::before{content:counter(live) ". "}
+.nv-live-badge{font-size:.75rem;font-weight:800;border-radius:999px;padding:.15rem .6rem;background:#fff3de;color:#8a5a00}
+.nv-live-steps>li.ok .nv-live-badge{background:#e3f6f2;color:#0a6b5d}
+.nv-live-who{margin:.2rem 0;font-size:.85rem;font-weight:700;color:#0757bd}
+.nv-live-steps p{margin:.25rem 0;overflow-wrap:anywhere}
+.nv-live-vars{list-style:none;padding:0;margin:.4rem 0 0;display:flex;flex-wrap:wrap;gap:.35rem .9rem;font-size:.82rem}
+.nv-live-vars li.ok{color:#0a6b5d}.nv-live-vars li.todo{color:#8a5a00}
+.nv-live-vars code{overflow-wrap:anywhere}
