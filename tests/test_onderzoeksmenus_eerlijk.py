@@ -49,7 +49,7 @@ def test_viral_toont_vaste_notities_als_niet_live(administrator):
 def test_publicatie_beweert_niet_dat_alles_werkt(administrator):
     html = administrator.get("/dashboard?section=publicatie").get_data(as_text=True)
     assert "Google Trends en eigen waarnemingen" in html and "Sociale populariteitscijfers ontbreken" in html
-    assert "nog niet gekoppeld" in html and "TESTDATA" in html
+    assert "nog niet gekoppeld" in html and "TESTDATA" not in html and "Testfase" not in html
 
 
 def test_bronnentest_alleen_eigenaar(administrator, monkeypatch):

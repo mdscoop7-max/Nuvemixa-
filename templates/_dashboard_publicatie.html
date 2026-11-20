@@ -11,7 +11,8 @@
 .nv-pub form{margin:0}.nv-pub button[disabled]{opacity:.55;cursor:not-allowed}
 </style>
 <div class="nv-pub">
-{% if c.bron == 'concept' %}<div class="banner" role="note"><span class="badge">JOUW CONCEPT</span> Dit product heb je geselecteerd in <a href="/dashboard?section=concepten">Kandidaten en concepten</a>. Ontbrekende gegevens staan bij de controles. De berekening gebruikt inkoop, verzending en betaalkosten. Overige kosten vul je in bij <a href="{{ url_for('control', section='onderzoek', margin_product=c.titel, _anchor='nv-product-margin') }}">Winstmarge per product</a>.</div>
+{% if publicatie.leeg %}<div class="banner" role="note">Er is nog geen concept geselecteerd. Selecteer een product bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a>; het verschijnt dan hier. Er wordt <strong>niets naar de echte webshop</strong> gestuurd zonder jouw goedkeuring en een schrijfkoppeling.</div>
+{% elif c.bron == 'concept' %}<div class="banner" role="note"><span class="badge">JOUW CONCEPT</span> Dit product heb je geselecteerd in <a href="/dashboard?section=concepten">Kandidaten en concepten</a>. Ontbrekende gegevens staan bij de controles. De berekening gebruikt inkoop, verzending en betaalkosten. Overige kosten vul je in bij <a href="{{ url_for('control', section='onderzoek', margin_product=c.titel, _anchor='nv-product-margin') }}">Winstmarge per product</a>.</div>
 {% else %}<div class="banner" role="note"><span class="badge">TESTDATA</span> Het product hieronder is een testvoorbeeld. Er is geen WooCommerce-schrijfsleutel gebruikt en er wordt <strong>niets naar de echte webshop gestuurd</strong>. Selecteer eerst een concept bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a> om met je eigen product te werken.</div>{% endif %}
 
 <section class="panel"><h2>Zo werkt het</h2>
@@ -23,7 +24,7 @@
 <li>Een product bewaren, beoordelen en selecteren — bij <a href="/dashboard?section=concepten">Kandidaten en concepten</a>; geselecteerde concepten verschijnen hieronder (gegevens alleen zoals jij ze invult)</li>
 <li>Inkoop, verkoop en marge controleren — werkt</li>
 <li>Productgegevens en afbeeldingen controleren — werkt (alleen de gegevens; afbeeldingslinks worden niet opgehaald)</li>
-<li>Bestaat het product al in WooCommerce? — werkt met {{ 'de echte leesverbinding' if publicatie.bron == 'echt' else 'TESTDATA (geen leesverbinding ingesteld)' }}</li>
+<li>Bestaat het product al in WooCommerce? — {{ 'werkt met de echte leesverbinding' if publicatie.bron == 'echt' else 'nog niet gekoppeld (geen leesverbinding ingesteld); controleer dit zelf in WooCommerce' }}</li>
 <li>Zelf goedkeuren — werkt; de goedkeuring hoort bij precies deze gegevens en vervalt na 1 uur of bij een wijziging</li>
 <li>Publiceren naar WooCommerce — <strong>nog niet gekoppeld</strong>: vereist een schrijfsleutel en jouw aparte toestemming</li>
 </ol></section>
@@ -31,13 +32,11 @@
 <section class="panel"><h2>Kies een product</h2>
 {% if publicatie.eigen %}<p><strong>Jouw geselecteerde concepten</strong></p>
 <div class="pick">{% for k in publicatie.eigen %}<a href="/dashboard?section=publicatie&amp;kandidaat={{ k.sku }}"{% if k.sku == c.sku %} class="on" aria-current="true"{% endif %}>{{ k.sku }}</a>{% endfor %}</div>{% else %}<p>Nog geen geselecteerde concepten.</p>{% endif %}
-<p><strong>Testproducten</strong> <span class="badge">TESTDATA</span></p>
-<div class="pick">{% for k in publicatie.kandidaten %}<a href="/dashboard?section=publicatie&amp;kandidaat={{ k.sku }}"{% if k.sku == c.sku %} class="on" aria-current="true"{% endif %}>{{ k.sku }}</a>{% endfor %}</div>
-<h3>{{ c.titel }}</h3>
+{% if not publicatie.leeg %}<h3>{{ c.titel }}</h3>
 <p>{{ c.beschrijving }}</p>
-<p>Leverancier: {{ c.leverancier }} · Categorie: {{ c.categorie }} · Afbeeldingen: {{ c.afbeeldingen|length }}</p>
+<p>Leverancier: {{ c.leverancier }} · Categorie: {{ c.categorie }} · Afbeeldingen: {{ c.afbeeldingen|length }}</p>{% endif %}
 </section>
-
+{% if not publicatie.leeg %}
 <section class="panel"><h2>Prijs en marge</h2>
 <div class="admin-table-wrap"><table class="admin-table"><tbody>
 <tr><td>Inkoopprijs</td><td class="num">{{ euro(c.inkoop) }}</td></tr>
@@ -51,7 +50,7 @@
 
 <section class="panel"><h2>Controles</h2>
 {% for category, message in get_flashed_messages(with_categories=true) %}<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>{% endfor %}
-{% if publicatie.bron_fout %}<p class="notice" role="alert">Echte WooCommerce-leesverbinding mislukt ({{ publicatie.bron_fout }}); TESTDATA gebruikt voor de dubbelcontrole.</p>{% endif %}
+{% if publicatie.bron_fout %}<p class="notice" role="alert">Echte WooCommerce-leesverbinding mislukt ({{ publicatie.bron_fout }}); de dubbelcontrole is niet uitgevoerd.</p>{% endif %}
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Controle</th><th>Uitkomst</th><th>Toelichting</th></tr></thead><tbody>
 {% for r in publicatie.rijen %}<tr><td>{{ r.stap }}</td><td class="{{ 'st-ok' if r.status == 'ok' else ('st-let' if r.status == 'let op' else 'st-fout') }}">{{ {'ok':'In orde','let op':'Let op','fout':'Fout'}[r.status] }}</td><td>{{ r.tekst }}</td></tr>{% endfor %}
 </tbody></table></div></section>
@@ -70,4 +69,5 @@
 <button type="submit" class="nv-blue-action"{% if not publicatie.schrijven_klaar or not publicatie.goedgekeurd or publicatie.fouten or c.bron != 'concept' %} disabled{% endif %}>Als concept naar WooCommerce sturen</button></form>
 <p>{% if c.bron != 'concept' %}Testproducten worden nooit verzonden.{% elif not publicatie.schrijven_klaar %}Verzenden is uitgeschakeld: de schrijfkoppeling is niet ingesteld. Nodig (alleen namen): <code>NUVEMIXA_WOO_WRITE=on</code>{% for n in publicatie.ontbrekend %}, <code>{{ n }}</code>{% endfor %}. Dat gebeurt pas na jouw afzonderlijke toestemming.{% else %}Schrijfschakelaar staat aan: na goedkeuring wordt uitsluitend een concept (draft) aangemaakt.{% endif %}</p>
 </section>
+{% endif %}
 </div>

@@ -2381,10 +2381,19 @@ def control():
         except Exception:
             own = {}
         pool = {**nv_publicatie.TEST_CANDIDATES, **own}
-        chosen = pool.get(request.args.get("kandidaat", ""), None) or next(iter(own.values()), None) or next(iter(nv_publicatie.TEST_CANDIDATES.values()))
+        # Standaard alleen eigen concepten; testproducten alleen nog via een expliciete ?kandidaat=TEST-…-link.
+        chosen = pool.get(request.args.get("kandidaat", ""), None) or next(iter(own.values()), None)
         existing, bron, fout = nv_publicatie.existing_products()
-        rows = nv_publicatie.check(chosen, existing)
-        publicatie = {"kandidaten": list(nv_publicatie.TEST_CANDIDATES.values()), "eigen": list(own.values()), "gekozen": chosen, "rijen": rows,
+        if chosen is None:
+            publicatie = {"leeg": True, "eigen": [], "bron": bron, "bron_fout": fout}
+        else:
+            rows = nv_publicatie.check(chosen, existing)
+            if bron != "echt" and chosen.get("bron") == "concept":
+                # Zonder leesverbinding is er niets echt gecontroleerd: niet vergelijken met voorbeeldproducten.
+                rows = [({**r, "status": "let op", "tekst": "Niet gecontroleerd: er is nog geen leesverbinding met WooCommerce. "
+                          "Controleer zelf in WooCommerce of dit product al bestaat."}
+                         if r["stap"] == "Bestaat al in WooCommerce" else r) for r in rows]
+            publicatie = {"leeg": False, "kandidaten": list(nv_publicatie.TEST_CANDIDATES.values()), "eigen": list(own.values()), "gekozen": chosen, "rijen": rows,
                       "fouten": bool(nv_publicatie.blocking(rows)), "marge": nv_publicatie.margin(chosen),
                       "voorbeeld": _json.dumps(nv_publicatie.payload(chosen), indent=2, ensure_ascii=False),
                       "bron": bron, "bron_fout": fout, "goedgekeurd": nv_publicatie.approval_valid(app.secret_key, chosen, session.get("nv_pub_goedkeuringen", {}).get(chosen["sku"], "")),

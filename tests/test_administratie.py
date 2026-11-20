@@ -31,11 +31,11 @@ def test_real_orders_has_no_customer_fields():
     assert adm.real_orders(None) is None
 
 
-def test_administration_page_labels_testdata_and_hides_real_figures(administrator, monkeypatch):
+def test_administration_page_shows_no_testdata_and_hides_real_figures(administrator, monkeypatch):
     monkeypatch.setattr(dashboard, "recent_woo_orders", lambda: (None, "WooCommerce niet gekoppeld."))
     page = administrator.get("/dashboard?section=administratie")
     text = page.get_data(as_text=True)
-    assert page.status_code == 200 and text.count("TESTDATA") >= 4
+    assert page.status_code == 200 and "TESTDATA" not in text and "Testproduct" not in text and "€123,90" not in text
     assert "ECHT" in text and "WooCommerce niet gekoppeld." in text
 
 

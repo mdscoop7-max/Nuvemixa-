@@ -88,9 +88,11 @@ def test_publish_is_refused_without_approval_connection_or_sender(monkeypatch):
     assert pub.publish(P1, [], "geheim", token, sender=sender) == {"id": 1} and sent[0]["status"] == "draft"
 
 
-def test_publication_page_labels_testdata_and_sends_nothing(administrator):
+def test_publication_page_without_concept_shows_no_testproducts_and_sends_nothing(administrator):
     text = administrator.get("/dashboard?section=publicatie").get_data(as_text=True)
-    assert "TESTDATA" in text and "nog niet gekoppeld" in text and "niets naar de echte webshop" in text
+    assert "TESTDATA" not in text and "TEST-P1" not in text and "nog geen concept geselecteerd" in text.lower()
+    assert "nog niet gekoppeld" in text and "niets naar de echte webshop" in text
+    # Een expliciete testlink blijft werken en blijft duidelijk gelabeld.
     assert "TEST-P2" in administrator.get("/dashboard?section=publicatie&kandidaat=TEST-P2").get_data(as_text=True)
 
 
@@ -119,3 +121,12 @@ def test_publication_routes_are_owner_only(staffdb, monkeypatch):
         for route in ("/admin/nv/publicatie/goedkeuren", "/admin/nv/publicatie/publiceren"):
             assert client.post(route, data={"_csrf_token": CSRF_TOKEN, "sku": "TEST-P1"}).status_code in (302, 303, 403)
         assert client.get("/dashboard?section=publicatie").status_code in (302, 303, 403)
+
+
+def test_concept_without_read_connection_is_not_compared_with_example_products(administrator, monkeypatch):
+    import app as dashboard
+    import nv_concepts
+    concept = {**P2, "sku": "NV-00009", "bron": "concept"}  # zelfde naam als het voorbeeldproduct 'dat al bestaat'
+    monkeypatch.setattr(nv_concepts, "selected_candidates", lambda: {"NV-00009": concept})
+    text = administrator.get("/dashboard?section=publicatie").get_data(as_text=True)
+    assert "Niet gecontroleerd: er is nog geen leesverbinding" in text and "#9001" not in text
