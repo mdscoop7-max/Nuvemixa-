@@ -5,7 +5,7 @@ set -euo pipefail
 APP=/home/nuvemixa/www/nuvemixa
 RAW=https://raw.githubusercontent.com/mdscoop7-max/Nuvemixa-/nv/webshop-fix-20261120/deploy/alwaysdata-20261120
 STAMP=$(date -u +%Y%m%d-%H%M%S)
-BACKUP=/home/nuvemixa/backups/nuvemixa-voor-fix-$STAMP.tar.gz
+BACKUP=/home/nuvemixa/backups/nuvemixa-voor-fix-klein-$STAMP.tar.gz
 TMP=$(mktemp -d)
 cd "$APP"
 test -f wsgi.py && test -x .venv/bin/python && test -f templates/_bottomnav.html && test -f trendmix_assistant.py
@@ -13,7 +13,8 @@ grep -q "register_trendmix_assistant(app, *products, *CATEGORIES, *live_orders_e
   || { echo "STOP: app.py roept de assistent anders aan; niets gewijzigd."; exit 1; }
 
 mkdir -p /home/nuvemixa/backups
-tar -czf "$BACKUP" --exclude=nuvemixa/.venv --exclude=nuvemixa/__pycache__ --exclude=nuvemixa/wsgi.py -C /home/nuvemixa/www nuvemixa
+# Volledige back-up staat al klaar (nuvemixa-voor-fix-20261120-160829.tar.gz); hier alleen de bestanden die veranderen.
+tar -czf "$BACKUP" -C /home/nuvemixa/www nuvemixa/templates nuvemixa/trendmix_assistant.py nuvemixa/static/images/hero/gadgets.jpg
 tar -tzf "$BACKUP" >/dev/null
 echo "Back-up gemaakt en gecontroleerd: $BACKUP"
 
@@ -25,6 +26,7 @@ test -s "$TMP/trendmix_assistant.py" && grep -q "def clean_answer" "$TMP/trendmi
 restore() {
   echo "FOUT: back-up wordt teruggezet..."
   tar -xzf "$BACKUP" -C /home/nuvemixa/www
+  rm -f "$APP/nv_openai.py"
   touch "$APP/wsgi.py" 2>/dev/null || true
   echo "Back-up teruggezet; de webshop is weer zoals voor deze update."
 }
