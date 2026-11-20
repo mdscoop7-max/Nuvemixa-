@@ -82,6 +82,7 @@
       if (el.nodeName === 'INPUT') trAttr(el, 'value', map);
     }
     var sv = document.getElementById('nv-services-e'); if (sv && sv.getAttribute('lang') !== L) sv.setAttribute('lang', L);
+    if (document.title) { var tt = lookup(document.title.trim(), map); if (tt !== undefined && tt !== document.title) document.title = tt; }
     var dl = document.getElementById('nv-eu-landen');
     if (dl && dl.getAttribute('data-l') !== L) {
       dl.setAttribute('data-l', L);
