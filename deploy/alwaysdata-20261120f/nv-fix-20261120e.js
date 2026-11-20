@@ -33,6 +33,12 @@
     m = core.match(POST_RE);
     if (m) { post = m[0]; core = core.slice(0, core.length - post.length); }
     if ((pre || post) && map[core] !== undefined) return pre + map[core] + post;
+    var cm = text.match(/^(Winkelwagen|Cart|Favorieten|Favourites|Favorites)\s*\((\d+)\)$/);
+    if (cm) { var enW = { Winkelwagen: 'Cart', Favorieten: 'Favourites' }, nlW = { Cart: 'Winkelwagen', Favourites: 'Favorieten', Favorites: 'Favorieten' }; var tw = map === DICT.en2nl ? nlW[cm[1]] : enW[cm[1]]; if (tw) return tw + ' (' + cm[2] + ')'; }
+    if (text.length > 2 && text === text.toUpperCase() && /[A-Z]/.test(text)) {
+      var cap = text.charAt(0) + text.slice(1).toLowerCase();
+      if (map[cap] !== undefined) return map[cap].toUpperCase();
+    }
     var n = text.match(/^(\d+)\s+(products?|producten?|items?|artikelen|resultaten|results)$/i);
     if (n) {
       var nl = /^(products?|producten?)$/i.test(n[2]) ? (n[1] === '1' ? 'product' : 'producten') : (/^(items?|artikelen)$/i.test(n[2]) ? (n[1] === '1' ? 'artikel' : 'artikelen') : 'resultaten');
@@ -91,6 +97,8 @@
   }
 
   try { Array.prototype.forEach.call(document.querySelectorAll('img[data-nv-nl]'), function (im) { while (im.firstChild) im.removeChild(im.firstChild); }); } catch (e) {}
+
+  try { var oc = document.createElement('style'); oc.textContent = 'html,body{overflow-x:clip}'; document.head.appendChild(oc); } catch (e) {}
 
   /* ---------- 1) infoblok overal ---------- */
   function placeServices() {
