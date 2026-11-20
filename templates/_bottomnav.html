@@ -327,3 +327,30 @@ main .tm-campaign::before{background:linear-gradient(180deg,rgba(4,13,30,.92) 0%
 {% include '_tm_mobile_extras.html' %}
 <script defer src="{{ url_for('static',filename='trendmix-english-labels.js',v='20261120-brand') }}"></script>
 <script defer src="{{ url_for('static',filename='trendmix-ui-2026.js',v='20261114-storefront-controls') }}"></script>
+
+<style>
+/* NUVEMIXA 2026-11-20 — eindregels: op ELKE pagina hetzelfde ondermenu en een compacte AI-knop.
+   Staat bewust als laatste in de pagina, zodat oudere pagina-stijlen (style.css, ux.css) dit niet overschrijven. */
+@media(max-width:760px){
+  html body nav.tm-dock.nv-dock{position:fixed!important;z-index:1200!important;left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:2px!important;padding:6px!important;margin:0!important;border-radius:24px!important;background:rgba(255,255,255,.97)!important;border:1px solid #cedced!important;box-shadow:0 10px 28px rgba(9,30,66,.18)!important;opacity:1!important;filter:none!important;transform:none!important;width:auto!important;height:auto!important}
+  html body nav.tm-dock.nv-dock > a{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;min-width:0!important;min-height:60px!important;padding:3px 0!important;margin:0!important;border:0!important;border-radius:18px!important;background:transparent!important;box-shadow:none!important;color:#0b315c!important;opacity:1!important;filter:none!important;text-decoration:none!important;font:750 10px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
+  html body nav.tm-dock.nv-dock > a .tm-dock-ico{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;border-radius:13px!important;background:#edf3fb!important;color:#0b315c!important;font:400 20px/1 system-ui,-apple-system,"Segoe UI Symbol",Arial,sans-serif!important;opacity:1!important;box-shadow:none!important;transform:none!important}
+  html body nav.tm-dock.nv-dock > a.is-active .tm-dock-ico{background:#0b305b!important;color:#fff!important}
+  html body nav.tm-dock.nv-dock > a.is-active{color:#0b305b!important;background:transparent!important}
+  html body nav.tm-dock.nv-dock .tm-dock-label{max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:inherit!important}
+  html body nav.tm-dock.nv-dock ~ nav.tm-dock{display:none!important}
+
+  /* AI-knop: rond icoon, niet meer over producten of de koopknop */
+  html body .tm-assist-fab{right:12px!important;left:auto!important;bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;width:50px!important;height:50px!important;min-width:0!important;max-width:50px!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center!important;gap:0!important}
+  html body .tm-assist-fab .tm-ai-brand,html body .tm-assist-fab > span{display:none!important}
+  html body .tm-assist-fab > svg{width:25px!important;height:25px!important}
+  html body:has(.mobile-sticky-cart) .tm-assist-fab,html body:has(.tm-product-page) .tm-assist-fab{bottom:calc(160px + env(safe-area-inset-bottom,0px))!important}
+}
+@media(min-width:761px){
+  /* Desktop: kleine knop rechtsonder, alleen 'AI hulp' */
+  html body .tm-assist-fab{right:18px!important;bottom:18px!important;padding:9px 14px!important;max-width:none!important;gap:7px!important}
+  html body .tm-assist-fab .tm-ai-brand small,html body .tm-assist-fab .tm-ai-pill{display:none!important}
+  html body .tm-assist-fab .tm-ai-brand b{font-size:13px!important}
+  html body .tm-assist-fab > svg{width:20px!important;height:20px!important}
+}
+</style>
