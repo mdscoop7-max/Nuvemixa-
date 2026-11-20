@@ -49,7 +49,10 @@ def _read_catalog_changes():
             categories, products = [], []
             for row in rows:
                 target = categories if row["kind"] == "category" else products
-                target.append((row["category"], row["slug"], json.loads(row["payload"])))
+                payload = json.loads(row["payload"])
+                if payload.get("deleted"):
+                    continue
+                target.append((row["category"], row["slug"], payload))
             return categories, products
     except (sqlite3.Error, OSError, ValueError):
         if has_request_context():
@@ -244,9 +247,11 @@ def catalog():
                     if (existing is None or not changes.get("extra")
                             or not str(changes.get("id", "")).startswith("tm-local-")):
                         abort(404)
+                    changes["deleted"] = True
+                    # This restricted Neon account has UPDATE rights but no DELETE rights.
                     deleted = db.execute(
-                        "DELETE FROM catalog_edits WHERE kind='product' AND category=? AND slug=?",
-                        (category, slug),
+                        "UPDATE catalog_edits SET payload=? WHERE kind='product' AND category=? AND slug=?",
+                        (json.dumps(changes, ensure_ascii=False), category, slug),
                     )
                     if deleted.rowcount != 1:
                         abort(404)
