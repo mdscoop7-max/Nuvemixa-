@@ -2672,6 +2672,29 @@ INFO_PAGES = {
 
 
 
+def company_details_line():
+    """Bedrijfsgegevens uit omgevingsvariabelen; alleen ingevulde velden worden getoond."""
+    fields = [
+        ("", os.getenv("NUVEMIXA_BEDRIJFSNAAM", "NUVEMIXA").strip()),
+        ("", os.getenv("NUVEMIXA_ADRES", "").strip()),
+        ("KvK-nummer: ", os.getenv("NUVEMIXA_KVK", "").strip()),
+        ("btw-id: ", os.getenv("NUVEMIXA_BTW", "").strip()),
+        ("e-mail: ", os.getenv("NUVEMIXA_EMAIL", "").strip()),
+        ("telefoon: ", os.getenv("NUVEMIXA_TELEFOON", "").strip()),
+    ]
+    return ", ".join(label + value for label, value in fields if value)
+
+
+def _fill_company_details(node):
+    if isinstance(node, str):
+        return node.replace("{bedrijfsgegevens}", company_details_line()) if "{bedrijfsgegevens}" in node else node
+    if isinstance(node, list):
+        return [_fill_company_details(item) for item in node]
+    if isinstance(node, dict):
+        return {key: _fill_company_details(value) for key, value in node.items()}
+    return node
+
+
 def render_info_page(info_slug):
 
     page = INFO_PAGES.get(info_slug)
@@ -2705,6 +2728,8 @@ def render_info_page(info_slug):
         ):
 
             raise ValueError(f"Invalid bilingual information document: {info_slug}")
+
+        info_doc = _fill_company_details(info_doc)
 
 
 
