@@ -826,7 +826,13 @@ def home():
 
     counts = {slug: len(items) for slug, items in products.items()}
 
-    return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items))
+    review_list, review_summary = [], {"count": 0, "average": 0.0, "bars": []}
+    try:
+        from nv_reviews import published_reviews, review_stats
+        review_list, review_summary = published_reviews(6), review_stats()
+    except (OSError, RuntimeError, sqlite3.Error):
+        app.logger.error("NUVEMIXA reviews storage unavailable")
+    return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
 
 
 
@@ -1793,6 +1799,43 @@ def admin_add_supplier():
 
 
 
+@app.route("/reviews", methods=["POST"])
+def submit_customer_review():
+    """Publiek reviewformulier op de homepage; CSRF wordt door verify_form_csrf gecontroleerd."""
+    if request.form.get("website"):  # honeypot: echte bezoekers laten dit veld leeg
+        return redirect(url_for("home", review="bedankt") + "#reviews", code=303)
+    from nv_reviews import submit_review, client_hash
+    language = "en" if request.form.get("language") == "en" else "nl"
+    try:
+        result = submit_review(
+            request.form, language=language,
+            client=client_hash(request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip(), app.config["SECRET_KEY"]),
+            consent=request.form.get("consent") == "1",
+        )
+    except (OSError, RuntimeError, sqlite3.Error):
+        app.logger.error("Review write failed")
+        result = "fout"
+    status = {"ok": "bedankt", "limiet": "bedankt", "ongeldig": "ongeldig"}.get(result, "fout")
+    return redirect(url_for("home", review=status) + "#reviews", code=303)
+
+
+@app.route("/admin/reviews/<int:review_id>", methods=["POST"])
+def admin_update_review(review_id):
+    if not admin_is_authenticated():
+        abort(403)
+    from nv_reviews import update_review
+    try:
+        update_review(review_id, request.form.get("action", ""),
+                      reply=request.form.get("reply", ""), verified=request.form.get("verified") == "1")
+        result = "opgeslagen"
+    except ValueError:
+        result = "ongeldig"
+    except (OSError, RuntimeError, sqlite3.Error):
+        app.logger.error("Review update failed")
+        result = "fout"
+    return redirect(url_for("control", section="reviews", result=result), code=303)
+
+
 @app.route("/admin/research", methods=["POST"])
 
 def admin_add_research_note():
@@ -2036,7 +2079,7 @@ def control():
 
         "marketing": "Marketing", "seo": "SEO & GEO", "rankfix": "RankFix AI",
 
-        "statistieken": "Statistieken", "leveranciers": "Leveranciers & dropshipping",
+        "statistieken": "Statistieken", "leveranciers": "Leveranciers & dropshipping", "reviews": "Klantreviews",
 
         "instellingen": "Instellingen",
 
@@ -2082,6 +2125,7 @@ def control():
         "statistieken": "Cataloguscijfers zonder fictieve omzet.",
 
         "leveranciers": "Europese dropshipleveranciers en productfeeds.",
+        "reviews": "Reviews van klanten goedkeuren, verbergen en beantwoorden.",
 
         "instellingen": "Shopinstellingen, betalingen en integraties.",
 
@@ -2136,6 +2180,14 @@ def control():
     }
 
     supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
+    review_rows, review_error = None, None
+    if section == "reviews" and is_admin:
+        try:
+            from nv_reviews import all_reviews
+            review_rows = all_reviews()
+        except (OSError, RuntimeError, sqlite3.Error):
+            app.logger.error("NUVEMIXA reviews storage unavailable")
+            review_error = "Reviewopslag is tijdelijk niet beschikbaar."
 
     research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
 
@@ -2230,6 +2282,8 @@ def control():
         merchant_preview_rows=merchant_preview_rows,
 
         supplier_rows=supplier_rows,
+        review_rows=review_rows,
+        review_error=review_error,
 
         supplier_error=supplier_error,
 
