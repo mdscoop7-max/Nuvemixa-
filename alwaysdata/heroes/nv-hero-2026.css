@@ -7,6 +7,10 @@
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) {
     --nv-hero-h: min(clamp(260px, calc(100vh - 320px), 540px), calc((100vw - 64px) / 2));
     display: block !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
     width: max-content !important;
     max-width: min(100%, 1288px) !important;
     height: auto !important;
