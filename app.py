@@ -1410,6 +1410,22 @@ def admin_login():
 
 
 
+@app.route("/admin/reviews-beheren")
+def admin_reviews_beheren():
+    """Stuur de ingelogde (2FA-)beheerder met een eenmalige link naar het reviewbeheer op Alwaysdata."""
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    import nv_reviews_sso
+    from urllib.parse import quote
+    doel = "https://nuvemixa.alwaysdata.net/admin/reviews"
+    if nv_reviews_sso.ingeschakeld():
+        doel = "https://nuvemixa.alwaysdata.net/admin/reviews/sso?t=" + quote(nv_reviews_sso.maak_token(), safe="")
+    response = redirect(doel)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
 @app.route("/admin/2fa", methods=["GET", "POST"])
 def admin_2fa():
     from nv_2fa_login import is_2fa_actief, controleer_tweede_stap
