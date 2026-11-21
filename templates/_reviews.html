@@ -95,7 +95,7 @@
     var f=chip.getAttribute('data-nv-review-filter');
     var shown=0;root.querySelectorAll('.nv-rev-item').forEach(function(item){var ok=(f==='all'||item.getAttribute('data-rating')===f);item.hidden=!ok;if(ok)shown++;});
     var none=root.querySelector('[data-nv-review-none]');if(none){var en=document.documentElement.lang==='en';var n=f==='all'?'':f;
-      none.textContent=f==='all'?(en?'No reviews yet – be the first to write one!':'Nog geen reviews – schrijf de eerste!'):(en?('No reviews with '+n+(n==='1'?' star':' stars')+' yet.'):('Nog geen reviews met '+n+(n==='1'?' ster.':' sterren.')));none.hidden=shown>0;}
+      none.textContent=f==='all'?(en?'No reviews yet – be the first to write one!':'Nog geen reviews – schrijf de eerste!'):(en?('No reviews with '+n+(n==='1'?' star':' stars')+' yet.'):('Nog geen reviews met '+n+(n==='1'?' ster.':' sterren.')));none.hidden=shown>0||f==='all';}
   });});
 })();
 </script>

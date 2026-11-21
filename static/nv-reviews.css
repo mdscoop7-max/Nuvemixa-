@@ -64,7 +64,7 @@
 .nv-rev-note.err{background:#fde8e8;color:#b42318}
 @media(max-width:980px){.nv-rev-list{grid-template-columns:1fr 1fr}.nv-rev-trust{grid-template-columns:1fr 1fr;gap:14px}.nv-rev-trust>div{border:0;padding:0}}
 @media(max-width:700px){.nv-reviews{margin:16px 0;border-radius:0;border-left:0;border-right:0;padding:30px 16px 96px}
-  .nv-rev-top-card{padding:18px}.nv-rev-btn-main{width:100%}
-  .nv-rev-filters{flex-wrap:nowrap;overflow-x:auto;padding:8px 6px 10px;margin-left:-6px;margin-right:-6px;-webkit-overflow-scrolling:touch}
+  .nv-rev-top-card{padding:0}.nv-rev-btn-main{width:100%}
+  .nv-rev-filters{flex-wrap:nowrap;overflow-x:auto;padding:12px 14px 14px;margin-left:-14px;margin-right:-14px;-webkit-overflow-scrolling:touch}
   .nv-rev-list,.nv-rev-2,.nv-rev-trust{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.nv-rev-btn{transition:none}}
