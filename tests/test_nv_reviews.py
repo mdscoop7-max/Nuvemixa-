@@ -68,7 +68,7 @@ def test_homepage_form_flow(reviews):
     home = client.get("/")
     assert home.status_code == 200
     html = home.get_data(as_text=True)
-    assert 'id="reviews"' in html and "Nog geen reviews" in html and 'data-tm-en="customers say?"' in html
+    assert 'id="reviews"' in html and "Nog geen reviews" in html and 'data-tm-en="Customer reviews"' in html
     with client.session_transaction() as data:
         token = data["_tm_csrf"]
     # zonder CSRF-token geweigerd
@@ -112,7 +112,7 @@ def test_neon_design_and_average_from_published_only(reviews):
 def test_review_stylesheet_uses_brand_colors():
     from pathlib import Path
     css = Path(__file__).resolve().parent.parent.joinpath("static", "nv-reviews.css").read_text(encoding="utf-8")
-    assert "#1557d6" in css and "#ffb800" in css and "@media(max-width:700px)" in css
+    assert "#071637" in css and "#ffc21a" in css and "@media(max-width:700px)" in css
 
 
 def test_dashboard_klanten_has_reviews_button():

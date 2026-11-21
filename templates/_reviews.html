@@ -1,17 +1,19 @@
-{# NUVEMIXA klantreviews — alleen door de beheerder goedgekeurde reviews worden getoond. #}
+{# NUVEMIXA klantreviews — Ecosystem-ontwerp. Alleen door de beheerder goedgekeurde reviews; geen verzonnen scores. #}
 {% set rs = review_stats|default({"count": 0, "average": 0.0, "bars": []}) %}
 {% set review_state = request.args.get('review') %}
+{% set all_reviews = reviews|default([]) %}
+{% set featured = (all_reviews|sort(attribute='rating', reverse=True)|first) if all_reviews else none %}
 {% macro tr(nl, en) %}data-tm-tr data-tm-nl="{{ nl }}" data-tm-en="{{ en }}"{% endmacro %}
-{% macro stars(n) %}{% for i in range(1, 6) %}{{ '★' if i <= (n|round|int) else '☆' }}{% endfor %}{% endmacro %}
-<section class="nv-reviews" id="reviews" aria-labelledby="nv-reviews-title">
-  <h2 id="nv-reviews-title"><span data-tm-tr data-tm-nl="Wat zeggen onze" data-tm-en="What do our">Wat zeggen onze</span> <span class="nv-rev-accent" data-tm-tr data-tm-nl="klanten?" data-tm-en="customers say?">klanten?</span></h2>
-  <p class="nv-rev-sub" {{ tr('Echte beoordelingen van NUVEMIXA-klanten. Reviews worden na controle gepubliceerd.', 'Genuine reviews from NUVEMIXA customers. Reviews are published after moderation.') }}>Echte beoordelingen van NUVEMIXA-klanten. Reviews worden na controle gepubliceerd.</p>
+{% macro starrow(n) %}{% for i in range(1, 6) %}{% if i <= n %}★{% else %}<i>★</i>{% endif %}{% endfor %}{% endmacro %}
+{% macro avatar(rv, idx) %}{% set colors = ['#1e6fe0', '#15803d', '#0ea5e9', '#7c3aed', '#0b3d91', '#0891b2'] %}<div class="nv-rev-av" style="background:{{ colors[idx % 6] }}" aria-hidden="true">{{ rv.name[:1]|upper }}</div>{% endmacro %}
+<section class="nv-reviews eco" id="reviews" aria-labelledby="nv-reviews-title">
+  <h2 id="nv-reviews-title" class="eco-sr" {{ tr('Klantreviews', 'Customer reviews') }}>Klantreviews</h2>
   {% if review_state == 'bedankt' %}<div class="nv-rev-note ok" role="status" {{ tr('Bedankt! Je review wordt na controle geplaatst.', 'Thank you! Your review will be published after moderation.') }}>Bedankt! Je review wordt na controle geplaatst.</div>
   {% elif review_state == 'ongeldig' %}<div class="nv-rev-note err" role="alert" {{ tr('Vul alle verplichte velden in (review minimaal 10 tekens) en geef toestemming.', 'Please fill in all required fields (review at least 10 characters) and give consent.') }}>Vul alle verplichte velden in (review minimaal 10 tekens) en geef toestemming.</div>
   {% elif review_state == 'fout' %}<div class="nv-rev-note err" role="alert" {{ tr('Versturen is niet gelukt. Probeer het later opnieuw.', 'Sending failed. Please try again later.') }}>Versturen is niet gelukt. Probeer het later opnieuw.</div>{% endif %}
 
-  <div class="nv-rev-top-card">
-    <div class="nv-rev-summary">
+  <div class="eco-top">
+    <div class="eco-summary">
       {% if rs.count %}
       <div class="nv-rev-scorerow">
         <div class="nv-rev-score"><span data-nv-review-score>{{ '%.1f'|format(rs.average) }}</span></div>
@@ -22,8 +24,45 @@
       {% else %}
       <p class="nv-rev-empty" {{ tr('Nog geen reviews – schrijf de eerste!', 'No reviews yet – be the first to write one!') }}>Nog geen reviews – schrijf de eerste!</p>
       {% endif %}
+      <button type="button" class="nv-rev-btn nv-rev-btn-main" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> <span {{ tr('Schrijf een review', 'Write a review') }}>Schrijf een review</span></button>
+      <ul class="eco-checks">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span {{ tr('Levering vanuit de EU', 'Delivery from within the EU') }}>Levering vanuit de EU</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span {{ tr('Retourinformatie vóór bestellen', 'Return information before ordering') }}>Retourinformatie vóór bestellen</span></li>
+        <li class="gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span {{ tr('Betrouwbare reviews', 'Trustworthy reviews') }}>Betrouwbare reviews</span><svg class="eco-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></li>
+      </ul>
     </div>
-    <button type="button" class="nv-rev-btn nv-rev-btn-main" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> <span {{ tr('Schrijf een review', 'Write a review') }}>Schrijf een review</span></button>
+    <div class="eco-reviews">
+      {% set counts = {} %}{% for bar in rs.bars %}{% set _ = counts.update({bar.star: bar.count}) %}{% endfor %}
+      <div class="nv-rev-filters" role="group" aria-label="Filter">
+        <button type="button" class="nv-rev-chip on" data-nv-review-filter="all"><span {{ tr('Alle', 'All') }}>Alle</span></button>
+        {% for star in [5,4,3,2,1] %}{% if counts.get(star, 0) or star == 5 %}<button type="button" class="nv-rev-chip" data-nv-review-filter="{{ star }}">{% if star == 1 %}<span {{ tr('1 ster', '1 star') }}>1 ster</span>{% else %}<span {{ tr(star ~ ' sterren', star ~ ' stars') }}>{{ star }} sterren</span>{% endif %}</button>{% endif %}{% endfor %}
+      </div>
+      <p class="nv-rev-none" data-nv-review-none hidden></p>
+      <div class="nv-rev-list">
+        {% for rv in all_reviews %}
+        <article class="nv-rev-item" data-rating="{{ rv.rating }}">
+          <div class="nv-rev-top">
+            {{ avatar(rv, loop.index0) }}
+            <div>
+              <div class="nv-rev-name">{{ rv.name }}{% if rv.rating < 5 %} <span class="nv-rev-stars xs" aria-label="{{ rv.rating }}/5">{{ starrow(rv.rating) }}</span>{% endif %}</div>
+              {% if rv.verified %}<div class="nv-rev-ver" {{ tr('✓ Geverifieerde aankoop', '✓ Verified purchase') }}>✓ Geverifieerde aankoop</div>{% endif %}
+              <div class="nv-rev-date">{{ rv.created_at[8:10] }}-{{ rv.created_at[5:7] }}-{{ rv.created_at[:4] }}</div>
+            </div>
+          </div>
+          <div class="nv-rev-stars sm" aria-label="{{ rv.rating }}/5">{{ starrow(rv.rating) }}</div>
+          <h3>{{ rv.title }}</h3>
+          <p>{{ rv.body }}</p>
+          {% if rv.product %}<div class="nv-rev-prod"><span {{ tr('Product:', 'Product:') }}>Product:</span> {{ rv.product }}</div>{% endif %}
+          {% if rv.reply %}<div class="nv-rev-reply"><b {{ tr('Reactie van NUVEMIXA:', 'Reply from NUVEMIXA:') }}>Reactie van NUVEMIXA:</b> {{ rv.reply }}</div>{% endif %}
+        </article>
+        {% else %}
+        <article class="nv-rev-item eco-invite">
+          <h3 {{ tr('Jouw review hier?', 'Your review here?') }}>Jouw review hier?</h3>
+          <p {{ tr('Heb je iets bij NUVEMIXA gekocht? Deel je ervaring – elke review wordt eerst gecontroleerd.', 'Bought something from NUVEMIXA? Share your experience – every review is checked first.') }}>Heb je iets bij NUVEMIXA gekocht? Deel je ervaring – elke review wordt eerst gecontroleerd.</p>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 
   <form id="nv-review-form" class="nv-rev-card nv-rev-form{% if review_state == 'ongeldig' %} open{% endif %}" method="post" action="{{ url_for('submit_customer_review') }}" novalidate>
@@ -47,38 +86,27 @@
         </div>
   </form>
 
-  {% set counts = {} %}{% for bar in rs.bars %}{% set _ = counts.update({bar.star: bar.count}) %}{% endfor %}
-  <div class="nv-rev-filters" role="group" aria-label="Filter">
-    <button type="button" class="nv-rev-chip on" data-nv-review-filter="all"><span {{ tr('Alle reviews', 'All reviews') }}>Alle reviews</span></button>
-    {% for star in [5,4,3,2,1] %}<button type="button" class="nv-rev-chip" data-nv-review-filter="{{ star }}">{% if star == 1 %}<span {{ tr('1 ster', '1 star') }}>1 ster</span>{% else %}<span {{ tr(star ~ ' sterren', star ~ ' stars') }}>{{ star }} sterren</span>{% endif %}</button>{% endfor %}
-  </div>
-  <p class="nv-rev-none" data-nv-review-none hidden></p>
-  <div class="nv-rev-list">
-    {% set colors = ['#1e6fe0', '#0b3d91', '#0ea5e9', '#2563eb', '#1d4ed8', '#0284c7'] %}
-    {% for rv in reviews %}
-    <article class="nv-rev-item" data-rating="{{ rv.rating }}">
-      <div class="nv-rev-top">
-        <div class="nv-rev-av" style="background:{{ colors[loop.index0 % 6] }}" aria-hidden="true">{{ rv.name[:1]|upper }}</div>
-        <div>
-          <div class="nv-rev-name">{{ rv.name }}{% if rv.verified %} <span class="nv-rev-check-ic" aria-hidden="true">✓</span>{% endif %}</div>
-          {% if rv.verified %}<div class="nv-rev-ver" {{ tr('Geverifieerde klant', 'Verified customer') }}>Geverifieerde klant</div>{% else %}<div class="nv-rev-ver plain" {{ tr('Klant', 'Customer') }}>Klant</div>{% endif %}
-          <div class="nv-rev-stars sm" aria-label="{{ rv.rating }}/5">{% for i in range(1, 6) %}{% if i <= rv.rating %}★{% else %}<i>★</i>{% endif %}{% endfor %}</div>
-        </div>
+  <div class="eco-stage">
+    <div class="eco-platform" aria-hidden="true"><div class="eco-platform-inner"></div><span class="eco-platform-label">NUVEMIXA</span></div>
+    <div class="eco-panel">
+      <div class="eco-title">NUVEMIXA<br>Ecosystem</div>
+      <nav class="eco-menu" aria-label="NUVEMIXA Ecosystem"><a class="eco-menu-item" href="/shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg><span data-tm-tr data-tm-nl="Shop" data-tm-en="Shop">Shop</span></a><div class="eco-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/></svg><span data-tm-tr data-tm-nl="Analyse" data-tm-en="Analytics">Analyse</span></div><div class="eco-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg><span data-tm-tr data-tm-nl="Voorraad" data-tm-en="Stock">Voorraad</span></div><div class="eco-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M22 21v-2a4 4 0 0 0-3-3.9"/></svg><span data-tm-tr data-tm-nl="Leveranciers" data-tm-en="Suppliers">Leveranciers</span></div><div class="eco-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-tm-tr data-tm-nl="Automatisering" data-tm-en="Automation">Automatisering</span></div></nav>
+    </div>
+    {% if featured %}
+    <figure class="eco-featured">
+      {{ avatar(featured, 0) }}
+      <div>
+        <div class="nv-rev-name">{{ featured.name }}{% if featured.verified %} <span class="nv-rev-check-ic" aria-hidden="true">✓</span>{% endif %}</div>
+        {% if featured.verified %}<div class="eco-ver-plain" {{ tr('Geverifieerde klant', 'Verified customer') }}>Geverifieerde klant</div>{% endif %}
+        <div class="nv-rev-stars" aria-label="{{ featured.rating }}/5">{{ starrow(featured.rating) }}</div>
+        <blockquote class="nv-rev-quote">{{ featured.body }}</blockquote>
       </div>
-      <h3>{{ rv.title }}</h3>
-      <p class="nv-rev-quote">{{ rv.body }}</p>
-      {% if rv.product %}<div class="nv-rev-prod"><span {{ tr('Product:', 'Product:') }}>Product:</span> {{ rv.product }}</div>{% endif %}
-      {% if rv.reply %}<div class="nv-rev-reply"><b {{ tr('Reactie van NUVEMIXA:', 'Reply from NUVEMIXA:') }}>Reactie van NUVEMIXA:</b> {{ rv.reply }}</div>{% endif %}
-      <div class="nv-rev-date">{{ rv.created_at[8:10] }}-{{ rv.created_at[5:7] }}-{{ rv.created_at[:4] }}</div>
-    </article>
-    {% endfor %}
-  </div>
-
-  <div class="nv-rev-trust">
-    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e6fe0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></b><span {{ tr('Levering vanuit de EU', 'Delivery from within the EU') }}>Levering vanuit de EU</span></div>
-    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0b3d91" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></b><span {{ tr('Retourinformatie vóór bestellen', 'Return information before ordering') }}>Retourinformatie vóór bestellen</span></div>
-    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></b><span {{ tr('Betrouwbare reviews', 'Trustworthy reviews') }}>Betrouwbare reviews</span></div>
-    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e6fe0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="m9 11 3 3L22 4"/></svg></b><span {{ tr('Reviews worden gecontroleerd', 'Reviews are moderated') }}>Reviews worden gecontroleerd</span></div>
+    </figure>
+    {% endif %}
+    <button type="button" class="eco-ai" data-tm-ai-open aria-label="Open NUVEMIXA AI"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M12 5v13"/></svg><span>NUVEMIXA AI</span></button>
+    <svg class="eco-globe" viewBox="0 0 200 200" aria-hidden="true"><defs><radialGradient id="ecoG" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#bff4ff"/><stop offset=".45" stop-color="#2ab8ff" stop-opacity=".75"/><stop offset="1" stop-color="#0b3d91" stop-opacity=".15"/></radialGradient></defs>
+<circle cx="100" cy="100" r="78" fill="url(#ecoG)"/><g fill="none" stroke="#e8fbff" stroke-opacity=".75" stroke-width="1.1"><circle cx="100" cy="100" r="78"/><ellipse cx="100" cy="100" rx="78" ry="26"/><ellipse cx="100" cy="100" rx="78" ry="52"/><ellipse cx="100" cy="100" rx="26" ry="78"/><ellipse cx="100" cy="100" rx="52" ry="78"/><path d="M22 100h156M100 22v156"/></g>
+<g fill="#fff"><circle cx="148.0" cy="159.7" r="2.2"/><circle cx="171.8" cy="120.9" r="2.2"/><circle cx="170.5" cy="74.8" r="2.2"/><circle cx="150.3" cy="42.5" r="2.2"/><circle cx="122.8" cy="159.7" r="2.2"/><circle cx="134.1" cy="120.9" r="2.2"/><circle cx="133.5" cy="74.8" r="2.2"/><circle cx="123.9" cy="42.5" r="2.2"/><circle cx="83.8" cy="159.7" r="2.2"/><circle cx="75.7" cy="120.9" r="2.2"/><circle cx="76.1" cy="74.8" r="2.2"/><circle cx="83.0" cy="42.5" r="2.2"/><circle cx="54.6" cy="159.7" r="2.2"/><circle cx="32.1" cy="120.9" r="2.2"/><circle cx="33.3" cy="74.8" r="2.2"/><circle cx="52.4" cy="42.5" r="2.2"/><circle cx="52.9" cy="159.7" r="2.2"/><circle cx="29.6" cy="120.9" r="2.2"/><circle cx="30.9" cy="74.8" r="2.2"/><circle cx="50.7" cy="42.5" r="2.2"/><circle cx="79.9" cy="159.7" r="2.2"/><circle cx="69.9" cy="120.9" r="2.2"/><circle cx="70.4" cy="74.8" r="2.2"/><circle cx="78.9" cy="42.5" r="2.2"/><circle cx="119.0" cy="159.7" r="2.2"/><circle cx="128.4" cy="120.9" r="2.2"/><circle cx="127.9" cy="74.8" r="2.2"/><circle cx="119.9" cy="42.5" r="2.2"/><circle cx="146.6" cy="159.7" r="2.2"/><circle cx="169.7" cy="120.9" r="2.2"/><circle cx="168.5" cy="74.8" r="2.2"/><circle cx="148.9" cy="42.5" r="2.2"/></g><ellipse class="eco-ring" cx="100" cy="112" rx="98" ry="22" fill="none" stroke="#c86bff" stroke-width="2" stroke-dasharray="3 5" stroke-opacity=".8"/></svg>
   </div>
 </section>
 <script>
