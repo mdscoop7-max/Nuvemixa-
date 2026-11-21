@@ -34,3 +34,6 @@ nv_2fa_storage.lock
 *.backup*
 *.bak*
 *.lock
+
+.nv_reviews_sso_secret
+nv_reviews_sso_used.sqlite3

@@ -62,3 +62,12 @@ def test_render_route_vereist_login(monkeypatch):
     from app import app
     r = app.test_client().get("/admin/reviews-beheren")
     assert r.status_code == 302 and "alwaysdata" not in r.headers["Location"]
+
+
+def test_sleutel_uit_bestand(tmp_path, monkeypatch):
+    monkeypatch.delenv("NUVEMIXA_REVIEWS_SSO_SECRET", raising=False)
+    bestand = tmp_path / ".nv_reviews_sso_secret"
+    bestand.write_text("k" * 40)
+    monkeypatch.setattr(sso, "SLEUTELBESTAND", bestand)
+    assert sso.ingeschakeld() is True
+    assert sso.controleer_token(sso.maak_token(), tmp_path / "db.sqlite3") is True

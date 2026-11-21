@@ -17,8 +17,16 @@ GELDIGHEID = 60
 DOEL = "nuvemixa-reviews-sso-v1"
 
 
+SLEUTELBESTAND = Path(__file__).resolve().parent / ".nv_reviews_sso_secret"
+
+
 def _sleutel():
     waarde = os.environ.get("NUVEMIXA_REVIEWS_SSO_SECRET", "").strip()
+    if not waarde:
+        try:
+            waarde = SLEUTELBESTAND.read_text(encoding="utf-8").strip()
+        except OSError:
+            waarde = ""
     return waarde if len(waarde) >= 32 else ""
 
 
