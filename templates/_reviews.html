@@ -1,44 +1,32 @@
-{# NUVEMIXA klantreviews — alleen door de beheerder goedgekeurde reviews worden getoond. #}
 {% set rs = review_stats|default({"count": 0, "average": 0.0, "bars": []}) %}
 {% set review_state = request.args.get('review') %}
 {% macro tr(nl, en) %}data-tm-tr data-tm-nl="{{ nl }}" data-tm-en="{{ en }}"{% endmacro %}
 {% macro stars(n) %}{% for i in range(1, 6) %}{{ '★' if i <= (n|round|int) else '☆' }}{% endfor %}{% endmacro %}
-<section class="nv-reviews" id="reviews" aria-labelledby="nv-reviews-title">
-  <h2 id="nv-reviews-title" {{ tr('Wat klanten zeggen', 'What customers say') }}>Wat klanten zeggen</h2>
-  <p class="nv-rev-sub" {{ tr('Echte beoordelingen van NUVEMIXA-klanten. Reviews worden geplaatst na controle.', 'Genuine reviews from NUVEMIXA customers. Reviews are published after moderation.') }}>Echte beoordelingen van NUVEMIXA-klanten. Reviews worden geplaatst na controle.</p>
-
-  {% if review_state == 'bedankt' %}<div class="nv-rev-note ok" role="status" {{ tr('Bedankt! Je review wordt na controle geplaatst.', 'Thank you! Your review will be published after moderation.') }}>Bedankt! Je review wordt na controle geplaatst.</div>
-  {% elif review_state == 'ongeldig' %}<div class="nv-rev-note err" role="alert" {{ tr('Vul alle verplichte velden in (review minimaal 10 tekens) en geef toestemming.', 'Please fill in all required fields (review at least 10 characters) and give consent.') }}>Vul alle verplichte velden in (review minimaal 10 tekens) en geef toestemming.</div>
-  {% elif review_state == 'fout' %}<div class="nv-rev-note err" role="alert" {{ tr('Versturen is niet gelukt. Probeer het later opnieuw.', 'Sending failed. Please try again later.') }}>Versturen is niet gelukt. Probeer het later opnieuw.</div>{% endif %}
-
-  <div class="nv-rev-grid">
-    <div>
-      <div class="nv-rev-card">
-        {% if rs.count %}
-        <div class="nv-rev-scorerow">
-          <div class="nv-rev-score">{{ ('%.1f'|format(rs.average)).replace('.', ',') }}</div>
-          <div><div class="nv-rev-stars" aria-label="{{ rs.average }} / 5">{{ stars(rs.average) }}</div>
-            {% if rs.count == 1 %}<div class="nv-rev-small" {{ tr('op basis van 1 review', 'based on 1 review') }}>op basis van 1 review</div>
-            {% else %}<div class="nv-rev-small" {{ tr('op basis van ' ~ rs.count ~ ' reviews', 'based on ' ~ rs.count ~ ' reviews') }}>op basis van {{ rs.count }} reviews</div>{% endif %}
-          </div>
-        </div>
-        <div class="nv-rev-bars">
-          {% for bar in rs.bars %}<div class="nv-rev-bar"><span>{{ bar.star }} ★</span><div class="t"><div class="f" style="width:{{ bar.percent }}%"></div></div><span>{{ bar.count }}</span></div>{% endfor %}
-        </div>
-        {% else %}
-        <p class="nv-rev-empty" {{ tr('Nog geen reviews – schrijf de eerste!', 'No reviews yet – be the first to write one!') }}>Nog geen reviews – schrijf de eerste!</p>
-        {% endif %}
-        <button type="button" class="nv-rev-btn" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false" {{ tr('Schrijf een review', 'Write a review') }}>Schrijf een review</button>
+<!-- NUVEMIXA review design reference, isolated from live storefront. -->
+<section class="nm-reviews nv-reviews" id="reviews" aria-labelledby="nm-reviews-heading">
+  <div class="nm-reviews__inner">
+    <header class="nm-reviews__header">
+      <div class="nm-reviews__brand"><span class="nm-reviews__bag" aria-hidden="true">M</span><span>NUVE<span class="nm-reviews__brand-orange">MIXA</span></span></div>
+      <h2 id="nm-reviews-heading">Wat zeggen onze <span>klanten?</span></h2>
+      <p>Echte beoordelingen van NUVEMIXA-klanten. Reviews worden na controle gepubliceerd.</p>
+    </header>
+    <div class="nm-reviews__main">
+      <div class="nm-reviews__score" aria-label="Nog geen reviews">
+        <div class="nm-reviews__number">{{ ('%.1f'|format(rs.average)).replace('.', ',') }} <small>/ 5</small></div>
+        <div class="nm-reviews__stars" aria-hidden="true">{% for n in range(1,6) %}{{ '★' if n <= (rs.average|round|int) else '☆' }}{% endfor %}</div>
+        {% if rs.count %}<strong>{{ rs.count }} reviews</strong>{% else %}<strong>Nog geen reviews</strong>{% endif %}
+        {% if not rs.count %}<p>Wees de eerste die een beoordeling geeft!</p>{% endif %}
       </div>
-      <div class="nv-rev-card nv-rev-trust">
-        <div>🚚 <span {{ tr('Levering vanuit de EU', 'Delivery from within the EU') }}>Levering vanuit de EU</span></div>
-        <div>↩️ <span {{ tr('Retourinformatie vóór bestellen', 'Return information before ordering') }}>Retourinformatie vóór bestellen</span></div>
-        <div>✅ <span {{ tr('Elke review wordt gecontroleerd', 'Every review is moderated') }}>Elke review wordt gecontroleerd</span></div>
+      <div class="nm-reviews__invite">
+        <div class="nm-reviews__edit-icon" aria-hidden="true">✎</div>
+        <div class="nm-reviews__invite-content">
+          <p>Deel je ervaring met NUVEMIXA en help andere klanten bij hun keuze.</p>
+          <button type="button" class="nm-reviews__button" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false"><span aria-hidden="true">✎</span> Schrijf een review <span aria-hidden="true">→</span></button>
+        </div>
       </div>
     </div>
-
-    <div>
-      <form id="nv-review-form" class="nv-rev-card nv-rev-form{% if review_state == 'ongeldig' %} open{% endif %}" method="post" action="{{ url_for('submit_customer_review') }}" novalidate>
+    <div class="nm-reviews__filters"><span class="nm-reviews__all">☆ Alle reviews ({{ rs.count }})</span></div>
+    <div class="nm-reviews__interactive">{% if review_state == 'bedankt' %}<p role="status">Bedankt! Je review wordt na controle geplaatst.</p>{% elif review_state in ('ongeldig','fout') %}<p role="alert">Controleer je gegevens en probeer opnieuw.</p>{% endif %}<form id="nv-review-form" class="nv-rev-card nv-rev-form{% if review_state == 'ongeldig' %} open{% endif %}" method="post" action="{{ url_for('submit_customer_review') }}" novalidate>
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="language" value="nl" data-nv-review-lang>
         <div class="nv-rev-hp" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
@@ -59,12 +47,7 @@
         </div>
       </form>
 
-      {% if reviews %}
-      <div class="nv-rev-filters" role="group">
-        <button type="button" class="nv-rev-chip on" data-nv-review-filter="all" {{ tr('Alle', 'All') }}>Alle</button>
-        <button type="button" class="nv-rev-chip" data-nv-review-filter="5" {{ tr('5 sterren', '5 stars') }}>5 sterren</button>
-      </div>
-      <div class="nv-rev-list">
+      {% if reviews %}<div class="nv-rev-list">
         {% set colors = ['#1e6fe0', '#14864b', '#c2410c', '#7c3aed', '#0e7490', '#be185d'] %}
         {% for rv in reviews %}
         <article class="nv-rev-item" data-rating="{{ rv.rating }}">
@@ -83,7 +66,11 @@
         </article>
         {% endfor %}
       </div>
-      {% endif %}
+      {% endif %}</div><div class="nm-reviews__trust">
+      <div><span aria-hidden="true">♧</span><strong>Levering vanuit<br>de EU</strong></div>
+      <div><span aria-hidden="true">↶</span><strong>Retourinformatie<br>vóór bestellen</strong></div>
+      <div><span aria-hidden="true">♢</span><strong>Betrouwbare<br>reviews</strong></div>
+      <div><span aria-hidden="true">☑</span><strong>Reviews worden<br>gecontroleerd</strong></div>
     </div>
   </div>
 </section>
