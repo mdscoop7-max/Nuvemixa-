@@ -1,0 +1,34 @@
+/* Isolated visual mock-up. Scoped selectors avoid changing existing Alwaysdata styling. */
+.nm-reviews{box-sizing:border-box;color:#f5f8ff;background:radial-gradient(ellipse at 0% 15%,#0c3e89 0,transparent 32%),radial-gradient(ellipse at 100% 90%,#0b46a6 0,transparent 30%),linear-gradient(125deg,#00112f,#001d49 52%,#001331);font-family:Arial,Helvetica,sans-serif;padding:22px 24px 64px;position:relative;overflow:hidden}
+.nm-reviews *{box-sizing:border-box}
+.nm-reviews__inner{max-width:1500px;margin:auto}
+.nm-reviews__header{text-align:center;margin-bottom:28px}
+.nm-reviews__brand{font-weight:900;font-size:32px;color:#00eaff;display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:.5px}
+.nm-reviews__brand-orange{color:#ff8538}
+.nm-reviews__bag{border:3px solid #00eaff;border-radius:7px;font-size:19px;padding:3px 7px;color:#ffae32;position:relative}
+.nm-reviews__bag:before{content:"";position:absolute;width:15px;height:9px;border:3px solid #00eaff;border-bottom:0;border-radius:10px 10px 0 0;top:-12px;left:50%;transform:translateX(-50%)}
+.nm-reviews__header h2{font-size:clamp(34px,5.1vw,68px);line-height:1.12;letter-spacing:-1.8px;margin:14px 0 13px;font-weight:800}
+.nm-reviews__header h2 span{color:#00eaff}
+.nm-reviews__header p{font-size:clamp(15px,1.55vw,24px);margin:0}
+.nm-reviews__main{display:grid;grid-template-columns:36% 64%;border:2px solid #04dffc;border-radius:25px;box-shadow:0 0 12px #00caff80,inset 0 0 28px #008bff23;padding:25px 32px;min-height:220px}
+.nm-reviews__score{text-align:center;border-right:2px solid #00bdf4;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px}
+.nm-reviews__number{font-size:60px;font-weight:800;line-height:1}
+.nm-reviews__number small{font-size:35px}
+.nm-reviews__stars{color:#00eaff;font-size:59px;letter-spacing:0;line-height:1.1;text-shadow:0 0 9px #00d5ff}
+.nm-reviews__score strong{font-size:25px}
+.nm-reviews__score p{font-size:19px;margin:4px 0 0}
+.nm-reviews__invite{display:flex;align-items:center;justify-content:center;gap:30px;padding:10px 20px}
+.nm-reviews__edit-icon{font-size:76px;line-height:1;color:#00eaff;text-shadow:0 0 18px #00eaff}
+.nm-reviews__invite-content{width:min(100%,650px)}
+.nm-reviews__invite-content p{font-size:20px;margin:0 0 20px}
+.nm-reviews__button{display:flex;justify-content:center;align-items:center;gap:20px;text-decoration:none;background:linear-gradient(90deg,#00e5ee,#04bafa);border-radius:100px;padding:15px 24px;color:#00152a;font-size:27px;font-weight:800;box-shadow:0 0 20px #00d5ff70}
+.nm-reviews__button:hover,.nm-reviews__button:focus-visible{filter:brightness(1.12);outline:2px solid white;outline-offset:3px}
+.nm-reviews__filters{padding:24px 16px 28px}
+.nm-reviews__all{display:inline-block;background:linear-gradient(90deg,#0758d7,#0579f8);border:2px solid #00eaff;border-radius:100px;box-shadow:0 0 18px #00eaff99;padding:15px 70px;font-size:20px;font-weight:700}
+.nm-reviews__trust{border:2px solid #078dff;border-radius:23px;display:grid;grid-template-columns:repeat(4,1fr);padding:35px 20px;box-shadow:inset 0 0 18px #037aff25}
+.nm-reviews__trust>div{display:flex;justify-content:center;align-items:center;gap:20px;border-right:1px solid #058fe4;padding:0 12px}
+.nm-reviews__trust>div:last-child{border-right:0}
+.nm-reviews__trust span{color:#00eaff;font-size:54px;line-height:1;text-shadow:0 0 13px #00eaff}
+.nm-reviews__trust strong{font-size:19px;line-height:1.4}
+@media(max-width:850px){.nm-reviews__main{grid-template-columns:1fr;padding:22px 15px}.nm-reviews__score{border-right:0;border-bottom:2px solid #00bdf4;padding-bottom:20px}.nm-reviews__invite{padding:25px 5px 0}.nm-reviews__trust{grid-template-columns:repeat(2,1fr);gap:25px}.nm-reviews__trust>div:nth-child(2){border-right:0}}
+@media(max-width:520px){.nm-reviews{padding:22px 12px 35px}.nm-reviews__brand{font-size:24px}.nm-reviews__header h2{letter-spacing:-.6px}.nm-reviews__number{font-size:47px}.nm-reviews__stars{font-size:43px}.nm-reviews__score strong{font-size:20px}.nm-reviews__score p{font-size:15px}.nm-reviews__invite{gap:10px}.nm-reviews__edit-icon{font-size:43px}.nm-reviews__invite-content p{font-size:15px}.nm-reviews__button{font-size:17px;gap:10px;padding:13px 8px}.nm-reviews__all{padding:12px 24px;font-size:16px}.nm-reviews__trust{padding:20px 10px;gap:16px}.nm-reviews__trust>div{gap:8px;padding:0 4px}.nm-reviews__trust span{font-size:31px}.nm-reviews__trust strong{font-size:12px}}
