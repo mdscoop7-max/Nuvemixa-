@@ -16,24 +16,23 @@
       <div class="nv-rev-card">
         {% if rs.count %}
         <div class="nv-rev-scorerow">
-          <div class="nv-rev-score">{{ ('%.1f'|format(rs.average)).replace('.', ',') }}</div>
+          <div class="nv-rev-score"><span data-nv-review-score>{{ '%.1f'|format(rs.average) }}</span></div>
           <div><div class="nv-rev-stars" aria-label="{{ rs.average }} / 5">{{ stars(rs.average) }}</div>
-            {% if rs.count == 1 %}<div class="nv-rev-small" {{ tr('op basis van 1 review', 'based on 1 review') }}>op basis van 1 review</div>
-            {% else %}<div class="nv-rev-small" {{ tr('op basis van ' ~ rs.count ~ ' reviews', 'based on ' ~ rs.count ~ ' reviews') }}>op basis van {{ rs.count }} reviews</div>{% endif %}
+            
           </div>
         </div>
         <div class="nv-rev-bars">
           {% for bar in rs.bars %}<div class="nv-rev-bar"><span>{{ bar.star }} ★</span><div class="t"><div class="f" style="width:{{ bar.percent }}%"></div></div><span>{{ bar.count }}</span></div>{% endfor %}
         </div>
         {% else %}
-        <p class="nv-rev-empty" {{ tr('Nog geen reviews – schrijf de eerste!', 'No reviews yet – be the first to write one!') }}>Nog geen reviews – schrijf de eerste!</p>
+        <p class="nv-rev-empty" data-tm-tr data-tm-nl="Schrijf de eerste beoordeling" data-tm-en="Write the first review">Schrijf de eerste beoordeling</p>
         {% endif %}
         <button type="button" class="nv-rev-btn" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false" {{ tr('Schrijf een review', 'Write a review') }}>Schrijf een review</button>
       </div>
       <div class="nv-rev-card nv-rev-trust">
         <div>🚚 <span {{ tr('Levering vanuit de EU', 'Delivery from within the EU') }}>Levering vanuit de EU</span></div>
         <div>↩️ <span {{ tr('Retourinformatie vóór bestellen', 'Return information before ordering') }}>Retourinformatie vóór bestellen</span></div>
-        <div>✅ <span {{ tr('Elke review wordt gecontroleerd', 'Every review is moderated') }}>Elke review wordt gecontroleerd</span></div>
+        
       </div>
     </div>
 
@@ -93,8 +92,9 @@
   var form=document.getElementById('nv-review-form'),open=root.querySelector('[data-nv-review-open]');
   function setOpen(v){form.classList.toggle('open',v);open.setAttribute('aria-expanded',String(v));if(v){var f=form.querySelector('input[name=rating]');if(f)f.focus();}}
   open.addEventListener('click',function(){setOpen(!form.classList.contains('open'));});
-  root.querySelector('[data-nv-review-close]').addEventListener('click',function(){setOpen(false);});
+  var close=root.querySelector('[data-nv-review-close]');if(close)close.addEventListener('click',function(){setOpen(false);});
   form.addEventListener('submit',function(){var l=root.querySelector('[data-nv-review-lang]');if(l)l.value=(document.documentElement.lang==='en')?'en':'nl';});
+  var score=root.querySelector('[data-nv-review-score]');function localizeScore(){if(score)score.textContent=score.textContent.replace(',', '.').replace('.',document.documentElement.lang==='en'?'.':',');}localizeScore();
   root.querySelectorAll('[data-nv-review-filter]').forEach(function(chip){chip.addEventListener('click',function(){
     root.querySelectorAll('[data-nv-review-filter]').forEach(function(x){x.classList.remove('on');});chip.classList.add('on');
     var f=chip.getAttribute('data-nv-review-filter');
