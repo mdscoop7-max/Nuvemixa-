@@ -53,7 +53,7 @@
   }
   /* Per afbeelding: het deel met tekst en knop in beeld houden */
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img { object-position: 50% 8% !important; }
-  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="lifestyle-sport"] { object-position: 50% 20% !important; }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="lifestyle-sport"] { object-position: 50% 4% !important; }
   html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="home-living-2026"] { object-position: 50% 50% !important; }
   /* Shop-pagina heeft extra ruimte boven de hero: iets lager zodat hij volledig in beeld past */
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) { width: min(100%, 1288px, calc((100vh - 340px) * 2.2)) !important; }
