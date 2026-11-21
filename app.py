@@ -2194,7 +2194,7 @@ def control():
 
         "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "extra-producten": "Extra producten", "categorieen": "Categorieën",
 
-        "bestellingen": "Bestellingen", "klanten": "Klanten", "accountbeheer": "Accountbeheer", "kortingen": "Kortingen & acties",
+        "bestellingen": "Bestellingen", "klanten": "Klanten", "reviews": "Klantreviews", "accountbeheer": "Accountbeheer", "kortingen": "Kortingen & acties",
 
         "marketing": "Marketing", "seo": "SEO & GEO", "rankfix": "RankFix AI",
 
@@ -2238,6 +2238,7 @@ def control():
         "bestellingen": "Bestellingen zodra een echte orderbron is gekoppeld.",
 
         "klanten": "Beveiligd klantenoverzicht zodra klantbeheer beschikbaar is.",
+        "reviews": "Beoordeel en publiceer klantreviews.",
         "accountbeheer": "Beheer toegang tot het NUVEMIXA-dashboard.",
 
         "kortingen": "Beheer kortingscodes en bereken hun effect op een testbedrag.",
