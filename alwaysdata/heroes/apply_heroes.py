@@ -6,7 +6,7 @@ from pathlib import Path
 
 backup = Path(sys.argv[1])
 backup.mkdir(parents=True, exist_ok=True)
-templates = [Path("templates/index.html"), Path("templates/category.html"), Path("templates/shop.html")]
+templates = [Path("templates/index.html"), Path("templates/category.html"), Path("templates/base.html")]
 for t in templates:
     shutil.copy2(t, backup / t.name)
 
