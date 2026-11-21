@@ -3133,7 +3133,7 @@ def sitemap():
 
     site_url = SITE_URL or request.url_root.rstrip("/")
 
-    urls = [f"{site_url}/"] + [f"{site_url}/{slug}" for slug in CATEGORIES] + [f"{site_url}/{chr(111)+"ver-nuvemixa" if path == "over-trendmix" else path}" for path in INFO_PAGES] + [f"{site_url}/faq"]
+    urls = [f"{site_url}/"] + [f"{site_url}/{slug}" for slug in CATEGORIES] + [f"{site_url}/{'over-nuvemixa' if path == 'over-trendmix' else path}" for path in INFO_PAGES] + [f"{site_url}/faq"]
 
     for slug, items in products.items():
 
