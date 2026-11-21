@@ -68,7 +68,7 @@ def test_homepage_form_flow(reviews):
     home = client.get("/")
     assert home.status_code == 200
     html = home.get_data(as_text=True)
-    assert 'id="reviews"' in html and "Nog geen reviews" in html and 'data-tm-en="What customers say"' in html
+    assert 'id="reviews"' in html and "Nog geen reviews" in html and 'data-tm-en="customers say?"' in html
     with client.session_transaction() as data:
         token = data["_tm_csrf"]
     # zonder CSRF-token geweigerd
@@ -106,13 +106,13 @@ def test_neon_design_and_average_from_published_only(reviews):
     assert stats["count"] == 2 and stats["average"] == 4.5
     html = app.test_client().get("/").get_data(as_text=True)
     assert "nv-reviews.css" in html and html.count('id="reviews"') == 1
-    assert "op basis van 2 reviews" in html and "4.5" in html
+    assert "Gebaseerd op 2 reviews" in html and "4 sterren</span> (1)" in html and "3 sterren</span> (0)" in html and "4.5" in html
 
 
-def test_neon_stylesheet_is_dark_navy():
+def test_review_stylesheet_uses_brand_colors():
     from pathlib import Path
     css = Path(__file__).resolve().parent.parent.joinpath("static", "nv-reviews.css").read_text(encoding="utf-8")
-    assert "#061226" in css and "#58e5ff" in css and "@media(max-width:760px)" in css
+    assert "#0b3d91" in css and "#ff7a00" in css and "@media(max-width:700px)" in css
 
 
 def test_dashboard_klanten_has_reviews_button():

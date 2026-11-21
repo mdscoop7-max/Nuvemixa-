@@ -829,7 +829,7 @@ def home():
     review_list, review_summary = [], {"count": 0, "average": 0.0, "bars": []}
     try:
         from nv_reviews import published_reviews, review_stats
-        review_list, review_summary = published_reviews(6), review_stats()
+        review_list, review_summary = published_reviews(30), review_stats()
     except (OSError, RuntimeError, sqlite3.Error):
         app.logger.error("NUVEMIXA reviews storage unavailable")
     return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
