@@ -246,6 +246,31 @@ root.querySelectorAll('input').forEach(input=>input.addEventListener('input',cal
 </td></tr>{% else %}<tr><td colspan="2">Geen producten in de catalogus.</td></tr>{% endfor %}</tbody></table></div>
 <p>Google beoordeelt ook het account, de winkel, bereikbaarheid en voorwaarden per markt. Deze lokale controle heeft geen Google-beoordeling opgevraagd.</p>
 <p><a href="https://support.google.com/merchants/answer/7052112?hl=nl" rel="noopener noreferrer">Productspecificatie van Google</a></p></section>
+{% elif section == "reviews" %}
+<section class="panel"><h2>Klantreviews</h2>
+<p>Nieuwe reviews staan eerst op <strong>wachtend</strong> en zijn pas zichtbaar op de homepage nadat je ze publiceert. E-mailadressen zie alleen jij.</p>
+{% if review_error %}<div class="notice" role="alert">{{ review_error }}</div>{% endif %}
+{% if request.args.get('result') == 'opgeslagen' %}<div class="notice" role="status">Review bijgewerkt.</div>{% elif request.args.get('result') in ('ongeldig', 'fout') %}<div class="notice" role="alert">Bijwerken is niet gelukt.</div>{% endif %}
+{% if review_rows is not none %}
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Review</th><th>Klant</th><th>Status</th><th>Acties</th></tr></thead><tbody>
+{% for row in review_rows %}<tr>
+<td><strong>{{ '★' * row.rating }}{{ '☆' * (5 - row.rating) }} {{ row.title }}</strong><br><small>{{ row.body }}</small>{% if row.product %}<br><small>Product: {{ row.product }}</small>{% endif %}<br><small>{{ row.created_at }} · {{ row.language|upper }}</small></td>
+<td>{{ row.name }}<br><small>{{ row.email }}</small></td>
+<td><span class="state-pill">{{ row.status }}</span>{% if row.verified %}<br><small>✓ geverifieerd</small>{% endif %}</td>
+<td>
+<form method="post" action="{{ url_for('admin_update_review', review_id=row.id) }}" class="nv-admin-form">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Reactie van NUVEMIXA<textarea name="reply" rows="2" maxlength="600">{{ row.reply }}</textarea></label>
+<label><input type="checkbox" name="verified" value="1"{% if row.verified %} checked{% endif %}> Geverifieerde aankoop</label>
+<button type="submit" name="action" value="opslaan">Opslaan</button>
+{% if row.status != 'gepubliceerd' %}<button type="submit" name="action" value="publiceren">Publiceren</button>{% endif %}
+{% if row.status == 'gepubliceerd' %}<button type="submit" name="action" value="verbergen">Verbergen</button>{% endif %}
+<button type="submit" name="action" value="verwijderen">Verwijderen</button>
+</form>
+</td></tr>{% else %}<tr><td colspan="4">Nog geen reviews ontvangen.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
 {% elif section == "leveranciers" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
