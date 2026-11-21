@@ -108,3 +108,6 @@
 .nm-reviews.nv-reviews .nm-reviews__button{display:flex;width:100%;margin:0;background:linear-gradient(90deg,#00e5ee,#04bafa);color:#00152a;font-size:27px;padding:15px 24px;border-radius:100px;box-shadow:0 0 20px #00d5ff70}
 .nm-reviews.nv-reviews .nm-reviews__trust strong{font-size:19px;color:#f5f8ff}
 @media(max-width:520px){.nm-reviews.nv-reviews{padding:22px 12px 35px}.nm-reviews.nv-reviews .nm-reviews__stars{font-size:43px}.nm-reviews.nv-reviews .nm-reviews__score strong{font-size:20px}.nm-reviews.nv-reviews .nm-reviews__score p{font-size:15px}.nm-reviews.nv-reviews .nm-reviews__invite-content p{font-size:15px}.nm-reviews.nv-reviews .nm-reviews__button{font-size:17px;padding:13px 8px}.nm-reviews.nv-reviews .nm-reviews__trust strong{font-size:12px}}
+
+/* Alleen buitenhoeken reviewsectie afronden */
+.nm-reviews.nv-reviews,.nm-reviews{border-radius:28px;overflow:hidden;isolation:isolate}
