@@ -48,12 +48,15 @@
     transform: none !important;
     aspect-ratio: auto !important;
     object-fit: cover !important;
-    object-position: 50% 50% !important;
+    object-position: 50% 30% !important;
     border-radius: 0 !important;
   }
   /* Per afbeelding: het deel met tekst en knop in beeld houden */
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img { object-position: 50% 8% !important; }
-  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="lifestyle-sport"] { object-position: 50% 45% !important; }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="lifestyle-sport"] { object-position: 50% 15% !important; }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="home-living-2026"] { object-position: 50% 40% !important; }
+  /* Shop-pagina heeft extra ruimte boven de hero: iets lager zodat hij volledig in beeld past */
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) { width: min(100%, 1288px, calc((100vh - 340px) * 2.35)) !important; }
   /* Gadgets-afbeelding is bijna vierkant: volledig tonen, gecentreerd op donkerblauw */
   html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="gadgets"] {
     object-fit: contain !important;
