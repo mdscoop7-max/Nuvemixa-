@@ -1,64 +1,62 @@
-/* NUVEMIXA hero-weergave (21-11-2026)
-   Desktop/tablet: compacte hoogte, hele banner zichtbaar (tekst + knop), niet uitgerekt, afgeronde hoeken.
+/* NUVEMIXA hero-weergave (21-11-2026, v2)
+   Desktop/tablet: brede banner over de volle breedte, lage vaste verhouding (2.35:1),
+   alleen een smalle rand boven/onder bijgesneden; tekst en knop blijven zichtbaar.
    Mobiel (<=760px): bestaande compacte weergave blijft ongewijzigd. */
 @media (min-width: 761px) {
   html body main .tm-new-hero:not(#nv-a):not(#nv-b),
   html body main .tm-offers-hero:not(#nv-a):not(#nv-b),
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) {
-    --nv-hero-h: min(clamp(260px, calc(100vh - 320px), 540px), calc((100vw - 64px) / 2));
     display: block !important;
     position: relative !important;
     left: auto !important;
     right: auto !important;
     transform: none !important;
-    width: max-content !important;
-    max-width: min(100%, 1288px) !important;
+    width: min(100%, 1288px, calc((100vh - 290px) * 2.35)) !important;
+    max-width: none !important;
+    aspect-ratio: 2.35 / 1 !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     margin: 18px auto 30px !important;
     padding: 0 !important;
-    background: transparent !important;
+    background: #0b1a3d !important;
     border-radius: 22px !important;
     overflow: hidden !important;
     box-shadow: 0 16px 36px rgba(11, 31, 68, .16) !important;
     line-height: 0 !important;
-    aspect-ratio: auto !important;
   }
   html body main .tm-new-hero:not(#nv-a):not(#nv-b) > a,
   html body main .tm-offers-hero:not(#nv-a):not(#nv-b) > a {
     display: block !important;
-    position: static !important;
-    inset: auto !important;
-    width: auto !important;
-    height: auto !important;
-    line-height: 0 !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
   }
   html body main .tm-new-hero:not(#nv-a):not(#nv-b) img,
   html body main .tm-offers-hero:not(#nv-a):not(#nv-b) img,
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img {
     display: block !important;
-    width: auto !important;
-    height: var(--nv-hero-h) !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     max-width: none !important;
     max-height: none !important;
-    margin: 0 auto !important;
-    position: static !important;
-    inset: auto !important;
+    margin: 0 !important;
     transform: none !important;
     aspect-ratio: auto !important;
-    object-fit: contain !important;
-    border-radius: 22px !important;
-  }
-  /* Alle producten (3:2): bovenkant met tekst en knop tonen in 2:1, alleen onderrand producten iets bijgesneden */
-  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img {
-    width: calc(var(--nv-hero-h) * 2) !important;
-    height: auto !important;
-    max-width: none !important;
-    max-height: none !important;
-    aspect-ratio: 2 / 1 !important;
     object-fit: cover !important;
-    object-position: 50% 10% !important;
+    object-position: 50% 50% !important;
+    border-radius: 0 !important;
+  }
+  /* Per afbeelding: het deel met tekst en knop in beeld houden */
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img { object-position: 50% 8% !important; }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="lifestyle-sport"] { object-position: 50% 45% !important; }
+  /* Gadgets-afbeelding is bijna vierkant: volledig tonen, gecentreerd op donkerblauw */
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img[src*="gadgets"] {
+    object-fit: contain !important;
   }
   html body main .tm-new-hero:not(#nv-a):not(#nv-b) .tm-desktop-hero-copy,
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) .tm-desktop-hero-copy {
