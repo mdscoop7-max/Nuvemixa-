@@ -1,47 +1,47 @@
 /* NUVEMIXA klantreviews — blauw/oranje huisstijl (logo-kleuren), responsive */
-.nv-reviews{position:relative;overflow:hidden;max-width:1240px;margin:clamp(24px,4vw,56px) auto;padding:clamp(28px,4.5vw,52px) clamp(16px,3vw,36px);border-radius:30px;color:#fff;font-family:inherit;background:radial-gradient(circle at 92% 8%,#ff8a0040,transparent 32%),radial-gradient(circle at 5% 95%,#2fa4ff40,transparent 38%),linear-gradient(135deg,#0a2a6b 0%,#0b3d91 45%,#1e6fe0 100%);box-shadow:0 24px 60px #0b3d9140}
+.nv-reviews{position:relative;max-width:1240px;margin:clamp(24px,4vw,56px) auto;padding:clamp(28px,4.5vw,56px) clamp(16px,3vw,40px);border-radius:30px;color:#0b1f44;font-family:inherit;background:linear-gradient(180deg,#f7f9fd,#eef3fb);border:1px solid #e3eaf5}
 .nv-reviews *{box-sizing:border-box}
-.nv-reviews h2{font-size:clamp(28px,4.2vw,46px);line-height:1.1;letter-spacing:-.03em;margin:0 0 10px;color:#fff;font-weight:850}
-.nv-rev-accent{background:linear-gradient(90deg,#ffb347,#ff7a00);-webkit-background-clip:text;background-clip:text;color:transparent}
-.nv-rev-sub{color:#d5e4ff;font-size:clamp(15px,1.6vw,18px);line-height:1.5;margin:0 0 26px}
-.nv-rev-top-card{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:#ffffff14;border:1px solid #ffffff2a;border-radius:22px;padding:22px 26px}
+.nv-reviews h2{font-size:clamp(30px,4.6vw,52px);line-height:1.1;letter-spacing:-.03em;margin:0 0 12px;color:#0f1b33;font-weight:900}
+.nv-rev-accent{color:inherit}
+.nv-rev-sub{color:#4b5873;font-size:clamp(15px,1.7vw,20px);line-height:1.5;margin:0 0 30px}
+.nv-rev-top-card{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
 .nv-rev-scorerow{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.nv-rev-score{font-size:clamp(58px,7vw,84px);font-weight:900;color:#fff;letter-spacing:-.05em;line-height:1;text-shadow:0 4px 24px #00000030}
-.nv-rev-stars{color:#ffb000;letter-spacing:2px}
-.nv-rev-stars i{color:#c9d3e3;font-style:normal}
-.nv-rev-stars-avg{font-size:clamp(28px,3.4vw,40px);background:linear-gradient(90deg,#ffb000 var(--nv-fill,0%),#c9d3e3 var(--nv-fill,0%));-webkit-background-clip:text;background-clip:text;color:transparent}
-.nv-rev-small{font-size:18px;color:#d5e4ff;margin-top:6px}
-.nv-rev-empty{font-size:clamp(20px,2.4vw,26px);font-weight:800;color:#fff;margin:0}
-.nv-rev-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:14px 26px;border:0;border-radius:16px;background:linear-gradient(135deg,#ffa53a,#ff7a00);color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer;box-shadow:0 10px 30px #ff7a0066;transition:transform .2s,filter .2s}
-.nv-rev-btn-main{font-size:clamp(17px,1.8vw,20px);padding:16px 30px}
+.nv-rev-score{font-size:clamp(60px,7.5vw,96px);font-weight:900;color:#1557d6;letter-spacing:-.05em;line-height:1}
+.nv-rev-stars{color:#ffb800;letter-spacing:2px}
+.nv-rev-stars i{color:#c3cad6;font-style:normal}
+.nv-rev-stars-avg{font-size:clamp(34px,4vw,52px);background:linear-gradient(90deg,#ffb800 var(--nv-fill,0%),#c3cad6 var(--nv-fill,0%));-webkit-background-clip:text;background-clip:text;color:transparent}
+.nv-rev-small{font-size:clamp(17px,1.9vw,22px);color:#24324d;margin-top:8px}
+.nv-rev-empty{font-size:clamp(20px,2.4vw,28px);font-weight:800;color:#0f1b33;margin:0}
+.nv-rev-btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;padding:14px 26px;border:0;border-radius:18px;background:linear-gradient(135deg,#1e6fe0,#0647c9);color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer;box-shadow:0 8px 26px #1e6fe066,0 0 0 4px #1e6fe01f;transition:transform .2s,filter .2s}
+.nv-rev-btn-main{font-size:clamp(18px,2vw,24px);padding:18px 34px}
 .nv-rev-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
 .nv-rev-btn.ghost{background:#eef3fb;color:#0b3d91;box-shadow:none}
-.nv-rev-btn:focus-visible,.nv-rev-chip:focus-visible,.nv-reviews input:focus-visible,.nv-reviews textarea:focus-visible{outline:3px solid #ffb347;outline-offset:3px}
-.nv-rev-filters{display:flex;gap:10px;margin:26px 0 22px;flex-wrap:wrap}
-.nv-rev-chip{min-height:44px;padding:10px 20px;border-radius:40px;background:#ffffff1a;border:1px solid #ffffff40;font:inherit;font-size:16px;color:#eaf2ff;cursor:pointer;white-space:nowrap}
-.nv-rev-chip.on{background:#fff;color:#0b3d91;border-color:#fff;font-weight:800;box-shadow:0 6px 18px #00000025}
-.nv-rev-none{background:#ffffff14;border:1px dashed #ffffff55;border-radius:16px;padding:18px;color:#eaf2ff;margin:0 0 18px}
+.nv-rev-btn:focus-visible,.nv-rev-chip:focus-visible,.nv-reviews input:focus-visible,.nv-reviews textarea:focus-visible{outline:3px solid #1e6fe0;outline-offset:3px}
+.nv-rev-filters{display:flex;gap:14px;margin:34px 0 28px;flex-wrap:wrap}
+.nv-rev-chip{min-height:48px;padding:10px 26px;border-radius:40px;background:#f4f6fa;border:1px solid #dde3ec;font:inherit;font-size:clamp(16px,1.6vw,19px);color:#1b2740;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px #0b1f440d}
+.nv-rev-chip.on{background:linear-gradient(135deg,#1e6fe0,#0647c9);color:#fff;border-color:#1e6fe0;font-weight:700;box-shadow:0 6px 20px #1e6fe066,0 0 0 4px #1e6fe022}
+.nv-rev-none{background:#fff;border:1px dashed #c6d3e6;border-radius:16px;padding:18px;color:#4b5873;margin:0 0 18px}
 .nv-rev-none[hidden]{display:none}
-.nv-rev-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-.nv-rev-item{background:#fff;color:#0b1f44;border-radius:22px;padding:24px;box-shadow:0 14px 34px #04153a40;border-top:5px solid #ff8a00;display:flex;flex-direction:column}
+.nv-rev-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.nv-rev-item{background:#fff;color:#0b1f44;border-radius:22px;padding:24px;border:1px solid #dbe7f8;box-shadow:0 10px 30px #1e6fe01a;display:flex;flex-direction:column}
 .nv-rev-item[hidden]{display:none}
-.nv-rev-top{display:flex;gap:14px;align-items:center}
-.nv-rev-av{flex:0 0 60px;width:60px;height:60px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:24px;border:3px solid #fff;box-shadow:0 0 0 3px #ff8a00}
-.nv-rev-name{font-weight:800;font-size:18px;color:#0b1f44}
-.nv-rev-check-ic{display:inline-block;margin-left:4px;background:#16a34a;color:#fff;border-radius:50%;width:20px;height:20px;text-align:center;font-size:12px;line-height:20px;vertical-align:2px}
-.nv-rev-ver{color:#5b6b85;font-size:14px}
-.nv-rev-stars.sm{font-size:22px;letter-spacing:1px}
-.nv-rev-item h3{font-size:17px;margin:14px 0 4px;color:#0b1f44}
-.nv-rev-quote{font-style:italic;font-size:17px;line-height:1.5;margin:4px 0 12px;color:#1b2b4b;white-space:pre-line;overflow-wrap:anywhere}
-.nv-rev-quote:before{content:"“";color:#1e6fe0;font-size:30px;font-weight:900;line-height:0;vertical-align:-10px;margin-right:2px}
-.nv-rev-quote:after{content:"”";color:#1e6fe0;font-size:30px;font-weight:900;line-height:0;vertical-align:-10px;margin-left:2px}
+.nv-rev-top{display:flex;gap:16px;align-items:center}
+.nv-rev-av{flex:0 0 72px;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:28px;border:4px solid #fff;box-shadow:0 0 0 3px #1e6fe0}
+.nv-rev-name{font-weight:800;font-size:clamp(18px,1.8vw,22px);color:#0f1b33}
+.nv-rev-check-ic{display:inline-block;margin-left:6px;background:#16a34a;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;font-size:13px;line-height:22px;vertical-align:3px}
+.nv-rev-ver{color:#4b5873;font-size:16px;margin-top:2px}
+.nv-rev-stars.sm{font-size:28px;letter-spacing:1px}
+.nv-rev-item h3{font-size:17px;margin:16px 0 2px;color:#0f1b33}
+.nv-rev-quote{font-style:italic;font-size:clamp(17px,1.7vw,20px);line-height:1.45;margin:10px 0 14px;color:#0f1b33;white-space:pre-line;overflow-wrap:anywhere}
+.nv-rev-quote:before{content:"“";color:#1e6fe0;font-size:44px;font-weight:900;font-style:normal;line-height:0;vertical-align:-16px;margin-right:6px}
+.nv-rev-quote:after{content:"”";color:#1e6fe0;font-size:44px;font-weight:900;font-style:normal;line-height:0;vertical-align:-16px;margin-left:6px}
 .nv-rev-prod{font-size:13px;color:#1e6fe0;font-weight:700;margin-bottom:8px}
 .nv-rev-reply{margin:0 0 10px;background:#f0f5fd;border-left:3px solid #1e6fe0;padding:8px 10px;border-radius:8px;font-size:13px;color:#2c4460}
-.nv-rev-date{margin-top:auto;color:#6b7a93;font-size:14px}
-.nv-rev-trust{display:grid;grid-template-columns:repeat(4,1fr);margin-top:26px;background:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 30px #04153a30}
-.nv-rev-trust>div{display:flex;gap:12px;align-items:center;font-weight:700;color:#0b2a66;padding:0 16px;border-left:1px solid #e3eaf5;font-size:15px}
+.nv-rev-date{margin-top:auto;color:#4b5873;font-size:16px}
+.nv-rev-trust{display:grid;grid-template-columns:repeat(4,1fr);margin-top:34px;background:#fff;border:1px solid #e3eaf5;border-radius:22px;padding:24px;box-shadow:0 8px 24px #0b1f440d}
+.nv-rev-trust>div{display:flex;gap:14px;align-items:center;font-weight:600;color:#0f1b33;padding:0 18px;border-left:1px solid #dfe5ee;font-size:clamp(15px,1.5vw,18px);line-height:1.3}
 .nv-rev-trust>div:first-child{border:0}
-.nv-rev-trust b{font-size:28px}
+.nv-rev-trust b{display:flex;flex:0 0 auto}
 /* Formulier */
 .nv-rev-form{display:none;margin-top:20px;background:#fff;color:#0b1f44;border-radius:22px;padding:24px;box-shadow:0 14px 34px #04153a40;gap:14px}
 .nv-rev-form.open{display:grid}
@@ -63,8 +63,8 @@
 .nv-rev-note.ok{background:#e5f6ec;color:#14864b}
 .nv-rev-note.err{background:#fde8e8;color:#b42318}
 @media(max-width:980px){.nv-rev-list{grid-template-columns:1fr 1fr}.nv-rev-trust{grid-template-columns:1fr 1fr;gap:14px}.nv-rev-trust>div{border:0;padding:0}}
-@media(max-width:700px){.nv-reviews{margin:16px 0;border-radius:0;padding:30px 16px 96px}
+@media(max-width:700px){.nv-reviews{margin:16px 0;border-radius:0;border-left:0;border-right:0;padding:30px 16px 96px}
   .nv-rev-top-card{padding:18px}.nv-rev-btn-main{width:100%}
-  .nv-rev-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .nv-rev-filters{flex-wrap:nowrap;overflow-x:auto;padding:8px 6px 10px;margin-left:-6px;margin-right:-6px;-webkit-overflow-scrolling:touch}
   .nv-rev-list,.nv-rev-2,.nv-rev-trust{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.nv-rev-btn{transition:none}}

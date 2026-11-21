@@ -23,7 +23,7 @@
       <p class="nv-rev-empty" {{ tr('Nog geen reviews – schrijf de eerste!', 'No reviews yet – be the first to write one!') }}>Nog geen reviews – schrijf de eerste!</p>
       {% endif %}
     </div>
-    <button type="button" class="nv-rev-btn nv-rev-btn-main" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false"><span aria-hidden="true">✎</span> <span {{ tr('Schrijf een review', 'Write a review') }}>Schrijf een review</span></button>
+    <button type="button" class="nv-rev-btn nv-rev-btn-main" data-nv-review-open aria-controls="nv-review-form" aria-expanded="false"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> <span {{ tr('Schrijf een review', 'Write a review') }}>Schrijf een review</span></button>
   </div>
 
   <form id="nv-review-form" class="nv-rev-card nv-rev-form{% if review_state == 'ongeldig' %} open{% endif %}" method="post" action="{{ url_for('submit_customer_review') }}" novalidate>
@@ -49,8 +49,8 @@
 
   {% set counts = {} %}{% for bar in rs.bars %}{% set _ = counts.update({bar.star: bar.count}) %}{% endfor %}
   <div class="nv-rev-filters" role="group" aria-label="Filter">
-    <button type="button" class="nv-rev-chip on" data-nv-review-filter="all"><span {{ tr('Alle reviews', 'All reviews') }}>Alle reviews</span> ({{ rs.count }})</button>
-    {% for star in [5,4,3,2,1] %}<button type="button" class="nv-rev-chip" data-nv-review-filter="{{ star }}">{% if star == 1 %}<span {{ tr('1 ster', '1 star') }}>1 ster</span>{% else %}<span {{ tr(star ~ ' sterren', star ~ ' stars') }}>{{ star }} sterren</span>{% endif %} ({{ counts.get(star, 0) }})</button>{% endfor %}
+    <button type="button" class="nv-rev-chip on" data-nv-review-filter="all"><span {{ tr('Alle reviews', 'All reviews') }}>Alle reviews</span></button>
+    {% for star in [5,4,3,2,1] %}<button type="button" class="nv-rev-chip" data-nv-review-filter="{{ star }}">{% if star == 1 %}<span {{ tr('1 ster', '1 star') }}>1 ster</span>{% else %}<span {{ tr(star ~ ' sterren', star ~ ' stars') }}>{{ star }} sterren</span>{% endif %}</button>{% endfor %}
   </div>
   <p class="nv-rev-none" data-nv-review-none hidden></p>
   <div class="nv-rev-list">
@@ -61,7 +61,7 @@
         <div class="nv-rev-av" style="background:{{ colors[loop.index0 % 6] }}" aria-hidden="true">{{ rv.name[:1]|upper }}</div>
         <div>
           <div class="nv-rev-name">{{ rv.name }}{% if rv.verified %} <span class="nv-rev-check-ic" aria-hidden="true">✓</span>{% endif %}</div>
-          {% if rv.verified %}<div class="nv-rev-ver" {{ tr('Geverifieerde aankoop', 'Verified purchase') }}>Geverifieerde aankoop</div>{% else %}<div class="nv-rev-ver plain" {{ tr('Klant', 'Customer') }}>Klant</div>{% endif %}
+          {% if rv.verified %}<div class="nv-rev-ver" {{ tr('Geverifieerde klant', 'Verified customer') }}>Geverifieerde klant</div>{% else %}<div class="nv-rev-ver plain" {{ tr('Klant', 'Customer') }}>Klant</div>{% endif %}
           <div class="nv-rev-stars sm" aria-label="{{ rv.rating }}/5">{% for i in range(1, 6) %}{% if i <= rv.rating %}★{% else %}<i>★</i>{% endif %}{% endfor %}</div>
         </div>
       </div>
@@ -75,10 +75,10 @@
   </div>
 
   <div class="nv-rev-trust">
-    <div><b aria-hidden="true">🚚</b><span {{ tr('Levering vanuit de EU', 'Delivery from within the EU') }}>Levering vanuit de EU</span></div>
-    <div><b aria-hidden="true">↩️</b><span {{ tr('Retourinformatie vóór bestellen', 'Return information before ordering') }}>Retourinformatie vóór bestellen</span></div>
-    <div><b aria-hidden="true">🛡️</b><span {{ tr('Betrouwbare reviews', 'Trustworthy reviews') }}>Betrouwbare reviews</span></div>
-    <div><b aria-hidden="true">☑️</b><span {{ tr('Reviews worden gecontroleerd', 'Reviews are moderated') }}>Reviews worden gecontroleerd</span></div>
+    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e6fe0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></b><span {{ tr('Levering vanuit de EU', 'Delivery from within the EU') }}>Levering vanuit de EU</span></div>
+    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0b3d91" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></b><span {{ tr('Retourinformatie vóór bestellen', 'Return information before ordering') }}>Retourinformatie vóór bestellen</span></div>
+    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></b><span {{ tr('Betrouwbare reviews', 'Trustworthy reviews') }}>Betrouwbare reviews</span></div>
+    <div><b aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e6fe0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="m9 11 3 3L22 4"/></svg></b><span {{ tr('Reviews worden gecontroleerd', 'Reviews are moderated') }}>Reviews worden gecontroleerd</span></div>
   </div>
 </section>
 <script>
