@@ -96,3 +96,15 @@
 }
 
 .nm-reviews__button{border:0;cursor:pointer;font-family:inherit}.nm-reviews__interactive{max-width:1100px;margin:0 auto 25px}.nm-reviews__interactive .nv-rev-form{background:#092450;color:#fff;border:1px solid #00dffc;padding:25px;border-radius:20px;margin:12px 0}.nm-reviews__interactive .nv-rev-form label,.nm-reviews__interactive .nv-rev-rate-wrap legend{color:#fff}.nm-reviews__interactive .nv-rev-list{margin:20px 0}.nm-reviews.nv-reviews{margin:0;color:#f5f8ff}.nm-reviews .nv-rev-form{display:none}.nm-reviews .nv-rev-form.open{display:block}
+
+/* Final specificity fixes: legacy review form rules must not override approved layout. */
+.nm-reviews.nv-reviews{background:radial-gradient(ellipse at 0% 15%,#0c3e89 0,transparent 32%),radial-gradient(ellipse at 100% 90%,#0b46a6 0,transparent 30%),linear-gradient(125deg,#00112f,#001d49 52%,#001331);padding:22px 24px 64px}
+.nm-reviews.nv-reviews .nm-reviews__header h2{font-size:clamp(34px,5.1vw,68px);margin:14px 0 13px;line-height:1.12}
+.nm-reviews.nv-reviews .nm-reviews__stars{font-size:59px;color:#00eaff;letter-spacing:3px}
+.nm-reviews.nv-reviews .nm-reviews__score{color:#f5f8ff}
+.nm-reviews.nv-reviews .nm-reviews__score strong{font-size:25px}
+.nm-reviews.nv-reviews .nm-reviews__score p{font-size:19px;color:#f5f8ff}
+.nm-reviews.nv-reviews .nm-reviews__invite-content p{font-size:20px;color:#f5f8ff}
+.nm-reviews.nv-reviews .nm-reviews__button{display:flex;width:100%;margin:0;background:linear-gradient(90deg,#00e5ee,#04bafa);color:#00152a;font-size:27px;padding:15px 24px;border-radius:100px;box-shadow:0 0 20px #00d5ff70}
+.nm-reviews.nv-reviews .nm-reviews__trust strong{font-size:19px;color:#f5f8ff}
+@media(max-width:520px){.nm-reviews.nv-reviews{padding:22px 12px 35px}.nm-reviews.nv-reviews .nm-reviews__stars{font-size:43px}.nm-reviews.nv-reviews .nm-reviews__score strong{font-size:20px}.nm-reviews.nv-reviews .nm-reviews__score p{font-size:15px}.nm-reviews.nv-reviews .nm-reviews__invite-content p{font-size:15px}.nm-reviews.nv-reviews .nm-reviews__button{font-size:17px;padding:13px 8px}.nm-reviews.nv-reviews .nm-reviews__trust strong{font-size:12px}}
