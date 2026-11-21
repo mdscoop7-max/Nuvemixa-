@@ -1,0 +1,78 @@
+/* NUVEMIXA hero-weergave (21-11-2026)
+   Desktop/tablet: compacte hoogte, hele banner zichtbaar (tekst + knop), niet uitgerekt, afgeronde hoeken.
+   Mobiel (<=760px): bestaande compacte weergave blijft ongewijzigd. */
+@media (min-width: 761px) {
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b),
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b),
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) {
+    --nv-hero-h: min(clamp(260px, calc(100vh - 320px), 540px), calc((100vw - 64px) / 2));
+    display: block !important;
+    width: max-content !important;
+    max-width: min(100%, 1288px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 18px auto 30px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+    box-shadow: 0 16px 36px rgba(11, 31, 68, .16) !important;
+    line-height: 0 !important;
+    aspect-ratio: auto !important;
+  }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) > a,
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b) > a {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    line-height: 0 !important;
+  }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) img,
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b) img,
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img {
+    display: block !important;
+    width: auto !important;
+    height: var(--nv-hero-h) !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 22px !important;
+  }
+  /* Alle producten (3:2): bovenkant met tekst en knop tonen in 2:1, alleen onderrand producten iets bijgesneden */
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) img {
+    width: calc(var(--nv-hero-h) * 2) !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: 2 / 1 !important;
+    object-fit: cover !important;
+    object-position: 50% 10% !important;
+  }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b) .tm-desktop-hero-copy,
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b) .tm-desktop-hero-copy {
+    display: none !important;
+  }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b)::before,
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b)::after,
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b)::before,
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b)::after {
+    display: none !important;
+  }
+}
+/* Mobiel: alleen de nieuwe Home & Living-afbeelding netjes in het bestaande compacte formaat */
+@media (max-width: 760px) {
+  html body main .tm-new-hero.nv-hl-new img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 14px !important;
+  }
+}
