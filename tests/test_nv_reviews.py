@@ -92,3 +92,32 @@ def test_admin_review_update_requires_login():
     with client.session_transaction() as data:
         token = data["_tm_csrf"]
     assert client.post("/admin/reviews/1", data={"action": "publiceren", "_csrf_token": token}).status_code == 403
+
+
+def test_neon_design_and_average_from_published_only(reviews):
+    from app import app
+    for email, rating in (("a@example.com", "5"), ("b@example.com", "4"), ("c@example.com", "2")):
+        reviews.submit_review({**VALID, "email": email, "rating": rating}, consent=True)
+    rows = reviews.all_reviews()
+    for row in rows:
+        if row["rating"] != 2:
+            reviews.update_review(row["id"], "publiceren")
+    stats = reviews.review_stats()
+    assert stats["count"] == 2 and stats["average"] == 4.5
+    html = app.test_client().get("/").get_data(as_text=True)
+    assert "nv-reviews.css" in html and html.count('id="reviews"') == 1
+    assert "op basis van 2 reviews" in html and "4.5" in html
+
+
+def test_neon_stylesheet_is_dark_navy():
+    from pathlib import Path
+    css = Path(__file__).resolve().parent.parent.joinpath("static", "nv-reviews.css").read_text(encoding="utf-8")
+    assert "#061226" in css and "#58e5ff" in css and "@media(max-width:760px)" in css
+
+
+def test_dashboard_klanten_has_reviews_button():
+    from pathlib import Path
+    tpl = Path(__file__).resolve().parent.parent.joinpath("templates", "dashboard.html").read_text(encoding="utf-8")
+    start = tpl.index("{% if section == 'klanten' %}")
+    assert "⭐ Reviews beheren" in tpl[start:start + 1500]
+    assert "section='reviews'" in tpl[start:start + 1500]
