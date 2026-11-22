@@ -109,3 +109,17 @@ Controleer daarna de live site met Ctrl+F5 op mobiel en desktop.
 De live-situatie na publicatie staat in `screenshots/live/`.
 Zie de map `screenshots/`. Daarin staan vóór/na-vergelijkingen per formaat (`mobiel-*.jpg`, `tablet-*.jpg`, `desktop-*.jpg`),
 uitsneden van de header en de reviews (`voor-*`, `na-*`) en `tablet-header-voor-na.png`.
+
+## 8. Herstel 2 — gepubliceerd 22-11-2026, 13:36 UTC
+
+Uitgevoerd met `fix2.sh --apply` (back-up `~/backups/nuvemixa-pre-fix2-20261122-133622.tar.gz`) en daarna de site herstart.
+
+| Onderdeel | Resultaat live |
+|---|---|
+| JS-fout `commerceTranslations`: het hele `languages.js` werd geweigerd. Daarachter zat nog een tweede, verborgen botsing (`sharedTranslations` met `app.js`). | Opgelost. **0 JS-fouten** op 9 pagina's × 5 formaten (NL en EN). Versie `?v=20261122b`. |
+| `/over-trendmix` | **301 → /over-nuvemixa** |
+| Canonical van `/over-nuvemixa` | Wijst naar zichzelf |
+| Reviewsectie (op verzoek vervangen door een compact blok naar het aangeleverde ontwerp) | Hoogte ~800 → ~210 px (desktop) en ~820 → ~225 px (mobiel). "Schrijf review" opent het formulier. NL/EN. Geen overloop. Correctielaag `?v=20261122c`. |
+| Opslagruimte | **Niet gewijzigd** (op verzoek eerst overleggen). `dashboard-test` (109 MB) wordt door de webshop niet gebruikt. De volledige back-up van 18-11 (91 MB) bewaren. |
+
+Terugdraaien: `tar -xzf ~/backups/nuvemixa-pre-fix2-20261122-133622.tar.gz -C /home/nuvemixa/www/nuvemixa` en daarna de site herstarten.
