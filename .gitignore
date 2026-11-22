@@ -35,3 +35,4 @@ nv_2fa_storage.lock
 *.bak*
 *.lock
 deploy/*/LAATSTE_BACKUP.txt
+deploy/*/LAATSTE_BACKUP_FIX2.txt
