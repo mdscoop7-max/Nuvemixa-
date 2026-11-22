@@ -23,24 +23,29 @@
   <meta property="og:type" content="product">
   <meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ product.product_url }}">
   <meta name="twitter:card" content="{% if product.images %}summary_large_image{% else %}summary{% endif %}">
-  <script type="application/ld+json">
-  {{ {
+  {% set nv_offer = {
+      "@type":"Offer",
+      "url":request.url_root.rstrip("/") ~ product.product_url,
+      "price":"%.2f"|format(product.price),
+      "priceCurrency":"EUR",
+      "itemCondition":"https://schema.org/NewCondition"
+  } %}
+  {% if product.stock_status == "in_stock" %}{% set nv_tmp = nv_offer.update({"availability":"https://schema.org/InStock"}) %}
+  {% elif product.stock_status == "out_of_stock" %}{% set nv_tmp = nv_offer.update({"availability":"https://schema.org/OutOfStock"}) %}{% endif %}
+  {% set nv_images = [] %}{% for nv_im in (product.images or []) %}{% set nv_tmp = nv_images.append((request.url_root.rstrip("/") ~ nv_im) if nv_im.startswith("/") else nv_im) %}{% endfor %}
+  {% set nv_schema = {
     "@context":"https://schema.org",
     "@type":"Product",
     "name":product.name,
     "description":product.description,
     "category":category_name,
-    "image":product.images,
-    "sku":product.id,
-    "brand":({"@type":"Brand","name":product.brand} if product.brand else none),
-    "offers":({
-      "@type":"Offer",
-      "url":request.url_root.rstrip("/") ~ product.product_url,
-      "price":"%.2f"|format(product.price),
-      "priceCurrency":"EUR",
-      "availability":("https://schema.org/InStock" if product.stock_status == "in_stock" else "https://schema.org/OutOfStock")
-    } if product.stock_status in ["in_stock","out_of_stock"] else none)
-  }|tojson }}
+    "image":nv_images,
+    "sku":product.id
+  } %}
+  {% if product.brand %}{% set nv_tmp = nv_schema.update({"brand":{"@type":"Brand","name":product.brand}}) %}{% endif %}
+  {% if product.price and product.price > 0 %}{% set nv_tmp = nv_schema.update({"offers":nv_offer}) %}{% endif %}
+  <script type="application/ld+json">
+  {{ nv_schema|tojson }}
   </script>
   <script type="application/ld+json">
   {{ {

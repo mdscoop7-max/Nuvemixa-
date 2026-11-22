@@ -3177,6 +3177,11 @@ def trendmix_security_headers(response):
 
         response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
 
+    elif request.path in ("/winkelwagen", "/afrekenen", "/wishlist"):
+
+        # Persoonlijke pagina's: niet indexeren, links wel volgen (RankFix: winkelwagen zonder canonical).
+        response.headers["X-Robots-Tag"] = "noindex, follow"
+
     if "dashboard_from" in request.args or request.args.get("from_dashboard") == "1":
         response.headers["Cache-Control"] = "private, no-store"
 

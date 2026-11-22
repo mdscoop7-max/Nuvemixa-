@@ -1,0 +1,193 @@
+/* NUVEMIXA eindafwerking 22-11-2026
+   Additieve correctielaag bovenop de bestaande live-stijl. Verandert geen kleuren,
+   logo's, hero-afbeeldingen, AI-knop of onderste navigatie.
+   Terugdraaien: verwijder de <link> naar dit bestand (en nv-polish-20261122.js).
+
+   1) Blauwe kopzone: afgeronde linker- en rechteronderhoek van het volledige blauwe deel
+   2) Kopzone compacter en consistente zoekbalk op alle paginatypes
+   3) Hero 'Alle Producten' op dezelfde hoogte als de andere categorie-hero's
+   4) Desktop-hero: breedte niet meer afhankelijk van de vensterhoogte
+   5) Reviews: officieel logo en nette lege toestand */
+
+/* ---------- 1) Afgeronde onderhoeken van de blauwe kopzone ----------
+   Het blauw werd getekend met border-image (… fill 0 / / 0 100vmax). border-image
+   negeert border-radius, daarom krijgt het onderste blauwe element nu dezelfde
+   gradient als achtergrond (zelfde breedte-uitvulling, dus kleur blijft identiek). */
+html body > nav.categories.tm-digital-nav:not(#nvp-a):not(#nvp-b),
+html body:not(:has(> nav.categories.tm-digital-nav)) > header.site-header:not(#nvp-a):not(#nvp-b) {
+  border-image: none !important;
+  border-color: transparent !important; /* bestaande rand werd voorheen door border-image overschilderd */
+  background: linear-gradient(90deg, #1630b0 0%, #1f4fe3 50%, #1630b0 100%) center top / calc(100% + 200vmax) 100% no-repeat !important;
+  border-bottom-left-radius: 24px !important;
+  border-bottom-right-radius: 24px !important;
+  box-shadow: 0 6px 18px rgba(5, 27, 54, .14) !important;
+}
+
+/* Product-/winkelwagen-/afrekenpagina's (desktop): de donkerblauwe categoriebalk is het
+   onderste deel van de kopzone en krijgt dezelfde afronding. */
+html body:not(:has(> nav.categories.tm-digital-nav)) > header.site-header:not(#nvp-a) > nav {
+  border-bottom-left-radius: 24px !important;
+  border-bottom-right-radius: 24px !important;
+}
+
+/* Account-, favorieten- en winkelwagenknop op product-/winkelwagenpagina's (desktop):
+   tekst niet meer afgekapt en telbolletje op de winkelwagenknop zelf. */
+@media (min-width: 761px) {
+  html body > header.site-header:not(#nvp-a) .tm-ref-actions { gap: 10px !important; align-items: center !important; }
+  html body > header.site-header:not(#nvp-a) .tm-ref-actions > a {
+    min-height: 36px !important;
+    padding: 5px 12px !important;
+    white-space: nowrap !important;
+    align-items: center !important;
+  }
+  html body > header.site-header:not(#nvp-a) .tm-ref-actions > a small { font-size: 12px !important; line-height: 1 !important; }
+}
+@media (min-width: 1001px) {
+  html body > header.site-header:not(#nvp-a) a.cart-link { position: relative !important; }
+}
+/* Tablet (761–1000px): account- en winkelwagenknop staan hier absoluut rechts;
+   de zoekbalk mocht daar niet meer onder doorlopen (bestaande overlap). */
+@media (min-width: 761px) and (max-width: 1000px) {
+  html body > header.site-header:not(#nvp-a) form.search-bar {
+    flex: 1 1 auto !important;
+    max-width: calc(100vw - 360px) !important;
+  }
+  html body > header.site-header:not(#nvp-a) form.search-bar button[type="submit"] .nvp-search-label { display: none !important; }
+  /* Categoriebalk past weer volledig (incl. oranje 'Aanbiedingen') */
+  html body > header.site-header:not(#nvp-a) .nav-inner .nav-link {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    letter-spacing: .5px !important;
+  }
+  html body > header.site-header:not(#nvp-a) .nav-inner .nav-link.nav-deals { padding-left: 14px !important; padding-right: 14px !important; }
+  /* Infobalk: alleen de eerste twee punten, zodat de taalkeuze in beeld blijft */
+  html body > .tm-usp-bar:not(#nvp-a) .tm-usp-inner > span:nth-of-type(n+3) { display: none !important; }
+}
+
+/* ---------- 2) Compactere kopzone (mobiel) ---------- */
+@media (max-width: 760px) {
+  html body > header.header.wrap:not(#nvp-a) {
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+    gap: 10px !important;
+  }
+  html body > nav.categories.tm-digital-nav:not(#nvp-a):not(#nvp-b) {
+    padding-bottom: 12px !important;
+  }
+  html body > nav.categories.tm-digital-nav:not(#nvp-a) > *:first-child {
+    margin-top: 0 !important;
+  }
+}
+@media (min-width: 761px) {
+  html body > nav.categories.tm-digital-nav:not(#nvp-a):not(#nvp-b) {
+    padding-bottom: 12px !important;
+  }
+}
+
+/* ---------- 2b) Eén zoekbalk-uitstraling op alle pagina's ---------- */
+html body form.search[role="search"]:not(#nvp-a),
+html body > header form.search:not(#nvp-a),
+html body > header form.search-bar:not(#nvp-a) {
+  display: flex !important;
+  align-items: stretch !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 1px solid #c7d8ec !important;
+  border-radius: 13px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 18px rgba(10, 49, 84, .06) !important;
+}
+html body > header form.search:not(#nvp-a) input,
+html body > header form.search-bar:not(#nvp-a) input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  font-size: 16px !important; /* 16px voorkomt automatisch inzoomen op iOS */
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  outline: none;
+}
+html body > header form.search:not(#nvp-a) input::placeholder,
+html body > header form.search-bar:not(#nvp-a) input::placeholder { color: #64748b !important; opacity: 1 !important; }
+html body > header form.search-bar:not(#nvp-a) > svg.tm-search-icon { display: none !important; }
+html body > header form.search:not(#nvp-a) button[type="submit"],
+html body > header form.search-bar:not(#nvp-a) button[type="submit"] {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: 52px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  border: 0 !important;
+  border-radius: 0 12px 12px 0 !important;
+  background: #09284e !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  cursor: pointer;
+}
+html body > header form.search:not(#nvp-a) button[type="submit"] svg,
+html body > header form.search-bar:not(#nvp-a) button[type="submit"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+  stroke-linecap: round !important;
+}
+html body > header form:not(#nvp-a) button[type="submit"]:focus-visible { outline: 3px solid #facc15 !important; outline-offset: -3px; }
+@media (max-width: 760px) {
+  html body > header form:not(#nvp-a) button[type="submit"] .nvp-search-label { display: none !important; }
+}
+@media (min-width: 761px) {
+  html body > header form.search:not(#nvp-a),
+  html body > header form.search-bar:not(#nvp-a) { height: 48px !important; min-height: 48px !important; }
+  html body > header form:not(#nvp-a) button[type="submit"] { padding: 0 20px !important; }
+}
+
+/* ---------- 3) Hero 'Alle Producten' gelijk met de andere hero's ----------
+   Extra ruimte kwam van main.legacy-main (padding-top) + section.shop-page (padding-top). */
+html body > main.legacy-main:has(> .page-section.shop-page):not(#nvp-a) { padding-top: 0 !important; }
+html body .page-section.shop-page:not(#nvp-a) { padding-top: 0 !important; }
+
+/* ---------- 4) Desktop/tablet-hero: vaste maximale breedte ----------
+   Was: min(100%, 1288px, calc((100vh - 290px) * 2.2)) — daardoor werd de hero smaller
+   bij lagere vensters. Nu alleen afhankelijk van de beschikbare breedte. */
+@media (min-width: 761px) {
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a),
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a),
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b):not(#nvp-a) {
+    width: min(100%, 1200px) !important;
+    margin-top: 18px !important;
+  }
+}
+
+/* ---------- 5) Reviews: officieel NUVEMIXA-logo en lege toestand ---------- */
+.nm-reviews .nm-reviews__brand.nvp-brand-logo { display: flex !important; justify-content: center !important; align-items: center !important; }
+.nm-reviews .nm-reviews__brand.nvp-brand-logo img {
+  display: block !important;
+  width: auto !important;
+  height: 64px !important;
+  max-width: min(260px, 70vw) !important;
+  object-fit: contain !important;
+  image-rendering: auto;
+}
+@media (max-width: 760px) {
+  .nm-reviews .nm-reviews__brand.nvp-brand-logo img { height: 52px !important; }
+}
+.nm-reviews .nm-reviews__score.nvp-empty .nm-reviews__number,
+.nm-reviews .nm-reviews__score.nvp-empty .nm-reviews__stars { display: none !important; }
+.nm-reviews .nm-reviews__score.nvp-empty strong { font-size: 26px !important; line-height: 1.2 !important; }

@@ -382,3 +382,33 @@ def test_extended_english_labels_across_website():
         response = client.get(path, follow_redirects=True)
         assert response.status_code == 200, path
         assert "trendmix-english-labels.js" in response.get_data(as_text=True)
+
+
+def test_product_structured_data_has_offer_and_no_nulls():
+    import json
+    import re
+    client = app.test_client()
+    for product in load_all_products()[:10]:
+        html = client.get(product["product_url"]).get_data(as_text=True)
+        blocks = re.findall(r'<script type="application/ld\+json">\s*(.*?)\s*</script>', html, re.S)
+        data = next(json.loads(b) for b in blocks if '"Product"' in b)
+        assert data.get("offers"), product["product_url"]
+        assert data["offers"]["priceCurrency"] == "EUR"
+        assert float(data["offers"]["price"]) > 0
+        assert None not in data.values(), "Product-JSON-LD bevat null-waarden"
+        assert all(img.startswith("http") for img in data.get("image", []))
+
+
+def test_private_pages_are_noindex():
+    client = app.test_client()
+    for path in ("/winkelwagen", "/wishlist"):
+        response = client.get(path)
+        assert "noindex" in response.headers.get("X-Robots-Tag", ""), path
+
+
+def test_polish_overlay_loaded_on_storefront_pages():
+    client = app.test_client()
+    for path in ("/", "/gadgets", "/home-living", "/winkelwagen"):
+        html = client.get(path, follow_redirects=True).get_data(as_text=True)
+        assert "nv-polish-20261122.css" in html, path
+        assert "nv-polish-20261122.js" in html, path
