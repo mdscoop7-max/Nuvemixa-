@@ -27,6 +27,8 @@ import sys
 import tempfile
 
 NEW_VER = "20261122b"
+POLISH_VER = "20261122c"
+KIT = os.path.dirname(os.path.abspath(__file__))
 HOOK_MARK = "# NUVEMIXA herstel 2 (22-11-2026)"
 HOOK = '''
 
@@ -69,7 +71,8 @@ for p in ("/", "/gadgets", "/home-living", "/shop", "/winkelwagen"):
     rr = c.get(p, follow_redirects=True)
     hh = rr.get_data(as_text=True)
     lm = re.search(r'languages\.js\?v=([\w-]+)', hh)
-    out[p] = {"status": rr.status_code, "languages_v": lm.group(1) if lm else None}
+    pm = re.search(r'nv-polish-20261122\.css\?v=([\w-]+)', hh)
+    out[p] = {"status": rr.status_code, "languages_v": lm.group(1) if lm else None, "polish_v": pm.group(1) if pm else None}
 print(json.dumps(out))
 '''
 
@@ -132,7 +135,7 @@ def main():
         if not fn.endswith(".html"):
             continue
         p = os.path.join(tdir, fn)
-        t = open(p, encoding="utf-8").read()
+        t = new.get(p) or open(p, encoding="utf-8").read()
         t2 = vre.sub(lambda m: (m.group(1) + NEW_VER + m.group(3)) if m.group(1) else (m.group(4) + NEW_VER), t)
         if t2 != t:
             new[p] = t2
@@ -149,6 +152,27 @@ def main():
             hook = HOOK
         new[apppy] = src.rstrip("\n") + "\n" + hook
         print("[C] app.py: 301 /over-trendmix -> /over-nuvemixa en canonical-correctie toevoegen (onderaan)")
+
+    # E) nieuwe correctielaag (compact reviewblok) + versienummer ophogen (cache 7 dagen)
+    for fn in ("nv-polish-20261122.css", "nv-polish-20261122.js"):
+        src_p = os.path.join(KIT, "static", fn)
+        dst_p = os.path.join(app, "static", fn)
+        if os.path.exists(src_p):
+            src_t = open(src_p, encoding="utf-8").read()
+            cur_t = open(dst_p, encoding="utf-8").read() if os.path.exists(dst_p) else ""
+            if src_t != cur_t:
+                new[dst_p] = src_t
+                print(f"[E] static/{fn}: nieuwe versie (compact reviewblok)")
+    pre = re.compile(r"(nv-polish-20261122\.(?:css|js)\?v=)([\w-]+)")
+    for fn in sorted(os.listdir(tdir)):
+        if not fn.endswith(".html"):
+            continue
+        p = os.path.join(tdir, fn)
+        t = new.get(p) or open(p, encoding="utf-8").read()
+        t2 = pre.sub(lambda m: m.group(1) + POLISH_VER, t)
+        if t2 != t:
+            new[p] = t2
+            print(f"[E] templates/{fn}: correctielaag-versie -> {POLISH_VER}")
 
     # D) rapport dashboard-test
     used = []

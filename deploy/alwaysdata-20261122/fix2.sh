@@ -7,7 +7,7 @@ BK="${NUVEMIXA_BACKUPS:-$HOME/backups}"
 PY="$APP/.venv/bin/python"; [ -x "$PY" ] || PY="$(command -v python3)"
 mkdir -p "$BK"
 BACKUP="$BK/nuvemixa-pre-fix2-$(date -u +%Y%m%d-%H%M%S).tar.gz"
-tar -czf "$BACKUP" -C "$APP" app.py templates static/languages.js
+tar -czf "$BACKUP" -C "$APP" app.py templates static/languages.js $(cd "$APP" && ls static/nv-polish-20261122.css static/nv-polish-20261122.js 2>/dev/null)
 tar -tzf "$BACKUP" >/dev/null
 echo "Back-up gecontroleerd: $BACKUP"
 echo "$BACKUP" > "$KIT/LAATSTE_BACKUP_FIX2.txt"
