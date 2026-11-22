@@ -6,7 +6,7 @@
    1) Blauwe kopzone: afgeronde linker- en rechteronderhoek van het volledige blauwe deel
    2) Kopzone compacter en consistente zoekbalk op alle paginatypes
    3) Hero 'Alle Producten' op dezelfde hoogte als de andere categorie-hero's
-   4) Desktop-hero: breedte niet meer afhankelijk van de vensterhoogte
+   4) Desktop-hero: ongewijzigd (op verzoek)
    5) Reviews: officieel logo en nette lege toestand */
 
 /* ---------- 1) Afgeronde onderhoeken van de blauwe kopzone ----------
@@ -163,43 +163,7 @@ html body > header form:not(#nvp-a) button[type="submit"]:focus-visible { outlin
 html body > main.legacy-main:has(> .page-section.shop-page):not(#nvp-a) { padding-top: 0 !important; }
 html body .page-section.shop-page:not(#nvp-a) { padding-top: 0 !important; }
 
-/* ---------- 4) Desktop/tablet-hero: vaste maximale breedte ----------
-   Was: min(100%, 1288px, calc((100vh - 290px) * 2.2)) — daardoor werd de hero smaller
-   bij lagere vensters. Nu alleen afhankelijk van de beschikbare breedte. */
-/* Desktop/tablet: hero schermbreed (rand tot rand), geen witte vlakken links/rechts.
-   Breedte = zichtbare vensterbreedte (--nvp-vw, gezet door nv-polish JS, zonder scrollbalk);
-   hoogte volgt de beeldverhouding 2.2:1, dus tekst en knop worden niet afgesneden.
-   Boven 2200px wordt de hoogte begrensd (licht bijsnijden boven/onder). */
-@media (min-width: 761px) {
-  html body { overflow-x: clip; }
-  html body > nav.categories.tm-digital-nav:not(#nvp-a) { position: relative !important; z-index: 5 !important; }
-  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a),
-  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a),
-  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b):not(#nvp-a) {
-    width: var(--nvp-vw, 100vw) !important;
-    max-width: none !important;
-    max-height: 1000px !important;
-    margin-top: -24px !important; /* onder de afgeronde kop doorlopen: geen witte hoekjes */
-    margin-left: calc(50% - var(--nvp-vw, 100vw) / 2) !important;
-    margin-right: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    aspect-ratio: auto !important;
-    height: min(calc(var(--nvp-vw, 100vw) / 2.2 + 24px), 1000px) !important;
-  }
-  /* Afbeelding begint ónder de afgeronde kop: niets van tekst/logo valt weg */
-  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a,
-  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a,
-  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > img,
-  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b):not(#nvp-a) img {
-    top: 24px !important;
-    height: calc(100% - 24px) !important;
-  }
-  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a img,
-  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a img { top: 0 !important; height: 100% !important; }
-  /* Aanbiedingen-afbeelding is breder: tekst staat links, dus links uitlijnen i.p.v. midden */
-  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a) img { object-position: 0% 50% !important; }
-}
+/* ---------- 4) Desktop-hero: bewust ongewijzigd (op verzoek blijft de live-weergave) ---------- */
 
 /* ---------- 5) Reviews: officieel NUVEMIXA-logo en lege toestand ---------- */
 .nm-reviews .nm-reviews__brand.nvp-brand-logo { display: flex !important; justify-content: center !important; align-items: center !important; }
