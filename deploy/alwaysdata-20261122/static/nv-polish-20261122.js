@@ -83,7 +83,14 @@
     }
   }
 
-  function run() { try { polishSearch(); } catch (e) {} try { polishReviews(); } catch (e) {} }
+  /* ---------- Schermbrede hero: zichtbare breedte zonder scrollbalk ---------- */
+  function setViewportWidth() {
+    try { document.documentElement.style.setProperty('--nvp-vw', document.documentElement.clientWidth + 'px'); } catch (e) {}
+  }
+  setViewportWidth();
+  window.addEventListener('resize', setViewportWidth);
+
+  function run() { setViewportWidth(); try { polishSearch(); } catch (e) {} try { polishReviews(); } catch (e) {} }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
   window.addEventListener('load', run);

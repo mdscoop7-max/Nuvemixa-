@@ -166,13 +166,39 @@ html body .page-section.shop-page:not(#nvp-a) { padding-top: 0 !important; }
 /* ---------- 4) Desktop/tablet-hero: vaste maximale breedte ----------
    Was: min(100%, 1288px, calc((100vh - 290px) * 2.2)) — daardoor werd de hero smaller
    bij lagere vensters. Nu alleen afhankelijk van de beschikbare breedte. */
+/* Desktop/tablet: hero schermbreed (rand tot rand), geen witte vlakken links/rechts.
+   Breedte = zichtbare vensterbreedte (--nvp-vw, gezet door nv-polish JS, zonder scrollbalk);
+   hoogte volgt de beeldverhouding 2.2:1, dus tekst en knop worden niet afgesneden.
+   Boven 2200px wordt de hoogte begrensd (licht bijsnijden boven/onder). */
 @media (min-width: 761px) {
+  html body { overflow-x: clip; }
+  html body > nav.categories.tm-digital-nav:not(#nvp-a) { position: relative !important; z-index: 5 !important; }
   html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a),
   html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a),
   html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b):not(#nvp-a) {
-    width: min(100%, 1200px) !important;
-    margin-top: 18px !important;
+    width: var(--nvp-vw, 100vw) !important;
+    max-width: none !important;
+    max-height: 1000px !important;
+    margin-top: -24px !important; /* onder de afgeronde kop doorlopen: geen witte hoekjes */
+    margin-left: calc(50% - var(--nvp-vw, 100vw) / 2) !important;
+    margin-right: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    aspect-ratio: auto !important;
+    height: min(calc(var(--nvp-vw, 100vw) / 2.2 + 24px), 1000px) !important;
   }
+  /* Afbeelding begint ónder de afgeronde kop: niets van tekst/logo valt weg */
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a,
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a,
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > img,
+  html body .page-section.shop-page > .tm-shop-hero:not(#nv-a):not(#nv-b):not(#nvp-a) img {
+    top: 24px !important;
+    height: calc(100% - 24px) !important;
+  }
+  html body main .tm-new-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a img,
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a) > a img { top: 0 !important; height: 100% !important; }
+  /* Aanbiedingen-afbeelding is breder: tekst staat links, dus links uitlijnen i.p.v. midden */
+  html body main .tm-offers-hero:not(#nv-a):not(#nv-b):not(#nvp-a) img { object-position: 0% 50% !important; }
 }
 
 /* ---------- 5) Reviews: officieel NUVEMIXA-logo en lege toestand ---------- */

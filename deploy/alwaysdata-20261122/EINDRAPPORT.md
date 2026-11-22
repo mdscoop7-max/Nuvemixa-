@@ -29,7 +29,7 @@ Live site: https://nuvemixa.alwaysdata.net/ · GitHub-branch: `ccr-3ad6edb4-zfvk
 | 3 | Header op mobiel te hoog | Opgelost | 140 → 132 px (en 133 → 125 px op 320 px breed) |
 | 4 | Zoekbalk heeft 3 varianten (icoon, alleen "Zoeken", blauwe pil), plus verschillende placeholders | Opgelost | Overal dezelfde balk: 46/48 px, navy knop, op desktop icoon + "Zoeken", in NL en EN. Tekst 16 px, zodat iOS niet inzoomt. |
 | 5 | Hero "Alle Producten" staat lager: 26 px op mobiel, 50 px op desktop | Opgelost | Padding van `legacy-main` en `.shop-page` weggehaald. Staat nu exact gelijk met de andere hero's. |
-| 6 | Breedte van de desktop-hero hangt af van de vensterhoogte (`calc((100vh - 290px) * 2.2)`): 682 px breed bij 1920×600 | Opgelost | `min(100%, 1200px)`, nu op elke vensterhoogte gelijk |
+| 6 | Breedte van de desktop-hero hangt af van de vensterhoogte (`calc((100vh - 290px) * 2.2)`): 682 px breed bij 1920×600 | Opgelost | Op verzoek schermbreed (rand tot rand, geen witte vlakken) in de originele verhouding 2.2:1; de hoogte is maximaal 1000 px. Op elke vensterhoogte gelijk. Aanbiedingen links uitgelijnd zodat de tekst zichtbaar blijft. |
 | 7 | Reviews tonen een afwijkend logo (tasje met "M") | Opgelost | Zelfde bestand als het headerlogo (`nuvemixa-logo-test.png`) |
 | 8 | Reviews tonen "0,0 / 5" terwijl er geen reviews zijn | Opgelost | Bij 0 reviews staat er "Nog geen beoordelingen" (EN: "No ratings yet") |
 | 9 | Product-/winkelwagenpagina's op desktop: "Account" afgekapt en de winkelwagenteller zweeft aan de rand van het scherm | Opgelost | Knoppen krijgen ruimte en de teller zit op de knop zelf |
