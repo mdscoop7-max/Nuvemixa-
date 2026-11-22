@@ -123,3 +123,9 @@ Uitgevoerd met `fix2.sh --apply` (back-up `~/backups/nuvemixa-pre-fix2-20261122-
 | Opslagruimte | **Niet gewijzigd** (op verzoek eerst overleggen). `dashboard-test` (109 MB) wordt door de webshop niet gebruikt. De volledige back-up van 18-11 (91 MB) bewaren. |
 
 Terugdraaien: `tar -xzf ~/backups/nuvemixa-pre-fix2-20261122-133622.tar.gz -C /home/nuvemixa/www/nuvemixa` en daarna de site herstarten.
+
+## 9. Opslag opgeruimd (22-11-2026)
+- Eerst gecontroleerd: `dashboard-test` was een losse testkopie van 15-11, sindsdien niet gewijzigd. Er werd nergens naar verwezen, en in Web → Sites staat alleen "NUVEMIXA webshop" (vanuit `/home/nuvemixa/www/nuvemixa`).
+- Daarna verwijderd door de eigenaar. De webshopmap ging van 160 MB naar 52 MB (~108 MB vrij).
+- De live site is daarna gecontroleerd: alle publieke pagina's 200; afrekenen (lege winkelwagen) en dashboard (login) geven 302, zoals verwacht.
+- De volledige back-up van 18-11 (91 MB) is bewust bewaard.
