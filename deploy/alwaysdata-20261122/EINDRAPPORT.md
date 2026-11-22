@@ -12,7 +12,13 @@ Live site: https://nuvemixa.alwaysdata.net/ · GitHub-branch: `ccr-3ad6edb4-zfvk
 - Een branch uitrollen zou daardoor live-werk overschrijven. Daarom zijn de verbeteringen gemaakt als
   **losse correctielaag** plus een **beveiligd patchscript** dat alleen exact herkende stukken aanpast.
 
-**Niet gepubliceerd.** Ik heb geen SSH-toegang tot Alwaysdata en de workflow werkt niet. Hoe je publiceert staat in §6.
+**Gepubliceerd op 22-11-2026, 13:18 UTC.** De eigenaar voerde het pakket uit via SSH (gebruiker `nuvemixa_deploy`) en herstartte daarna de site.
+- Back-ups vóór de wijziging: `~/backups/nuvemixa-pre-polish-20261122-131724.tar.gz` en `-131758.tar.gz`.
+- Controle op de server: "RESULTAAT: OK".
+- Live gecontroleerd: correctielaag op alle pagina's (CSS/JS 200), overal precies één H1, `offers: null` weg, hero-afmetingen gelijk aan vóór, geen horizontale overloop.
+- Opmerking: het account zat aan zijn opslaglimiet. Daarom is `~/.cache` (pip-cache, 20 MB) geleegd en zijn alleen de 5 benodigde bestanden gedownload.
+- Opmerking: `nuvemixa_deploy` mag `wsgi.py` niet lezen. Herstarten gaat daarom via het beheerpaneel (Web → Sites).
+- Terugdraaien: `NUVEMIXA_BACKUPS=~/backups bash ~/nv-kit/deploy/alwaysdata-20261122/rollback.sh` en daarna de site herstarten.
 
 ## 2. Back-up (vóór elke wijziging)
 
@@ -100,5 +106,6 @@ bash nv-kit/deploy/alwaysdata-20261122/rollback.sh
 Controleer daarna de live site met Ctrl+F5 op mobiel en desktop.
 
 ## 7. Screenshots
+De live-situatie na publicatie staat in `screenshots/live/`.
 Zie de map `screenshots/`. Daarin staan vóór/na-vergelijkingen per formaat (`mobiel-*.jpg`, `tablet-*.jpg`, `desktop-*.jpg`),
 uitsneden van de header en de reviews (`voor-*`, `na-*`) en `tablet-header-voor-na.png`.
