@@ -154,9 +154,9 @@ def ai_answer(question,lang,products,all_items=()):
     except (nv_openai.AIUnavailable,ValueError,KeyError,IndexError,TypeError):
         return None
 
-def register_trendmix_assistant(app,catalog,categories,live_orders_enabled):
-    @app.route("/api/trendmix-assistant",methods=["GET","POST"])
-    def trendmix_assistant():
+def register_nuvemixa_assistant(app,catalog,categories,live_orders_enabled):
+    @app.route("/api/nuvemixa-assistant",methods=["GET","POST"])
+    def nuvemixa_assistant():
         if request.method=="GET":
             return jsonify({"ok":True,"service":"NUVEMIXA Help","mode":"ai" if os.getenv("OPENAI_API_KEY") else "catalog",
                             "live_orders":bool(live_orders_enabled())})

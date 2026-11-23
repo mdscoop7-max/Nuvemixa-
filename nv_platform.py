@@ -118,7 +118,7 @@ def register(mod):
             if request.path=='/admin/login':request_limit('admin-login',6)
             if request.path=='/contact':request_limit('contact',5)
             if request.path in ['/reviews','/review-purchase']:request_limit('review',5,86400)
-            if request.path=='/api/trendmix-assistant':request_limit('assistant',12,60)
+            if request.path=='/api/nuvemixa-assistant':request_limit('assistant',12,60)
 
     @app.context_processor
     def context():

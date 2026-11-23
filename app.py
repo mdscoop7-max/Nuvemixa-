@@ -373,7 +373,7 @@ def verify_form_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
     # Read-only JSON assistant handles Origin separately.
-    if request.endpoint == "trendmix_assistant":
+    if request.endpoint == "nuvemixa_assistant":
         return
     origin = request.headers.get("Origin")
     if origin:
@@ -1397,8 +1397,8 @@ def trendmix_security_headers(response):
 
 
 # Public read-only support endpoint; customer orders remain private.
-from trendmix_assistant import register_trendmix_assistant
-register_trendmix_assistant(app, products, CATEGORIES, live_orders_enabled)
+from nuvemixa_assistant import register_nuvemixa_assistant
+register_nuvemixa_assistant(app, products, CATEGORIES, live_orders_enabled)
 
 
 # NUVEMIXA-REVIEWS-20261121: klantreviews (aparte opslag, moderatie door beheerder).

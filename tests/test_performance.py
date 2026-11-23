@@ -28,7 +28,7 @@ def test_static_browser_cache_and_private_pages():
     assert "max-age=3600" in hero.headers["Cache-Control"]
 
     # Do not share cart state, customer pages or assistant answers via public caching.
-    for path in ("/", "/winkelwagen", "/api/trendmix-assistant"):
+    for path in ("/", "/winkelwagen", "/api/nuvemixa-assistant"):
         response = client.get(path)
         assert "public" not in response.headers.get("Cache-Control", "")
 

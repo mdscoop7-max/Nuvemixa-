@@ -241,7 +241,7 @@
     const ctrl=new AbortController();
     const timer=setTimeout(()=>ctrl.abort(),12000);
     try{
-      const res=await fetch('/api/trendmix-assistant',{
+      const res=await fetch('/api/nuvemixa-assistant',{
         method:'POST',credentials:'same-origin',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({question:value,language:lang,page:window.location.pathname}),
