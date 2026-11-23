@@ -24,7 +24,7 @@ label.chk{font-size:13px;display:flex;gap:6px;align-items:center}
 .empty{color:#5b6b80}
 </style></head><body><div class="wrap">
 <div class="top"><div><h1>Klantreviews beheren</h1><div class="meta">Nieuwe reviews zijn pas openbaar na <b>Publiceren</b>. E-mailadressen worden nooit op de website getoond.</div></div>
-<div><a href="https://trendmix.onrender.com/dashboard?section=klanten">&larr; Terug naar dashboard</a></div></div>
+<div><a href="/dashboard?section=klanten">&larr; Terug naar dashboard</a></div></div>
 {% if result == 'opgeslagen' %}<p class="note ok">Wijziging opgeslagen.</p>{% elif result in ('ongeldig','fout') %}<p class="note err">De wijziging kon niet worden uitgevoerd.</p>{% endif %}
 {% if review_error %}<p class="note err">{{ review_error }}</p>{% endif %}
 {% for rv in reviews %}
