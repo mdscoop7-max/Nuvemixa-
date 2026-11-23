@@ -59,7 +59,7 @@ jobs:
       - run: python -m pytest tests -q -p no:cacheprovider
 '''
 write(R/'.github/workflows/nuvemixa-integration.yml',workflow)
-write(R/'.github/workflows/trendmix-tests.yml','''# Compatibility filename retained; the complete suite is defined in nuvemixa-integration.yml.
+write(R/'.github/workflows/nuvemixa-syntax.yml','''# Compatibility filename retained; the complete suite is defined in nuvemixa-integration.yml.
 name: NUVEMIXA source syntax
 on: [push, pull_request]
 permissions:
