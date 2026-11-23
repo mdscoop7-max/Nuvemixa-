@@ -1,0 +1,1065 @@
+{
+  "method": "GET only; public reachable internal href/src/srcset; no external requests, form submission or private URLs",
+  "checked": 264,
+  "failures": [],
+  "external_hosts_not_requested": [],
+  "private_paths_excluded": [],
+  "results": [
+    {
+      "url": "http://127.0.0.1:5001/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/?lang=en",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nv-platform.css?v=20261123-add964e1e7e8",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nuvemixa-app-180-20261123.png",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nv-platform.js?v=20261123-add964e1e7e8",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/favicon.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/storefront-v2.css?v=20261123-ratio25",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/manifest.webmanifest",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/trendmix-footer-unified.css?v=20261105-footer-clean2",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nuvemixa-refresh.css?v=20261110-1",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/trendmix-ui-2026.css?v=20261110-flitsfix",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nm-reviews-neon-isolated.css?v=20261121-ad2",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nv-hero-2026.css?v=20261123-desktopwide400-html2",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nv-polish-20261122.css?v=20261122c",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/account",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/wishlist",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/winkelwagen",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nuvemixa-logo-test.png?v=20261110-logo-test",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/aanbiedingen",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/shop",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/contact",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/gadgets-2026.jpg?v=20261121g",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/draadloze-bluetooth-oordopjes",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/draadloze-bluetooth-oordopjes.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/mini-full-hd-projector",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/mini-full-hd-projector.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/draadloze-oplader-3-in-1",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/draadloze-oplader-3-in-1.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/smartwatch",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/smartwatch.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/rgb-led-strip-5-meter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/rgb-led-strip-5-meter.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/bluetooth-speaker",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/bluetooth-speaker.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/noise-cancelling-koptelefoon",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/noise-cancelling-koptelefoon.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/magnetische-powerbank",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/magnetische-powerbank.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/bluetooth-tracker",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/bluetooth-tracker.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/smartphone-gimbal",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/smartphone-gimbal.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/ringlamp-met-statief",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/ringlamp-met-statief.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/usb-c-snellader",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/usb-c-snellader.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/draagbare-mini-ventilator",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/draagbare-mini-ventilator.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/telefoonhouder-voor-bureau",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/telefoonhouder-voor-bureau.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/draadloze-computermuis",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/draadloze-computermuis.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/compacte-usb-c-hub",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/compacte-usb-c-hub.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/opvouwbaar-bluetooth-toetsenbord",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/opvouwbaar-bluetooth-toetsenbord.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/digitale-wekker-met-draadloos-laden",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/digitale-wekker-met-draadloos-laden.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/mini-fotoprinter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/mini-fotoprinter.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/gadgets/draagbare-ssd",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/gadgets/draagbare-ssd.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/meer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/trendmix-english-labels.js?v=20261120w",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/trendmix-ui-2026.js?v=20261120w",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/bestellen",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/retouren",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nv-fix-20261120e.js?v=20261123-native-country",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/faq",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/over-nuvemixa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/voorwaarden",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/privacy",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/cookies",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/dashboard",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/herroepen",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/herroepingsformulier",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nv-polish-20261122.js?v=20261122c",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/account/forgot-password",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nuvemixa-refresh.js?v=20261123",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/aanbiedingen.png?v=20261120p",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/trendmix-footer-unified.css?v=20261110-footer-allpages",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/nuvemixa-refresh.css?v=20261110-footer-allpages",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/gadgets-2026.jpg?v=20261120p",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/smart-home.png?v=20261120p",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-beveiligingscamera",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-beveiligingscamera.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-led-lamp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-led-lamp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/wifi-smartstekker",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/wifi-smartstekker.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/videodeurbel",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/videodeurbel.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-thermostaat",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-thermostaat.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-led-lichtstrip",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-led-lichtstrip.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/bewegingssensor",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/bewegingssensor.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-deursensor",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-deursensor.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-rookmelder",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-rookmelder.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-luchtreiniger",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-luchtreiniger.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-luchtbevochtiger",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-luchtbevochtiger.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-gordijnmotor",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-gordijnmotor.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-lichtschakelaar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-lichtschakelaar.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/wifi-watersensor",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/wifi-watersensor.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-temperatuurmeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-temperatuurmeter.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-ir-afstandsbediening",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-ir-afstandsbediening.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slim-nachtlampje",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slim-nachtlampje.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-buitenverlichting",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-buitenverlichting.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-energiemeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-energiemeter.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/smart-home/slimme-robotstofzuiger",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/smart-home/slimme-robotstofzuiger.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/beauty-care.png?v=20261120p",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/professionele-fohn",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/professionele-fohn.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-gezichtsreiniger",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-gezichtsreiniger.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/led-gezichtsmasker",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/led-gezichtsmasker.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/keramische-stijltang",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/keramische-stijltang.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/automatische-krultang",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/automatische-krultang.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-gezichtsroller",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-gezichtsroller.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/ultrasone-huidreiniger",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/ultrasone-huidreiniger.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-nagelvijl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-nagelvijl.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/uv-led-nagellamp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/uv-led-nagellamp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-voetvijl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-voetvijl.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/gezichtsstomer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/gezichtsstomer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/make-upspiegel-met-led",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/make-upspiegel-met-led.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-tandenborstel",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-tandenborstel.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/waterflosser",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/waterflosser.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-bodytrimmer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-bodytrimmer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/massageapparaat-voor-hoofdhuid",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/massageapparaat-voor-hoofdhuid.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/warmteborstel-voor-haar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/warmteborstel-voor-haar.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/compacte-reisfohn",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/compacte-reisfohn.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/gezichtsmassageapparaat",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/gezichtsmassageapparaat.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/beauty-care/elektrische-wenkbrauwtrimmer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/beauty-care/elektrische-wenkbrauwtrimmer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/home-living-2026.jpg?v=20261121a",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/aroma-diffuser",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/aroma-diffuser.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/draadloze-tafellamp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/draadloze-tafellamp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/bureau-organizer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/bureau-organizer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/sunset-projectielamp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/sunset-projectielamp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/led-nachtlamp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/led-nachtlamp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/digitale-keukenweegschaal",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/digitale-keukenweegschaal.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/automatische-zeepdispenser",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/automatische-zeepdispenser.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/elektrische-melkopschuimer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/elektrische-melkopschuimer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/mini-kruimeldief",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/mini-kruimeldief.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/oplaadbare-kastverlichting",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/oplaadbare-kastverlichting.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/elektrische-kledingontpluizer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/elektrische-kledingontpluizer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/opvouwbare-wasmand",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/opvouwbare-wasmand.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/sieradenorganizer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/sieradenorganizer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/make-uporganizer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/make-uporganizer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/schoenenorganizer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/schoenenorganizer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/kabelorganizer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/kabelorganizer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/automatische-plantbewatering",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/automatische-plantbewatering.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/digitale-thermometer-voor-binnen",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/digitale-thermometer-voor-binnen.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/opvouwbare-laptoptafel",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/opvouwbare-laptoptafel.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/home-living/elektrische-vacuumpomp-voor-opbergzakken",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/home-living/elektrische-vacuumpomp-voor-opbergzakken.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/lifestyle-sport.jpg?v=20261120p",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/massagegun",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/massagegun.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/geisoleerde-sportdrinkfles",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/geisoleerde-sportdrinkfles.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/weerstandsbandenset",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/weerstandsbandenset.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/yogamat",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/yogamat.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/smart-fitnessarmband",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/smart-fitnessarmband.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/verstelbaar-springtouw",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/verstelbaar-springtouw.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/foamroller",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/foamroller.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/sporttas",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/sporttas.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/hardlooptelefoonhouder",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/hardlooptelefoonhouder.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/draadloze-sportoordopjes",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/draadloze-sportoordopjes.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/opvouwbare-waterfles",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/opvouwbare-waterfles.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/mini-fitnessstepper",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/mini-fitnessstepper.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/handtrainer",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/handtrainer.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/fitnesshandschoenen",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/fitnesshandschoenen.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/elektrische-spiermassager",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/elektrische-spiermassager.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/hardloopheuptas",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/hardloopheuptas.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/digitale-bagageweegschaal",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/digitale-bagageweegschaal.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/reisorganizerset",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/reisorganizerset.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/oplaadbare-fietslamp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/oplaadbare-fietslamp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/lifestyle-sport/draagbare-bandenpomp",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/img/product/lifestyle-sport/draagbare-bandenpomp.svg",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/images/hero/alle-producten.png?v=20261120p",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/shop?category=Gadgets",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/shop?category=Smart+Home",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/shop?category=Beauty+%26+Care",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/shop?category=Lifestyle+%26+Sport",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/design-tokens.css",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/style.css",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/ux.css",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/app.js?v=20261120w",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/languages.js?v=20261122b",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/over-trendmix",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5001/static/trendmix-info.css?v=20261019-1",
+      "status": 200
+    }
+  ]
+}

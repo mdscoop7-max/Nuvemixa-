@@ -1,0 +1,71 @@
+{
+  "exit_code": 0,
+  "tests": [
+    {
+      "test": "tests/test_local_platform.py::test_verification_single_use_and_welcome_coupon",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_campaigns_off_by_default_and_expired",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_money_and_coupon_exact_totals",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_coupon_personal_minimum_exclusion_and_stacking",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_concurrent_coupon_reservation_only_one_order",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_review_reward_equal_no_fake_verified_review[1]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_review_reward_equal_no_fake_verified_review[5]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_review_sso_has_no_general_admin_scope",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_expired_token_and_coupon",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_administration_requires_authorization_and_keeps_campaign_inactive",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    }
+  ],
+  "versions": {
+    "Flask": "3.1.3",
+    "Werkzeug": "3.1.9",
+    "pytest": "9.1.1"
+  },
+  "external_io": "blocked"
+}

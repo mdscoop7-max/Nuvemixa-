@@ -12,11 +12,9 @@ def secure_post(client, *args, **kwargs):
 
 
 def test_control_page_exists():
-    client = app.test_client()
-    response = client.get("/control")
-
-    assert response.status_code == 200
-    assert b"TrendMix Control" in response.data or b"Controle" in response.data
+    client=app.test_client()
+    response=client.get('/control')
+    assert response.status_code==302 and '/admin/login' in response.location
 
 
 def test_shop_categories_have_20_products_with_images():
@@ -43,7 +41,7 @@ def test_all_main_category_pages_render():
 
 def test_core_customer_pages_render():
     client = app.test_client()
-    for path in ("/", "/faq", "/contact", "/over-trendmix", "/bestellen", "/retouren", "/voorwaarden", "/privacy", "/cookies", "/robots.txt", "/sitemap.xml"):
+    for path in ("/", "/faq", "/contact", "/over-nuvemixa", "/bestellen", "/retouren", "/voorwaarden", "/privacy", "/cookies", "/robots.txt", "/sitemap.xml"):
         response = client.get(path)
         assert response.status_code == 200, f"{path} returned {response.status_code}"
 
@@ -56,7 +54,8 @@ def test_cart_and_checkout_test_flow():
     assert product["name"].encode() in response.data
     response = client.get("/afrekenen")
     assert response.status_code == 200
-    assert b"Testmodus" in response.data
+    assert b"Simulatiecheckout" in response.data
+    assert b"Geen echte bestelling" in response.data
 
 
 def test_catalog_is_exactly_100_products():
@@ -94,11 +93,14 @@ def test_language_bundle_has_no_obsolete_affiliate_store_model():
         assert obsolete not in content
 
 
-def test_language_bundle_keeps_all_six_languages():
+def test_active_languages_are_exactly_dutch_and_english():
+    import json
     from pathlib import Path
-    content = Path("static/languages.js").read_text(encoding="utf-8")
-    for language in ("nl:", "en:", "de:", "fr:", "it:", "es:"):
-        assert language in content
+    data=json.loads(Path('content/ui-translations.json').read_text(encoding='utf-8'))
+    assert set(data)=={'nl','en'}
+    client=app.test_client()
+    assert b'<html lang="en"' in client.get('/account?lang=en').data
+    assert b'<html lang="nl"' in client.get('/account?lang=nl').data
 
 
 def test_homepage_seo_and_search_action_metadata():
@@ -174,7 +176,7 @@ def test_rankfix_audit_home_and_categories_have_one_h1():
 
 def test_rankfix_audit_canonicals_and_meta_descriptions():
     client = app.test_client()
-    for path in ("/shop", "/contact", "/privacy", "/over-trendmix", "/aanbiedingen"):
+    for path in ("/shop", "/contact", "/privacy", "/over-nuvemixa", "/aanbiedingen"):
         response = client.get(path)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
@@ -223,17 +225,15 @@ def test_cart_numeric_product_id_quantity_and_remove_work():
         assert not data.get("trendmix_cart")
 
 
-def test_contact_message_is_not_falsely_confirmed_without_mail(monkeypatch):
-    monkeypatch.delenv("RESEND_API_KEY", raising=False)
-    monkeypatch.delenv("CONTACT_FROM_EMAIL", raising=False)
-    client = app.test_client()
-    response = secure_post(client, 
-        "/contact?ajax=1",
-        data={"name": "Test", "email": "test@example.com", "message": "Controle"},
-        headers={"X-Requested-With": "XMLHttpRequest"},
-    )
-    assert response.status_code == 503
-    assert response.get_json()["ok"] is False
+def test_contact_message_is_explicitly_local_test_mail(monkeypatch):
+    import nv_store
+    client=app.test_client()
+    response=secure_post(client,'/contact?ajax=1',data={'name':'Test','email':'test@example.invalid','message':'Uitsluitend een lokaal fictief testbericht.'})
+    assert response.status_code==200
+    assert response.get_json()=={'ok':True,'mode':'local_test'}
+    with nv_store.db() as db:
+        message=db.execute("SELECT status FROM nv_mail WHERE kind='contact' ORDER BY rowid DESC").fetchone()
+        assert message[0]=='test'
 
 
 def test_live_orders_require_explicit_enable_flag(monkeypatch):
@@ -249,7 +249,7 @@ def test_global_language_dropdown_is_present_across_storefront():
     client = app.test_client()
     pages = ("/", "/gadgets", "/smart-home", "/beauty-care", "/lifestyle-sport",
              "/shop", "/wishlist", "/winkelwagen", "/contact", "/faq",
-             "/over-trendmix", "/account", "/aanbiedingen",
+             "/over-nuvemixa", "/account", "/aanbiedingen",
              "/beauty-care/elektrische-gezichtsroller")
     for path in pages:
         response = client.get(path)
@@ -268,7 +268,7 @@ def test_original_category_menu_and_svg_icons_survive_redesign():
         response = client.get(path)
         assert response.status_code == 200, path
         html = response.get_data(as_text=True)
-        assert 'class="categories tm-digital-nav"' in html, path
+        assert 'tm-digital-nav' in html and '<details class="tm-category-dropdown"' in html, path
         assert 'class="tm-nav-icon"' in html, path
         assert '<svg' in html, path
         for category in ("/gadgets", "/smart-home", "/beauty-care",
@@ -311,7 +311,7 @@ def test_information_pages_have_professional_bilingual_content():
             assert len(document["lead"]) > 90
             assert document["title"] and document["description"]
         assert len(content["nl"]["sections"]) == len(content["en"]["sections"])
-        response = client.get("/" + slug)
+        response = client.get("/over-nuvemixa" if slug=="over-trendmix" else "/"+slug)
         assert response.status_code == 200, slug
         html = response.get_data(as_text=True)
         assert 'data-tm-info-root' in html, slug
@@ -368,17 +368,11 @@ def test_catalog_product_cards_and_detail_are_bilingual():
 
 
 def test_extended_english_labels_across_website():
-    from pathlib import Path
-    script = Path("static/trendmix-english-labels.js").read_text(encoding="utf-8")
-    assert "TrendMixEnglishLabels" in script
-    assert '"Je winkelwagen": "Your shopping cart"' in script
-    assert '"Algemene voorwaarden": "Terms and Conditions"' in script
-    translator = Path("static/trendmix-ui-2026.js").read_text(encoding="utf-8")
-    assert "function translateRemainingText()" in translator
-    assert "translateRemainingText();" in translator
-    client = app.test_client()
-    for path in ("/", "/shop", "/wishlist", "/winkelwagen", "/contact",
-                 "/privacy", "/retouren", "/beauty-care/elektrische-gezichtsroller"):
-        response = client.get(path)
-        assert response.status_code == 200, path
-        assert "trendmix-english-labels.js" in response.get_data(as_text=True)
+    client=app.test_client()
+    for path in ['/shop?q=zzzzzz','/account','/contact','/retouren']:
+        response=client.get(path+('&' if '?' in path else '?')+'lang=en')
+        assert response.status_code==200
+        assert b'<html lang="en"' in response.data
+        assert b'Herhaal wachtwoord' not in response.data
+        assert b'Geen producten gevonden' not in response.data
+    assert b'Repeat password' in client.get('/account?lang=en').data

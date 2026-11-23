@@ -1,0 +1,334 @@
+/* NUVEMIXA eindafwerking 22-11-2026
+   Additieve correctielaag bovenop de bestaande live-stijl. Verandert geen kleuren,
+   logo's, hero-afbeeldingen, AI-knop of onderste navigatie.
+   Terugdraaien: verwijder de <link> naar dit bestand (en nv-polish-20261122.js).
+
+   1) Blauwe kopzone: afgeronde linker- en rechteronderhoek van het volledige blauwe deel
+   2) Kopzone compacter en consistente zoekbalk op alle paginatypes
+   3) Hero 'Alle Producten' op dezelfde hoogte als de andere categorie-hero's
+   4) Desktop-hero: ongewijzigd (op verzoek)
+   5) Reviews: officieel logo en nette lege toestand */
+
+/* ---------- 1) Afgeronde onderhoeken van de blauwe kopzone ----------
+   Het blauw werd getekend met border-image (… fill 0 / / 0 100vmax). border-image
+   negeert border-radius, daarom krijgt het onderste blauwe element nu dezelfde
+   gradient als achtergrond (zelfde breedte-uitvulling, dus kleur blijft identiek). */
+html body > nav.categories.tm-digital-nav:not(#nvp-a):not(#nvp-b),
+html body:not(:has(> nav.categories.tm-digital-nav)) > header.site-header:not(#nvp-a):not(#nvp-b) {
+  border-image: none !important;
+  border-color: transparent !important; /* bestaande rand werd voorheen door border-image overschilderd */
+  background: linear-gradient(90deg, #1630b0 0%, #1f4fe3 50%, #1630b0 100%) center top / calc(100% + 200vmax) 100% no-repeat !important;
+  border-bottom-left-radius: 24px !important;
+  border-bottom-right-radius: 24px !important;
+  box-shadow: 0 6px 18px rgba(5, 27, 54, .14) !important;
+}
+
+/* Product-/winkelwagen-/afrekenpagina's (desktop): de donkerblauwe categoriebalk is het
+   onderste deel van de kopzone en krijgt dezelfde afronding. */
+html body:not(:has(> nav.categories.tm-digital-nav)) > header.site-header:not(#nvp-a) > nav {
+  border-bottom-left-radius: 24px !important;
+  border-bottom-right-radius: 24px !important;
+}
+
+/* Account-, favorieten- en winkelwagenknop op product-/winkelwagenpagina's (desktop):
+   tekst niet meer afgekapt en telbolletje op de winkelwagenknop zelf. */
+@media (min-width: 761px) {
+  html body > header.site-header:not(#nvp-a) .tm-ref-actions { gap: 10px !important; align-items: center !important; }
+  html body > header.site-header:not(#nvp-a) .tm-ref-actions > a {
+    min-height: 36px !important;
+    padding: 5px 12px !important;
+    white-space: nowrap !important;
+    align-items: center !important;
+  }
+  html body > header.site-header:not(#nvp-a) .tm-ref-actions > a small { font-size: 12px !important; line-height: 1 !important; }
+}
+@media (min-width: 1001px) {
+  html body > header.site-header:not(#nvp-a) a.cart-link { position: relative !important; }
+}
+/* Tablet (761–1000px): account- en winkelwagenknop staan hier absoluut rechts;
+   de zoekbalk mocht daar niet meer onder doorlopen (bestaande overlap). */
+@media (min-width: 761px) and (max-width: 1000px) {
+  html body > header.site-header:not(#nvp-a) form.search-bar {
+    flex: 1 1 auto !important;
+    max-width: calc(100vw - 360px) !important;
+  }
+  html body > header.site-header:not(#nvp-a) form.search-bar button[type="submit"] .nvp-search-label { display: none !important; }
+  /* Categoriebalk past weer volledig (incl. oranje 'Aanbiedingen') */
+  html body > header.site-header:not(#nvp-a) .nav-inner .nav-link {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    letter-spacing: .5px !important;
+  }
+  html body > header.site-header:not(#nvp-a) .nav-inner .nav-link.nav-deals { padding-left: 14px !important; padding-right: 14px !important; }
+  /* Infobalk: alleen de eerste twee punten, zodat de taalkeuze in beeld blijft */
+  html body > .tm-usp-bar:not(#nvp-a) .tm-usp-inner > span:nth-of-type(n+3) { display: none !important; }
+}
+
+/* ---------- 2) Compactere kopzone (mobiel) ---------- */
+@media (max-width: 760px) {
+  html body > header.header.wrap:not(#nvp-a) {
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+    gap: 10px !important;
+  }
+  html body > nav.categories.tm-digital-nav:not(#nvp-a):not(#nvp-b) {
+    padding-bottom: 12px !important;
+  }
+  html body > nav.categories.tm-digital-nav:not(#nvp-a) > *:first-child {
+    margin-top: 0 !important;
+  }
+}
+@media (min-width: 761px) {
+  html body > nav.categories.tm-digital-nav:not(#nvp-a):not(#nvp-b) {
+    padding-bottom: 12px !important;
+  }
+}
+
+/* ---------- 2b) Eén zoekbalk-uitstraling op alle pagina's ---------- */
+html body form.search[role="search"]:not(#nvp-a),
+html body > header form.search:not(#nvp-a),
+html body > header form.search-bar:not(#nvp-a) {
+  display: flex !important;
+  align-items: stretch !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 1px solid #c7d8ec !important;
+  border-radius: 13px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 18px rgba(10, 49, 84, .06) !important;
+}
+html body > header form.search:not(#nvp-a) input,
+html body > header form.search-bar:not(#nvp-a) input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  font-size: 16px !important; /* 16px voorkomt automatisch inzoomen op iOS */
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  outline: none;
+}
+html body > header form.search:not(#nvp-a) input::placeholder,
+html body > header form.search-bar:not(#nvp-a) input::placeholder { color: #64748b !important; opacity: 1 !important; }
+html body > header form.search-bar:not(#nvp-a) > svg.tm-search-icon { display: none !important; }
+html body > header form.search:not(#nvp-a) button[type="submit"],
+html body > header form.search-bar:not(#nvp-a) button[type="submit"] {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: 52px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  border: 0 !important;
+  border-radius: 0 12px 12px 0 !important;
+  background: #09284e !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  cursor: pointer;
+}
+html body > header form.search:not(#nvp-a) button[type="submit"] svg,
+html body > header form.search-bar:not(#nvp-a) button[type="submit"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+  stroke-linecap: round !important;
+}
+html body > header form:not(#nvp-a) button[type="submit"]:focus-visible { outline: 3px solid #facc15 !important; outline-offset: -3px; }
+@media (max-width: 760px) {
+  html body > header form:not(#nvp-a) button[type="submit"] .nvp-search-label { display: none !important; }
+}
+@media (min-width: 761px) {
+  html body > header form.search:not(#nvp-a),
+  html body > header form.search-bar:not(#nvp-a) { height: 48px !important; min-height: 48px !important; }
+  html body > header form:not(#nvp-a) button[type="submit"] { padding: 0 20px !important; }
+}
+
+/* ---------- 3) Hero 'Alle Producten' gelijk met de andere hero's ----------
+   Extra ruimte kwam van main.legacy-main (padding-top) + section.shop-page (padding-top). */
+html body > main.legacy-main:has(> .page-section.shop-page):not(#nvp-a) { padding-top: 0 !important; }
+html body .page-section.shop-page:not(#nvp-a) { padding-top: 0 !important; }
+
+/* ---------- 4) Desktop-hero: bewust ongewijzigd (op verzoek blijft de live-weergave) ---------- */
+
+/* ---------- 5) Reviews: officieel NUVEMIXA-logo en lege toestand ---------- */
+.nm-reviews .nm-reviews__brand.nvp-brand-logo { display: flex !important; justify-content: center !important; align-items: center !important; }
+.nm-reviews .nm-reviews__brand.nvp-brand-logo img {
+  display: block !important;
+  width: auto !important;
+  height: 64px !important;
+  max-width: min(260px, 70vw) !important;
+  object-fit: contain !important;
+  image-rendering: auto;
+}
+@media (max-width: 760px) {
+  .nm-reviews .nm-reviews__brand.nvp-brand-logo img { height: 52px !important; }
+}
+.nm-reviews .nm-reviews__score.nvp-empty .nm-reviews__number,
+.nm-reviews .nm-reviews__score.nvp-empty .nm-reviews__stars { display: none !important; }
+.nm-reviews .nm-reviews__score.nvp-empty strong { font-size: 26px !important; line-height: 1.2 !important; }
+
+/* ---------- 6) Compact reviewblok (22-11-2026, op verzoek) ----------
+   Vervangt de grote reviewsectie door één compacte kaart. Formulier en meldingen blijven werken. */
+html body .nm-reviews.nvp-compact:not(#nvp-a) {
+  background: transparent !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  margin: 28px auto !important;
+  max-width: 1100px;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+html body .nm-reviews.nvp-compact:not(#nvp-a)::before,
+html body .nm-reviews.nvp-compact:not(#nvp-a)::after { display: none !important; }
+html body .nm-reviews.nvp-compact .nm-reviews__inner { padding: 0 !important; background: none !important; max-width: none !important; }
+html body .nm-reviews.nvp-compact .nm-reviews__header,
+html body .nm-reviews.nvp-compact .nm-reviews__main,
+html body .nm-reviews.nvp-compact .nm-reviews__filters,
+html body .nm-reviews.nvp-compact .nm-reviews__trust { display: none !important; }
+
+.nvp-rev {
+  position: relative;
+  border-radius: 28px;
+  padding: 22px 28px 16px;
+  color: #f2f7ff;
+  background: radial-gradient(120% 140% at 15% 0%, #123a7a 0%, #0b2552 45%, #08193a 100%);
+  border: 2px solid #19a8ff;
+  box-shadow: 0 0 0 1px rgba(25, 168, 255, .25), 0 0 22px rgba(25, 168, 255, .35), 0 12px 30px rgba(5, 20, 50, .25);
+  font-family: inherit;
+}
+.nvp-rev-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 26px;
+}
+.nvp-rev-logo { display: block; padding-right: 26px; border-right: 3px solid #19a8ff; }
+.nvp-rev-logo img { display: block; height: 72px; width: auto; max-width: 230px; object-fit: contain; }
+.nvp-rev-text h2 {
+  margin: 0 0 6px !important; padding: 0 !important;
+  font-size: 34px !important; line-height: 1.1 !important; font-weight: 800 !important;
+  color: #fff !important; letter-spacing: .2px; text-align: left !important;
+  background: none !important; -webkit-text-fill-color: #fff !important;
+}
+.nvp-rev-text p { margin: 0 !important; font-size: 20px; font-weight: 600; color: #e3edff !important; }
+.nvp-rev-score { display: inline-flex; align-items: center; gap: 6px; color: #fff; font-weight: 800; }
+.nvp-rev-score svg { width: 20px; height: 20px; color: #22d3ee; fill: #22d3ee; }
+.nvp-rev-score small { font-size: .8em; opacity: .8; margin-left: 1px; }
+.nvp-rev-actions { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+.nvp-rev-write {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 10px 26px; border: 0; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(180deg, #2fe1ff 0%, #12c2f2 100%);
+  color: #061a33; font-size: 20px; font-weight: 800; font-family: inherit;
+  box-shadow: 0 0 18px rgba(34, 211, 238, .45);
+}
+.nvp-rev-write svg { width: 24px; height: 24px; }
+.nvp-rev-write:hover { filter: brightness(1.05); }
+.nvp-rev-all {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 6px 10px; border: 0; background: none; cursor: pointer;
+  color: #fff; font-size: 18px; font-weight: 700; font-family: inherit;
+}
+.nvp-rev-all svg { width: 22px; height: 22px; }
+.nvp-rev-write:focus-visible, .nvp-rev-all:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
+.nvp-rev-trust {
+  list-style: none; margin: 16px 0 0 !important; padding: 12px 0 2px !important;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 2px solid #19a8ff;
+}
+.nvp-rev-trust li {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 4px 8px; font-size: 17px; font-weight: 700; color: #fff;
+  border-left: 2px solid rgba(25, 168, 255, .85);
+}
+.nvp-rev-trust li:first-child { border-left: 0; }
+.nvp-rev-trust svg { width: 28px; height: 28px; flex: 0 0 28px; color: #22d3ee; }
+
+/* Formulier en meldingen onder de kaart, in dezelfde stijl */
+html body .nm-reviews.nvp-compact .nm-reviews__interactive form.open,
+html body .nm-reviews.nvp-compact .nm-reviews__interactive form[open] {
+  margin-top: 14px !important;
+  background: #0b2552 !important;
+  border: 2px solid #19a8ff !important;
+  border-radius: 22px !important;
+  color: #f2f7ff;
+}
+
+@media (max-width: 700px) {
+  .nvp-rev { padding: 18px 18px 12px; border-radius: 24px; }
+  .nvp-rev-top { grid-template-columns: auto 1fr; gap: 14px 16px; }
+  .nvp-rev-logo { padding-right: 16px; }
+  .nvp-rev-logo img { height: 54px; max-width: 150px; }
+  .nvp-rev-text h2 { font-size: 24px !important; }
+  .nvp-rev-text p { font-size: 15px; }
+  .nvp-rev-actions { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; }
+  .nvp-rev-write { min-height: 46px; padding: 8px 20px; font-size: 17px; flex: 1 1 auto; }
+  .nvp-rev-all { font-size: 15px; flex: 0 0 auto; }
+  .nvp-rev-trust { grid-template-columns: repeat(2, 1fr); row-gap: 8px; margin-top: 12px !important; padding-top: 10px !important; }
+  .nvp-rev-trust li { justify-content: flex-start; font-size: 14px; gap: 8px; }
+  .nvp-rev-trust li:nth-child(odd) { border-left: 0; }
+  .nvp-rev-trust svg { width: 22px; height: 22px; flex-basis: 22px; }
+}
+@media (max-width: 360px) {
+  .nvp-rev-logo img { height: 44px; max-width: 120px; }
+  .nvp-rev-text h2 { font-size: 21px !important; }
+  .nvp-rev-write { font-size: 15px; padding: 8px 14px; }
+  .nvp-rev-all { font-size: 14px; }
+  .nvp-rev-trust li { font-size: 13px; padding: 4px 6px; }
+}
+/* Mobiel: alles binnen de kaart houden */
+.nvp-rev-text { min-width: 0; }
+.nvp-rev-text h2, .nvp-rev-text p { overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .nvp-rev { padding: 16px 14px 10px; }
+  .nvp-rev-top { grid-template-columns: auto minmax(0, 1fr); gap: 12px 12px; }
+  .nvp-rev-logo { padding-right: 12px; border-right-width: 2px; }
+  .nvp-rev-logo img { height: 42px; max-width: 118px; }
+  .nvp-rev-text h2 { font-size: 20px !important; margin-bottom: 3px !important; }
+  .nvp-rev-text p { font-size: 14px; line-height: 1.3; }
+  .nvp-rev-actions { gap: 8px; }
+  .nvp-rev-write { min-width: 0; min-height: 44px; padding: 8px 14px; font-size: 16px; gap: 8px; }
+  .nvp-rev-write svg { width: 20px; height: 20px; }
+  .nvp-rev-all { font-size: 14px; padding: 6px 4px; white-space: nowrap; gap: 5px; }
+  .nvp-rev-all svg { width: 18px; height: 18px; }
+}
+@media (max-width: 360px) {
+  .nvp-rev-logo img { height: 36px; max-width: 100px; }
+  .nvp-rev-text h2 { font-size: 18px !important; }
+  .nvp-rev-text p { font-size: 13px; }
+  .nvp-rev-write { font-size: 15px; padding: 8px 10px; }
+  .nvp-rev-all { font-size: 13px; }
+}
+@media (max-width: 360px) {
+  .nvp-rev-write { white-space: nowrap; font-size: 14px; padding: 8px 10px; gap: 6px; }
+  .nvp-rev-write svg { width: 17px; height: 17px; }
+  .nvp-rev-all { font-size: 12.5px; }
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+  .nvp-rev { padding: 18px 20px 12px; }
+  .nvp-rev-top { gap: 18px; }
+  .nvp-rev-logo { padding-right: 18px; }
+  .nvp-rev-logo img { height: 56px; max-width: 170px; }
+  .nvp-rev-text h2 { font-size: 26px !important; }
+  .nvp-rev-text p { font-size: 16px; }
+  .nvp-rev-write { font-size: 17px; min-height: 46px; padding: 8px 18px; }
+  .nvp-rev-all { font-size: 15px; }
+  .nvp-rev-trust li { font-size: 14px; gap: 7px; }
+  .nvp-rev-trust svg { width: 22px; height: 22px; flex-basis: 22px; }
+}

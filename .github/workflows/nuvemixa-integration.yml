@@ -1,0 +1,28 @@
+name: NUVEMIXA local acceptance
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ci-test-key-not-for-production
+      NUVEMIXA_COOKIE_SECURE: "false"
+      NUVEMIXA_ENV: local
+      NUVEMIXA_STORE_DB: /tmp/nuvemixa-ci/store.sqlite3
+      NUVEMIXA_CUSTOMER_DB: /tmp/nuvemixa-ci/customers.sqlite3
+      NUVEMIXA_REVIEWS_DB: /tmp/nuvemixa-ci/reviews.sqlite3
+      NUVEMIXA_SSO_USED_DB: /tmp/nuvemixa-ci/sso.sqlite3
+      NUVEMIXA_ADMIN_DB: /tmp/nuvemixa-ci/store.sqlite3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.lock pytest==9.1.1
+      - run: mkdir -p /tmp/nuvemixa-ci
+      - run: python -m pytest tests -q -p no:cacheprovider
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node tools/test_phone_layout.cjs

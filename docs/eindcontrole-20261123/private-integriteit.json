@@ -1,0 +1,14 @@
+[
+  {
+    "path": "nuvemixa_customers.sqlite3",
+    "unchanged": true
+  },
+  {
+    "path": ".nv_reviews_sso_secret",
+    "unchanged": true
+  },
+  {
+    "path": "nv_reviews_sso_used.sqlite3",
+    "unchanged": true
+  }
+]

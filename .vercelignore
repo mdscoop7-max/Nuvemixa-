@@ -1,0 +1,13 @@
+.git
+.venv*
+.repair-*
+instance
+herstelpunten
+**/*.sqlite3
+**/*.sqlite3-*
+**/*.db
+**/*.log
+.env*
+.nv_reviews_sso_secret
+docs/eindcontrole-*
+static/*.bin

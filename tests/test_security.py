@@ -68,11 +68,13 @@ def test_checkout_does_not_store_personal_data_in_signed_cookie(monkeypatch):
         "_csrf_token": token,
         "first_name": "Test", "last_name": "Shopper", "email": "test@example.com",
         "address_1": "Example 1", "postcode": "1234 AB", "city": "Leiden",
-        "country": "NL", "checkout_consent": "yes",
+        "country": "NL", "checkout_consent": "yes", "idempotency":"security-idempotency-key",
     })
-    assert result.status_code == 200
+    assert result.status_code == 303
     with client.session_transaction() as saved:
         assert "trendmix_test_checkout" not in saved
+        for private in ("first_name","last_name","email","address_1","postcode","city"):
+            assert private not in saved
 
 
 def test_security_headers_and_request_size_limit(monkeypatch):

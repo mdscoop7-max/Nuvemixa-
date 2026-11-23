@@ -1,0 +1,56 @@
+{
+  "/lifestyle-sport/yogamat": [
+    {
+      "product_url": "/lifestyle-sport/weerstandsbandenset",
+      "reason_nl": "Een apart trainingsaccessoire voor een gevarieerde sportroutine; productspecificaties nog te controleren.",
+      "reason_en": "A separate training accessory for a varied exercise routine; product specifications still need checking.",
+      "compatible": false
+    },
+    {
+      "product_url": "/lifestyle-sport/foamroller",
+      "reason_nl": "Een aanvullend sportaccessoire; geen medische of compatibiliteitsclaim.",
+      "reason_en": "A complementary exercise accessory; no medical or compatibility claim.",
+      "compatible": false
+    },
+    {
+      "product_url": "/lifestyle-sport/geisoleerde-sportdrinkfles",
+      "reason_nl": "Een drinkfles voor onderweg naar je training; definitieve eigenschappen nog onbevestigd.",
+      "reason_en": "A bottle for travelling to your workout; final properties remain unconfirmed.",
+      "compatible": false
+    },
+    {
+      "product_url": "/lifestyle-sport/sporttas",
+      "reason_nl": "Een tas voor sportbenodigdheden. Of je mat erin past is niet bevestigd.",
+      "reason_en": "A bag for exercise essentials. Fit for your mat is not confirmed.",
+      "compatible": false
+    }
+  ],
+  "/home-living/opvouwbare-laptoptafel": [
+    {
+      "product_url": "/home-living/bureau-organizer",
+      "reason_nl": "Voor het apart ordenen van kleine werkbenodigdheden. Afmetingen zijn nog onbevestigd.",
+      "reason_en": "For separately organising small work items. Dimensions remain unconfirmed.",
+      "compatible": false
+    },
+    {
+      "product_url": "/home-living/kabelorganizer",
+      "reason_nl": "Voor het ordenen van kabels naast je werkplek; geen bevestigde pasvorm.",
+      "reason_en": "For organising cables alongside your workspace; fit is not confirmed.",
+      "compatible": false
+    }
+  ],
+  "/lifestyle-sport/reisorganizerset": [
+    {
+      "product_url": "/lifestyle-sport/digitale-bagageweegschaal",
+      "reason_nl": "Om bagage afzonderlijk te wegen vóór vertrek; geen bevestigde meetnauwkeurigheid.",
+      "reason_en": "For separately weighing luggage before travel; measurement accuracy is not confirmed.",
+      "compatible": false
+    },
+    {
+      "product_url": "/lifestyle-sport/opvouwbare-waterfles",
+      "reason_nl": "Een los reisaccessoire; eigenschappen nog te controleren.",
+      "reason_en": "A separate travel accessory; properties still need checking.",
+      "compatible": false
+    }
+  ]
+}

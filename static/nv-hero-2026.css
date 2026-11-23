@@ -1,0 +1,153 @@
+/* NUVEMIXA hero layout: 2.5:1, matching the approved Aanbiedingen artwork.
+   Mobile keeps the approved 5:2 frame; desktop uses the full width at 400px.
+   Both languages preserve embedded text and
+   buttons must remain visible: contain is intentional; do not replace with cover.
+   Original image files remain unchanged. */
+.tm-desktop-hero-copy { display: none; }
+
+main .tm-new-hero,
+main .tm-offers-hero,
+main .tm-shop-hero {
+  display: block;
+  position: relative;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: 5 / 2;
+  margin: 16px auto 26px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #0b172c;
+  line-height: 0;
+}
+main .tm-new-hero > a {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+main .tm-new-hero img,
+main .tm-offers-hero > img,
+main .tm-shop-hero > img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  /* Offers and legacy shop markup contain an inline height:auto. */
+  height: 100% !important;
+  max-width: 100%;
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 0 !important;
+}
+/* Photographic outpainting fills the extra width. The unchanged NL/EN
+   source image stays on top in contain mode, retaining every original
+   text pixel, logo and button. Backgrounds have no flat side panels. */
+main .tm-new-hero:has(img[src*="smart-home"]) { background-image: url("/static/images/hero/smart-home-wide-20261123.webp"); }
+main .tm-new-hero:has(img[src*="beauty-care"]) { background-image: url("/static/images/hero/beauty-care-wide-20261123.webp"); }
+main .tm-new-hero:has(img[src*="home-living"]) { background-image: url("/static/images/hero/home-living-wide-20261123.webp"); }
+main .tm-new-hero:has(img[src*="lifestyle-sport"]) { background-image: url("/static/images/hero/lifestyle-sport-wide-20261123.webp"); }
+main .tm-new-hero:has(img[src*="gadgets"]) { background-image: url("/static/images/hero/gadgets-wide-20261123.webp"); }
+main .tm-shop-hero { background-image: url("/static/images/hero/alle-producten-wide-20261123.webp"); }
+main .tm-new-hero, main .tm-shop-hero { background-size: cover; background-position: center; background-repeat: no-repeat; }
+main .tm-offers-hero { background: transparent; }
+
+/* The shop grid stays at its existing 1200px width. Its hero uses the same
+   main-container width and horizontal alignment as category/offers heroes. */
+main.legacy-main:has(.shop-page) { container-type: inline-size; }
+main.legacy-main .shop-page > .tm-shop-hero {
+  width: 100cqw;
+  max-width: none;
+  margin-left: calc((100% - 100cqw) / 2);
+  margin-right: calc((100% - 100cqw) / 2);
+}
+/* Desktop only: a single uninterrupted photograph spans the content
+   width at 400px height. Live text replaces the printed-in image on desktop;
+   all mobile image, spacing and sizing rules remain unchanged. */
+.nv-desktop-features { display: none; }
+@media (min-width: 992px) {
+  main .tm-new-hero,
+  main .tm-offers-hero,
+  main .tm-shop-hero {
+    width: 100%; max-width: none; height: 400px; aspect-ratio: auto;
+    background-size: cover; background-position: center; background-repeat: no-repeat;
+    --nv-hero-accent: #087df7; --nv-hero-ink: #fff;
+  }
+  main.legacy-main .shop-page > .tm-shop-hero {
+    width: 100cqw; max-width: none;
+    margin-left: calc((100% - 100cqw) / 2);
+    margin-right: calc((100% - 100cqw) / 2);
+  }
+  main .tm-new-hero img,
+  main .tm-offers-hero > img,
+  main .tm-shop-hero > img { display: none !important; }
+  main .tm-new-hero::before,
+  main .tm-offers-hero::before,
+  main .tm-shop-hero::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(5,18,38,.88), rgba(5,18,38,.7) 28%, rgba(5,18,38,.08) 65%, transparent 85%);
+    pointer-events: none;
+  }
+  main .tm-desktop-hero-copy {
+    display: flex; position: relative; z-index: 1; box-sizing: border-box;
+    flex-direction: column; align-items: flex-start; justify-content: center;
+    width: min(52%, 680px); height: 100%; padding: 20px clamp(22px, 3vw, 42px);
+    color: var(--nv-hero-ink); line-height: 1.25; text-align: left;
+  }
+  main .tm-desktop-brand {
+    display: block; font-weight: 900; font-size: 22px; line-height: 1.1;
+    letter-spacing: -.5px; margin-bottom: 9px;
+    background: linear-gradient(90deg, #fff 0 48%, #1979ff 48% 76%, #ff871e 89% 100%);
+    background-clip: text; -webkit-background-clip: text; color: transparent;
+  }
+  main .tm-desktop-tag {
+    display: inline-block; background: var(--nv-hero-accent); color: #fff;
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    padding: 5px 12px; border-radius: 999px; margin-bottom: 10px;
+  }
+  main .tm-desktop-hero-copy h2 {
+    color: inherit; font-size: clamp(24px, 2.2vw, 32px); font-weight: 900;
+    letter-spacing: -.5px; line-height: 1.08; margin: 0 0 10px; max-width: 100%;
+  }
+  main .tm-desktop-hero-copy p {
+    color: inherit; font-size: 13.5px; line-height: 1.45;
+    margin: 0 0 14px; max-width: 430px;
+  }
+  main .tm-desktop-cta {
+    display: inline-block; flex-shrink: 0; background: var(--nv-hero-accent);
+    color: #fff; border-radius: 10px; padding: 11px 18px;
+    font-size: 13px; font-weight: 800; line-height: 1.2;
+  }
+  main .nv-desktop-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; font-size: 10px; }
+  main .nv-desktop-categories span { background: rgba(0,0,0,.4); border-radius: 8px; padding: 5px 7px; }
+  main .nv-desktop-features {
+    display: flex; flex-wrap: wrap; gap: 7px 12px; position: absolute; z-index: 1;
+    bottom: 14px; right: 20px; left: 54%; color: #fff; font-size: 10px;
+    line-height: 1.35; background: rgba(5,20,45,.8); padding: 8px 12px; border-radius: 10px;
+  }
+  main .tm-new-hero:has(img[src*="smart-home"]) { background-image: url("/static/images/hero/smart-home-desktop-photo-20261123.webp"); --nv-hero-accent: #f5751d; }
+  main .tm-new-hero:has(img[src*="beauty-care"]) { background-image: url("/static/images/hero/beauty-care-desktop-photo-20261123.webp"); --nv-hero-accent: #ed1689; }
+  main .tm-new-hero:has(img[src*="home-living"]) { background-image: url("/static/images/hero/home-living-desktop-photo-20261123.webp"); --nv-hero-accent: #f5751d; }
+  main .tm-new-hero:has(img[src*="lifestyle-sport"]) { background-image: url("/static/images/hero/lifestyle-sport-desktop-photo-20261123.webp"); --nv-hero-accent: #087df7; }
+  main .tm-new-hero:has(img[src*="gadgets"]) { background-image: url("/static/images/hero/gadgets-desktop-photo-20261123.webp"); --nv-hero-accent: #087df7; }
+  main .tm-shop-hero { background-image: url("/static/images/hero/alle-producten-desktop-photo-20261123.webp"); --nv-hero-accent: #a47815; }
+  main .tm-offers-hero { background-image: url("/static/images/hero/aanbiedingen-desktop-photo-20261123.webp"); --nv-hero-accent: #e93447; --nv-hero-ink: #10233d; }
+  main .tm-offers-hero::before { background: linear-gradient(90deg, rgba(255,248,235,.95), rgba(255,248,235,.83) 28%, rgba(255,248,235,.08) 65%, transparent 85%); }
+  main .tm-offers-hero .tm-desktop-brand { background: none; color: #10233d; }
+}
+main .tm-new-hero > a:focus-visible,
+main a.tm-shop-hero:focus-visible {
+  outline: 3px solid #ffc55c;
+  outline-offset: -4px;
+}
+@media (max-width: 991px) {
+  main .tm-new-hero,
+  main .tm-offers-hero,
+  main .tm-shop-hero { margin-top: 12px; margin-bottom: 20px; }
+}

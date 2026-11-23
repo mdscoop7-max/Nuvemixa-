@@ -1,7 +1,7 @@
 {% from '_tm_icons.html' import tm_icon %}
 <!DOCTYPE html>
 <html lang="nl">
-<head>
+<head>{% include "_nv_platform_head.html" %}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f6f7fb">
@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='ux.css') }}">
-  <script defer src="{{ url_for('static', filename='app.js', v='20260920-3') }}"></script>
-  <script defer src="{{ url_for('static', filename='languages.js', v='20260921-1') }}"></script>
+  <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='app.js', v='20261120w') }}"></script>
+  <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='languages.js', v='20261122b') }}"></script>
   {% if product.images %}
   <meta property="og:image" content="{{ product.images[0] }}">
   {% endif %}
@@ -23,26 +23,31 @@
   <meta property="og:type" content="product">
   <meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ product.product_url }}">
   <meta name="twitter:card" content="{% if product.images %}summary_large_image{% else %}summary{% endif %}">
-  <script type="application/ld+json">
-  {{ {
+  {% set nv_offer = {
+      "@type":"Offer",
+      "url":request.url_root.rstrip("/") ~ product.product_url,
+      "price":"%.2f"|format(product.price),
+      "priceCurrency":"EUR",
+      "itemCondition":"https://schema.org/NewCondition"
+  } %}
+  {% if product.stock_status == "in_stock" %}{% set nv_tmp = nv_offer.update({"availability":"https://schema.org/InStock"}) %}
+  {% elif product.stock_status == "out_of_stock" %}{% set nv_tmp = nv_offer.update({"availability":"https://schema.org/OutOfStock"}) %}{% endif %}
+  {% set nv_images = [] %}{% for nv_im in (product.images or []) %}{% set nv_tmp = nv_images.append((request.url_root.rstrip("/") ~ nv_im) if nv_im.startswith("/") else nv_im) %}{% endfor %}
+  {% set nv_schema = {
     "@context":"https://schema.org",
     "@type":"Product",
     "name":product.name,
     "description":product.description,
     "category":category_name,
-    "image":product.images,
-    "sku":product.id,
-    "brand":({"@type":"Brand","name":product.brand} if product.brand else none),
-    "offers":({
-      "@type":"Offer",
-      "url":request.url_root.rstrip("/") ~ product.product_url,
-      "price":"%.2f"|format(product.price),
-      "priceCurrency":"EUR",
-      "availability":("https://schema.org/InStock" if product.stock_status == "in_stock" else "https://schema.org/OutOfStock")
-    } if product.stock_status in ["in_stock","out_of_stock"] else none)
-  }|tojson }}
+    "image":nv_images,
+    "sku":product.id
+  } %}
+  {% if product.brand %}{% set nv_tmp = nv_schema.update({"brand":{"@type":"Brand","name":product.brand}}) %}{% endif %}
+  {% if product.price and product.price > 0 %}{% set nv_tmp = nv_schema.update({"offers":nv_offer}) %}{% endif %}
+  <script nonce="{{ g.nv_nonce }}" type="application/ld+json">
+  {{ nv_schema|tojson }}
   </script>
-  <script type="application/ld+json">
+  <script nonce="{{ g.nv_nonce }}" type="application/ld+json">
   {{ {
     "@context":"https://schema.org",
     "@type":"BreadcrumbList",
@@ -53,7 +58,15 @@
     ]
   }|tojson }}
   </script>
-<link rel="stylesheet" href="{{ url_for('static',filename='trendmix-ui-2026.css',v='20261027-global-bright3') }}">
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-footer-unified.css', v='20261110-footer-allpages') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='nuvemixa-refresh.css', v='20261110-footer-allpages') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='trendmix-ui-2026.css', v='20261110-flitsfix') }}">
+{% raw %}<!-- NUVEMIXA 2026-11-20e head -->
+
+<style>@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}</style>
+
+<script nonce="{{ g.nv_nonce }}" type="speculationrules">{"prefetch":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/winkelwagen*","/afrekenen*","/account*","/admin*","/api/*","/dashboard*","/control*","/wishlist*","/*logout*"]}}]},"eagerness":"moderate"}],"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/winkelwagen*","/afrekenen*","/account*","/admin*","/api/*","/dashboard*","/control*","/wishlist*","/*logout*","/*\\?*"]}}]},"eagerness":"conservative"}]}</script>{% endraw %}
+<link rel="stylesheet" href="/static/nv-polish-20261122.css?v=20261122c">
 </head>
 <body>
 {% include "_header.html" %}
@@ -101,7 +114,6 @@
       </div>
 
       <p class="detail-description" data-tm-product-nl="{{ product.short_description }}" data-tm-product-en="{{ product.en_short_description }}">{{ product.short_description }}</p>
-      <p class="detail-test-note">Demo-product en testprijs. Definitieve productfoto, prijs, voorraad en specificaties worden vóór commerciële livegang met de leverancier bevestigd.</p><div class="detail-confidence"><span data-i18n="clearProductInfo">{{ tm_icon('check') }} Duidelijke productinformatie</span><span data-i18n="testCollection">Testcollectie</span><span data-i18n="returnPolicy">Retourvoorwaarden vóór livegang</span></div>
 
       <div class="product-availability">
         <strong class="{% if product.stock_status == 'in_stock' %}stock-good{% elif product.stock_status == 'out_of_stock' %}stock-bad{% else %}stock-unknown{% endif %}">
@@ -118,7 +130,7 @@
       </ul>
       {% endif %}
 
-      <div class="detail-actions">
+      {% if product.demo %}<p class="nv-demo-label">{{ nv_tr("Voorbeeldproduct — geen bevestigd verkoopartikel","Demonstration product — not a verified sale item") }}</p>{% endif %}<div class="detail-actions">
         <form action="/winkelwagen" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="add">
           <input type="hidden" name="product_id" value="{{ product.id }}">
@@ -186,5 +198,6 @@
 </main>
 
 {% include "_footer.html" %}
+<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-polish-20261122.js?v=20261122c"></script>
 </body>
 </html>

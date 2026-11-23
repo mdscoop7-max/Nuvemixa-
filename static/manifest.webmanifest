@@ -1,0 +1,30 @@
+{
+  "name": "NUVEMIXA",
+  "short_name": "NUVEMIXA",
+  "id": "/",
+  "orientation": "any",
+  "categories": [
+    "shopping"
+  ],
+  "description": "NUVEMIXA — slimme gadgets en meer. Lokale voorbeeldwebshop; echte verkoop nog geblokkeerd.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#063cbb",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "/static/nuvemixa-app-192-20261123.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/nuvemixa-app-512-20261123.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "url": "http://127.0.0.1:5001/orders/SIM-7CA9D9FB677A89C8B46D",
+  "main": "Simulatiebestelling SIM-7CA9D9FB677A89C8B46D\n\nUitsluitend lokaal getest. Geen geld overgemaakt of product besteld.\n\nStatus: paid\n\nYogamat × 1 — €39,95\n\nProducten\n€39,95\nKorting\n€0,00\nVerzending (simulatie)\n€0,00\nInbegrepen btw (simulatie)\n€6,93\nDefinitief simulatietotaal\n€39,95\nGesimuleerd terugbetaald\n€0,00\n\nDe bevestiging staat uitsluitend in de lokale testpostbus. Dit is geen echte factuur.\n\nOvereenkomst herroepen · Mijn account",
+  "mode": "fictitious local simulation, no external I/O"
+}

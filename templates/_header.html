@@ -2,7 +2,7 @@
 <div class="tm-usp-bar" role="note" aria-label="Belangrijkste voordelen">
   <div class="shell tm-usp-inner">{% include '_tm_topbar_language.html' %}
     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm12 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg> <span data-i18n="uspDelivery">Levering volgens productinformatie</span></span>
-    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-5"/></svg> <span data-i18n="uspCheckout">Checkout in testfase</span></span>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-5"/></svg> <span data-i18n="uspCheckout">Bestellen binnenkort mogelijk</span></span>
     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg> <span data-i18n="uspReturns">Retourinformatie duidelijk vermeld</span></span>
     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M17 7c-1-2-3-3-5-3-3 0-5 2-5 4 0 6 10 3 10 8 0 2-2 4-5 4-2 0-4-1-5-3"/></svg> <span data-i18n="uspPrices">Duidelijke prijzen</span></span>
   </div>
@@ -10,7 +10,7 @@
 <header class="site-header">
   <div class="shell header-main">
     <button class="menu-toggle" type="button" data-tm-menu-trigger aria-label="Menu openen" aria-expanded="false" aria-controls="tmMobileDrawer"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <a class="brand tm-brand" href="/" aria-label="NUVEMIXA home"><img class="nv-brand-image" src="{{ url_for('static', filename='nuvemixa-logo.png', v='20261105-approved') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
+    <a class="brand tm-brand" href="/" aria-label="NUVEMIXA home"><img class="nv-brand-image" src="{{ url_for('static', filename='nuvemixa-logo-test.png', v='20261110-logo-test') }}" alt="NUVEMIXA" onerror="this.onerror=null;this.src='/static/logo.svg'"></a>
     <form class="search-bar" action="/" method="get" role="search">
       <svg class="tm-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
       <input type="search" name="q" value="{{ search_query|default('') }}" placeholder="Zoek naar producten, merken of specificaties" data-i18n-placeholder="searchProducts" aria-label="Zoek producten">
@@ -30,3 +30,4 @@
     </div>
   </nav>
 </header>
+{% include "_nv_campaign_banner.html" %}

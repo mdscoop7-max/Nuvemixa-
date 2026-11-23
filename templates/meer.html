@@ -1,0 +1,61 @@
+{% extends "base.html" %}{% block title %}Meer | NUVEMIXA{% endblock %}{% block description %}Bekijk alle handige onderdelen van NUVEMIXA: je account, favorieten, bestellen en bezorgen, klantenservice en meer informatie over onze webshop.{% endblock %}{% block content %}
+<style>
+.nv-more2{max-width:780px;margin:0 auto;padding:16px 14px 28px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#0f1b33}
+.nv-more2 *{box-sizing:border-box}
+.nv-more2 .nvm-hero{border-radius:24px;padding:20px 18px 18px;color:#fff;background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#7c3aed 100%);box-shadow:0 12px 28px -12px rgba(37,99,235,.55);position:relative;overflow:hidden}
+.nv-more2 .nvm-hero:after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none}
+.nv-more2 .nvm-hero:before{content:"";position:absolute;right:40px;bottom:-60px;width:110px;height:110px;border-radius:50%;background:rgba(255,186,81,.25);pointer-events:none}
+.nv-more2 h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.5px;color:#fff}
+.nv-more2 .nvm-hero p{margin:4px 0 0;font-size:14px;opacity:.92;color:#fff}
+.nv-more2 .nvm-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;position:relative;z-index:1}
+.nv-more2 .nvm-chip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 10px;font-size:11.5px;font-weight:600;color:#fff}
+.nv-more2 button.nvm-chip{margin-left:auto;background:#fff;color:#1d4ed8;cursor:pointer;font:inherit;font-size:11.5px;font-weight:700}
+.nv-more2 button.nvm-chip b{opacity:.45;font-weight:700}.nv-more2 button.nvm-chip b.on{opacity:1}
+.nv-more2 h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin:20px 4px 10px;font-weight:700}
+.nv-more2 .nvm-list{display:flex;flex-direction:column;gap:10px}
+.nv-more2 .nvm-row{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #e4eaf5;border-radius:18px;padding:11px 12px;box-shadow:0 4px 14px -10px rgba(15,27,51,.25);position:relative;overflow:hidden;text-decoration:none!important;color:#0f1b33!important;transition:transform .12s ease,box-shadow .12s ease}
+.nv-more2 .nvm-row:active{transform:scale(.985)}
+.nv-more2 .nvm-row:focus-visible{outline:3px solid #ffba51;outline-offset:2px}
+.nv-more2 .nvm-row:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--c)}
+.nv-more2 .nvm-ico{flex:0 0 44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:0 6px 14px -6px var(--c)}
+.nv-more2 .nvm-ico svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nv-more2 .nvm-t{flex:1;min-width:0}.nv-more2 .nvm-t strong{display:block;font-size:15.5px;font-weight:700;line-height:1.25}.nv-more2 .nvm-t small{display:block;font-size:12.5px;color:#64748b;margin-top:1px;line-height:1.3}
+.nv-more2 .nvm-go{flex:0 0 28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#eef2fb;background:color-mix(in srgb,var(--c) 12%,#fff);color:var(--c);font-weight:800;font-size:17px}
+@media(min-width:760px){.nv-more2 .nvm-list{display:grid;grid-template-columns:1fr 1fr}}
+</style>
+<section class="page-section nv-more2">
+  <div class="nvm-hero">
+    <h1 data-nv-nl="Meer" data-nv-en="More">Meer</h1>
+    <p data-nv-nl="Alles over je account, bestellen en service." data-nv-en="Everything about your account, ordering and service.">Alles over je account, bestellen en service.</p>
+    <div class="nvm-chips">
+      <span class="nvm-chip">🔒 <span data-nv-nl="Veilig winkelen" data-nv-en="Safe shopping">Veilig winkelen</span></span>
+      <span class="nvm-chip">🇪🇺 <span data-nv-nl="Alleen EU" data-nv-en="EU only">Alleen EU</span></span>
+      <button type="button" class="nvm-chip" id="nvm-lang" aria-label="Taal / Language"><b data-l="nl">NL</b> | <b data-l="en">EN</b></button>
+    </div>
+  </div>
+  {% set groups = [
+    ('Mijn NUVEMIXA','My NUVEMIXA',[
+      ('/account','#2563eb','#60a5fa','<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>','Mijn account','My account','Inloggen en je gegevens','Sign in and your details'),
+      ('/wishlist','#e11d48','#fb7185','<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>','Mijn favorieten','My favourites','Bewaarde producten','Saved products')]),
+    ('Bestellen & service','Ordering & service',[
+      ('/bestellen','#ea580c','#fb923c','<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>','Bestellen & levering','Ordering & delivery','Levertijd en verzending','Delivery times and shipping'),
+      ('/retouren','#7c3aed','#a78bfa','<path d="M4 4v6h6"/><path d="M4.5 10A8 8 0 1 1 6 17.3"/>','Retourneren','Returns','14 dagen bedenktijd','14-day cooling-off period'),
+      ('/faq','#0d9488','#2dd4bf','<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14"/><path d="M12 17.5h.01"/>','Hulp & FAQ','Help & FAQ','Antwoord op veelgestelde vragen','Answers to common questions'),
+      ('/contact','#16a34a','#4ade80','<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>','Contact','Contact','Stel je vraag aan ons team','Ask our team a question'),
+      ('/over-trendmix','#d97706','#fbbf24','<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/>','Over NUVEMIXA','About NUVEMIXA','Wie we zijn en wat we doen','Who we are and what we do')])
+  ] %}
+  {% for gnl, gen, items in groups %}
+  <h2 data-nv-nl="{{ gnl }}" data-nv-en="{{ gen }}">{{ gnl }}</h2>
+  <div class="nvm-list">
+    {% for href, c, c2, svg, nl, en, snl, sen in items %}
+    <a class="nvm-row" href="{{ href }}" style="--c:{{ c }};--c2:{{ c2 }}"><span class="nvm-ico"><svg viewBox="0 0 24 24" aria-hidden="true">{{ svg|safe }}</svg></span><span class="nvm-t"><strong data-nv-nl="{{ nl }}" data-nv-en="{{ en }}">{{ nl }}</strong><small data-nv-nl="{{ snl }}" data-nv-en="{{ sen }}">{{ snl }}</small></span><span class="nvm-go" aria-hidden="true">›</span></a>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+<script nonce="{{ g.nv_nonce }}">
+(function(){var b=document.getElementById('nvm-lang');if(!b)return;function cur(){try{return localStorage.getItem('trendmix-language')==='en'?'en':'nl'}catch(e){return'nl'}}
+function mark(){var l=cur();b.querySelectorAll('b').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-l')===l)})}mark();
+b.addEventListener('click',function(){var n=cur()==='en'?'nl':'en';try{localStorage.setItem('trendmix-language',n)}catch(e){}document.documentElement.setAttribute('lang',n);location.reload()});})();
+</script>
+{% endblock %}

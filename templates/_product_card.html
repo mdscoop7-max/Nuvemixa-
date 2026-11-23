@@ -9,7 +9,7 @@
     <div class="product-card-meta"><span class="product-category" data-category-name="{{ product.category_slug }}">{{ product.category_name }}</span><span class="product-card-stock" data-i18n="testCollection">Testcollectie</span></div>
     <h3><a href="{{ product.product_url }}" data-tm-product-nl="{{ product.name }}" data-tm-product-en="{{ product.en_name }}">{{ product.name }}</a></h3>
     <div class="product-bottom">
-      <strong>{{ format_eur(product.price) }}</strong>
+      {% if product.demo %}<span class="nv-demo-label">{{ nv_tr("Voorbeeldproduct","Demonstration product") }}</span>{% endif %}<strong>{{ format_eur(product.price) }}</strong>
       <form class="card-cart-form" action="/winkelwagen" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="product_id" value="{{ product.id }}">

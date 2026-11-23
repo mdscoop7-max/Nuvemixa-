@@ -1,0 +1,53 @@
+/* Functional screens only. Approved hero rules and artwork are left intact. */
+.iteminfo .add,.product-body .card-add,.detail-actions .btn{font-size:14px!important;min-height:44px!important;line-height:1.4!important}.site-footer a{font-size:14px!important;line-height:1.6!important}.tm-dock-label{font-size:12px!important}.iteminfo h3 a,.product-body h3 a{line-height:1.45!important}
+.nv-workflow{max-width:1100px;margin:24px auto;padding:24px;background:#fff;color:#142c4a;border:1px solid #d8e3ee;border-radius:18px;overflow-wrap:anywhere}
+.nv-workflow p,.nv-workflow label,.nv-workflow li,.nv-workflow dd,.nv-workflow dt{font-size:16px!important;line-height:1.6}.nv-workflow h1{font-size:clamp(26px,4vw,38px)!important}.nv-workflow h2{font-size:24px}.nv-workflow form{margin:16px 0}.nv-workflow label{display:block;margin:12px 0;font-weight:600}.nv-workflow input:not([type=hidden]):not([type=checkbox]),.nv-workflow select,.nv-workflow textarea{display:block;width:100%;max-width:100%;border:1px solid #6a7e94;border-radius:8px;padding:12px;background:#fff;color:#142c4a;font:inherit;font-size:16px!important;min-height:46px}.nv-workflow button,.nv-workflow .nv-button{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:12px 18px;background:#064eac;color:#fff!important;border:0;border-radius:9px;font:700 16px/1.4 system-ui;cursor:pointer;text-decoration:none}.nv-workflow a{color:#064eac;text-underline-offset:3px}.nv-workflow :focus-visible,.nv-promo-banner:focus-visible{outline:3px solid #b25800!important;outline-offset:4px!important}.nv-check{display:flex!important;align-items:flex-start;gap:12px}.nv-check input{width:24px;height:24px;flex:none}.nv-actions{display:flex;flex-wrap:wrap;gap:10px}.nv-actions form{margin:0}.nv-cart-item{display:flex;align-items:center;gap:20px;padding:20px 0;border-bottom:1px solid #d8e3ee}.nv-cart-item>img{width:100px;height:100px;object-fit:contain}.nv-total{font-weight:800;font-size:22px!important}.nv-two-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px}.nv-notice{padding:16px;background:#eaf2ff;border-left:5px solid #064eac;border-radius:6px}.nv-workflow details{padding:14px 0;border-bottom:1px solid #d8e3ee}.nv-workflow summary{cursor:pointer;min-height:44px;font-size:17px;font-weight:700}.nv-workflow pre{white-space:pre-wrap;overflow-wrap:anywhere;font:16px/1.6 system-ui}.nv-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.nv-card-grid img{max-width:100%;object-fit:contain}.nv-promo-banner{display:flex;align-items:center;gap:22px;margin:16px auto;padding:18px 24px;border-radius:20px;background:linear-gradient(105deg,#3c05ab,#8a00b7 70%,#b000bd);color:#fff!important;text-decoration:none;line-height:1.45;box-sizing:border-box}.nv-promo-banner strong{display:block;font-size:clamp(22px,2.4vw,34px);color:#fff}.nv-promo-banner small{display:block;font-size:14px;color:#fff}.nv-promo-banner span>span{display:block;font-size:17px}.nv-promo-gift{display:block;width:140px;height:110px;flex:none;background:url('/static/nuvemixa-welkomst-referentie.png') -16px -97px/724px 241px no-repeat;color:transparent;font-size:0}.nv-promo-review{max-width:35%;border:1px solid #fff;padding:14px;border-radius:16px;font-size:16px}.nv-demo-label{font-size:14px;line-height:1.4;background:#eef4ff;color:#16395d;border-radius:6px;padding:5px 8px;display:inline-block}.nv-platform-links{font-size:16px;padding:16px;display:flex;flex-wrap:wrap;gap:16px}.nv-workflow dl{display:grid;grid-template-columns:1fr auto;gap:10px}.nv-workflow dd{margin:0;font-weight:700}
+@media(max-width:760px){.nv-workflow{padding:18px;margin:16px 0}.nv-two-columns{grid-template-columns:1fr}.nv-cart-item{gap:12px}.nv-cart-item>img{width:70px;height:70px}.nv-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nv-promo-banner{padding:14px;gap:12px;flex-wrap:wrap}.nv-promo-gift{display:none}.nv-promo-review{max-width:100%;font-size:14px}}
+/* Approved compact campaign strip; public rendering requires an active campaign. */
+.nv-promo-banner{gap:18px;margin:12px auto;padding:14px 20px;border-radius:16px;min-height:104px;background:linear-gradient(105deg,#24105d,#441078 58%,#a009b5)}
+.nv-promo-gift{width:90px;height:64px;background-position:-14px -64px;background-size:474px 158px}
+.nv-promo-copy{flex:1;min-width:0}
+.nv-promo-copy strong{font-size:clamp(21px,1.8vw,28px);line-height:1.2}
+.nv-promo-copy>span{font-size:15px;line-height:1.4;margin-top:5px}
+.nv-promo-banner small{font-size:13px;line-height:1.4;color:#eee3ff}
+.nv-promo-banner .nv-promo-cta{display:inline-flex;align-items:center;justify-content:center;gap:14px;flex:none;min-height:48px;padding:12px 20px;border-radius:32px;background:#ffe000;color:#141728;font-size:19px;font-weight:800;white-space:nowrap}
+.nv-promo-cta span{font-size:27px;line-height:1}
+.nv-promo-review{display:flex;align-items:center;gap:12px;width:29%;max-width:340px;padding:8px 0 8px 18px;border:0;border-left:1px solid #b88dd6;border-radius:0;font-size:15px;line-height:1.3}
+.nv-promo-review svg{width:32px;height:32px;flex:none;color:#ffe000}
+.nv-promo-review>span{font-size:14px}
+.nv-promo-review b{display:block;color:#fff;font-size:15px;margin-bottom:3px}
+.nv-promo-review>span>span{font-size:14px}
+@media(min-width:761px) and (max-width:1100px){.nv-promo-banner{flex-wrap:wrap}.nv-promo-copy{flex-basis:calc(100% - 120px)}.nv-promo-review{width:auto;max-width:none;flex:1}}
+@media(max-width:760px){.nv-promo-banner{min-height:0;padding:14px;gap:12px}.nv-promo-copy{flex-basis:100%}.nv-promo-copy strong{font-size:22px}.nv-promo-banner .nv-promo-cta{font-size:17px;min-height:44px;padding:10px 18px}.nv-promo-review{max-width:100%;width:100%;padding:10px 0 0;border:0;border-top:1px solid #b88dd6}.nv-promo-review>span{flex:1}}
+/* Screen/touch classification keeps phones mobile beyond width-only breakpoints. */
+html.nv-phone body{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
+html.nv-phone .tm-dock{display:grid!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;left:max(12px,env(safe-area-inset-left,0px))!important;right:max(12px,env(safe-area-inset-right,0px))!important}
+html.nv-phone .tm-mobile-drawer{max-height:100dvh}
+html.nv-phone .tm-top-menu-trigger{display:none!important}
+html.nv-phone .tm-drawer-panel{max-height:100dvh;overflow-y:auto}
+html.nv-phone .nv-two-columns{grid-template-columns:1fr}
+html.nv-phone main :is(.tm-new-hero,.tm-offers-hero,.tm-shop-hero){height:auto!important;aspect-ratio:5/2!important;min-height:0!important;max-height:none!important}
+html.nv-phone main .tm-new-hero:has(img[src*="smart-home"]){background-image:url('/static/images/hero/smart-home-wide-20261123.webp')!important}
+html.nv-phone main .tm-new-hero:has(img[src*="beauty-care"]){background-image:url('/static/images/hero/beauty-care-wide-20261123.webp')!important}
+html.nv-phone main .tm-new-hero:has(img[src*="home-living"]){background-image:url('/static/images/hero/home-living-wide-20261123.webp')!important}
+html.nv-phone main .tm-new-hero:has(img[src*="lifestyle-sport"]){background-image:url('/static/images/hero/lifestyle-sport-wide-20261123.webp')!important}
+html.nv-phone main .tm-new-hero:has(img[src*="gadgets"]){background-image:url('/static/images/hero/gadgets-wide-20261123.webp')!important}
+html.nv-phone main .tm-shop-hero{background-image:url('/static/images/hero/alle-producten-wide-20261123.webp')!important}
+html.nv-phone main .tm-offers-hero{background:transparent!important}
+html.nv-phone main :is(.tm-new-hero img,.tm-offers-hero>img,.tm-shop-hero>img){display:block!important;width:100%!important;height:100%!important;object-fit:contain!important}
+html.nv-phone main :is(.tm-desktop-hero-copy,.nv-desktop-features,.tm-new-hero::before,.tm-offers-hero::before,.tm-shop-hero::before){display:none!important}
+/* Legacy fallback before JS classifies the phone. */
+@media(hover:none) and (pointer:coarse) and (max-height:540px) and (max-width:1100px){body{padding-bottom:96px!important}.tm-dock{display:grid!important;position:fixed!important;bottom:10px!important;left:12px!important;right:12px!important;grid-template-columns:repeat(5,minmax(0,1fr));z-index:1200;background:#fff;border:1px solid #d2dfef;border-radius:22px;padding:8px}.tm-dock a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px}.tm-dock svg{width:24px;height:24px}.tm-mobile-drawer{max-width:min(90vw,430px)}.main-nav{display:none!important}.tm-menu-compact .tm-category-menu-links{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))}.header.wrap,.header-main{flex-wrap:wrap!important}.header .search,.header-main .search-bar{order:5;width:100%!important;flex-basis:100%!important}.nv-promo-banner{padding:12px}.nv-promo-review{display:none}.nv-two-columns{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media(hover:none) and (pointer:coarse) and (max-height:540px) and (max-width:1100px){
+ body main :is(.tm-new-hero,.tm-offers-hero,.tm-shop-hero){height:auto!important;aspect-ratio:5/2!important;min-height:0!important;max-height:none!important}
+ body main .tm-new-hero img,body main .tm-offers-hero>img,body main .tm-shop-hero>img{display:block!important;object-fit:contain!important;height:100%!important}
+ body main .tm-desktop-hero-copy,body main .nv-desktop-features,body main .tm-new-hero::before,body main .tm-offers-hero::before,body main .tm-shop-hero::before{display:none!important}
+ body main .tm-new-hero:has(img[src*="smart-home"]){background-image:url('/static/images/hero/smart-home-wide-20261123.webp')!important}
+ body main .tm-new-hero:has(img[src*="beauty-care"]){background-image:url('/static/images/hero/beauty-care-wide-20261123.webp')!important}
+ body main .tm-new-hero:has(img[src*="home-living"]){background-image:url('/static/images/hero/home-living-wide-20261123.webp')!important}
+ body main .tm-new-hero:has(img[src*="lifestyle-sport"]){background-image:url('/static/images/hero/lifestyle-sport-wide-20261123.webp')!important}
+ body main .tm-new-hero:has(img[src*="gadgets"]){background-image:url('/static/images/hero/gadgets-wide-20261123.webp')!important}
+ body main .tm-shop-hero{background-image:url('/static/images/hero/alle-producten-wide-20261123.webp')!important}
+ body main .tm-offers-hero{background:transparent!important}
+}

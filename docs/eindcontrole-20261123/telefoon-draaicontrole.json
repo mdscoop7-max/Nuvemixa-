@@ -1,0 +1,670 @@
+{
+  "method": "Mocked screen/touch APIs in isolated launcher; existing browser viewport; no physical phone or installed PWA tested. Dedicated Chromium touch-emulation launch was denied (EPERM).",
+  "results": [
+    {
+      "route": "/",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/smart-home",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/beauty-care",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/home-living",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/lifestyle-sport",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/gadgets",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/shop",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.1875
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/aanbiedingen",
+      "dockVisible": true,
+      "height": 844,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 138.875,
+        "imageVisible": true,
+        "width": 347.20001220703125
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/account",
+      "dockVisible": true,
+      "height": 844,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/winkelwagen",
+      "dockVisible": true,
+      "height": 844,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 390
+    },
+    {
+      "route": "/",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/smart-home",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/beauty-care",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/home-living",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/lifestyle-sport",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/gadgets",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/shop",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7875366210938
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/aanbiedingen",
+      "dockVisible": true,
+      "height": 390,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 320.3125,
+        "imageVisible": true,
+        "width": 800.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/account",
+      "dockVisible": true,
+      "height": 390,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/winkelwagen",
+      "dockVisible": true,
+      "height": 390,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 844
+    },
+    {
+      "route": "/",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/smart-home",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/beauty-care",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/home-living",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/lifestyle-sport",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/gadgets",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/shop",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7875366210938
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/aanbiedingen",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 392.3125,
+        "imageVisible": true,
+        "width": 980.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/account",
+      "dockVisible": true,
+      "height": 430,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/winkelwagen",
+      "dockVisible": true,
+      "height": 430,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 1024
+    },
+    {
+      "route": "/",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/smart-home",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/beauty-care",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/home-living",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/lifestyle-sport",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/gadgets",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/shop",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.1875
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/aanbiedingen",
+      "dockVisible": true,
+      "height": 932,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 154.875,
+        "imageVisible": true,
+        "width": 387.2000122070313
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/account",
+      "dockVisible": true,
+      "height": 932,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/winkelwagen",
+      "dockVisible": true,
+      "height": 932,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 430
+    },
+    {
+      "route": "/",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/smart-home",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/beauty-care",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/home-living",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/lifestyle-sport",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/gadgets",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/shop",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7875366210938
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/aanbiedingen",
+      "dockVisible": true,
+      "height": 430,
+      "hero": {
+        "desktopCopyVisible": false,
+        "height": 355.51251220703125,
+        "imageVisible": true,
+        "width": 888.7999877929688
+      },
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/account",
+      "dockVisible": true,
+      "height": 430,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    },
+    {
+      "route": "/winkelwagen",
+      "dockVisible": true,
+      "height": 430,
+      "hero": null,
+      "overflow": false,
+      "phone": true,
+      "width": 932
+    }
+  ],
+  "deviceLogicCases": 7,
+  "desktop": {
+    "phone": false,
+    "heroHeight": 400,
+    "dockDisplay": "none"
+  },
+  "categoryMenuSurvivesRotation": true,
+  "escape": true,
+  "checkout": {
+    "addressField": true,
+    "columns": "763.2px",
+    "dock": "grid",
+    "overflow": false,
+    "phone": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "source": "static/nuvemixa-logo-test.png",
+  "sha256": "b6768f2fa54cbc574dff8300657d0b882888e523f80dc177b8314e3fb48ce819",
+  "owner_confirmed": true,
+  "method": "exact source pixels resized and centred; no redrawing",
+  "icons": [
+    {
+      "file": "nuvemixa-app-180-20261123.png",
+      "size": 180,
+      "source": "nuvemixa-logo-test.png"
+    },
+    {
+      "file": "nuvemixa-app-192-20261123.png",
+      "size": 192,
+      "source": "nuvemixa-logo-test.png"
+    },
+    {
+      "file": "nuvemixa-app-512-20261123.png",
+      "size": 512,
+      "source": "nuvemixa-logo-test.png"
+    }
+  ]
+}

@@ -1,21 +1,14 @@
-name: TrendMix regressietests
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+# Compatibility filename retained; the complete suite is defined in nuvemixa-integration.yml.
+name: NUVEMIXA source syntax
+on: [push, pull_request]
 permissions:
   contents: read
 jobs:
-  tests:
+  syntax:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: pip
-      - name: Install dependencies
-        run: python -m pip install -r requirements.txt pytest
-      - name: Run Flask regression tests
-        run: python -m pytest -q
+          python-version: "3.13"
+      - run: python -m compileall -q app.py nv_store.py nv_platform.py nv_presentation.py

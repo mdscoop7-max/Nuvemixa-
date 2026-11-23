@@ -1,0 +1,2162 @@
+[
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "nl",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.1875,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.1875,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "nl",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7875366210938,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7875366210938,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7875366210938,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "nl",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.1875,
+      "x": 24.012500762939453
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "nl",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "nl",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 120,
+      "width": 300,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 320,
+    "touchQuery": false,
+    "viewport": 320
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 136,
+      "width": 340,
+      "x": 10
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "touchQuery": false,
+    "viewport": 375
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.1875,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 138.875,
+      "width": 347.20001220703125,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 375,
+    "touchQuery": false,
+    "viewport": 390
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.1875,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "grid",
+    "height": 900,
+    "hero": {
+      "height": 154.875,
+      "width": 387.2000122070313,
+      "x": 14
+    },
+    "lang": "en",
+    "scrollWidth": 415,
+    "touchQuery": false,
+    "viewport": 430
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7875366210938,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 285.1125183105469,
+      "width": 712.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "touchQuery": false,
+    "viewport": 768
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7875366210938,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 390,
+    "hero": {
+      "height": 315.51251220703125,
+      "width": 788.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 829,
+    "touchQuery": false,
+    "viewport": 844
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7875366210938,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 968.7999877929688,
+      "x": 20
+    },
+    "lang": "en",
+    "scrollWidth": 1009,
+    "touchQuery": false,
+    "viewport": 1024
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.1875,
+      "x": 24.012500762939453
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1303.2000732421875,
+      "x": 24
+    },
+    "lang": "en",
+    "scrollWidth": 1351,
+    "touchQuery": false,
+    "viewport": 1366
+  },
+  {
+    "path": "/",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/smart-home",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/beauty-care",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/home-living",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/lifestyle-sport",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/gadgets",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/shop",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  },
+  {
+    "path": "/aanbiedingen",
+    "broken": [],
+    "dock": "none",
+    "height": 900,
+    "hero": {
+      "height": 400,
+      "width": 1460,
+      "x": 222.40000915527344
+    },
+    "lang": "en",
+    "scrollWidth": 1905,
+    "touchQuery": false,
+    "viewport": 1920
+  }
+]

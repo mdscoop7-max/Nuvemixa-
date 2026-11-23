@@ -18,7 +18,7 @@ Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, bea
 {% endblock %}
 
 {% block extra_css %}
-<link rel="preload" as="image" href="{{ url_for('static', filename='images/hero/alle-producten.png') }}" fetchpriority="high">
+<link rel="preload" media="(max-width: 991px)" as="image" href="{{ url_for('static', filename='images/hero/alle-producten.png', v='20261120p') }}" fetchpriority="high">
 <style>
 .tm-shop-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 38px}
 .tm-shop-grid .item{min-width:0}
@@ -29,35 +29,13 @@ Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, bea
 .tm-shop-grid .iteminfo .add{width:100%}
 @media(max-width:760px){.tm-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px!important}.tm-shop-grid .iteminfo{padding:12px!important}.tm-shop-grid .iteminfo h3{font-size:14px!important;min-height:55px}.tm-shop-grid .iteminfo .add{font-size:13px!important;padding:12px 4px!important}.tm-shop-grid .photo{aspect-ratio:1.15}.tm-shop-grid .photo img{object-fit:cover}}
 
-/* NUVEMIXA Alle producten hero - desktop en mobiel */
-.tm-shop-hero {
-    display: block;
-    width: 100%;
-    max-width: 950px;
-    margin: 16px auto 24px;
-    overflow: hidden;
-    border-radius: 18px;
-}
-.tm-shop-hero img {
-    display: block;
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-}
-@media (max-width: 760px) {
-    .tm-shop-hero {
-        max-width: 100%;
-        margin: 12px auto 18px;
-        border-radius: 14px;
-    }
-}
 </style>
 {% endblock %}
 
 {% block content %}
 
 <section class="page-section shop-page">
-<a href="#producten" class="tm-shop-hero" aria-label="Bekijk alle producten"><img src="{{ url_for('static', filename='images/hero/alle-producten.png') }}" alt="Ontdek alle producten van NUVEMIXA" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:auto;border-radius:18px;"><div class="tm-desktop-hero-copy" aria-hidden="true"><span class="tm-desktop-brand">NUVEMIXA</span><span class="tm-desktop-tag">ALLE PRODUCTEN</span><h2>Ontdek de volledige collectie</h2><p>Van slimme gadgets en wonen tot verzorging en sport.</p><span class="tm-desktop-cta">Bekijk alle producten →</span></div></a>
+<a href="#producten" class="tm-shop-hero" aria-label="Bekijk alle producten"><img src="{{ url_for('static', filename='images/hero/alle-producten.png', v='20261120p') }}" alt="Ontdek alle producten van NUVEMIXA" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:auto;border-radius:18px;">{% with nv_hero_key='shop' %}{% include "_nv_desktop_hero.html" %}{% endwith %}</a>
 
 
 <!-- ========================================================

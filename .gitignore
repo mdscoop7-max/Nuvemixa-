@@ -7,3 +7,16 @@ __pycache__/
 instance/
 templates/index-backup.html
 templates/index-stap3-backup.html
+
+# Private state and restoration points (never deploy)
+herstelpunten/
+*.sqlite3
+*.sqlite3-*
+.nv_reviews_sso_secret
+.repair-deps/
+.venv-afwerking/
+
+# Lokale reservekopieen en Windows-omgeving
+*.bak
+*.bak-*
+.venv-windows/

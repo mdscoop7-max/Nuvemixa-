@@ -639,3 +639,227 @@ a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{o
 .header.wrap .wordmark .nv-brand-image,.site-header .tm-brand .nv-brand-image{display:block!important;width:clamp(174px,20vw,262px)!important;max-width:100%!important;height:auto!important;max-height:72px!important;object-fit:contain!important;filter:none!important}
 .tm-footer-v2 .footer-logo .nv-brand-image{display:block!important;width:clamp(190px,20vw,255px)!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
 @media(max-width:760px){.header.wrap .wordmark .nv-brand-image,.site-header .tm-brand .nv-brand-image{width:clamp(158px,45vw,214px)!important;max-height:61px!important}.tm-footer-v2 .footer-logo .nv-brand-image{width:215px!important}}
+
+
+/* NUVEMIXA compact official logo sizing 20261105 */
+/* Same approved artwork everywhere; only displayed dimensions change. */
+.header.wrap .wordmark .nv-brand-image,
+.site-header .tm-brand .nv-brand-image{
+  display:block!important;
+  width:176px!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:60px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+.header.wrap .wordmark,
+.site-header .tm-brand{max-width:100%!important}
+.tm-footer-v2 .footer-logo .nv-brand-image{
+  display:block!important;
+  width:180px!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:65px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+@media(max-width:760px){
+  .header.wrap .wordmark .nv-brand-image,
+  .site-header .tm-brand .nv-brand-image{
+    width:146px!important;
+    max-width:100%!important;
+    max-height:52px!important;
+  }
+  .tm-footer-v2 .footer-logo .nv-brand-image{
+    width:160px!important;
+    max-height:58px!important;
+  }
+}
+@media(max-width:365px){
+  .header.wrap .wordmark .nv-brand-image,
+  .site-header .tm-brand .nv-brand-image{width:134px!important;max-height:48px!important}
+}
+
+
+/* NUVEMIXA cart professional clean white 20261105 */
+body:has(.cart-page){background:#f6f9fd!important}
+.cart-page{padding-top:clamp(20px,3vw,40px)!important;padding-bottom:40px}
+.cart-page .back-link{display:inline-flex;align-items:center;min-height:44px;color:#164477!important;font-weight:750;text-decoration:none}
+.cart-page .checkout-steps{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 22px}
+.cart-page .checkout-steps span{border-radius:999px!important;padding:9px 14px!important;background:#eaf2fa!important;color:#425d7a!important;font-size:12px;font-weight:750}
+.cart-page .checkout-steps .active{background:#0b2a51!important;color:#fff!important}
+.cart-page .cart-panel{background:#fff!important;color:#112b4b!important;border:1px solid #dce7f3!important;border-radius:22px!important;padding:clamp(18px,3vw,32px)!important;margin-bottom:34px!important;box-shadow:0 16px 45px #18345412!important}
+.cart-page .cart-panel .commerce-heading{gap:14px}
+.cart-page .cart-panel .commerce-heading h1{font-size:clamp(28px,3.4vw,40px)!important;line-height:1.16!important;letter-spacing:-.035em!important;color:#0a294e!important;margin:9px 0!important}
+.cart-page .cart-panel .commerce-heading p{color:#536981!important}
+.cart-page .cart-panel .commerce-badge{background:#edf5ff!important;border:1px solid #d4e4f6!important;border-radius:999px!important;color:#104c87!important;font-size:12px!important;padding:9px 13px!important}
+.cart-page .cart-row{grid-template-columns:90px minmax(0,1fr) auto!important;gap:18px!important;padding:19px 0!important;border-top:1px solid #e3edf6!important;min-width:0;align-items:center}
+.cart-page .cart-row img,.cart-page .cart-row .cart-thumb{width:90px!important;height:90px!important;object-fit:cover!important;border-radius:14px!important;background:#f3f7fd!important;border:1px solid #e4edf7!important;max-width:100%}
+.cart-page .cart-row .cart-info{min-width:0;gap:6px!important}
+.cart-page .cart-row .cart-info>strong:first-child{color:#0e2d52!important;line-height:1.45;font-size:15px;overflow-wrap:anywhere}
+.cart-page .cart-row .cart-info span{color:#56708b!important}
+.cart-page .cart-row .cart-item-subtotal{font-size:13px;color:#113a67!important}
+.cart-page .cart-actions{display:flex!important;align-items:center!important;gap:7px!important;flex-wrap:nowrap}
+.cart-page .cart-actions form{margin:0!important;display:block!important}
+.cart-page .cart-actions b{min-width:20px;text-align:center;color:#0c2b50!important;font-size:14px}
+.cart-page .cart-row button{display:grid!important;place-items:center!important;min-width:42px!important;width:42px!important;height:42px!important;border:1px solid #d1e2f3!important;border-radius:11px!important;background:#f1f6fc!important;color:#123c6b!important;touch-action:manipulation}
+.cart-page .cart-row button:hover{background:#e1efff!important;border-color:#a5c8ed!important}
+.cart-page .cart-row button:focus-visible{outline:3px solid #ffb73d!important;outline-offset:2px}
+.cart-page .cart-clear{min-height:44px!important;border-radius:11px!important;color:#173d68!important;background:#fff!important;border:1px solid #b8cee5!important;padding:10px 15px!important}
+.cart-page .cart-total{color:#0b294f!important;border-top:1px solid #dce7f3!important;font-size:clamp(18px,2.5vw,24px)!important}
+.cart-page .modern-total strong{color:#0d305b!important}
+.cart-page .cart-checkout-box{border:1px solid #d9e8f8!important;background:#f4f9ff!important;border-radius:16px!important;padding:clamp(14px,2vw,22px)!important;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.cart-page .cart-checkout-box small{color:#536c84!important}
+.cart-page .cart-checkout-box strong{color:#0c2c51!important}
+.cart-page .cart-checkout-box .checkout-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 24px!important;border-radius:12px!important;background:#0b2c56!important;color:#fff!important;border:1px solid #0b2c56!important;text-decoration:none;font-weight:800!important;box-shadow:0 7px 18px #0b2c5622!important}
+.cart-page .cart-checkout-box .checkout-button:hover{background:#164678!important}
+.cart-page .empty-state{background:#f7fbff!important;border:1px dashed #d6e5f5!important;border-radius:14px;padding:28px!important}
+@media(max-width:760px){
+ .cart-page .cart-row{grid-template-columns:72px minmax(0,1fr)!important;gap:11px!important;padding:15px 0!important}
+ .cart-page .cart-row img,.cart-page .cart-row .cart-thumb{width:72px!important;height:72px!important}
+ .cart-page .cart-actions{grid-column:2!important;justify-content:flex-start!important;flex-wrap:wrap!important}
+ .cart-page .cart-row button{min-width:44px!important;width:44px!important;height:44px!important}
+ .cart-page .cart-panel{padding:17px!important}
+ .cart-page .cart-checkout-box{display:grid;grid-template-columns:1fr}
+ .cart-page .cart-checkout-box .checkout-button{width:100%;min-height:54px}
+}
+@media(max-width:365px){
+ .cart-page .checkout-steps{gap:5px}
+ .cart-page .checkout-steps span{font-size:11px;padding:7px 8px!important}
+ .cart-page .cart-row{grid-template-columns:62px minmax(0,1fr)!important}
+ .cart-page .cart-row img,.cart-page .cart-row .cart-thumb{width:62px!important;height:62px!important}
+}
+
+
+/* NUVEMIXA unified modern store buttons 20261105 */
+/* Existing approved navy/white/orange theme is unchanged. Buttons are easier to tap. */
+:where(.herobutton,.item .add,.cart-checkout-box .checkout-button,.btn.btn-dark){
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;border-radius:12px!important;
+  font-weight:800!important;line-height:1.3!important;
+  transition:background-color .18s ease,box-shadow .18s ease,transform .18s ease;
+  touch-action:manipulation
+}
+:where(.herobutton,.cart-checkout-box .checkout-button,.btn.btn-dark):hover{
+  transform:translateY(-1px);box-shadow:0 9px 22px #0c315426!important
+}
+:where(.item .add):focus-visible,:where(.herobutton,.btn,.checkout-button):focus-visible{
+  outline:3px solid #f9a11b!important;outline-offset:3px!important
+}
+@media(max-width:760px){
+  :where(.item .add){min-height:46px!important}
+  .cart-page .cart-checkout-box .checkout-button{min-height:54px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  :where(.herobutton,.item .add,.cart-checkout-box .checkout-button,.btn.btn-dark){
+    transition:none!important;transform:none!important
+  }
+}
+
+
+/* NUVEMIXA laptop logo and standalone categories color 20261105 */
+/* The complete existing horizontal logo is shown as-is, never a square tile. */
+.header.wrap .wordmark::before,
+.site-header .tm-brand::before,
+.tm-footer-v2 .footer-logo::before{content:none!important;display:none!important}
+.header.wrap .wordmark,.site-header .tm-brand,.tm-footer-v2 .footer-logo{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  padding:0!important;border-radius:0!important
+}
+.header.wrap .wordmark .nv-brand-image,
+.site-header .tm-brand .nv-brand-image{
+  width:clamp(180px,19vw,245px)!important;
+  height:auto!important;
+  max-height:70px!important;
+  object-fit:contain!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important
+}
+/* Category menu has its own unmistakable gold-orange surface, separate from navy nav. */
+.tm-digital-nav.tm-menu-compact{
+  background:linear-gradient(110deg,#e7a12d 0%,#ffd37a 52%,#eaaa39 100%)!important;
+  border-top:1px solid #d08c22!important;
+  border-bottom:2px solid #c98719!important
+}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary{
+  background:#fff!important;
+  color:#0b315b!important;
+  border:1px solid #b67f26!important;
+  box-shadow:0 3px 10px #72501e26!important;
+  font-weight:850!important
+}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary:hover{
+  background:#fff4d7!important;color:#0b315b!important
+}
+.tm-digital-nav .tm-category-dropdown>summary.tm-menu-summary svg{color:#0b315b!important}
+.tm-digital-nav .tm-category-dropdown[open]>.categorylinks.tm-category-menu-links{
+  background:#fff!important
+}
+@media(max-width:760px){
+ .header.wrap .wordmark .nv-brand-image,
+ .site-header .tm-brand .nv-brand-image{width:clamp(145px,48vw,200px)!important;max-height:58px!important}
+}
+
+
+/* NUVEMIXA coordinated contact and information page colors - 20261105 */
+/* Design only: contact markup, inputs, CSRF, action and submission stay unchanged. */
+body:has(main.info-page),body:has(main.cart-page),body:has(.account-page){background:#f6f9ff!important}
+main.info-page{padding-top:clamp(24px,3vw,42px)!important;padding-bottom:45px!important}
+main.info-page .back-link{display:inline-flex;align-items:center;min-height:42px;color:#255c98!important;font-weight:750;text-decoration:none}
+main.info-page .info-card{background:#fff!important;border:1px solid #dce8f7!important;border-radius:22px!important;box-shadow:0 14px 46px #0e355c12!important;color:#122c50!important}
+main.info-page .info-card h1,main.info-page .info-card h2,main.info-page .info-card h3{color:#0c315b!important;line-height:1.18}
+main.info-page .info-card p,main.info-page .info-lead{color:#526b86!important;line-height:1.65}
+main.info-page .eyebrow,main.info-page .section-label{color:#1465b2!important;font-weight:850;letter-spacing:.09em}
+main.info-page .commerce-badge{color:#0d4d86!important;background:#e9f3ff!important;border:1px solid #d1e5fa!important;border-radius:999px!important}
+.contact-page-card{padding:clamp(22px,3vw,43px)!important}
+.contact-page-card .contact-heading{margin-bottom:12px}
+.contact-page-card .contact-heading h1{font-size:clamp(29px,3.3vw,46px)!important;letter-spacing:-.035em}
+.contact-page-card .contact-service-grid{gap:clamp(18px,2.4vw,32px)!important}
+.contact-page-card .contact-page-form{padding:clamp(18px,2.5vw,30px)!important;background:linear-gradient(145deg,#fff,#f8fbff)!important;border:1px solid #dbe7f5!important;border-radius:19px!important;box-shadow:0 8px 25px #15395b0c!important}
+.contact-page-card .contact-page-form .form-heading{margin-bottom:12px!important}
+.contact-page-card .contact-page-form .form-heading>span{background:#e5f1ff!important;color:#0d5eac!important;border-radius:13px!important}
+.contact-page-card .contact-page-form .form-heading h2{font-size:clamp(20px,2vw,25px)!important;margin:0 0 4px}
+.contact-page-card .contact-page-form label{color:#173d69!important;font-weight:750!important}
+.contact-page-card .contact-page-form label span{color:#173d69!important;font-size:13px!important;font-weight:750!important}
+.contact-page-card .contact-page-form input:not([type=hidden]),.contact-page-card .contact-page-form textarea{width:100%;min-width:0;background:#fff!important;border:1px solid #cbdced!important;border-radius:12px!important;box-shadow:none!important;color:#142e4e!important;font-size:15px!important;padding:14px 15px!important}
+.contact-page-card .contact-page-form input::placeholder,.contact-page-card .contact-page-form textarea::placeholder{color:#72849a!important}
+.contact-page-card .contact-page-form input:focus-visible,.contact-page-card .contact-page-form textarea:focus-visible{border-color:#126cbd!important;outline:3px solid #c9e4ff!important;outline-offset:0!important}
+.contact-page-card .contact-page-form button[type=submit]{width:100%!important;min-height:52px!important;background:linear-gradient(95deg,#0b4f9b,#0877db)!important;border:1px solid #0d5baf!important;color:#fff!important;border-radius:12px!important;box-shadow:0 8px 19px #0b5cb533!important;font-size:15px!important;font-weight:850!important}
+.contact-page-card .contact-page-form button[type=submit]:hover{background:linear-gradient(95deg,#0b427f,#095fba)!important}
+.contact-page-card .contact-service-aside{background:linear-gradient(160deg,#eaf4ff,#f7fbff)!important;border:1px solid #d7e6f8!important;border-radius:19px!important;padding:clamp(18px,2vw,28px)!important;color:#163c66!important}
+.contact-page-card .contact-service-aside .support-icon{background:#dcecff!important;color:#0b5fac!important;border-radius:13px!important}
+.contact-page-card .contact-service-aside strong{color:#123e70!important}
+.contact-page-card .contact-service-aside span{color:#526d8a!important}
+.contact-page-card .contact-service-aside a{color:#0a63bb!important;font-weight:800!important}
+.tm-contact-alert{border:1px solid #efb0b0!important;background:#fff0f0!important;color:#8e2525!important;border-radius:12px;padding:13px 17px;margin-bottom:16px}
+.tm-contact-alert.tm-contact-success{border-color:#a9ddbd!important;background:#eaf9f0!important;color:#13613c!important}
+/* Consistent navigation contrast for standalone info, account, contact and cart pages. */
+.site-header .header-main{background:#fff!important}
+.site-header .main-nav{background:#0a305b!important;border-color:#173f71!important}
+.site-header .main-nav .nav-link{color:#fff!important}
+.site-header .main-nav .nav-link:hover,.site-header .main-nav .nav-link.active{color:#fff!important;background:#1d568d!important}
+.site-header .main-nav .nav-deals{background:#ed8b23!important;color:#0d2646!important}
+.site-header .main-nav .nav-deals:hover{background:#ffd06a!important;color:#0d2646!important}
+.site-header .cart-link{background:#0870cf!important;color:#fff!important;border-color:#0870cf!important;box-shadow:0 5px 14px #0870cf24!important}
+.site-header .cart-link span{background:#fff!important;color:#0b4f90!important}
+.account-page .account-card{background:linear-gradient(135deg,#fff,#f1f7ff)!important;border:1px solid #d9e7f7!important;border-radius:21px!important;box-shadow:0 12px 35px #0d315512!important}
+.account-page .section-heading h1,.account-page .account-card h2{color:#0b3159!important}
+.account-page .section-heading p,.account-page .account-description{color:#526a85!important}
+.account-page .account-status{background:#fff2d9!important;color:#945316!important;border-radius:999px;padding:6px 10px;font-weight:800}
+.cart-page .checkout-steps{background:#0962b8!important;border:1px solid #0962b8!important;border-radius:14px!important;padding:9px!important;box-shadow:0 6px 16px #0d59ad23!important}
+.cart-page .checkout-steps span{color:#fff!important;background:transparent!important;border-color:transparent!important}
+.cart-page .checkout-steps span.active{background:#fff!important;color:#0758a8!important;border-color:#fff!important}
+@media(max-width:760px){
+ main.info-page{padding-top:18px!important;padding-bottom:28px!important}
+ .contact-page-card{padding:16px!important;border-radius:17px!important}
+ .contact-page-card .contact-heading h1{font-size:29px!important}
+ .contact-page-card .contact-service-grid{grid-template-columns:1fr!important}
+ .contact-page-card .contact-page-form{padding:15px!important}
+ .contact-page-card .contact-page-form input:not([type=hidden]),.contact-page-card .contact-page-form textarea{font-size:16px!important}
+ .contact-page-card .contact-service-aside{padding:18px!important}
+ .cart-page .checkout-steps{gap:2px!important;padding:7px!important}
+ .cart-page .checkout-steps span{font-size:10px!important;padding:8px 6px!important}
+}

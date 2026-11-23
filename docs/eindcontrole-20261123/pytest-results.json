@@ -1,0 +1,479 @@
+{
+  "exit_code": 0,
+  "tests": [
+    {
+      "test": "tests/test_control.py::test_control_page_exists",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_shop_categories_have_20_products_with_images",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_all_main_category_pages_render",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_core_customer_pages_render",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_cart_and_checkout_test_flow",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_catalog_is_exactly_100_products",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_homepage_has_hero_image_fallbacks",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_sitemap_is_valid_xml_shape_and_has_products",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_no_obsolete_affiliate_faq_copy_on_faq_page",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_language_bundle_has_no_obsolete_affiliate_store_model",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_active_languages_are_exactly_dutch_and_english",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_homepage_seo_and_search_action_metadata",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_category_pages_have_resilient_images_and_social_metadata",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_product_page_uses_light_theme_and_structured_data",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_search_matches_description_content",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_mobile_navigation_contains_core_shopping_tasks",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_no_stale_production_trust_claims_in_client_translation_layers",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_base_design_tokens_match_light_storefront",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_rankfix_audit_home_and_categories_have_one_h1",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_rankfix_audit_canonicals_and_meta_descriptions",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_session_cookie_security_flags",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_mobile_drawer_and_assistant_translations_are_available",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_cart_numeric_product_id_quantity_and_remove_work",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_contact_message_is_explicitly_local_test_mail",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_live_orders_require_explicit_enable_flag",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_global_language_dropdown_is_present_across_storefront",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_original_category_menu_and_svg_icons_survive_redesign",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_product_buttons_render_accessible_vector_icons",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_information_pages_have_professional_bilingual_content",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_information_page_translation_bundle_and_original_hero_untouched",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_all_test_products_have_curated_english_names",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_catalog_product_cards_and_detail_are_bilingual",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_control.py::test_extended_english_labels_across_website",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_registration_preserves_cart_and_persists_favorites",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_verification_single_use_and_welcome_coupon",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_campaigns_off_by_default_and_expired",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_password_reset_expiry_replay_and_session_invalidation",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_money_and_coupon_exact_totals",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_coupon_personal_minimum_exclusion_and_stacking",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_concurrent_coupon_reservation_only_one_order",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_double_click_and_double_event_no_duplicate",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_cancel_timeout_failure_release_reservation[cancelled]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_cancel_timeout_failure_release_reservation[failed]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_cancel_timeout_failure_release_reservation[expired]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_refund_capped_and_idempotent",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_review_reward_equal_no_fake_verified_review[1]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_review_reward_equal_no_fake_verified_review[5]",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_foreign_order_cannot_be_read_or_paid",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_address_validation_and_no_live_webhook",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_review_sso_has_no_general_admin_scope",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_private_caching_csp_nonce_static_blob_blocked",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_pwa_no_private_or_price_cache",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_catalog_publication_offer_and_expiry",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_withdrawal_idempotent_guest_and_acknowledgement",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_server_english_and_metadata",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_central_rate_limit_and_input_limit",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_expired_token_and_coupon",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_administration_requires_authorization_and_keeps_campaign_inactive",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_publication_requires_evidence_then_offer_is_shared",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_curated_cart_recommendations_are_existing_and_bounded",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_all_public_pages_products_and_templates_render",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_sitemap_canonical_redirect_and_svg_integrity",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_largest_remainder_never_overdiscounts_small_lines",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_full_refund_vat_lines_reconcile_after_partial_refund",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_event_id_cannot_be_reused_for_another_order",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_mail_adapter_never_sends_test_messages",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_atomic_ai_budget_across_workers_without_provider_calls",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_private_backup_restore_with_fake_database",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_local_platform.py::test_account_address_is_private_and_prefills_checkout",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_performance.py::test_static_browser_cache_and_private_pages",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_performance.py::test_visible_heroes_are_prioritized_without_changing_images",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_performance.py::test_shared_cart_footer_and_ai_trendmix_remain_everywhere",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_security.py::test_csrf_rejects_missing_token_and_accepts_valid_form",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_security.py::test_csrf_rejects_foreign_origin_even_with_token",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_security.py::test_csrf_rejects_token_from_another_session",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_security.py::test_checkout_does_not_store_personal_data_in_signed_cookie",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_security.py::test_security_headers_and_request_size_limit",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    },
+    {
+      "test": "tests/test_security.py::test_all_storefront_post_forms_include_csrf_tokens",
+      "stage": "call",
+      "outcome": "passed",
+      "detail": ""
+    }
+  ],
+  "versions": {
+    "Flask": "3.1.3",
+    "Werkzeug": "3.1.9",
+    "pytest": "9.1.1"
+  },
+  "external_io": "blocked"
+}

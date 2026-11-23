@@ -6,20 +6,43 @@ import secrets
 import urllib.request
 import urllib.error
 from pathlib import Path
-from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort
+from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, jsonify
+from werkzeug.security import check_password_hash
+from datetime import datetime, timezone
+import time
 from product_art import render_product_svg
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
+def _persistent_session_secret():
+    configured = os.getenv('SECRET_KEY')
+    if configured:
+        return configured
+    if os.getenv('NUVEMIXA_ENV') == 'production':
+        raise RuntimeError('SECRET_KEY must be configured in production')
+    target = Path(os.getenv('NUVEMIXA_SECRET_FILE') or Path(__file__).resolve().parent / 'instance' / 'session.key')
+    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with target.open('x', encoding='ascii') as stream:
+            stream.write(secrets.token_hex(48))
+        os.chmod(target, 0o600)
+    except FileExistsError:
+        pass
+    return target.read_text(encoding='ascii').strip()
+
+app.config['SECRET_KEY'] = _persistent_session_secret()
+app.config['SESSION_COOKIE_NAME'] = os.getenv('NUVEMIXA_SESSION_COOKIE', 'nuvemixa_session')
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=bool(os.getenv("VERCEL_ENV")),
+    SESSION_COOKIE_SECURE=os.getenv("NUVEMIXA_COOKIE_SECURE", "true").lower() == "true",
     SESSION_COOKIE_SAMESITE="Lax",
     MAX_CONTENT_LENGTH=65536,
     MAX_FORM_MEMORY_SIZE=32768,
     MAX_FORM_PARTS=50,
 )
 BASE_DIR = Path(__file__).resolve().parent
+if os.getenv('NUVEMIXA_ENV') != 'production':
+    os.environ.setdefault('NUVEMIXA_REVIEWS_DB', str(BASE_DIR / 'instance' / 'reviews.sqlite3'))
+    Path(os.environ['NUVEMIXA_REVIEWS_DB']).parent.mkdir(parents=True, exist_ok=True)
 PRODUCTS_DIR = BASE_DIR / "products"
 with (BASE_DIR / "content" / "product-names-en.json").open(encoding="utf-8") as _product_translation_stream:
     PRODUCT_NAMES_EN = json.load(_product_translation_stream)
@@ -142,7 +165,7 @@ def enrich_product(product, category_slug, index):
     item.setdefault("id", f"tm-{category_slug}-{slugify(item.get('name'))}-{index}")
     item.setdefault("slug", slugify(item.get("name")) or f"product-{index + 1}")
     item["en_name"] = PRODUCT_NAMES_EN.get(category_slug, {}).get(item["slug"], item["name"])
-    item["en_short_description"] = f"{item['en_name']} — a provisional selection from the NUVEMIXA test catalogue."
+    item["en_short_description"] = f"{item['en_name']} — a provisional selection from the NUVEMIXA catalogue."
     item["en_description"] = (
         f"{item['en_name']} is a provisional product in the NUVEMIXA catalogue. "
         "The image is temporary and may differ from the final item. "
@@ -191,7 +214,7 @@ def cart_items():
             "id": product["id"],
             "name": product["name"],
             "en_name": product["en_name"],
-            "price": float(product.get("price", 0) or 0),
+            "price": product.get("price", 0),
             "image": product.get("image", ""),
             "category_name": product["category_name"],
             "qty": qty,
@@ -208,7 +231,7 @@ def cart_count():
 
 def cart_total():
     return sum(
-        float(item.get("price", 0) or 0) * max(1, int(item.get("qty", 1)))
+        item.get("price", 0) * max(1, int(item.get("qty", 1)))
         for item in cart_items()
     )
 
@@ -380,7 +403,13 @@ def home():
         needle = query.casefold()
         search_results = [item for item in all_items if needle in item["name"].casefold() or needle in item["category_name"].casefold() or needle in str(item.get("brand") or "").casefold() or needle in str(item.get("description") or "").casefold() or needle in " ".join(f"{key} {value}" for key, value in (item.get("specifications") or {}).items()).casefold()]
     counts = {slug: len(items) for slug, items in products.items()}
-    return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items))
+    review_list, review_summary = [], {"count": 0, "average": 0.0, "bars": []}
+    try:
+        from nv_reviews import published_reviews, review_stats
+        review_list, review_summary = published_reviews(6), review_stats()
+    except Exception:
+        app.logger.error("NUVEMIXA reviews storage unavailable")
+    return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
 
 
 @app.route("/shop")
@@ -409,9 +438,80 @@ def products_page():
     return redirect(url_for("shop"), code=302)
 
 
+# NUVEMIXA customer accounts: separate from admin login and checkout.
+import sqlite3
+from werkzeug.security import generate_password_hash
+
+_CUSTOMER_DB = Path(os.getenv("NUVEMIXA_CUSTOMER_DB") or BASE_DIR / "nuvemixa_customers.sqlite3")
+_CUSTOMER_ATTEMPTS = {}
+
+def _customer_conn():
+    conn = sqlite3.connect(str(_CUSTOMER_DB), timeout=10)
+    conn.row_factory = sqlite3.Row
+    conn.execute("CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    return conn
+
+def _current_customer():
+    customer_id = session.get("nv_customer_id")
+    if not isinstance(customer_id, int):
+        return None
+    with _customer_conn() as conn:
+        row = conn.execute("SELECT id, name, email FROM customers WHERE id=?", (customer_id,)).fetchone()
+        return dict(row) if row else None
+
+def _customer_error(message, status=400):
+    return render_template("account.html", categories=CATEGORIES, customer=None, account_error=message), status
+
 @app.route("/account")
 def account():
-    return render_template("account.html", categories=CATEGORIES)
+    return render_template("account.html", categories=CATEGORIES, customer=_current_customer(), account_error=None)
+
+@app.route("/account/register", methods=["POST"])
+def customer_register():
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().casefold()
+    password = request.form.get("password", "")
+    password_confirm = request.form.get("password_confirm", "")
+    if password != password_confirm:
+        return _customer_error("De wachtwoorden komen niet overeen.")
+    if not (1 <= len(name) <= 100) or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) or len(email) > 254 or not (12 <= len(password) <= 128):
+        return _customer_error("Controleer naam, e-mailadres en wachtwoord (minimaal 12 tekens).")
+    try:
+        with _customer_conn() as conn:
+            cursor = conn.execute("INSERT INTO customers (name,email,password_hash) VALUES (?,?,?)", (name,email,generate_password_hash(password,method="scrypt")))
+            customer_id = cursor.lastrowid
+    except sqlite3.IntegrityError:
+        return _customer_error("Dit e-mailadres is al geregistreerd.")
+    session.clear()
+    session["nv_customer_id"] = customer_id
+    return redirect(url_for("account"), code=303)
+
+@app.route("/account/login", methods=["POST"])
+def customer_login():
+    email = request.form.get("email", "").strip().casefold()
+    password = request.form.get("password", "")
+    ip = request.remote_addr or "unknown"
+    now = time.monotonic()
+    recent = [t for t in _CUSTOMER_ATTEMPTS.get(ip,[]) if now-t < 900]
+    if len(recent) >= 8:
+        return _customer_error("Te veel pogingen. Probeer het later opnieuw.",429)
+    if len(email)>254 or len(password)>128 or not email or not password:
+        return _customer_error("Ongeldige inloggegevens.",401)
+    with _customer_conn() as conn:
+        row=conn.execute("SELECT id,password_hash FROM customers WHERE email=?",(email,)).fetchone()
+    if not row or not check_password_hash(row["password_hash"],password):
+        recent.append(now)
+        _CUSTOMER_ATTEMPTS[ip]=recent
+        return _customer_error("Ongeldige inloggegevens.",401)
+    _CUSTOMER_ATTEMPTS.pop(ip,None)
+    session.clear()
+    session["nv_customer_id"]=row["id"]
+    return redirect(url_for("account"),code=303)
+
+@app.route("/account/logout", methods=["POST"])
+def customer_logout():
+    session.clear()
+    return redirect(url_for("account"),code=303)
 
 
 @app.route("/wishlist", methods=["GET", "POST"])
@@ -449,10 +549,283 @@ def product(product_id):
     return redirect(product_item["product_url"], code=302)
 
 
+
+# NUVEMIXA admin controls: deny access unless an administrator password hash is configured.
+# Use a persistent SECRET_KEY; never store credentials in the repository.
+_ADMIN_LOGIN_ATTEMPTS = {}
+_ADMIN_MAX_ATTEMPTS = 6
+_ADMIN_ATTEMPT_WINDOW = 900
+
+
+def admin_is_authenticated():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and session.get("nv_admin") is True
+
+
+def admin_configured():
+    return bool(os.getenv("NUVEMIXA_ADMIN_PASSWORD_HASH")) and bool(os.getenv("SECRET_KEY"))
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if not admin_configured():
+        return render_template("admin_login.html", config_missing=True, error=None), 503
+    if admin_is_authenticated():
+        return redirect(url_for("control"))
+    error = None
+    if request.method == "POST":
+        ip = request.remote_addr or "unknown"
+        now = time.monotonic()
+        attempts = [t for t in _ADMIN_LOGIN_ATTEMPTS.get(ip, []) if now - t < _ADMIN_ATTEMPT_WINDOW]
+        if len(attempts) >= _ADMIN_MAX_ATTEMPTS:
+            return render_template("admin_login.html", config_missing=False, error="Te veel pogingen. Probeer het later opnieuw."), 429
+        password = request.form.get("password", "")
+        try:
+            valid = bool(password) and check_password_hash(os.environ["NUVEMIXA_ADMIN_PASSWORD_HASH"], password)
+        except (ValueError, TypeError):
+            valid = False
+        if valid:
+            _ADMIN_LOGIN_ATTEMPTS.pop(ip, None)
+            session.clear()
+            session["nv_admin"] = True
+            return redirect(url_for("control"))
+        attempts.append(now)
+        _ADMIN_LOGIN_ATTEMPTS[ip] = attempts
+        error = "Het wachtwoord klopt niet."
+    return render_template("admin_login.html", config_missing=False, error=error)
+
+
+@app.route("/admin/logout", methods=["POST"])
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
+def merchant_product_checks(item):
+    """Fail closed until the supplier confirms all mandatory selling details."""
+    missing = []
+    if not item.get("supplier_verified"):
+        missing.append("leverancier")
+    if not item.get("product_data_verified"):
+        missing.append("productgegevens")
+    if item.get("stock_status") not in ("in_stock", "out_of_stock"):
+        missing.append("voorraad")
+    if not item.get("price_verified") or not (float(item.get("price") or 0) > 0):
+        missing.append("prijs")
+    if not item.get("image_verified"):
+        missing.append("productafbeelding")
+    if not item.get("delivery_verified"):
+        missing.append("verzending")
+    if not item.get("brand") and not item.get("identifier_exists_verified"):
+        missing.append("merk/productidentificatie")
+    return missing
+
+
+@app.route("/admin/merchant-preview")
+def admin_merchant_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    items = list(catalog_items())
+    checked = [{"id": str(p.get("id", "")), "name": p["name"],
+                "missing": merchant_product_checks(p)} for p in items]
+    response = jsonify({
+        "status": "internal_preview_only", "published": False,
+        "total": len(checked),
+        "ready": sum(not p["missing"] for p in checked),
+        "products": checked,
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/research-preview")
+def admin_research_preview():
+    """Show verified catalogue completeness, not invented market demand."""
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    findings = []
+    for item in catalog_items():
+        confirmed_cost = bool(item.get("cost_verified"))
+        confirmed_supplier = bool(item.get("supplier_verified"))
+        findings.append({
+            "id": str(item.get("id", "")),
+            "name": item["name"],
+            "category": item["category_name"],
+            "supplier_verified": confirmed_supplier,
+            "purchase_cost_verified": confirmed_cost,
+            "stock_verified": item.get("stock_status") in ("in_stock", "out_of_stock"),
+            "selling_price_verified": bool(item.get("price_verified")),
+            "market_demand": None,
+            "competition_score": None,
+            "estimated_profit": None,
+        })
+    response = jsonify({
+        "status": "internal_research_only",
+        "market_data_connected": False,
+        "products": findings,
+        "total": len(findings),
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/integrations")
+def admin_integrations():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    response = jsonify({
+        "status": "configuration_presence_only",
+        "orders_live_enabled": live_orders_enabled(),
+        "woocommerce_configured": woo_configured(),
+        "merchant_publishing_enabled": False,
+        "rankfix_configured": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment_key_present": bool(os.getenv("MOLLIE_API_KEY")),
+        "contact_configured": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+        "note": "Configuration presence does not confirm external connectivity.",
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+
+# Local administrative records are separate from the public test catalogue.
+# All mutations require both administrator login and the existing CSRF middleware.
+def admin_local_records(kind):
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        return None, "Admin database is nog niet ingesteld."
+    try:
+        from nuvemixa_admin_store import list_suppliers, list_research
+        return (list_suppliers() if kind == "suppliers" else list_research()), None
+    except (OSError, RuntimeError) as exc:
+        app.logger.error("NUVEMIXA admin storage unavailable: %s", exc)
+        return None, "Admin database is tijdelijk niet beschikbaar."
+
+
+@app.route("/admin/suppliers", methods=["POST"])
+def admin_add_supplier():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_supplier
+    try:
+        add_supplier(
+            request.form.get("name", ""), request.form.get("contact_email", ""),
+            request.form.get("website", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except (ValueError, __import__("sqlite3").IntegrityError):
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Supplier record write failed")
+        result = "fout"
+    return redirect(url_for("control", section="leveranciers", result=result), code=303)
+
+
+@app.route("/admin/research", methods=["POST"])
+def admin_add_research_note():
+    if not admin_is_authenticated():
+        abort(403)
+    if not os.getenv("NUVEMIXA_ADMIN_DB"):
+        abort(503)
+    from nuvemixa_admin_store import add_research
+    try:
+        add_research(
+            request.form.get("category", ""), request.form.get("product_name", ""),
+            request.form.get("source", ""), request.form.get("notes", "")
+        )
+        result = "toegevoegd"
+    except ValueError:
+        result = "ongeldig"
+    except (OSError, RuntimeError):
+        app.logger.exception("Research note write failed")
+        result = "fout"
+    return redirect(url_for("control", section="onderzoek", result=result), code=303)
+
+
+def recent_woo_orders():
+    """Read WooCommerce orders only if already configured. Never fabricate orders."""
+    if not woo_configured():
+        return None, "WooCommerce niet gekoppeld."
+    result = woo_request("GET", "orders?per_page=20&orderby=date&order=desc")
+    if not isinstance(result, list):
+        return None, "WooCommerce niet bereikbaar of antwoord ongeldig."
+    # Only display operational fields; no addresses, phone or customer details.
+    filtered = []
+    for item in result:
+        if not isinstance(item, dict):
+            continue
+        filtered.append({
+            "id": str(item.get("id", ""))[:40],
+            "status": str(item.get("status", "onbekend"))[:45],
+            "date": str(item.get("date_created", ""))[:25],
+            "total": str(item.get("total", ""))[:40],
+            "currency": str(item.get("currency", "EUR"))[:10],
+        })
+    return filtered, None
+
+
+
+# Optional integrations are restricted to a logged-in administrator.
+@app.route("/admin/rankfix/open")
+def admin_rankfix_open():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import rankfix_scan_url
+    address = rankfix_scan_url()
+    if not address:
+        return "RankFix-adres niet veilig geconfigureerd.", 503
+    response = redirect(address, code=302)
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.route("/admin/mollie/check")
+def admin_mollie_check():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import mollie_readonly_check
+    response = jsonify(mollie_readonly_check())
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/admin/merchant-feed-preview.xml")
+def admin_merchant_feed_preview():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
+    from nuvemixa_integrations import merchant_feed_preview
+    xml, count = merchant_feed_preview(catalog_items())
+    response = Response(xml, content_type="application/xml; charset=utf-8")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-NUVEMIXA-Preview-Only"] = "true"
+    response.headers["X-NUVEMIXA-Eligible-Count"] = str(count)
+    return response
+
+
+@app.route("/admin/supplier-feed-preview", methods=["POST"])
+def admin_supplier_feed_preview():
+    if not admin_is_authenticated():
+        abort(403)
+    uploaded = request.files.get("feed")
+    if not uploaded or not uploaded.filename.lower().endswith(".csv"):
+        return jsonify({"error": "Upload een CSV-bestand."}), 400
+    raw = uploaded.stream.read(60001)
+    from nuvemixa_integrations import supplier_csv_preview
+    try:
+        result = supplier_csv_preview(raw)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/control")
 @app.route("/dashboard")
 @app.route("/catalogus-overzicht")
 def control():
+    if not admin_is_authenticated():
+        return redirect(url_for("admin_login"))
     all_products = load_all_products()
     category_counts = {}
     for product in all_products:
@@ -460,7 +833,7 @@ def control():
         category_counts[category_name] = category_counts.get(category_name, 0) + 1
 
     offer_count = sum(1 for product in all_products if product.get("old_price") or product.get("is_offer"))
-    avg_price = round(sum(float(product.get("price", 0) or 0) for product in all_products) / len(all_products), 2) if all_products else 0
+    avg_price = round(sum(product.get("price", 0) for product in all_products) / len(all_products), 2) if all_products else 0
     top_category = max(category_counts.items(), key=lambda item: item[1])[0] if category_counts else "N/A"
     featured_products = sorted(all_products, key=lambda p: (float(p.get("price", 0) or 0), p.get("name", "")), reverse=True)[:8]
 
@@ -506,6 +879,22 @@ def control():
     search = request.args.get("q", "").strip()[:120]
     filtered_products = filter_products(all_products, search=search) if search else all_products
 
+    merchant_checks = [merchant_product_checks(p) for p in all_products]
+    merchant_preview_rows = [
+        {"name": p["name"], "category": p.get("category_name") or p.get("category") or "",
+         "missing": missing}
+        for p, missing in zip(all_products, merchant_checks)
+    ] if section == "google-shopping" else []
+    integration_status = {
+        "merchant": {"ready": sum(not errors for errors in merchant_checks), "total": len(all_products)},
+        "rankfix": bool(os.getenv("RANKFIX_API_URL") and os.getenv("RANKFIX_API_TOKEN")),
+        "payment": bool(os.getenv("MOLLIE_API_KEY")),
+        "woo": woo_configured(),
+        "contact": bool(os.getenv("RESEND_API_KEY") and os.getenv("CONTACT_FROM_EMAIL")),
+    }
+    supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
+    research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
+    order_rows, order_error = (recent_woo_orders() if section == "bestellingen" else (None, None))
     view_template = "control.html" if request.path == "/catalogus-overzicht" else "dashboard.html"
     return render_template(
         view_template,
@@ -525,6 +914,14 @@ def control():
         },
         category_counts=sorted(category_counts.items()),
         categories=CATEGORIES,
+        integration_status=integration_status,
+        merchant_preview_rows=merchant_preview_rows,
+        supplier_rows=supplier_rows,
+        supplier_error=supplier_error,
+        research_rows=research_rows,
+        research_error=research_error,
+        order_rows=order_rows,
+        order_error=order_error,
     )
 
 
@@ -600,7 +997,7 @@ def render_info_page(info_slug):
         ):
             raise ValueError(f"Invalid bilingual information document: {info_slug}")
 
-    source = info_doc["nl"] if info_doc else page
+    source = info_doc[getattr(__import__("flask").g, "nv_language", "nl")] if info_doc else page
     return render_template(
         "info.html",
         title=source["title"],
@@ -705,7 +1102,7 @@ def winkelwagen():
                     cart.append({
                         "id": product["id"],
                         "name": product["name"],
-                        "price": float(product.get("price", 0) or 0),
+                        "price": product.get("price", 0),
                         "image": product.get("image", ""),
                         "category_name": product["category_name"],
                         "qty": 1,
@@ -738,7 +1135,7 @@ def winkelwagen():
         return redirect(url_for("winkelwagen"))
 
     total = sum(
-        float(item.get("price", 0) or 0) * max(1, int(item.get("qty", 1)))
+        item.get("price", 0) * max(1, int(item.get("qty", 1)))
         for item in cart
     )
     return render_template(
@@ -755,7 +1152,7 @@ def afrekenen():
     cart = [dict(item) for item in cart_items()]
     if not cart:
         return redirect(url_for("winkelwagen"))
-    total = sum(float(item.get("price", 0) or 0) * max(1, int(item.get("qty", 1))) for item in cart)
+    total = sum(item.get("price", 0) * max(1, int(item.get("qty", 1))) for item in cart)
     order = None
     error = None
     if request.method == "POST":
@@ -778,6 +1175,15 @@ def afrekenen():
         elif live_orders_enabled():
             order, error = create_woo_order(cart, customer)
             if order:
+                try:
+                    regels = "\n".join(f"- {i.get('qty', 1)}x {i.get('name', i.get('id'))} ({i.get('price', '')})" for i in cart)
+                    nv_send_mail(
+                        f"Nieuwe bestelling NUVEMIXA #{order.get('id', '')}",
+                        f"Nieuwe bestelling #{order.get('id', '')}\n\nKlant: {customer['first_name']} {customer['last_name']}\nE-mail: {customer['email']}\nAdres: {customer['address_1']}, {customer['postcode']} {customer['city']}, {customer['country']}\n\nProducten:\n{regels}\n\nTotaal: {total:.2f} EUR\n",
+                        reply_to=customer["email"],
+                    )
+                except Exception:
+                    pass
                 session.pop("trendmix_cart", None)
                 return render_template("checkout.html", categories=CATEGORIES, cart=[], cart_count=0, cart_total=0, test_mode=False, order=order, error=None)
         else:
@@ -792,15 +1198,58 @@ def afrekenen():
 def faq():
     return render_template("faq.html", categories=CATEGORIES)
 
+@app.route("/meer")
+def nuvemixa_more():
+    return render_template("meer.html", categories=CATEGORIES)
+
 @app.route("/contact", methods=["GET"])
 def contact_page():
     return render_template("contact.html", categories=CATEGORIES, search_query="")
+
+
+# --- NUVEMIXA e-mail via Gmail SMTP (wachtwoord alleen via env SMTP_PASSWORD) ---
+import smtplib as _nv_smtplib
+from email.message import EmailMessage as _NvEmailMessage
+
+NV_MAIL_DEFAULT = "mdscoop7@gmail.com"
+
+
+def nv_mail_configured():
+    return bool(os.getenv("SMTP_PASSWORD"))
+
+
+def nv_send_mail(subject, text, to=None, reply_to=None):
+    """Verstuur een e-mail via SMTP. Geeft True terug als het gelukt is."""
+    password = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
+    if not password:
+        return False
+    user = os.getenv("SMTP_USER", NV_MAIL_DEFAULT)
+    msg = _NvEmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = f"NUVEMIXA <{user}>"
+    msg["To"] = to or os.getenv("CONTACT_TO_EMAIL", NV_MAIL_DEFAULT)
+    if reply_to:
+        msg["Reply-To"] = reply_to
+    msg.set_content(text)
+    try:
+        with _nv_smtplib.SMTP(os.getenv("SMTP_HOST", "smtp.gmail.com"), int(os.getenv("SMTP_PORT", "587")), timeout=15) as smtp:
+            smtp.starttls()
+            smtp.login(user, password)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:  # nooit het wachtwoord loggen
+        app.logger.error("Mail versturen mislukt: %s", type(exc).__name__)
+        return False
+
 
 @app.route("/contact", methods=["POST"])
 def contact():
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
     message = request.form.get("message", "").strip()
+    subject = request.form.get("subject", "Overig").strip()
+    if subject not in ("Productvraag", "Bestelling", "Levering en retour", "Overig"):
+        subject = "Overig"
 
     if not name or not email or not message or len(name) > 120 or len(email) > 254 or len(message) > 5000:
         return redirect(url_for("contact_page") + "?status=error")
@@ -809,6 +1258,19 @@ def contact():
         return redirect(url_for("contact_page") + "?status=error")
 
     is_ajax = request.args.get("ajax") == "1" or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if nv_mail_configured():
+        sent = nv_send_mail(
+            f"NUVEMIXA contactformulier: {name}",
+            f"Naam: {name}\nE-mail: {email}\n\nBericht:\n{message}\n",
+            reply_to=email,
+        )
+        if sent:
+            if is_ajax:
+                return Response(json.dumps({"ok": True}), mimetype="application/json")
+            return redirect(url_for("contact_page") + "?status=sent")
+        if is_ajax:
+            return Response(json.dumps({"ok": False}), status=502, mimetype="application/json")
+        return redirect(url_for("contact_page") + "?status=error")
     api_key = os.getenv("RESEND_API_KEY")
     from_email = os.getenv("CONTACT_FROM_EMAIL")
 
@@ -822,8 +1284,8 @@ def contact():
         "from": from_email,
         "to": [os.getenv("CONTACT_TO_EMAIL", from_email)],
         "reply_to": email,
-        "subject": f"NUVEMIXA contactformulier: {name}",
-        "text": f"Naam: {name}\\nE-mail: {email}\\n\\nBericht:\\n{message}",
+        "subject": f"NUVEMIXA contactformulier: {subject}",
+        "text": f"Naam: {name}\\nE-mail: {email}\\nOnderwerp: {subject}\\n\\nBericht:\\n{message}",
     }
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
@@ -848,6 +1310,7 @@ def contact():
         return Response(json.dumps({"ok": False}), status=502, mimetype="application/json")
     return redirect(url_for("contact_page") + "?status=error")
 
+@app.route("/over-nuvemixa")
 @app.route("/over-trendmix")
 def over_trendmix():
     return render_info_page("over-trendmix")
@@ -917,8 +1380,10 @@ def trendmix_security_headers(response):
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     if os.getenv("VERCEL_ENV"):
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
-    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact") or request.path.startswith("/api/"):
+    if request.path in ("/winkelwagen", "/afrekenen", "/wishlist", "/contact", "/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith(("/api/", "/admin/")):
         response.headers["Cache-Control"] = "no-store"
+    if request.path in ("/dashboard", "/control", "/catalogus-overzicht") or request.path.startswith("/admin/"):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     # Browser caching speeds up repeat page visits without caching private pages,
     # cart state, API replies or customer information.
     if request.path.startswith("/static/") and response.status_code == 200:
@@ -935,5 +1400,120 @@ def trendmix_security_headers(response):
 from trendmix_assistant import register_trendmix_assistant
 register_trendmix_assistant(app, products, CATEGORIES, live_orders_enabled)
 
-if __name__ == "__main__":
-    app.run(debug=False)
+
+# NUVEMIXA-REVIEWS-20261121: klantreviews (aparte opslag, moderatie door beheerder).
+@app.route("/reviews", methods=["POST"])
+def submit_customer_review():
+    """Publiek reviewformulier op de homepage; CSRF wordt door verify_form_csrf gecontroleerd."""
+    if request.form.get("website"):  # honeypot
+        return redirect(url_for("home", review="bedankt") + "#reviews", code=303)
+    from nv_reviews import submit_review, client_hash
+    language = "en" if request.form.get("language") == "en" else "nl"
+    try:
+        result = submit_review(
+            request.form, language=language,
+            client=client_hash(request.remote_addr or "", app.config["SECRET_KEY"]),
+            consent=request.form.get("consent") == "1",
+        )
+    except Exception:
+        app.logger.error("Review write failed")
+        result = "fout"
+    status = {"ok": "bedankt", "limiet": "bedankt", "ongeldig": "ongeldig"}.get(result, "fout")
+    return redirect(url_for("home", review=status) + "#reviews", code=303)
+
+
+@app.route("/admin/reviews")
+def admin_reviews():
+    if not (admin_is_authenticated() or session.get("nv_review_role") is True):
+        return redirect(url_for("admin_login"))
+    rows, error = [], None
+    try:
+        from nv_reviews import all_reviews
+        rows = all_reviews()
+    except Exception:
+        app.logger.error("NUVEMIXA reviews storage unavailable")
+        error = "Reviewopslag is tijdelijk niet beschikbaar."
+    resp = current_app.make_response(render_template("admin_reviews.html", reviews=rows, review_error=error, result=request.args.get("result")))
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return resp
+
+
+@app.route("/admin/reviews/<int:review_id>", methods=["POST"])
+def admin_update_review(review_id):
+    if not (admin_is_authenticated() or session.get("nv_review_role") is True):
+        abort(403)
+    from nv_reviews import update_review
+    if request.form.get('action') in ('verbergen','verwijderen') and not request.form.get('moderation_reason','').strip():
+        abort(400, description='Een inhoudelijke moderatiereden is verplicht, onafhankelijk van de sterren.')
+    try:
+        update_review(review_id, request.form.get("action", ""),
+                      reply=request.form.get("reply", ""), verified=False)
+        from nv_store import db as commerce_db, audit as log_moderation
+        with commerce_db(True) as db:
+            log_moderation(db, 'review:'+request.form.get('action','')+':'+request.form.get('moderation_reason','')[:200], review_id)
+        result = "opgeslagen"
+    except ValueError:
+        result = "ongeldig"
+    except Exception:
+        app.logger.error("Review update failed")
+        result = "fout"
+    return redirect(url_for("admin_reviews", result=result), code=303)
+
+
+
+# NUVEMIXA 2026-11-20f: beveiligings-headers (HSTS 1 dag, CSP alleen in testmodus / Report-Only)
+@app.after_request
+def _nv_security_headers_20261120f(resp):
+    try:
+        h = resp.headers
+        h.setdefault("Strict-Transport-Security", "max-age=86400")
+        h.setdefault("Content-Security-Policy-Report-Only",
+                     "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                     "font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; "
+                     "connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'")
+        h.setdefault("X-Content-Type-Options", "nosniff")
+        h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    except Exception:
+        pass
+    return resp
+
+
+# Eenmalige inloglink vanuit het NUVEMIXA-dashboard (Render) naar het reviewbeheer
+import nv_reviews_sso as _nv_reviews_sso
+_nv_reviews_sso.registreer_ontvanger(app, os.getenv("NUVEMIXA_SSO_USED_DB") or str(BASE_DIR / "instance" / "sso-used.sqlite3"))
+
+
+# NUVEMIXA herstel 2 (22-11-2026): /over-trendmix permanent naar /over-nuvemixa en juiste canonical.
+from flask import redirect as _nv2_redirect, request as _nv2_request
+
+
+@app.before_request
+def _nv2_over_trendmix_redirect():
+    if _nv2_request.path.rstrip("/") == "/over-trendmix":
+        return _nv2_redirect("/over-nuvemixa", code=301)
+    return None
+
+
+@app.after_request
+def _nv2_over_nuvemixa_canonical(response):
+    try:
+        if _nv2_request.path.rstrip("/") == "/over-nuvemixa" and response.mimetype == "text/html" and not response.direct_passthrough:
+            body = response.get_data(as_text=True)
+            fixed = re.sub(r'(<link rel="canonical" href="[^"]*?)/over-trendmix"', r'\1/over-nuvemixa"', body)
+            if fixed != body:
+                response.set_data(fixed)
+    except Exception:  # nooit de pagina breken
+        pass
+    return response
+
+
+# Register every route/hook before any server starts (CLI, WSGI and direct startup).
+from nv_platform import register as register_local_platform
+register_local_platform(__import__(__name__))
+from nv_presentation import register as register_presentation
+register_presentation(app)
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', debug=False)
