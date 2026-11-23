@@ -202,8 +202,8 @@ def test_mobile_drawer_and_assistant_translations_are_available():
         html = response.get_data(as_text=True)
         assert 'id="tmMobileDrawer"' in html
         assert 'id="tmSmartAssistant"' in html
-        assert "trendmix-ui-2026.css" in html
-        assert "trendmix-ui-2026.js" in html
+        assert "nuvemixa-ui-2026.css" in html
+        assert "nuvemixa-ui-2026.js" in html
         assert 'data-tm-language="en"' in html
         assert 'data-tm-language="nl"' in html
 
@@ -274,7 +274,7 @@ def test_original_category_menu_and_svg_icons_survive_redesign():
         for category in ("/gadgets", "/smart-home", "/beauty-care",
                          "/lifestyle-sport", "/shop"):
             assert f'href="{category}"' in html
-    css = Path("static/trendmix-ui-2026.css").read_text(encoding="utf-8")
+    css = Path("static/nuvemixa-ui-2026.css").read_text(encoding="utf-8")
     assert "min-height:54px!important" in css
     assert "display:block!important" in css
 
@@ -321,12 +321,12 @@ def test_information_pages_have_professional_bilingual_content():
         assert html.count('class="tm-info-section"') >= minimum
         assert html.count("<h1") == 1, slug
         assert 'rel="canonical"' in html, slug
-        assert "trendmix-info.css" in html, slug
+        assert "nuvemixa-info.css" in html, slug
 
 
 def test_information_page_translation_bundle_and_original_hero_untouched():
     from pathlib import Path
-    script = Path("static/trendmix-ui-2026.js").read_text(encoding="utf-8")
+    script = Path("static/nuvemixa-ui-2026.js").read_text(encoding="utf-8")
     assert "function translateInformationPage()" in script
     assert "$$('[data-tm-info-nl][data-tm-info-en]').forEach" in script
     assert "$$('[data-tm-tr]').forEach" in script
@@ -362,7 +362,7 @@ def test_catalog_product_cards_and_detail_are_bilingual():
             assert "data-tm-product-nl=" in html, path
             assert "data-tm-product-en=" in html, path
     from pathlib import Path
-    source = Path("static/trendmix-ui-2026.js").read_text(encoding="utf-8")
+    source = Path("static/nuvemixa-ui-2026.js").read_text(encoding="utf-8")
     assert "function translateProductText()" in source
     assert "$$('[data-tm-product-nl][data-tm-product-en]')" in source
 

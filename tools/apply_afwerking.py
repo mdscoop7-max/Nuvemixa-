@@ -75,5 +75,5 @@ s=s.replace('setTimeout(rememberHeader, 600);','/* Header colours come from CSS,
 p.write_text(s,encoding='utf-8')
 p=R/'static/app.js';s=p.read_text(encoding='utf-8').replace('function applyLanguage(lang){','function applyLanguage(lang){ return; // Server-owned NL/EN; storage key remains compatible.\n');p.write_text(s,encoding='utf-8')
 (R/'static/languages.js').write_text('/* NL/EN are rendered by nv_presentation.py. Historical dictionaries are in the restoration point. */\n',encoding='utf-8')
-p=R/'static/trendmix-ui-2026.js';s=p.read_text(encoding='utf-8').replace('      translateRemainingText();','      /* Full-page translation is server-owned. */');p.write_text(s,encoding='utf-8')
+p=R/'static/nuvemixa-ui-2026.js';s=p.read_text(encoding='utf-8').replace('      translateRemainingText();','      /* Full-page translation is server-owned. */');p.write_text(s,encoding='utf-8')
 print('Source migration complete; hero source files preserved.')

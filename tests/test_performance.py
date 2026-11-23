@@ -19,7 +19,7 @@ def test_static_browser_cache_and_private_pages():
     assert "immutable" in versioned.headers["Cache-Control"]
     assert "max-age=604800" in versioned.headers["Cache-Control"]
 
-    unversioned = client.get("/static/trendmix-hero-fix.css")
+    unversioned = client.get("/static/nuvemixa-hero-fix.css")
     assert unversioned.status_code == 200
     assert "max-age=900" in unversioned.headers["Cache-Control"]
 
