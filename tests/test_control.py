@@ -294,7 +294,7 @@ def test_information_pages_have_professional_bilingual_content():
     import json
     client = app.test_client()
     expected_sections = {
-        "over-trendmix": 7,
+        "over-nuvemixa": 7,
         "voorwaarden": 12,
         "privacy": 11,
         "cookies": 9,
@@ -311,7 +311,7 @@ def test_information_pages_have_professional_bilingual_content():
             assert len(document["lead"]) > 90
             assert document["title"] and document["description"]
         assert len(content["nl"]["sections"]) == len(content["en"]["sections"])
-        response = client.get("/over-nuvemixa" if slug=="over-trendmix" else "/"+slug)
+        response = client.get("/"+slug)
         assert response.status_code == 200, slug
         html = response.get_data(as_text=True)
         assert 'data-tm-info-root' in html, slug
