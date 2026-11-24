@@ -10,7 +10,7 @@
 <div class="nv-xp-steps">
   {% if not product %}
   <fieldset><legend><span>1</span> Categorie</legend>
-    <div class="nv-xp-cats">{% for g in extra_groups %}<label><input type="radio" name="category" value="{{ g.key }}" required{% if g.key == (category or extra_groups[0].key) %} checked{% endif %}> {{ g.name }}</label>{% endfor %}</div>
+    <label>Hoofdmenu / categorie *<select name="category" required>{% for g in extra_groups %}<option value="{{ g.key }}"{% if g.key == (category or extra_groups[0].key) %} selected{% endif %}>{{ g.name }}</option>{% endfor %}</select></label>
   </fieldset>
   {% endif %}
   <fieldset><legend><span>{{ 1 if product else 2 }}</span> Foto</legend>
