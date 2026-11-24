@@ -1,7 +1,7 @@
 {% for category, message in get_flashed_messages(with_categories=true) %}
 <p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>
 {% endfor %}
-{% set targets = [15, 20, 25, 30, 35, 40] %}
+{% set targets = range(5, 85, 5) %}
 {% macro extra_form(product=none, category=none) %}
 <form method="post" action="{{ url_for('nv_manage.catalog') }}" enctype="multipart/form-data" class="nv-xp-form" data-xp-form>
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten">
@@ -34,7 +34,7 @@
     </div>
     <div class="nv-xp-advice" data-xp-advice hidden>
       <span>Gewenste marge:</span>
-      {% for t in targets %}<button type="button" class="nv-xp-chip{{ ' on' if t == 30 }}" data-xp-target="{{ t }}">{{ t }}%</button>{% endfor %}
+      <select data-xp-target aria-label="Gewenste marge">{% for t in targets %}<option value="{{ t }}"{% if t == 30 %} selected{% endif %}>{{ t }}%</option>{% endfor %}</select>
       <p>Adviesprijs: <strong data-xp-advice-price>—</strong> <button type="button" class="nv-xp-use" data-xp-use>Gebruik deze prijs</button></p>
     </div>
     <p class="nv-xp-margin" data-xp-margin aria-live="polite"></p>
@@ -62,8 +62,8 @@
 <style>
 .nv-xp-delete{margin-top:12px}.nv-delete-action{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#b42318!important;color:#fff!important;border:1px solid #912018!important;border-radius:11px;padding:11px 18px;font-weight:750;cursor:pointer}.nv-delete-action:hover{background:#912018!important}.nv-xp-back{display:inline-flex;padding:9px 14px;background:#e9edf3;color:#23364d;border:1px solid #cad3df;border-radius:10px;text-decoration:none;font-weight:650;margin-bottom:12px}
 </style>
-<a class="nv-xp-back" href="/dashboard?section=producten">← Naar producten</a>
-<section class="panel">
+<a class="nv-xp-back" href="#xp-new">+ Nieuw product</a>
+<section class="panel" id="xp-new">
 <h2>Nieuw product toevoegen</h2>
 <p>Vul de stappen in; rechts zie je meteen hoe het product in de webshop staat. Een nieuw product wordt eerst als <strong>concept</strong> bewaard (alleen zichtbaar in het dashboard), tenzij je “Direct zichtbaar” aanvinkt. Er wordt niets naar WooCommerce of Alwaysdata gestuurd.</p>
 <div class="nv-xp-sum">
