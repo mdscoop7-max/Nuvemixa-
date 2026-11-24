@@ -79,13 +79,28 @@
       }
     }
     cost.addEventListener('input', prices); price.addEventListener('input', prices);
-    form.querySelectorAll('[data-xp-target]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        target = parseInt(b.getAttribute('data-xp-target'), 10);
-        form.querySelectorAll('[data-xp-target]').forEach(function (x) { x.classList.toggle('on', x === b); });
-        prices();
-      });
+    var targetSelect = form.querySelector('[data-xp-target]');
+    targetSelect.addEventListener('change', function () {
+      target = Number(targetSelect.value);
+      prices();
+      if (adviceCents) { price.value = (adviceCents / 100).toFixed(2); prices(); }
     });
+    img.addEventListener('click', function () {
+      var photo = img.querySelector('img');
+      if (!photo) return;
+      var dialog = document.createElement('dialog');
+      dialog.style.cssText = 'max-width:95vw;max-height:95vh;border:0;border-radius:12px;padding:12px';
+      var close = document.createElement('button');
+      close.type = 'button'; close.textContent = 'Sluiten ×';
+      var enlarged = document.createElement('img');
+      enlarged.src = photo.src; enlarged.alt = name.value;
+      enlarged.style.cssText = 'display:block;max-width:85vw;max-height:80vh;object-fit:contain';
+      dialog.append(close, enlarged); document.body.appendChild(dialog);
+      close.addEventListener('click', function () { dialog.close(); });
+      dialog.addEventListener('close', function () { dialog.remove(); });
+      dialog.showModal();
+    });
+    img.style.cursor = 'zoom-in';
     use.addEventListener('click', function () { if (adviceCents) { price.value = (adviceCents / 100).toFixed(2); prices(); } });
     text(); prices();
   }
