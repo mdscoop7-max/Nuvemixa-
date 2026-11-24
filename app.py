@@ -771,6 +771,8 @@ def verify_form_csrf():
     if request.endpoint == "nv_manage.catalog" and allowed("product_add", "product_edit", "image_manage"):
         # Alleen voor ingelogde beheerders: ruimte voor één productfoto (max. 5 MB) bij 'Extra producten'.
         request.max_content_length = 6 * 1024 * 1024
+        # Multipart parser reads chunks larger than the global 32 KiB limit.
+        request.max_form_memory_size = 512 * 1024
 
     origin = request.headers.get("Origin")
     app.logger.warning(
