@@ -1,0 +1,16 @@
+/* Only the explicitly requested account tabs, password eyes and category text. */
+.nv-account-panel .nv-account-tabs button[aria-selected="true"]{background:#064eac!important;color:#fff!important;border:1px solid #064eac!important}
+.nv-account-panel .nv-account-tabs button[aria-selected="false"]{background:#eaf2ff!important;color:#064eac!important;border:1px solid #bdd3ee!important}
+.nv-account-panel .nv-password-control{display:block;position:relative}
+.nv-account-panel .nv-password-control input{padding-right:58px!important}
+.nv-account-panel .nv-password-control .nv-password-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:44px;height:44px;min-height:44px;padding:10px;background:transparent!important;color:#064eac!important;border:0;border-radius:8px;box-shadow:none}
+.nv-password-eye svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8}
+html body .categoryshowcase .categorygrid>a.categorytile{grid-template-areas:"i t t" "d d d" "b b b"!important}
+html body .categoryshowcase .categorytile .categorydesc{word-break:normal!important;overflow-wrap:normal!important;hyphens:none!important}
+html body .categoryshowcase .categorytile .nv-smart-category-description>span{display:block;white-space:nowrap}
+html body .categoryshowcase .categorytile .categorycta{justify-self:end!important;align-self:end!important}
+/* Only the separate Home & Living feature text panel; all hero geometry stays intact. */
+.nv-desktop-features.nv-targeted-no-panel{background:transparent!important}
+/* Owner extended this approval to every hero with a black CSS text overlay. */
+.tm-new-hero.nv-targeted-clear-text-panel::before,.tm-shop-hero.nv-targeted-clear-text-panel::before{background:none!important}
+.tm-shop-hero.nv-targeted-clear-text-panel .nv-desktop-categories span{background:transparent!important}
