@@ -452,7 +452,14 @@ def home():
         review_list, review_summary = published_reviews(5), review_stats()
     except Exception:
         app.logger.error("NUVEMIXA reviews storage unavailable")
-    weekly_offer = next((item for item in all_items if item.get("offer_week")), None)
+    from datetime import date
+    from zoneinfo import ZoneInfo
+    day = datetime.now(ZoneInfo('Europe/Amsterdam')).date()
+    candidates = sorted((item for item in all_items if item.get('offer_week') and item.get('offer_end') and item['offer_end'] >= day.isoformat()),
+                        key=lambda item: (item['category_slug'], str(item.get('sku') or item['slug'])))
+    weekly_offer = candidates[0] if candidates else None
+    if weekly_offer:
+        weekly_offer['remaining_days'] = (date.fromisoformat(weekly_offer['offer_end']) - day).days + 1
     return render_template("index.html", categories=CATEGORIES, weekly_offer=weekly_offer, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
 
 
@@ -1430,6 +1437,9 @@ def sitemap():
 def trendmix_security_headers(response):
     # Safe baseline headers; a strict CSP requires a separate audit of inline scripts.
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    commit = os.getenv("RENDER_GIT_COMMIT", "")
+    if re.fullmatch(r"[0-9a-f]{40}", commit):
+        response.headers["X-NUVEMIXA-Commit"] = commit
     response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")

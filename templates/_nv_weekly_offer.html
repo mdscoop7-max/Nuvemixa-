@@ -20,7 +20,8 @@
             € {{ "%.2f"|format(weekly_offer.price)|replace(".", ",") }}
         </strong>
 
-        <p>Geldig t/m {{ weekly_offer.offer_end }}</p>
+        <p>{{ weekly_offer.remaining_days }} {{ 'dag' if weekly_offer.remaining_days == 1 else 'dagen' }} resterend</p>
+        <small>Geldig t/m {{ weekly_offer.offer_end }}</small>
 
         <a class="nv-weekly-button"
            href="{{ weekly_offer.product_url }}">

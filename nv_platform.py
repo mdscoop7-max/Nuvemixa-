@@ -252,7 +252,7 @@ def register(mod):
         return render_template('nv_cart.html',categories=mod.CATEGORIES,cart=rows,cart_total=mod.cart_total(),quote=quote,coupon_error=coupon_error,recommendations=recommendations(rows))
     app.view_functions['winkelwagen']=cart
     def offers():
-        products=[p for p in mod.load_all_products() if (p.get('extra') and p.get('offer_list')) or (not p.get('extra') and p.get('published') and not p.get('demo') and p.get('old_price'))]
+        products=[p for p in mod.load_all_products() if p.get('offer_list') or (not p.get('extra') and p.get('published') and not p.get('demo') and p.get('old_price'))]
         return render_template('offers.html',products=products,category='Aanbiedingen',search='',categories=mod.CATEGORIES,deals_page=True)
     app.view_functions['deals']=offers
     def sitemap():

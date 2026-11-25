@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='ux.css') }}">
-  <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='app.js', v='20261125zoom1') }}"></script>
+  <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='app.js', v='20261125zoom2') }}"></script>
   <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='languages.js', v='20261122b') }}"></script>
   {% if product.images %}
   <meta property="og:image" content="{{ product.images[0] }}">
@@ -67,7 +67,7 @@
 
 <script nonce="{{ g.nv_nonce }}" type="speculationrules">{"prefetch":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/winkelwagen*","/afrekenen*","/account*","/admin*","/api/*","/dashboard*","/control*","/wishlist*","/*logout*"]}}]},"eagerness":"moderate"}],"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/winkelwagen*","/afrekenen*","/account*","/admin*","/api/*","/dashboard*","/control*","/wishlist*","/*logout*","/*\\?*"]}}]},"eagerness":"conservative"}]}</script>{% endraw %}
 <link rel="stylesheet" href="/static/nv-polish-20261122.css?v=20261122c">
-</head>
+<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-gallery.js?v=20261125-gallery2"></script><link rel="stylesheet" href="/static/nv-gallery.css?v=20261125-gallery2"></head>
 <body>
 {% include "_header.html" %}
 

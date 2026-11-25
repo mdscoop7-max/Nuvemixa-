@@ -26,12 +26,15 @@ def _fetch_extra_products():
 
         result = []
         for raw in data["products"]:
+            if raw.get("hidden") and not raw.get("extra"):
+                result.append(dict(raw))
+                continue
             if not raw.get("id") or not raw.get("name"):
                 continue
 
             item = dict(raw)
-            item["id"] = "extra-" + str(raw["id"])
-            item["extra"] = True
+            item["extra"] = raw.get("extra", True)
+            item["id"] = ("extra-" if item["extra"] else "") + str(raw["id"])
             item["price"] = float(raw["price"])
             item["image"] = image_url(raw.get("image"))
             item["images"] = [
@@ -60,7 +63,7 @@ def fetch_extra_products():
     with _cache_lock:
         if monotonic() >= _cache_until:
             _cache_products = _fetch_extra_products()
-            _cache_until = monotonic() + 30
+            _cache_until = monotonic()  # Prices and offers always come from the current permanent source.
         return deepcopy(_cache_products)
 
 from flask import g, has_request_context
@@ -79,7 +82,21 @@ def merged_catalog(base):
         for item in fetch_extra_products():
             category = item.get("category_slug")
             if category in catalog:
-                catalog[category].append(item)
+                def slug(row):
+                    import re
+                    value = str(row.get('name', '')).lower().replace('+', ' plus ').replace('&', ' en ')
+                    return row.get('slug') or re.sub(r'[-\s]+', '-', re.sub(r'[^a-z0-9\s-]', '', value).strip())
+                position = next((i for i, row in enumerate(catalog[category]) if slug(row) == item['slug']), None)
+                if item.get('hidden'):
+                    if position is not None:
+                        catalog[category].pop(position)
+                elif position is None:
+                    if item.get('extra'):
+                        catalog[category].append(item)
+                else:
+                    original = catalog[category][position]
+                    # Keep the supplied base ID and all fields not present in the public edit.
+                    catalog[category][position] = {**original, **item, 'id': original.get('id', item['id'])}
 
         g.nv_public_products = catalog
 
