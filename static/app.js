@@ -138,26 +138,86 @@ document.addEventListener('error',(event)=>{
 },true);
 
 
-/* Product gallery + mobile sticky add-to-cart */
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.detail-thumbnails button').forEach(button=>{
-    button.addEventListener('click',()=>{
-      const image=button.querySelector('img');
-      const main=document.querySelector('.detail-image img');
-      if(image&&main){
-        main.src=image.src;
-        document.querySelectorAll('.detail-thumbnails button').forEach(b=>b.classList.remove('active'));
-        button.classList.add('active');
+/* NUVEMIXA product gallery and zoom */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.detail-gallery').forEach(gallery => {
+    const main = gallery.querySelector('.detail-image img');
+    if (!main) return;
+    const buttons = Array.from(gallery.querySelectorAll('.detail-thumbnails button'));
+    const images = buttons.map(b => b.querySelector('img')).filter(Boolean).map(img => img.src);
+    if (!images.length) images.push(main.src);
+    let current = Math.max(0, images.indexOf(main.src));
+    function selectImage(index) {
+      current = (index + images.length) % images.length;
+      main.src = images[current];
+      buttons.forEach((b, i) => b.classList.toggle('active', i === current));
+    }
+    buttons.forEach((button, index) => button.addEventListener('click', () => selectImage(index)));
+    main.style.cursor = 'zoom-in';
+    main.tabIndex = 0;
+    main.setAttribute('role', 'button');
+    main.setAttribute('aria-label', 'Productfoto vergroten: ' + main.alt);
+    function openZoom() {
+      if (document.querySelector('.tm-image-zoom')) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'tm-image-zoom';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', 'Productfoto vergroten');
+      Object.assign(overlay.style, {zIndex:'2147483647', boxSizing:'border-box'});
+      const photo = document.createElement('img');
+      photo.src = main.src;
+      photo.alt = main.alt;
+      Object.assign(photo.style, {maxWidth:'90vw', maxHeight:'85vh', objectFit:'contain'});
+      overlay.appendChild(photo);
+      const previousOverflow = document.body.style.overflow;
+      function closeZoom() {
+        document.removeEventListener('keydown', keyboard);
+        overlay.remove();
+        document.body.style.overflow = previousOverflow;
+        main.focus();
       }
-    });
-  });
-  document.querySelectorAll('.detail-image img').forEach(img=>{
-    img.addEventListener('click',()=>{
-      const overlay=document.createElement('div');
-      overlay.className='tm-image-zoom';
-      overlay.innerHTML='<button type="button" aria-label="Afbeelding sluiten">×</button><img src="'+img.src+'" alt="'+(img.alt||'')+'">';
-      overlay.addEventListener('click',e=>{if(e.target===overlay||e.target.tagName==='BUTTON')overlay.remove()});
+      function move(step) {
+        selectImage(current + step);
+        photo.src = main.src;
+      }
+      function keyboard(event) {
+        if (event.key === 'Escape') { event.preventDefault(); closeZoom(); }
+        if (event.key === 'ArrowLeft' && images.length > 1) { event.preventDefault(); move(-1); }
+        if (event.key === 'ArrowRight' && images.length > 1) { event.preventDefault(); move(1); }
+        if (event.key === 'Tab') {
+          const controls = Array.from(overlay.querySelectorAll('button'));
+          const index = controls.indexOf(document.activeElement);
+          event.preventDefault();
+          controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
+        }
+      }
+      function makeButton(text, label, className, action) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = text;
+        button.className = className;
+        button.setAttribute('aria-label', label);
+        button.addEventListener('click', action);
+        overlay.appendChild(button);
+        return button;
+      }
+      const close = makeButton('×', 'Afbeelding sluiten', 'nv-zoom-close', closeZoom);
+      if (images.length > 1) {
+        const prev = makeButton('‹', 'Vorige foto', 'nv-zoom-prev', () => move(-1));
+        const next = makeButton('›', 'Volgende foto', 'nv-zoom-next', () => move(1));
+        Object.assign(prev.style, {left:'12px', right:'auto', top:'50%', transform:'translateY(-50%)'});
+        Object.assign(next.style, {right:'12px', top:'50%', transform:'translateY(-50%)'});
+      }
+      overlay.addEventListener('click', event => { if (event.target === overlay) closeZoom(); });
       document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', keyboard);
+      close.focus();
+    }
+    main.addEventListener('click', openZoom);
+    main.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openZoom(); }
     });
   });
 });
