@@ -1,0 +1,412 @@
+.xp {
+  --blue: #075ae8;
+  --edge: #c8d7f5;
+  color: #101e3a;
+  background: #f6f9ff;
+  padding: clamp(8px, 1.4vw, 24px);
+  border-radius: 16px;
+  min-width: 0;
+}
+.xp * {
+  box-sizing: border-box;
+}
+.xp header,
+.xp nav,
+.xp footer,
+.xp-thumbs,
+.xp-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.xp header {
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.xp h2,
+.xp h3,
+.xp p {
+  margin: 5px 0;
+}
+.xp header h2 {
+  font-size: 2rem;
+}
+.xp nav a,
+.xp button,
+.xp-file {
+  border: 1px solid #a4bfed;
+  background: white;
+  color: #14376d;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: none;
+}
+.xp nav .xp-new {
+  background: #ed6500;
+  color: white;
+}
+.xp-steps {
+  background: #e9f0ff;
+  padding: 9px;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.xp .xp-steps a {
+  background: transparent;
+  border: 0;
+  flex: auto;
+  text-align: center;
+}
+.xp-top,
+.xp-bottom,
+.xp-stock,
+.xp-pair,
+.xp-dims {
+  display: grid;
+  gap: 10px;
+}
+.xp-top {
+  grid-template-columns: 1.04fr 1.28fr 1fr;
+}
+.xp-bottom {
+  grid-template-columns: 1.12fr 0.75fr 1.05fr 1.1fr;
+  margin-top: 10px;
+}
+.xp article,
+.xp #xp-stock {
+  background: white;
+  border: 1px solid var(--edge);
+  box-shadow: 0 2px 5px #14376d0c;
+  border-radius: 14px;
+  padding: 12px;
+  min-width: 0;
+}
+.xp h3 {
+  font-size: 1.04rem;
+  margin-bottom: 12px;
+}
+.xp label,
+.xp small {
+  display: block;
+  margin: 5px 0;
+}
+.xp input,
+.xp select,
+.xp textarea,
+#xp-desc {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #b9c8dd;
+  border-radius: 7px;
+  padding: 6px;
+  color: #101e3a;
+  font: inherit;
+}
+.xp .xp-check,
+.xp .xp-cost {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.xp-check input {
+  width: auto;
+}
+.xp .xp-cost {
+  justify-content: space-between;
+}
+.xp-cost input {
+  width: 38%;
+}
+.xp-pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.xp-dims {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.xp label,
+.xp small,
+.xp output {
+  font-size: 0.86rem;
+}
+.xp-photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: #f4f7fb;
+  border-radius: 10px;
+  height: clamp(160px, 15vw, 270px);
+}
+.xp-photo img {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  inset: 0;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+.xp-photo button {
+  z-index: 1;
+  position: absolute;
+  border-radius: 50%;
+}
+.xp-photo [data-zoom] {
+  right: 6px;
+  top: 6px;
+}
+.xp-photo [data-prev] {
+  left: 5px;
+}
+.xp-photo [data-next] {
+  right: 5px;
+}
+.xp-thumbs button {
+  padding: 2px;
+}
+.xp-thumbs img {
+  width: 40px;
+  height: 35px;
+  object-fit: cover;
+}
+.xp-thumbs [aria-pressed="true"] {
+  outline: 2px solid var(--blue);
+}
+.xp .xp-file input {
+  font-size: 0.8rem;
+  border: 0;
+  padding: 2px;
+}
+.xp [hidden] {
+  display: none !important;
+}
+.xp footer {
+  margin: 14px 0;
+  justify-content: flex-end;
+}
+.xp footer button:first-child {
+  margin-right: auto;
+}
+.xp .xp-save {
+  background: var(--blue);
+  color: white;
+}
+.xp #xp-stock {
+  margin-top: 12px;
+}
+.xp-stock {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.xp [data-result] p {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #e3eaff;
+  padding: 4px;
+  font-size: 0.85rem;
+}
+.xp [data-result] p:nth-last-child(-n + 2) {
+  background: #e0f8e3;
+}
+.xp [role="alert"] {
+  color: #a52919;
+}
+.xp summary {
+  cursor: pointer;
+}
+.xp #xp-desc {
+  min-height: 100px;
+}
+.xp [data-record] {
+  margin: 10px 0;
+}
+.xp [data-record] img {
+  vertical-align: middle;
+  object-fit: contain;
+}
+.xp .xp-tools {
+  gap: 2px;
+}
+.xp-tools button {
+  padding: 4px;
+}
+@media (max-width: 1100px) {
+  .xp-bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .xp-top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .xp-top article:last-child {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 700px) {
+  .xp-top,
+  .xp-bottom,
+  .xp-stock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .xp .xp-steps a {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+  .xp header nav a {
+    font-size: 0.85rem;
+  }
+  .xp footer {
+    align-items: stretch;
+  }
+  .xp footer button {
+    flex: auto;
+  }
+}
+.xp h1 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 2px 0;
+  font-size: clamp(24px, 2.3vw, 35px);
+  line-height: 1.15;
+}
+.xp svg {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  color: #0868e5;
+  vertical-align: middle;
+}
+.xp h1 svg {
+  color: #102341;
+}
+.xp h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.xp .xp-file {
+  position: relative;
+  display: inline-block;
+  color: #075ae8;
+  padding: 5px 9px;
+}
+.xp .xp-file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.xp .xp-steps b {
+  background: #1266ee;
+  color: white;
+  border-radius: 50%;
+  padding: 4px 9px;
+  margin-right: 3px;
+}
+.xp .xp-photo [data-zoom] {
+  background: #304b71;
+  border: 2px solid white;
+  padding: 7px;
+}
+.xp [data-zoom] svg {
+  color: white;
+  width: 20px;
+  height: 20px;
+}
+.xp #xp-editor input:not([type="checkbox"]),
+.xp #xp-editor select,
+.xp #xp-editor textarea {
+  min-height: 30px;
+  padding: 4px 7px;
+}
+.xp #xp-editor .xp-tools button {
+  min-height: 27px;
+  padding: 2px 5px;
+}
+.xp #xp-editor textarea {
+  resize: vertical;
+}
+.xp #xp-editor .xp-tools {
+  margin: 0;
+}
+.xp .xp-top article,
+.xp .xp-bottom article {
+  align-content: start;
+}
+.xp [data-result] strong {
+  white-space: nowrap;
+}
+@media (min-width: 1101px) {
+  .xp {
+    font-size: 14px;
+    line-height: 1.3;
+    padding: 14px;
+  }
+  .xp header {
+    margin: 0 0 9px;
+  }
+  .xp h3 {
+    font-size: 16px;
+    line-height: 1.2;
+    margin: 0 0 8px;
+  }
+  .xp h1 {
+    margin: 0;
+  }
+  .xp .xp-steps {
+    margin: 8px 0;
+    padding: 5px;
+  }
+  .xp .xp-photo {
+    height: clamp(155px, 12vw, 225px);
+  }
+  .xp #xp-editor label {
+    margin: 4px 0;
+    line-height: 1.25;
+  }
+  .xp #xp-editor details {
+    margin: 4px 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+  .xp #xp-editor summary {
+    padding: 3px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .xp #xp-editor .xp-check {
+    padding: 4px;
+  }
+  .xp article {
+    padding: 10px;
+  }
+  .xp #xp-editor input:not([type="checkbox"]),
+  .xp #xp-editor select {
+    padding: 3px 6px;
+    min-height: 26px;
+    line-height: 1.25;
+  }
+  .xp .xp-tools button {
+    line-height: 1;
+  }
+  .xp [data-result] p {
+    line-height: 1.3;
+    margin: 3px 0;
+    padding: 3px;
+  }
+  .xp article small {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .xp #xp-desc {
+    min-height: 80px;
+  }
+  .xp footer {
+    margin: 10px 0;
+  }
+}

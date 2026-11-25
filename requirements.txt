@@ -7,3 +7,4 @@ qrcode[pil]>=8.0,<9
 psycopg[binary,pool]>=3.3,<4
 certifi>=2024.7.4
 tzdata>=2025.1
+nh3>=0.3,<0.4

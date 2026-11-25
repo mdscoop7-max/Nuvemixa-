@@ -20,6 +20,7 @@ from flask import g, has_request_context, Flask, Response, current_app, render_t
 
 from werkzeug.security import check_password_hash
 from werkzeug.local import LocalProxy
+import nv_extra_pricing
 from nv_catalog_manager import catalog_changes
 from nuvemixa_integrations import mollie_readonly_check
 from nv_storage_paths import CUSTOMER_DB
@@ -205,6 +206,8 @@ def catalog_snapshot():
             continue
         if changes.get("hidden") and not show_hidden:
             continue
+        if changes.get("extra") and not show_hidden:
+            changes = nv_extra_pricing.public_price(changes)
         position = index.get((category, slug))
         if position is None:
             if changes.get("id"):
@@ -768,9 +771,9 @@ def verify_form_csrf():
     if request.endpoint in ("trendmix_assistant", "webshop_visits.webshop_visit"):
         return
 
-    if request.endpoint == "nv_manage.catalog" and allowed("product_add", "product_edit", "image_manage"):
+    if request.endpoint in ("nv_manage.catalog", "nv_manage.extra_editor") and allowed("product_add", "product_edit", "image_manage"):
         # Alleen voor ingelogde beheerders: ruimte voor één productfoto (max. 5 MB) bij 'Extra producten'.
-        request.max_content_length = 6 * 1024 * 1024
+        request.max_content_length = (41 if request.path == "/admin/nv/extra-producten" else 6) * 1024 * 1024
         # Multipart parser reads chunks larger than the global 32 KiB limit.
         request.max_form_memory_size = 512 * 1024
 
@@ -878,7 +881,7 @@ def shop():
 
 def deals():
 
-    deal_products = [item for item in load_all_products() if item.get("old_price") and float(item.get("old_price") or 0) > float(item.get("price") or 0)]
+    deal_products = [item for item in load_all_products() if (item.get("offer_list") and nv_extra_pricing.active(item, nv_extra_pricing.today().isoformat())) or (not item.get("extra") and item.get("old_price") and float(item["old_price"]) > float(item["price"]))]
 
     return render_template("offers.html", products=deal_products, category="Aanbiedingen", search="", categories=CATEGORIES, deals_page=True)
 
@@ -2289,6 +2292,10 @@ def control():
         livegang = nv_livegang.checklist()
     extra_groups = None
     if section == "extra-producten":
+        day = nv_extra_pricing.today().isoformat()
+        for product in all_products:
+            if product.get("extra"):
+                product["active_offer"] = nv_extra_pricing.active(product, day)
         extra_groups = [{"key": key, "name": meta.get("name", key),
                          "base": sum(1 for p in all_products if p["category_slug"] == key and not p.get("extra")),
                          "extra": [p for p in all_products if p["category_slug"] == key and p.get("extra")]}

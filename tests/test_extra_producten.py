@@ -26,18 +26,18 @@ def add(client, **fields):
 
 def test_menu_shows_every_main_category_with_base_count(administrator, local_db):
     html = administrator.get("/dashboard?section=extra-producten").get_data(as_text=True)
-    assert "Nieuw product toevoegen" in html
+    assert "＋ Nieuw product" in html
     for name in ("Gadgets", "Smart Home", "Beauty &amp; Care", "Home &amp; Living", "Lifestyle &amp; Sport"):
-        assert f"Product toevoegen aan {name}" in html
-    assert "20 basisproducten" in html
+        assert f">{name}</option>" in html
+    assert "Mijn producten" in html and "Concepten" in html
     assert 'href="/dashboard?section=extra-producten"' in administrator.get("/dashboard").get_data(as_text=True)
 
 
 def test_new_product_is_concept_and_hidden_from_shop(administrator, local_db):
     response = add(administrator)
     assert response.status_code == 303 and "section=extra-producten" in response.location
-    page = administrator.get("/dashboard?section=extra-producten").get_data(as_text=True)
-    assert "Mini statiefhouder" in page and "Concept (verborgen)" in page and "inkoop €" in page.replace("\xa0", " ")
+    page = administrator.get("/dashboard?section=extra-producten&view=drafts").get_data(as_text=True)
+    assert "Mini statiefhouder" in page and "Concept" in page and "14,95" in page
     shop = dashboard.app.test_client().get("/gadgets").get_data(as_text=True)
     assert "Mini statiefhouder" not in shop
 
@@ -54,7 +54,7 @@ def test_visible_product_appears_in_shop_and_can_be_hidden_again(administrator, 
 def test_invalid_input_is_refused_and_base_products_cannot_be_edited_here(administrator, local_db):
     add(administrator, cost_price="abc")
     add(administrator, name="Ander product", image="http://onveilig.example/x.jpg")
-    page = administrator.get("/dashboard?section=extra-producten").get_data(as_text=True)
+    page = administrator.get("/dashboard?section=extra-producten&view=drafts").get_data(as_text=True)
     assert "Mini statiefhouder" not in page and "Ander product" not in page
     with dashboard.app.test_request_context("/dashboard"):
         base = next(p for p in dashboard.catalog_items() if p["category_slug"] == "gadgets")
@@ -101,7 +101,7 @@ def test_non_image_upload_is_refused(administrator, local_db):
 def test_form_has_preview_price_advice_and_upload(administrator, local_db):
     html = administrator.get("/dashboard?section=extra-producten").get_data(as_text=True)
     assert 'enctype="multipart/form-data"' in html and 'name="image_file"' in html
-    assert "Voorbeeld in de webshop" in html and "Gebruik deze prijs" in html and "nv-extra-producten.js" in html
+    assert "data-preview" in html and "Prijsresultaat (automatisch)" in html and "nv-extra-producten.js" in html
 
 
 def test_anonymous_cannot_send_large_bodies():

@@ -150,15 +150,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     });
   });
-  document.querySelectorAll('.detail-image img').forEach(img=>{
-    img.addEventListener('click',()=>{
-      const overlay=document.createElement('div');
-      overlay.className='tm-image-zoom';
-      overlay.innerHTML='<button type="button" aria-label="Afbeelding sluiten">×</button><img src="'+img.src+'" alt="'+(img.alt||'')+'">';
-      overlay.addEventListener('click',e=>{if(e.target===overlay||e.target.tagName==='BUTTON')overlay.remove()});
-      document.body.appendChild(overlay);
-    });
-  });
+
 });
 
 
