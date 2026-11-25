@@ -1,0 +1,15 @@
+<section class="nv-workflow nv-return-panel" id="retourformulier">
+<h2>{{ nv_tr('Retourformulier en herroeping','Return form and withdrawal') }}</h2>
+<p>{{ nv_tr('Een reden opgeven is niet verplicht bij wettelijke herroeping. De herroepingsinformatie hierboven blijft van toepassing.','Giving a reason is not required for statutory withdrawal. The withdrawal information above remains applicable.') }}</p>
+<p><a href="/herroepen">{{ nv_tr('Overeenkomst herroepen','Withdraw from a contract') }}</a> · <a href="#modelformulier">{{ nv_tr('Modelformulier','Model withdrawal form') }}</a></p>
+<details id="modelformulier"><summary>{{ nv_tr('Modelformulier voor herroeping','Model withdrawal form') }}</summary><p>{{ nv_tr('Aan de verkoper van de bestelling. Hierbij deel ik u mee dat ik onze overeenkomst betreffende de verkoop van de volgende goederen / levering van de volgende dienst herroep: … Besteld op / ontvangen op: … Naam consument: … Adres consument: … Datum: … Handtekening alleen wanneer dit formulier op papier wordt ingediend. Doorhalen wat niet van toepassing is.','To the seller of the order. I hereby give notice that I withdraw from our contract for the sale of the following goods / provision of the following service: … Ordered on / received on: … Consumer name: … Consumer address: … Date: … Signature only if this form is submitted on paper. Delete as appropriate.') }}</p></details>
+<p class="nv-notice">{{ nv_tr('Lokale simulatie: dit formulier verstuurt geen e-mail en registreert geen echte retourmelding.','Local simulation: this form sends no email and does not register a real return request.') }}</p>
+{% if g.nv_return_errors %}<div role="alert"><ul>{% for error in g.nv_return_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+{% if g.nv_return_validated %}<p role="status">{{ nv_tr('Je formulier is lokaal gevalideerd. Er is niets verzonden of als echte retour geregistreerd.','Your form was validated locally. Nothing was sent or registered as a real return.') }}</p>{% endif %}
+<form method="post" action="/retouren#retourformulier">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+{% for key,nl,en,kind,limit in [('name','Naam','Name','text',120),('email','E-mailadres','Email address','email',254),('order_number','Bestelnummer','Order number','text',80),('product','Product','Product','text',200)] %}
+<label>{{ nv_tr(nl,en) }}<input name="{{ key }}" type="{{ kind }}" value="{{ g.nv_return_values.get(key,'') }}" maxlength="{{ limit }}" required {% if key in ['name','email'] %}autocomplete="{{ key }}"{% endif %}></label>{% endfor %}
+<label>{{ nv_tr('Retourreden (optioneel)','Reason for return (optional)') }}<textarea name="reason" maxlength="2000" rows="3">{{ g.nv_return_values.get('reason','') }}</textarea></label>
+<button>{{ nv_tr('Versturen (lokale simulatie)','Submit (local simulation)') }}</button>
+</form></section>

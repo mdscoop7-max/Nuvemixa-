@@ -43,8 +43,8 @@ def test_visible_heroes_are_prioritized_without_changing_images():
 
     shop = client.get("/shop").get_data(as_text=True)
     offers = client.get("/aanbiedingen").get_data(as_text=True)
-    assert 'rel="preload" media="(max-width: 991px)" as="image"' in shop
-    assert 'rel="preload" media="(max-width: 991px)" as="image"' in offers
+    assert ('rel="preload" media="(max-width: 991px)" as="image"' in shop or 'rel="preload" as="image" media="(max-width: 991px)"' in shop)
+    assert ('rel="preload" media="(max-width: 991px)" as="image"' in offers or 'rel="preload" as="image" media="(max-width: 991px)"' in offers)
 
 
 def test_shared_cart_footer_and_ai_trendmix_remain_everywhere():

@@ -1,0 +1,30 @@
+<aside class="nv-weekly-offer">
+    <h2>⚡ Aanbieding van de week</h2>
+
+    <a href="{{ weekly_offer.product_url }}">
+        <img src="{{ weekly_offer.image }}"
+             alt="{{ weekly_offer.name }}">
+    </a>
+
+    <div class="nv-weekly-info">
+        <h3>{{ weekly_offer.name }}</h3>
+
+        {% if weekly_offer.old_price and weekly_offer.old_price > weekly_offer.price %}
+        <span class="nv-weekly-discount">
+            -{{ ((1 - (weekly_offer.price|float) / (weekly_offer.old_price|float)) * 100)|round|int }}%
+        </span>
+        <del>€ {{ "%.2f"|format(weekly_offer.old_price)|replace(".", ",") }}</del>
+        {% endif %}
+
+        <strong class="nv-weekly-price">
+            € {{ "%.2f"|format(weekly_offer.price)|replace(".", ",") }}
+        </strong>
+
+        <p>Geldig t/m {{ weekly_offer.offer_end }}</p>
+
+        <a class="nv-weekly-button"
+           href="{{ weekly_offer.product_url }}">
+            Bekijk aanbieding →
+        </a>
+    </div>
+</aside>

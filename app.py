@@ -104,7 +104,11 @@ def load_catalog():
     return catalog
 
 
-products = load_catalog()
+from werkzeug.local import LocalProxy
+from nv_public_products import merged_catalog
+
+base_products = load_catalog()
+products = LocalProxy(lambda: merged_catalog(base_products))
 
 
 def catalog_items():
@@ -237,14 +241,23 @@ def cart_total():
 
 
 def load_all_products():
+    from flask import has_request_context
+    from copy import deepcopy
+    if has_request_context() and hasattr(g, 'nv_all_products_cache'):
+        return deepcopy(g.nv_all_products_cache)
     all_products = []
     for category_slug, items in products.items():
         for index, raw in enumerate(items):
             item = enrich_product(raw, category_slug, index)
             item["category"] = item.get("category_name", category_slug)
             all_products.append(item)
-    for index, product in enumerate(all_products, start=1):
-        product["id"] = index
+    index = 0
+    for product in all_products:
+        if not product.get("extra"):
+            index += 1
+            product["id"] = index
+    if has_request_context():
+        g.nv_all_products_cache = deepcopy(all_products)
     return all_products
 
 
@@ -439,7 +452,8 @@ def home():
         review_list, review_summary = published_reviews(5), review_stats()
     except Exception:
         app.logger.error("NUVEMIXA reviews storage unavailable")
-    return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
+    weekly_offer = next((item for item in all_items if item.get("offer_week")), None)
+    return render_template("index.html", categories=CATEGORIES, weekly_offer=weekly_offer, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
 
 
 @app.route("/shop")
@@ -459,7 +473,7 @@ def shop():
 
 @app.route("/aanbiedingen")
 def deals():
-    deal_products = [item for item in load_all_products() if item.get("old_price") and float(item.get("old_price") or 0) > float(item.get("price") or 0)]
+    deal_products = [item for item in load_all_products() if item.get("offer_list") or not item.get("extra") and item.get("old_price") and float(item.get("old_price") or 0) > float(item.get("price") or 0)]
     return render_template("offers.html", products=deal_products, category="Aanbiedingen", search="", categories=CATEGORIES, deals_page=True)
 
 
@@ -1017,6 +1031,9 @@ INFO_PAGES = {
 }
 
 
+INFO_PAGES.setdefault('over-nuvemixa', INFO_PAGES['over-trendmix'])
+
+
 def render_info_page(info_slug):
     page = INFO_PAGES.get(info_slug)
     if not page:
@@ -1351,7 +1368,7 @@ def contact():
 @app.route("/over-nuvemixa")
 @app.route("/over-trendmix")
 def over_trendmix():
-    return render_info_page("over-trendmix")
+    return render_info_page("over-nuvemixa")
 
 
 @app.route("/bestellen")
