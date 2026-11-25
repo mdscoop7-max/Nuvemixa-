@@ -764,6 +764,38 @@ def csrf_token():
 
 
 @app.before_request
+def retire_legacy_public_storefront():
+    # Only the legacy Render dashboard host; never local development or the new shop.
+    if request.host.split(":")[0].lower() != "trendmix.onrender.com":
+        return
+    endpoint = request.endpoint
+    public_pages = {
+        "home", "shop", "products_page", "aanbiedingen", "account",
+        "wishlist", "cart", "product", "category_page", "subcategory_page",
+        "legacy_product_detail", "product_detail", "legacy_product_url",
+        "winkelwagen", "afrekenen", "faq", "meer", "contact_page",
+        "over_nuvemixa", "over_trendmix", "bestellen", "privacy", "retouren",
+        "voorwaarden", "cookies", "sitemap", "robots",
+    }
+    public_path = request.path.rstrip("/") or "/"
+    if endpoint not in public_pages and public_path not in {
+        "/aanbiedingen", "/account/register", "/account/login",
+        "/account/logout", "/contact",
+    }:
+        return
+    # Preserve explicitly requested, authorized dashboard previews.
+    preview = request.args.get("dashboard_from")
+    preview_sections = {"category_page": {"categorieen"},
+                        "product_detail": {"producten", "afbeeldingen"}}
+    if preview in preview_sections.get(endpoint, ()) and allowed(*SECTIONS.get(preview, ())):
+        return
+    if request.method not in ("GET", "HEAD"):
+        abort(410)
+    # Do not forward legacy checkout data, query parameters or incompatible slugs.
+    return redirect("https://nuvemixa.onrender.com/", code=302)
+
+
+@app.before_request
 def verify_form_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
