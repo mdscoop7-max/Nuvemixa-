@@ -1,29 +1,19 @@
 {% from '_tm_icons.html' import tm_icon %}
 {% set selected = namespace(product={}, category=request.args.get('categorie','')) %}
-{% for group in extra_groups %}{% for item in group.extra %}{% if item.slug == request.args.get('edit') and group.key == selected.category %}{% set selected.product=item %}{% endif %}{% endfor %}{% endfor %}
+{% for group in extra_groups %}{% for item in group['items'] %}{% if item.slug == request.args.get('edit') and group.key == selected.category %}{% set selected.product=item %}{% endif %}{% endfor %}{% endfor %}
 {% set p=selected.product %}
 {% set base=url_for('control',section='extra-producten') %}
-{% set view=request.args.get('view','edit') %}
+{% set view=request.args.get('view','products' if section == 'producten' else 'edit') %}
 {% macro field(label,key,type='text',value=none,attrs='') %}<label>{{ label }}<input name="{{ key }}" type="{{ type }}" value="{{ (p.get(key,'') if value is none else value) or ('0' if p.get(key) == 0 else '') }}" {{ attrs|safe }}></label>{% endmacro %}
 <link rel="stylesheet" href="{{ url_for('static',filename='nv-extra-editor.css',v=nv_static_version('nv-extra-editor.css')) }}">
-<section class="xp" id="xp-new">
+<link rel="stylesheet" href="/static/nv-gallery.css?v=20261125-gallery2"><section class="xp" id="xp-new">
 <a href="{{ url_for('control',section='producten') }}">← Terug</a>
-<header><div><h1>{{ tm_icon('bag') }} Extra producten</h1><p>Voeg producten toe, beheer concepten en publiceer in de webshop.</p></div><nav><a class="xp-new" data-new href="{{ base }}">＋ Nieuw product</a><a href="{{ base }}&view=drafts">Concepten</a><a href="{{ base }}&view=products">Mijn producten</a></nav></header>
+<header><div><h1>{{ tm_icon('bag') }} Extra producten</h1><p>Voeg producten toe, beheer concepten en publiceer in de webshop.</p></div><nav><a class="xp-new" data-new href="{{ base }}">＋ Nieuw product</a><a href="{{ base }}&view=products">Alle producten</a><a href="{{ base }}&view=drafts">Concepten</a><a href="{{ base }}&view=offers">Aanbiedingen</a></nav></header>
 {% for category,message in get_flashed_messages(with_categories=true) %}<p role="status">{{ message }}</p>{% endfor %}
-{% if view in ['drafts','products'] %}
-<h3>{{ 'Concepten' if view=='drafts' else 'Mijn producten' }}</h3><label>Zoeken <input type="search" id="xp-search" placeholder="Productnaam of SKU"></label>
-{% for g in extra_groups %}{% for item in g.extra if (item.hidden and view=='drafts') or (not item.hidden and view=='products') %}
-<article data-record><div>{% if item.image %}<img width="52" height="52" src="{{ item.image }}" alt="">{% endif %}<strong>{{ item.name }}</strong> · {{ item.sku|default('') }} · {{ g.name }} · {{ format_eur(item.price) }}{% if item.active_offer %} · Actieprijs {{ format_eur(item.sale_price|float) }}{% endif %} · Voorraad {{ item.stock_quantity if item.stock_quantity is not none else 'onbekend' }} · {{ 'Concept' if item.hidden else 'Gepubliceerd' }}</div>
-<a href="{{ base }}&categorie={{ g.key }}&edit={{ item.slug }}">Bewerken / voorbeeld</a>
-{% if not item.hidden %}<a href="{{ item.product_url }}">Productpagina</a>{% endif %}
-<form method="post" action="{{ url_for('nv_manage.catalog') }}">
-<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="category" value="{{ g.key }}"><input type="hidden" name="slug" value="{{ item.slug }}"><input type="hidden" name="visible" value="{{ '1' if item.hidden else '0' }}">
-<button name="op" value="visibility">{{ 'Publiceren' if item.hidden else 'Verbergen' }}</button>{% if is_admin and item.hidden %}<button name="op" value="delete" onclick="return confirm('Dit concept verwijderen?')">Verwijderen</button>{% endif %}</form></article>
-{% endfor %}{% endfor %}<p data-empty>Geen producten gevonden.</p>
-{% else %}
+{% if view == 'edit' %}
 <nav class="xp-steps"><a href="#xp-data"><b>1</b> Productgegevens</a><a href="#xp-cost"><b>2</b> Prijs, kosten &amp; marge</a><a href="#xp-stock"><b>3</b> Voorraad &amp; publicatie</a></nav>
 <form id="xp-editor" action="/admin/nv/extra-producten" method="post" enctype="multipart/form-data">
-<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="editor" value="2">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="editor" value="2"><input type="hidden" name="recalculate_price" value="{{ 0 if p else 1 }}">
 {% if p %}<input type="hidden" name="slug" value="{{ p.slug }}">{% endif %}
 <div class="xp-top" id="xp-data">
 <article><h3>{{ tm_icon('bag') }} Productafbeeldingen</h3><div class="xp-photo" data-drop><button type="button" data-zoom aria-label="Foto vergroten">{{ tm_icon('search') }}</button><img data-main alt="Productfoto" hidden><span data-placeholder>Nog geen foto</span><button type="button" data-prev aria-label="Vorige foto">‹</button><button type="button" data-next aria-label="Volgende foto">›</button></div>
@@ -43,11 +33,12 @@
 <article><h3>{{ tm_icon('tag') }} Gewenste marge</h3>{% set margin=p.get('margin','30')|float %}<label>Gewenste marge<select data-margin>{% for t in range(5,85,5) %}<option value="{{ t }}" {% if margin==t %}selected{% endif %}>{{ t }}%</option>{% endfor %}<option value="own" {% if margin not in range(5,85,5) %}selected{% endif %}>Eigen percentage</option></select></label>{{ field('Eigen percentage','margin','number',margin,'step=".01" min="0" max="99.99"') }}
 <label>Btw-tarief<select name="vat">{% for t in [21,9,0] %}<option value="{{ t }}" {% if p.get('vat',21)|int==t %}selected{% endif %}>{{ t }}%</option>{% endfor %}</select></label></article>
 <article><h3>{{ tm_icon('grid') }} Prijsresultaat (automatisch)</h3><div data-result></div><label>Prijsberekening<select name="price_mode"><option value="auto">Automatisch</option><option value="manual" {% if p and p.get('price_mode','manual')=='manual' %}selected{% endif %}>Handmatig</option></select></label>{{ field('Verkoopprijs incl. btw (€)','price','number',attrs='step=".01" min="0" required') }}</article>
-<article><h3>{{ tm_icon('tag') }} Aanbieding</h3>{% macro check(key,label,default=false) %}<label class="xp-check"><input type="checkbox" name="{{ key }}" value="1" {% if p.get(key,default) %}checked{% endif %}>{{ label }}</label>{% endmacro %}
-{{ check('offer_enabled','Aanbieding actief') }}{{ field('Aanbiedingsprijs (€)','sale_price','number',attrs='step=".01" min="0"') }}
+<article id="xp-offer"><h3>{{ tm_icon('tag') }} Aanbieding</h3>{% macro check(key,label,default=false) %}<label class="xp-check"><input type="checkbox" name="{{ key }}" value="1" {% if p.get(key,default) %}checked{% endif %}>{{ label }}</label>{% endmacro %}
+<p>De normale verkoopprijs blijft behouden. Een nieuwe weekaanbieding vervangt de vorige homepagekeuze.</p>{{ check('offer_enabled','Aanbieding actief') }}{{ field('Aanbiedingsprijs (€)','sale_price','number',attrs='step=".01" min="0"') }}
 <div class="xp-pair">{{ field('Startdatum','offer_start','date') }}{{ field('Einddatum','offer_end','date') }}</div>{{ check('offer_shop','Tonen als aanbieding in de webshop',true) }}{{ check('offer_list','Ook tonen op Aanbiedingen',true) }}{{ check('offer_week','Tonen als aanbieding van de week',false) }}<output data-sale></output></article></div>
 <details id="xp-stock"><summary>Voorraad &amp; publicatie</summary><div class="xp-stock">{{ field('Aantal op voorraad','stock_quantity','number',attrs='min="0"') }}{{ field('Minimumvoorraad','minimum_stock','number',attrs='min="0"') }}<label>Voorraadstatus<select name="stock_status">{% for key,label in stock_labels.items() %}<option value="{{ key }}" {% if p.get('stock_status')==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><label class="xp-check"><input type="checkbox" name="visible" value="1" {% if p and not p.hidden %}checked{% endif %}>Zichtbaar in webshop</label><output data-low></output></div></details>
 <p role="alert" data-error></p><footer><button name="intent" value="draft">Als concept opslaan</button><button type="button" data-preview>Voorbeeld</button><button class="xp-save" name="intent" value="save">✓ Product opslaan</button></footer></form>
-{% endif %}</section>
+{% endif %}
+{% include '_nv_product_overview.html' %}</section>
 <script defer src="{{ url_for('static',filename='nv-gallery.js',v=nv_static_version('nv-gallery.js')) }}"></script>
 <script defer src="{{ url_for('static',filename='nv-extra-producten.js',v=nv_static_version('nv-extra-producten.js')) }}"></script>

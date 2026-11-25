@@ -54,7 +54,7 @@
   }|tojson }}
   </script>
 <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-ui-2026.css', v='20261120-ai-compact') }}">
-</head>
+<link rel="stylesheet" href="/static/nv-gallery.css?v=20261125-gallery2"></head>
 <body>
 {% include "_header.html" %}
 
@@ -187,6 +187,6 @@
 </main>
 
 {% include "_footer.html" %}
-<script defer src="{{ url_for('static',filename='nv-gallery.js') }}"></script>
+<script defer src="{{ url_for('static',filename='nv-gallery.js',v='20261125-gallery2') }}"></script>
 </body>
 </html>

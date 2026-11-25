@@ -25,7 +25,7 @@ def number(value, maximum=Decimal("9999999.99")):
         raise ValueError("Controleer de bedragen en percentages (maximaal twee decimalen).") from None
 
 
-def price_fields(form):
+def price_fields(form, previous=None):
     costs = {key: number(form.get(key)) for key in COSTS}
     total = sum(costs.values())
     margin = number(form.get("margin"), Decimal("99.99"))
@@ -34,7 +34,11 @@ def price_fields(form):
         raise ValueError("Kies een geldig btw-tarief.")
     manual = form.get("price_mode") == "manual"
     net = money(total / (1 - margin / 100))
-    gross = number(form.get("price")) if manual else number(net + money(net * vat / 100))
+    previous = previous or {}
+    # Opening an existing product or editing an offer must never change its regular price.
+    recalculate = not previous or form.get("recalculate_price") == "1"
+    gross = number(form.get("price")) if manual else (
+        number(net + money(net * vat / 100)) if recalculate else number(previous.get("price")))
     return {**{k: str(v) for k, v in costs.items()}, "price": float(gross), "margin": str(margin),
             "vat": str(vat), "price_mode": "manual" if manual else "auto"}
 
@@ -49,8 +53,10 @@ def offer_fields(form, gross):
                 date.fromisoformat(value)
     except ValueError:
         raise ValueError("Controleer de actieperiode.") from None
-    if enabled and (not start or not end or end < start or not 0 < sale < number(gross)):
-        raise ValueError("Kies een geldige actieperiode en een actieprijs lager dan de verkoopprijs.")
+    if enabled and (not start or not end or end < start):
+        raise ValueError("Kies een start- en einddatum; de einddatum moet op of na de startdatum liggen.")
+    if enabled and not 0 < sale < number(gross):
+        raise ValueError(f"De actieprijs moet hoger zijn dan € 0 en lager dan de normale verkoopprijs (€ {number(gross):.2f}).")
     return dict(offer_enabled=enabled, offer_start=start, offer_end=end, sale_price=str(sale),
                 offer_shop=form.get("offer_shop") == "1", offer_list=form.get("offer_list") == "1", offer_week=form.get("offer_week") == "1")
 
@@ -66,13 +72,15 @@ def record_prices(product, previous):
 
 
 def active(row, day):
-    return row.get("offer_enabled") and row.get("offer_shop") and row["offer_start"] <= day <= row["offer_end"]
+    return bool(row.get("offer_enabled") and row.get("offer_shop")
+                and row.get("offer_start") and row.get("offer_end")
+                and row["offer_start"] <= day <= row["offer_end"])
 
 
 def public_price(product):
     day = today().isoformat()
     if not active(product, day):
-        return product
+        return dict(product, old_price=None, badge=None) if "offer_enabled" in product else product
     result = dict(product, price=float(product["sale_price"]), old_price=None, badge=None)
     start = date.fromisoformat(product["offer_start"])
     first = (start - timedelta(days=30)).isoformat()

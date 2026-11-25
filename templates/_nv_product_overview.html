@@ -1,0 +1,21 @@
+<section id="xp-products" aria-label="Opgeslagen producten">
+<h2>{{ 'Concepten' if view == 'drafts' else 'Aanbiedingen' if view == 'offers' else 'Alle producten' if view == 'products' else 'Opgeslagen extra producten' }}</h2>
+<p>Mijn producten · Selecteer Bewerken, Prijs wijzigen of Aanbieding instellen om hetzelfde product te beheren.</p>
+<div class="xp-filters">
+<label>Zoeken op productnaam of SKU<input type="search" id="xp-search" placeholder="Productnaam of SKU" value="{{ request.args.get('q','') }}"></label>
+<label>Categorie<select data-filter="category"><option value="">Alle categorieën</option>{% for g in extra_groups %}<option value="{{ g.key }}">{{ g.name }}</option>{% endfor %}</select></label>
+<label>Publicatie / aanbieding<select data-filter="state"><option value="">Alle statussen</option><option value="published">Gepubliceerd</option><option value="draft">Concepten</option><option value="offer">Actieve aanbiedingen</option></select></label>
+<label>Voorraad<select data-filter="stock"><option value="">Alle voorraad</option>{% for key,label in stock_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+</div>
+{% set week=namespace(name='Geen actieve weekaanbieding') %}
+{% for g in extra_groups %}{% for item in g['items'] %}{% if item.homepage_offer %}{% set week.name=item.name %}{% endif %}{% endfor %}{% endfor %}
+<p role="status">Homepagekeuze: <strong>{{ week.name }}</strong>. Bij meerdere oude keuzes bepaalt de vaste volgorde categorie/SKU welk product wordt getoond.</p>
+{% for g in extra_groups %}{% for item in g['items'] if (view == 'products' or view == 'drafts' and item.hidden or view == 'offers' and item.offer_enabled or view == 'edit' and item.extra) %}
+<article data-record data-category="{{ g.key }}" data-state="{{ 'draft' if item.hidden else 'published' }}" data-offer="{{ 1 if item.active_offer else 0 }}" data-stock="{{ item.stock_status }}">
+<div class="xp-record-info"><img width="72" height="72" src="{{ item.image }}" alt="{{ item.name }}" loading="lazy"><div><h3>{{ item.name }}</h3><p>SKU {{ item.sku|default('—',true) }} · {{ g.name }}</p><p>Inkoop {{ format_eur(item.cost_price|default(0)|float) }} · Verkoop {{ format_eur(item.price) }} · Voorraad {{ item.stock_quantity if item.stock_quantity is not none else 'onbekend' }}</p><p>{{ 'Concept' if item.hidden else 'Gepubliceerd' }} · {{ 'Actieve aanbieding' if item.active_offer else 'Ingepland' if item.offer_enabled and item.scheduled_offer else 'Verlopen' if item.offer_enabled else 'Geen aanbieding' }}{% if item.offer_week %} · Weekaanbieding geselecteerd{% endif %}</p></div></div>
+<nav aria-label="Acties voor {{ item.name }}">
+{% set edit=base ~ '&view=edit&categorie=' ~ g.key ~ '&edit=' ~ item.slug %}
+<a href="{{ edit }}">Bewerken</a><a href="{{ edit }}#xp-cost">Prijs wijzigen</a><a href="{{ edit }}#xp-offer">Aanbieding instellen</a><a title="Bekijk productpagina" href="{{ item.product_url }}?dashboard_from=extra-producten">Product bekijken</a>
+{% if allowed('product_edit') %}<form method="post" action="{{ url_for('nv_manage.catalog') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="section" value="extra-producten"><input type="hidden" name="category" value="{{ g.key }}"><input type="hidden" name="slug" value="{{ item.slug }}"><input type="hidden" name="visible" value="{{ 1 if item.hidden else 0 }}"><button name="op" value="visibility">{{ 'Publiceren' if item.hidden else 'Verbergen' }}</button>{% if item.offer_enabled %}<button name="op" value="end_offer">Aanbieding beëindigen</button>{% endif %}{% if is_admin and item.extra %}<button name="op" value="delete" data-confirm-delete>Verwijderen</button>{% endif %}</form>{% endif %}
+</nav></article>
+{% endfor %}{% endfor %}<p data-empty hidden>Geen producten gevonden.</p></section>

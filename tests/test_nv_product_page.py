@@ -89,7 +89,8 @@ class ProductResearchPageTests(unittest.TestCase):
         self.assertNotIn("research_term", topbar)
         self.assertEqual(search.status_code, 200)
         self.assertIn("Bekijk productpagina", search.get_data(as_text=True))
-        self.assertIn('<details class="panel-after" open>', search.get_data(as_text=True))
+        self.assertIn('id="xp-search"', search.get_data(as_text=True))
+        self.assertIn('data-record', search.get_data(as_text=True))
         fetch.assert_not_called()
 
 

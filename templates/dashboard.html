@@ -158,7 +158,9 @@
 {% set nv_grp = {'producten':1,'extra-producten':1,'publicatie':1,'categorieen':1,'afbeeldingen':1,'bestellingen':1,'klanten':1,'klantenservice':1,'kortingen':1,'onderzoek':2,'internationaal':2,'partners':2,'concepten':2,'viral':2,'calculator':2,'statistieken':2,'seo':3,'rankfix':3,'google-shopping':3,'google-ads':3,'marketing':3,'leveranciers':4,'woocommerce':4,'administratie':4,'accountbeheer':4,'monitoring':4,'instellingen':4}.get(section,0) %}
 <header class="section-header nv-sg nv-sg-{{ nv_grp }}"><div><span class="section-kicker">{{ ['NUVEMIXA · OVERZICHT','WINKEL','ONDERZOEK','VINDBAARHEID','BEHEER'][nv_grp] }}</span><h1>{{ section_names.get(section,"Dashboard") }}</h1><p>{{ section_descriptions.get(section,"Overzicht van de huidige gegevens en beschikbare koppelingen.") }}</p></div></header>
 {% endif %}
-{% if section in ("producten", "categorieen", "afbeeldingen") %}
+{% if section == "producten" %}
+{% include "_dashboard_extra_producten.html" %}
+{% elif section in ("categorieen", "afbeeldingen") %}
 {% include "_dashboard_catalog.html" %}
 {% elif section == "extra-producten" %}
 {% include "_dashboard_extra_producten.html" %}

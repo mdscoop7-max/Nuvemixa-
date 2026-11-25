@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from nv_catalog_manager import catalog_changes
+from nv_catalog_manager import catalog_changes, invalidate_changes
 from nv_extra_pricing import public_price, active, today
 
 bp = Blueprint("nv_public_catalog", __name__)
@@ -15,14 +15,15 @@ PUBLIC_FIELDS = (
 
 @bp.get("/api/public/catalog")
 def public_catalog():
+    invalidate_changes()
     _, edits = catalog_changes()
     day = today().isoformat()
     products = []
 
     for category, slug, product in edits:
-        if not product.get("extra"):
-            continue
-        if product.get("hidden") is not False or product.get("deleted"):
+        if product.get("hidden") or product.get("extra") and product.get("hidden") is not False or product.get("deleted"):
+            if not product.get("extra") and product.get("hidden"):
+                products.append(dict(category_slug=category, slug=slug, hidden=True, extra=False))
             continue
 
         priced = public_price(product)
@@ -35,6 +36,7 @@ def public_catalog():
         item["id"] = str(product.get("id") or (category + ":" + slug))
         item["category_slug"] = category
         item["slug"] = slug
+        item["extra"] = bool(product.get("extra"))
 
         offer_active = bool(active(product, day))
         item["offer_list"] = (

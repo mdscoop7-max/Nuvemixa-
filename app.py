@@ -204,9 +204,12 @@ def catalog_snapshot():
     for category, slug, changes in product_edits:
         if category not in items:
             continue
+        position = index.get((category, slug))
         if changes.get("hidden") and not show_hidden:
+            if position is not None:
+                items[category][position] = {**items[category][position], "hidden": True}
             continue
-        if changes.get("extra") and not show_hidden:
+        if "offer_enabled" in changes and not show_hidden:
             changes = nv_extra_pricing.public_price(changes)
         position = index.get((category, slug))
         if position is None:
@@ -214,6 +217,8 @@ def catalog_snapshot():
                 items[category].append(changes)
         else:
             items[category][position] = {**items[category][position], "slug": slug, **changes}
+    if not show_hidden:
+        items = {key: [p for p in rows if not p.get("hidden")] for key, rows in items.items()}
     snapshot = (categories, items)
     if has_request_context():
         g.nv_catalog = snapshot
@@ -913,7 +918,7 @@ def shop():
 
 def deals():
 
-    deal_products = [item for item in load_all_products() if (item.get("offer_list") and nv_extra_pricing.active(item, nv_extra_pricing.today().isoformat())) or (not item.get("extra") and item.get("old_price") and float(item["old_price"]) > float(item["price"]))]
+    deal_products = [item for item in load_all_products() if (item.get("offer_list") and nv_extra_pricing.active(item, nv_extra_pricing.today().isoformat())) or ("offer_enabled" not in item and not item.get("extra") and item.get("old_price") and float(item["old_price"]) > float(item["price"]))]
 
     return render_template("offers.html", products=deal_products, category="Aanbiedingen", search="", categories=CATEGORIES, deals_page=True)
 
@@ -2325,14 +2330,19 @@ def control():
         import nv_livegang
         livegang = nv_livegang.checklist()
     extra_groups = None
-    if section == "extra-producten":
+    if section in {"extra-producten", "producten"}:
         day = nv_extra_pricing.today().isoformat()
         for product in all_products:
-            if product.get("extra"):
-                product["active_offer"] = nv_extra_pricing.active(product, day)
+            product["active_offer"] = nv_extra_pricing.active(product, day)
+            product["scheduled_offer"] = bool(product.get("offer_start") and product["offer_start"] > day)
+        week_candidates = sorted((p for p in all_products if p.get("active_offer") and p.get("offer_week") and not p.get("hidden")),
+                                 key=lambda p: (p["category_slug"], str(p.get("sku") or p["slug"])))
+        for product in all_products:
+            product["homepage_offer"] = bool(week_candidates and product is week_candidates[0])
         extra_groups = [{"key": key, "name": meta.get("name", key),
                          "base": sum(1 for p in all_products if p["category_slug"] == key and not p.get("extra")),
-                         "extra": [p for p in all_products if p["category_slug"] == key and p.get("extra")]}
+                         "extra": [p for p in all_products if p["category_slug"] == key and p.get("extra")],
+                         "items": [p for p in all_products if p["category_slug"] == key]}
                         for key, meta in CATEGORIES.items()]
 
     merchant_report = (merchant_audit(catalog_items(), app.static_folder)
@@ -3512,6 +3522,9 @@ def trendmix_security_headers(response):
     # Safe baseline headers; a strict CSP requires a separate audit of inline scripts.
 
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    commit = os.getenv("RENDER_GIT_COMMIT", "")
+    if re.fullmatch(r"[0-9a-f]{40}", commit):
+        response.headers["X-NUVEMIXA-Commit"] = commit
 
     response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
 

@@ -192,10 +192,11 @@ def valid_image(url):
 
 
 def modern_extra(form, previous, db, category, slug, catalog_items):
-    prices = pricing.price_fields(form)
+    prices = pricing.price_fields(form, previous)
     fields = form.copy()
     fields["price"] = str(prices["price"])
     product = validated_extra(fields, previous)
+    product["extra"] = previous.get("extra", not bool(previous))
     product.update(prices, **pricing.offer_fields(form, prices["price"]))
     if product["stock_quantity"] is not None and product["stock_status"] == "unknown":
         product["stock_status"] = "in_stock" if product["stock_quantity"] else "out_of_stock"
@@ -347,19 +348,24 @@ def catalog():
                         images.append(url)
                     changes["images"] = images
                     changes["image_verified"] = False
-                elif section == "extra-producten" and request.form.get("op") == "visibility":
-                    if existing is None or not changes.get("extra"):
+                elif request.form.get("op") in {"visibility", "end_offer"}:
+                    if existing is None:
                         abort(404)
-                    changes["hidden"] = request.form.get("visible") != "1"
+                    changes = {**existing, **changes}
+                    if request.form.get("op") == "end_offer":
+                        changes["offer_enabled"] = False
+                    else:
+                        changes["hidden"] = request.form.get("visible") != "1"
                 else:
-                    if section == "extra-producten" and slug and not changes.get("extra"):
+                    if section == "extra-producten" and slug and not changes.get("extra") and request.form.get("editor") != "2":
                         abort(404)  # alleen zelf toegevoegde producten zijn hier te bewerken
                     if section == "extra-producten" and request.form.get("editor") == "2":
-                        updated = modern_extra(request.form, changes, db, category, slug, catalog_items)
+                        previous = {**(existing or {}), **changes}
+                        updated = modern_extra(request.form, previous, db, category, slug, catalog_items)
                     else:
                         updated = (validated_extra if section == "extra-producten" else validated_product)(request.form, changes)
                     if section == "extra-producten":
-                        save_gallery(db, updated, changes)
+                        save_gallery(db, updated, {**(existing or {}), **changes})
                     if not slug:
                         slug = slugify(updated["name"])[:100]
                         if not slug or db.execute("SELECT 1 FROM catalog_edits WHERE kind='product' AND category=? AND slug=?", (category, slug)).fetchone() or any(item["category_slug"] == category and item["slug"] == slug
@@ -371,7 +377,16 @@ def catalog():
                     if not existing or existing["name"] != updated["name"] or existing["description"] != updated["description"]:
                         updated["product_data_verified"] = False
                     changes = updated
-                if changes.get("extra"):
+                if changes.get("offer_week") and changes.get("offer_enabled") and request.form.get("op") != "visibility":
+                    # The catalogue write lock makes selecting a homepage product atomic.
+                    for other in db.execute("SELECT category,slug,payload FROM catalog_edits WHERE kind='product'").fetchall():
+                        if (other["category"], other["slug"]) == (category, slug):
+                            continue
+                        payload = json.loads(other["payload"])
+                        if payload.get("offer_week"):
+                            payload["offer_week"] = False
+                            save(db, "product", other["category"], other["slug"], payload)
+                if "offer_enabled" in changes or changes.get("extra"):
                     pricing.record_prices(changes, json.loads(row[0]) if row else {})
                 save(db, "product", category, slug, changes)
     except ValueError as exc:

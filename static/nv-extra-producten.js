@@ -1,20 +1,27 @@
 (() => {
   "use strict";
+  document.querySelectorAll('[data-confirm-delete]').forEach(button => button.addEventListener('click', event => {
+    if (!confirm('Dit extra product verwijderen? Dit kan niet via het dashboard worden hersteld.')) event.preventDefault();
+  }));
   const search = document.querySelector("#xp-search");
   if (search) {
     function filter() {
       let count = 0;
       document.querySelectorAll("[data-record]").forEach((row) => {
-        row.hidden = !row.textContent
-          .toLowerCase()
-          .includes(search.value.toLowerCase());
+        const category = document.querySelector('[data-filter="category"]').value;
+        const state = document.querySelector('[data-filter="state"]').value;
+        const stock = document.querySelector('[data-filter="stock"]').value;
+        row.hidden = !row.textContent.toLowerCase().includes(search.value.toLowerCase()) ||
+          (category && row.dataset.category !== category) ||
+          (state && !(state === 'offer' ? row.dataset.offer === '1' : row.dataset.state === state)) ||
+          (stock && row.dataset.stock !== stock);
         if (!row.hidden) count++;
       });
       document.querySelector("[data-empty]").hidden = count > 0;
     }
     search.addEventListener("input", filter);
+    document.querySelectorAll('[data-filter]').forEach(select => select.addEventListener('change', filter));
     filter();
-    return;
   }
   const f = document.querySelector("#xp-editor");
   if (!f) return;
@@ -36,7 +43,6 @@
     busy = false,
     current = 0;
   const photos = JSON.parse(el("#xp-photos").textContent)
-    .filter((url) => !url.startsWith("/img/product/"))
     .map((url) => ({ url }));
   const editor = el("#xp-desc");
   function button(text, fn) {
@@ -175,7 +181,7 @@
     );
     update();
   });
-  function update() {
+  function update(recalculate = false) {
     const total = Array.from(f.querySelectorAll("[data-cost]")).reduce(
       (sum, c) => sum + cents(c),
       0,
@@ -190,7 +196,7 @@
     const automatic = get("price_mode").value === "auto";
     price.readOnly = automatic;
     let net = rate < 10000 ? round(total * 10000, 10000 - rate) : 0;
-    if (automatic)
+    if (automatic && recalculate)
       price.value = ((net + round(net * vat, 100)) / 100).toFixed(2);
     else net = round(cents(price) * 100, 100 + vat);
     const gross = cents(price),
@@ -243,9 +249,11 @@
     el('[data-count="short_description"]').textContent =
       get("short_description").value.length + " / 160";
   }
-  f.addEventListener("input", () => {
+  f.addEventListener("input", (event) => {
     dirty = true;
-    update();
+    const recalculate = event.target.matches('[data-cost], [data-margin], [name="margin"], [name="vat"], [name="price_mode"]');
+    if (recalculate) get("recalculate_price").value = "1";
+    update(recalculate);
   });
   document.querySelector('a[href="#xp-stock"]').onclick = () => {
     el("#xp-stock").open = true;
@@ -335,6 +343,7 @@
       url.searchParams.set("categorie", reply.category);
       url.searchParams.set("edit", reply.slug);
       url.searchParams.set("saved", "1");
+      url.searchParams.set("view", "edit");
       location.assign(url);
     } catch (err) {
       error(err.message);
@@ -343,7 +352,7 @@
     }
   };
   showPhotos();
-  update();
+  update(get("recalculate_price").value === "1");
   if (new URL(location.href).searchParams.has("saved"))
     el("[data-error]").textContent = "Product opgeslagen.";
 })();
