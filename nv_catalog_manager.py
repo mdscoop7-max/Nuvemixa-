@@ -1,5 +1,7 @@
 """Local edits layered over the supplied test catalogue."""
 import json
+import nh3
+import nv_extra_pricing as pricing
 import re
 import sqlite3
 import uuid
@@ -9,7 +11,7 @@ from pathlib import Path
 import nv_dashboard_postgres
 from urllib.parse import urlsplit
 
-from flask import abort, current_app, g, has_request_context, request
+from flask import jsonify, abort, current_app, g, has_request_context, request
 from nv_dashboard_manager import DB, bp, connect, management_result, require_admin
 from nv_permissions import allowed
 
@@ -76,7 +78,7 @@ def validated_product(form, existing):
     quantity = form.get("stock_quantity", "").strip()
     status = form.get("stock_status")
     description = form.get("description", "").strip()
-    if (not 1 <= len(name) <= 160 or len(description) > 4000
+    if (not 1 <= len(name) <= 160 or len(description) > max(4000, len(existing.get("description", "")))
             or not re.fullmatch(r"\d{1,7}([.,]\d{1,2})?", price)
             or not re.fullmatch(r"\d{0,8}", quantity)
             or status not in {"unknown", "in_stock", "out_of_stock"}):
@@ -166,7 +168,7 @@ def validated_extra(form, existing):
     if image and not (valid_image(image) or re.fullmatch(r"/img/extra/[0-9a-f]{24}\.webp", image)):
         raise ValueError("Gebruik een geldige HTTPS-afbeeldingslink of een bestaand lokaal afbeeldingsbestand.")
     short = form.get("short_description", "").strip()
-    if len(short) > 300:
+    if len(short) > max(300, len(existing.get("short_description", ""))):
         raise ValueError("De korte omschrijving mag maximaal 300 tekens zijn.")
     product["cost_price"] = float(Decimal(cost.replace(",", "."))) if cost else 0
     product["short_description"] = short
@@ -189,10 +191,84 @@ def valid_image(url):
                 and Path(current_app.root_path, parsed.path.lstrip("/")).is_file())
 
 
+def modern_extra(form, previous, db, category, slug, catalog_items):
+    prices = pricing.price_fields(form)
+    fields = form.copy()
+    fields["price"] = str(prices["price"])
+    product = validated_extra(fields, previous)
+    product.update(prices, **pricing.offer_fields(form, prices["price"]))
+    if product["stock_quantity"] is not None and product["stock_status"] == "unknown":
+        product["stock_status"] = "in_stock" if product["stock_quantity"] else "out_of_stock"
+    sku = form.get("sku", "").strip().upper() or previous.get("sku") or "NUV-" + uuid.uuid4().hex[:10].upper()
+    if not re.fullmatch(r"[A-Z0-9][A-Z0-9_-]{0,63}", sku):
+        raise ValueError("Controleer de SKU (letters, cijfers, streepje of laag streepje).")
+    if any(str(item.get("sku", "")).upper() == sku and (item["category_slug"], item["slug"]) != (category, slug)
+           for item in catalog_items()):
+        raise ValueError("Deze SKU bestaat al.")
+    for row in db.execute("SELECT category,slug,payload FROM catalog_edits WHERE kind='product'"):
+        other = json.loads(row["payload"])
+        if not other.get("deleted") and other.get("sku", "").upper() == sku and (row["category"], row["slug"]) != (category, slug):
+            raise ValueError("Deze SKU bestaat al.")
+    product.update(sku=sku, brand=form.get("brand", "").strip()[:100], ean=form.get("ean", "").strip())
+    if product["ean"] and not re.fullmatch(r"\d{8}|\d{13}", product["ean"]):
+        raise ValueError("Gebruik een EAN van 8 of 13 cijfers.")
+    for key in ("weight", "length", "width", "height"):
+        product[key] = str(pricing.number(form[key])) if form.get(key) else ""
+    minimum = form.get("minimum_stock", "")
+    if minimum and not re.fullmatch(r"\d{1,8}", minimum):
+        raise ValueError("Controleer de minimumvoorraad.")
+    product["minimum_stock"] = int(minimum) if minimum else None
+    rich = form.get("description_html", "")
+    product["description_html"] = nh3.clean(rich, tags={"p","br","div","b","strong","i","em","u","ul","ol","li","a"},
+        attributes={"a": {"href"}}, url_schemes={"https","http"}) if rich else ""
+    if len(product["description_html"]) > max(16000, len(previous.get("description_html", ""))):
+        raise ValueError("De opgemaakte beschrijving is te lang.")
+    for key, limit in (("description", 2000), ("short_description", 160)):
+        if len(product[key]) > max(limit, len(previous.get(key, ""))):
+            raise ValueError("De omschrijving is te lang.")
+    if form.get("intent") == "draft":
+        product["hidden"] = True
+    return product
+
+
+def save_gallery(db, updated, previous):
+    uploads = [u for u in request.files.getlist("image_file") if u.filename]
+    if len(uploads) > 8:
+        raise ValueError("Kies maximaal acht foto's.")
+    uploaded = []
+    for file in uploads:
+        photo = processed_upload(file)
+        if not photo:
+            raise ValueError("De foto is leeg.")
+        key, data = photo
+        save(db, "image", "upload", key, {"mime": "image/webp", "data": data})
+        uploaded.append(f"/img/extra/{key}.webp")
+    if "gallery" in request.form:
+        order = json.loads(request.form["gallery"])
+        if not isinstance(order, list) or len(order) > 8:
+            raise ValueError("Controleer de fotoselectie.")
+        photos = []
+        for entry in order:
+            if isinstance(entry, int) and 0 <= entry < len(uploaded):
+                photos.append(uploaded[entry])
+            elif isinstance(entry, str) and (entry in previous.get("images", []) or valid_image(entry)):
+                photos.append(entry)
+            else:
+                raise ValueError("Controleer de gekozen foto.")
+    else:
+        photos = list(dict.fromkeys(uploaded + (updated.get("images") or [])))
+    if len(photos) > 8:
+        raise ValueError("Kies maximaal acht foto's.")
+    updated.update(images=photos, image=photos[0] if photos else "", image_verified=False)
+
+
+@bp.post("/admin/nv/extra-producten", endpoint="extra_editor")
 @bp.post("/admin/nv/catalog")
 def catalog():
     CATEGORIES, catalog_items, slugify = current_app.extensions["nuvemixa_catalog_api"]
     section = request.form.get("section")
+    if request.path.endswith("/extra-producten") and section != "extra-producten":
+        abort(400)
     if section not in {"producten", "categorieen", "afbeeldingen", "extra-producten"}:
         abort(400)
     category = request.form.get("category", "")
@@ -278,18 +354,15 @@ def catalog():
                 else:
                     if section == "extra-producten" and slug and not changes.get("extra"):
                         abort(404)  # alleen zelf toegevoegde producten zijn hier te bewerken
-                    updated = (validated_extra if section == "extra-producten" else validated_product)(request.form, changes)
+                    if section == "extra-producten" and request.form.get("editor") == "2":
+                        updated = modern_extra(request.form, changes, db, category, slug, catalog_items)
+                    else:
+                        updated = (validated_extra if section == "extra-producten" else validated_product)(request.form, changes)
                     if section == "extra-producten":
-                        upload = processed_upload(request.files.get("image_file"))
-                        if upload:
-                            key, data = upload
-                            save(db, "image", "upload", key, {"mime": "image/webp", "data": data})
-                            url = f"/img/extra/{key}.webp"
-                            updated.update(image=url, images=[url] + [u for u in updated.get("images") or [] if u != url],
-                                           image_verified=False)
+                        save_gallery(db, updated, changes)
                     if not slug:
                         slug = slugify(updated["name"])[:100]
-                        if not slug or any(item["category_slug"] == category and item["slug"] == slug
+                        if not slug or db.execute("SELECT 1 FROM catalog_edits WHERE kind='product' AND category=? AND slug=?", (category, slug)).fetchone() or any(item["category_slug"] == category and item["slug"] == slug
                                            for item in catalog_items()):
                             raise ValueError("Deze productnaam bestaat al in de categorie.")
                         updated.update(id="tm-local-" + uuid.uuid4().hex, slug=slug)
@@ -298,13 +371,19 @@ def catalog():
                     if not existing or existing["name"] != updated["name"] or existing["description"] != updated["description"]:
                         updated["product_data_verified"] = False
                     changes = updated
+                if changes.get("extra"):
+                    pricing.record_prices(changes, json.loads(row[0]) if row else {})
                 save(db, "product", category, slug, changes)
     except ValueError as exc:
+        if request.headers.get("Accept") == "application/json":
+            return jsonify(error=str(exc)), 422
         return management_result(section, str(exc))
     except (sqlite3.Error, OSError):
         current_app.logger.error("Lokale cataloguswijziging kon niet worden opgeslagen")
         return management_result(section, "De cataloguswijziging kon niet worden opgeslagen.")
     invalidate_changes()  # na de commit: volgende pagina leest de nieuwe stand
+    if section == "extra-producten" and request.headers.get("Accept") == "application/json":
+        return jsonify(ok=True, slug=slug, category=category)
     if deleting_extra:
         return management_result(section, "Extra product verwijderd.", success=True)
     if section == "extra-producten":

@@ -69,7 +69,9 @@
     <div class="detail-gallery">
       <div class="detail-image">
         {% if product.images %}
+          <button type="button" data-public-zoom aria-label="Productfoto vergroten" style="border:0;padding:0;background:transparent;cursor:zoom-in;width:100%;height:100%">
           <img src="{{ product.images[0] }}" alt="{{ product.name }}" data-tm-product-nl="{{ product.name }}" data-tm-product-en="{{ product.en_name }}" loading="eager" decoding="async" data-product-image data-fallback-icon="{{ product.icon|default('✨') }}">
+          </button><script type="application/json" id="public-gallery">{{ product.images|tojson }}</script>
         {% else %}
           <span class="image-fallback" data-i18n="noImage">Geen afbeelding beschikbaar</span>
         {% endif %}
@@ -136,7 +138,7 @@
     <div class="content-panel">
       <span class="eyebrow dark" data-i18n="productInfo">Productinformatie</span>
       <h2 data-i18n="descriptionLabel">Beschrijving</h2>
-      <p data-tm-product-nl="{{ product.description }}" data-tm-product-en="{{ product.en_description }}">{{ product.description }}</p>
+      {% if product.description_html %}<div>{{ product.description_html|safe }}</div>{% else %}<p data-tm-product-nl="{{ product.description }}" data-tm-product-en="{{ product.en_description }}">{{ product.description }}</p>{% endif %}
     </div>
 
     {% if product.specifications %}
@@ -185,5 +187,6 @@
 </main>
 
 {% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='nv-gallery.js') }}"></script>
 </body>
 </html>

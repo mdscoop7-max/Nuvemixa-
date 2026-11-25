@@ -1,95 +1,349 @@
-/* Extra producten: fotovoorbeeld, live webshopvoorbeeld en prijsadvies (zelfde rekenkern als de calculator). */
-(function () {
-  'use strict';
-  var MAX = 5 * 1024 * 1024;
-  function euro(cents) {
-    return '€ ' + (cents / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  }
-  function cents(input) {
-    var v = parseFloat(String(input.value || '').replace(',', '.'));
-    return isFinite(v) && v > 0 ? Math.round(v * 100) : null;
-  }
-  function setup(form) {
-    var file = form.querySelector('[data-xp-file]'), drop = form.querySelector('[data-xp-drop]');
-    var link = form.querySelector('[data-xp-link]'), img = form.querySelector('[data-xp-img]');
-    var name = form.querySelector('[data-xp-name]'), shortText = form.querySelector('[data-xp-short]');
-    var cost = form.querySelector('[data-xp-cost]'), price = form.querySelector('[data-xp-price]');
-    var advice = form.querySelector('[data-xp-advice]'), advicePrice = form.querySelector('[data-xp-advice-price]');
-    var marginLine = form.querySelector('[data-xp-margin]'), use = form.querySelector('[data-xp-use]');
-    var target = 30, adviceCents = null, objectUrl = null;
-
-    function showImage(src) {
-      img.textContent = '';
-      if (!src) { var s = document.createElement('span'); s.textContent = 'Nog geen foto'; img.appendChild(s); return; }
-      var el = document.createElement('img'); el.alt = ''; el.src = src; img.appendChild(el);
-    }
-    function pickFile(f) {
-      if (!f) return;
-      if (f.size > MAX) { alertLine(drop, 'Deze foto is groter dan 5 MB. Kies een kleinere foto.'); file.value = ''; return; }
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-      objectUrl = URL.createObjectURL(f);
-      showImage(objectUrl);
-      drop.classList.add('has-file');
-      drop.querySelector('strong').textContent = f.name;
-    }
-    function alertLine(el, text) {
-      var p = el.parentNode.querySelector('.nv-xp-err') || document.createElement('p');
-      p.className = 'nv-xp-err'; p.setAttribute('role', 'alert'); p.textContent = text;
-      el.parentNode.insertBefore(p, el.nextSibling);
-    }
-    if (file) {
-      file.addEventListener('change', function () { pickFile(file.files[0]); });
-      ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
-      ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
-      drop.addEventListener('drop', function (e) {
-        var f = e.dataTransfer && e.dataTransfer.files[0];
-        if (!f) return;
-        try { var dt = new DataTransfer(); dt.items.add(f); file.files = dt.files; } catch (err) { /* oudere browser */ }
-        pickFile(f);
+(() => {
+  "use strict";
+  const search = document.querySelector("#xp-search");
+  if (search) {
+    function filter() {
+      let count = 0;
+      document.querySelectorAll("[data-record]").forEach((row) => {
+        row.hidden = !row.textContent
+          .toLowerCase()
+          .includes(search.value.toLowerCase());
+        if (!row.hidden) count++;
       });
+      document.querySelector("[data-empty]").hidden = count > 0;
     }
-    if (link) link.addEventListener('input', function () {
-      if (file && file.files && file.files.length) return;
-      showImage(/^https:\/\/\S+$/.test(link.value.trim()) ? link.value.trim() : null);
-    });
-    function text() {
-      form.querySelector('[data-xp-pname]').textContent = name.value.trim() || 'Productnaam';
-      form.querySelector('[data-xp-pshort]').textContent = shortText.value.trim() || 'Korte omschrijving';
-    }
-    name.addEventListener('input', text); shortText.addEventListener('input', text);
-
-    function prices() {
-      var core = window.NVMargin, buy = cents(cost), sell = cents(price);
-      form.querySelector('[data-xp-pprice]').textContent = euro(sell || 0);
-      advice.hidden = !(core && buy);
-      adviceCents = null;
-      if (core && buy) {
-        var r = core.compute({purchase: buy, vat: 21, target: target});
-        adviceCents = r && r.advice && !r.error ? r.advice.selling : null;
-        advicePrice.textContent = adviceCents ? euro(adviceCents) : '—';
-      }
-      marginLine.textContent = '';
-      if (core && buy && sell) {
-        var own = core.compute({purchase: buy, vat: 21, target: target, own: sell}).own;
-        if (own) {
-          marginLine.textContent = 'Bij deze prijs: geschatte winst ' + euro(own.profit) + ' per stuk, winstmarge ' +
-            own.margin.toFixed(1).replace('.', ',') + '% (met standaardaannames voor verzending, advertenties, retouren en betaalkosten).';
-          marginLine.className = 'nv-xp-margin' + (own.profit <= 0 ? ' bad' : own.margin < 15 ? ' low' : ' ok');
-        }
-      }
-    }
-    cost.addEventListener('input', prices); price.addEventListener('input', prices);
-    form.querySelectorAll('[data-xp-target]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        target = parseInt(b.getAttribute('data-xp-target'), 10);
-        form.querySelectorAll('[data-xp-target]').forEach(function (x) { x.classList.toggle('on', x === b); });
-        prices();
-      });
-    });
-    use.addEventListener('click', function () { if (adviceCents) { price.value = (adviceCents / 100).toFixed(2); prices(); } });
-    text(); prices();
+    search.addEventListener("input", filter);
+    filter();
+    return;
   }
-  function init() { document.querySelectorAll('[data-xp-form]').forEach(setup); }
-  // Na DOMContentLoaded: dan is ook de rekenkern (nv-margin-core.js, later in de pagina) geladen.
-  if (document.readyState === 'complete') init(); else document.addEventListener('DOMContentLoaded', init);
+  const f = document.querySelector("#xp-editor");
+  if (!f) return;
+  const get = (name) => f.elements.namedItem(name);
+  const el = (selector) => f.querySelector(selector);
+  const on = (selector, action) =>
+    el(selector).addEventListener("click", action);
+  const euros = (cents) =>
+    (cents / 100).toLocaleString("nl-NL", {
+      style: "currency",
+      currency: "EUR",
+    });
+  const cents = (field) => Math.round(Number(field.value || 0) * 100);
+  const round = (a, b) => Math.floor((a + b / 2) / b);
+  const error = (msg) => {
+    el("[data-error]").textContent = msg;
+  };
+  let dirty = false,
+    busy = false,
+    current = 0;
+  const photos = JSON.parse(el("#xp-photos").textContent)
+    .filter((url) => !url.startsWith("/img/product/"))
+    .map((url) => ({ url }));
+  const editor = el("#xp-desc");
+  function button(text, fn) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = text;
+    b.onclick = fn;
+    return b;
+  }
+  function showPhotos() {
+    const main = el("[data-main]");
+    current = Math.max(0, Math.min(current, photos.length - 1));
+    main.hidden = !photos.length;
+    el("[data-placeholder]").hidden = !!photos.length;
+    el("[data-photo-actions]").hidden = !photos.length;
+    if (photos.length) main.src = photos[current].url;
+    for (const key of ["prev", "next", "zoom"])
+      el("[data-" + key + "]").hidden =
+        photos.length < (key === "zoom" ? 1 : 2);
+    el("[data-thumbs]").replaceChildren(
+      ...photos.map((p, i) => {
+        const b = button("", () => {
+            current = i;
+            showPhotos();
+          }),
+          img = new Image();
+        img.src = p.url;
+        img.alt = "Foto " + (i + 1);
+        b.append(img);
+        b.setAttribute("aria-pressed", i === current);
+        return b;
+      }),
+    );
+  }
+  function add(files) {
+    if (files.length + photos.length > 8)
+      return error("Kies maximaal acht foto’s.");
+    if (files.some((file) => file.size > 5242880))
+      return error("Een foto is groter dan 5 MB.");
+    photos.push(
+      ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    );
+    current = photos.length - 1;
+    dirty = true;
+    error("");
+    showPhotos();
+  }
+  get("image_file").onchange = (e) => {
+    add(Array.from(e.target.files));
+    e.target.value = "";
+  };
+  el("[data-drop]").ondragover = (e) => e.preventDefault();
+  el("[data-drop]").ondrop = (e) => {
+    e.preventDefault();
+    add(Array.from(e.dataTransfer.files));
+  };
+  on("[data-add-link]", () => {
+    const link = el("[data-link]");
+    if (
+      !/^https:\/\//i.test(link.value) ||
+      !link.validity.valid ||
+      photos.length >= 8
+    )
+      return error("Controleer de HTTPS-link en het aantal foto’s.");
+    photos.push({ url: link.value });
+    current = photos.length - 1;
+    link.value = "";
+    dirty = true;
+    showPhotos();
+  });
+  function reorder(to) {
+    photos.splice(to, 0, photos.splice(current, 1)[0]);
+    current = to;
+    dirty = true;
+    showPhotos();
+  }
+  on("[data-cover]", () => reorder(0));
+  on("[data-left]", () => reorder(Math.max(0, current - 1)));
+  on("[data-remove]", () => {
+    const [p] = photos.splice(current, 1);
+    if (p.file) URL.revokeObjectURL(p.url);
+    dirty = true;
+    showPhotos();
+  });
+  on("[data-prev]", () => {
+    current = (current + photos.length - 1) % photos.length;
+    showPhotos();
+  });
+  on("[data-next]", () => {
+    current = (current + 1) % photos.length;
+    showPhotos();
+  });
+  function zoom() {
+    window.nvPhotoGallery(
+      photos.map((p) => p.url),
+      current,
+      get("name").value,
+    );
+  }
+  on("[data-main]", zoom);
+  on("[data-zoom]", zoom);
+  editor.onpaste = (e) => {
+    e.preventDefault();
+    document.execCommand(
+      "insertText",
+      false,
+      e.clipboardData.getData("text/plain"),
+    );
+  };
+  editor.ondrop = (e) => e.preventDefault();
+  f.querySelectorAll("[data-format]").forEach((b) => {
+    b.onmousedown = (e) => e.preventDefault();
+    b.onclick = () => {
+      let arg = null;
+      if (b.dataset.format === "createLink") {
+        arg = prompt("Volledige HTTPS-link");
+        if (!arg || !/^https:\/\//i.test(arg)) return;
+      }
+      editor.focus();
+      document.execCommand(b.dataset.format, false, arg);
+      dirty = true;
+    };
+  });
+  let category = get("category").value;
+  get("category").addEventListener("change", () => {
+    if (get("category").value !== "@offers") {
+      category = get("category").value;
+      return;
+    }
+    get("category").value = category;
+    for (const key of ["offer_enabled", "offer_shop", "offer_list"])
+      get(key).checked = true;
+    get("sale_price").focus();
+    error(
+      "Aanbiedingen is toegevoegd als publicatiebestemming. Het product blijft in de gekozen categorie.",
+    );
+    update();
+  });
+  function update() {
+    const total = Array.from(f.querySelectorAll("[data-cost]")).reduce(
+      (sum, c) => sum + cents(c),
+      0,
+    );
+    const select = el("[data-margin]"),
+      margin = get("margin");
+    margin.parentElement.hidden = select.value !== "own";
+    if (select.value !== "own") margin.value = select.value;
+    const rate = cents(margin),
+      vat = Number(get("vat").value),
+      price = get("price");
+    const automatic = get("price_mode").value === "auto";
+    price.readOnly = automatic;
+    let net = rate < 10000 ? round(total * 10000, 10000 - rate) : 0;
+    if (automatic)
+      price.value = ((net + round(net * vat, 100)) / 100).toFixed(2);
+    else net = round(cents(price) * 100, 100 + vat);
+    const gross = cents(price),
+      profit = net - total;
+    const result = el("[data-result]");
+    result.replaceChildren();
+    for (const [key, value] of [
+      ["Totale kosten (excl. btw)", euros(total)],
+      ["Gewenste marge", margin.value + "%"],
+      ["Verkoopprijs excl. btw", euros(net)],
+      ["Btw (" + vat + "%)", euros(gross - net)],
+      ["Verkoopprijs incl. btw", euros(gross)],
+      [
+        "Winst per stuk",
+        euros(profit) +
+          " (" +
+          (net ? ((100 * profit) / net).toFixed(1) : "0") +
+          "%)",
+      ],
+    ]) {
+      const row = document.createElement("p"),
+        strong = document.createElement("strong");
+      strong.textContent = value;
+      row.append(key + " ", strong);
+      result.append(row);
+    }
+    el("[data-total]").textContent = euros(total);
+    const sale = cents(get("sale_price")),
+      saleNet = round(sale * 100, 100 + vat),
+      gain = saleNet - total;
+    el("[data-sale]").textContent =
+      get("offer_enabled").checked && sale && gross
+        ? "Korting " +
+          ((1 - sale / gross) * 100).toFixed(1).replace(".", ",") +
+          "% · Winst " +
+          euros(gain) +
+          " · Marge " +
+          (saleNet ? (gain / saleNet) * 100 : 0).toFixed(1) +
+          "%" +
+          (gain < 0 ? " · Verliesgevend" : "")
+        : "";
+    el("[data-low]").textContent =
+      get("stock_quantity").value !== "" &&
+      get("minimum_stock").value !== "" &&
+      Number(get("stock_quantity").value) <= Number(get("minimum_stock").value)
+        ? "Lage voorraad"
+        : "";
+    el('[data-count="description"]').textContent =
+      editor.innerText.length + " / 2000";
+    el('[data-count="short_description"]').textContent =
+      get("short_description").value.length + " / 160";
+  }
+  f.addEventListener("input", () => {
+    dirty = true;
+    update();
+  });
+  document.querySelector('a[href="#xp-stock"]').onclick = () => {
+    el("#xp-stock").open = true;
+  };
+  document.querySelector("[data-new]").onclick = (e) => {
+    if (dirty && !confirm("Niet-opgeslagen wijzigingen verlaten?"))
+      e.preventDefault();
+  };
+  on("[data-preview]", () => {
+    const modal = document.createElement("dialog");
+    modal.style.cssText =
+      "max-width:min(600px,94vw);max-height:90dvh;overflow:auto;border:1px solid #cad7ee;border-radius:16px;padding:24px";
+    const heading = document.createElement("h2");
+    heading.textContent = get("name").value || "Productvoorbeeld";
+    modal.append(heading);
+    photos.forEach((p, i) => {
+      const b = button("", () =>
+        window.nvPhotoGallery(
+          photos.map((x) => x.url),
+          i,
+          heading.textContent,
+        ),
+      );
+      const img = new Image();
+      img.src = p.url;
+      img.width = i ? 55 : 140;
+      img.alt = "Productfoto";
+      b.append(img);
+      modal.append(b);
+    });
+    for (const line of [
+      get("category").selectedOptions[0].text,
+      get("short_description").value,
+      editor.innerText,
+      euros(cents(get("price"))),
+      get("offer_enabled").checked
+        ? "Actieprijs " + euros(cents(get("sale_price")))
+        : "",
+      get("stock_status").selectedOptions[0].text,
+    ]) {
+      const p = document.createElement("p");
+      p.textContent = line;
+      modal.append(p);
+    }
+    modal.append(button("Sluiten", () => modal.close()));
+    document.body.append(modal);
+    modal.onclose = () => modal.remove();
+    modal.showModal();
+  });
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    busy = true;
+    error("");
+    try {
+      const data = new FormData(f);
+      data.set("category", get("category").value);
+      data.set("intent", e.submitter?.value || "save");
+      data.set("description", editor.innerText);
+      data.set("description_html", editor.innerHTML);
+      data.delete("image_file");
+      let count = 0;
+      data.set(
+        "gallery",
+        JSON.stringify(
+          photos.map((p) => {
+            if (!p.file) return p.url;
+            data.append("image_file", p.file);
+            return count++;
+          }),
+        ),
+      );
+      const r = await fetch(f.action, {
+        method: "POST",
+        body: data,
+        headers: { Accept: "application/json" },
+      });
+      if (!r.headers.get("Content-Type")?.includes("application/json"))
+        throw Error(
+          r.status === 413
+            ? "De upload is te groot."
+            : "Opslaan mislukt. Controleer je sessie en probeer opnieuw.",
+        );
+      const reply = await r.json();
+      if (!r.ok || !reply.ok) throw Error(reply.error || "Opslaan mislukt.");
+      const url = new URL(location.href);
+      url.searchParams.set("categorie", reply.category);
+      url.searchParams.set("edit", reply.slug);
+      url.searchParams.set("saved", "1");
+      location.assign(url);
+    } catch (err) {
+      error(err.message);
+    } finally {
+      busy = false;
+    }
+  };
+  showPhotos();
+  update();
+  if (new URL(location.href).searchParams.has("saved"))
+    el("[data-error]").textContent = "Product opgeslagen.";
 })();

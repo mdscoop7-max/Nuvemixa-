@@ -22,7 +22,7 @@ WRITE_ENDPOINTS = frozenset({
     "admin_add_supplier",
     "admin_create_customer",
     "customer_register",
-    "nv_manage.catalog",
+    "nv_manage.catalog", "nv_manage.extra_editor",
     "nv_manage.concept_new",      # conceptproduct bewaren (research_notes); publiceert niets
     "nv_manage.concept_update",
     "nv_manage.save_candidate",   # schrijft alleen via de bestaande leverancierslijst; verstuurt niets
