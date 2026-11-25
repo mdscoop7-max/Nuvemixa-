@@ -52,7 +52,7 @@ def offer_fields(form, gross):
     if enabled and (not start or not end or end < start or not 0 < sale < number(gross)):
         raise ValueError("Kies een geldige actieperiode en een actieprijs lager dan de verkoopprijs.")
     return dict(offer_enabled=enabled, offer_start=start, offer_end=end, sale_price=str(sale),
-                offer_shop=form.get("offer_shop") == "1", offer_list=form.get("offer_list") == "1")
+                offer_shop=form.get("offer_shop") == "1", offer_list=form.get("offer_list") == "1", offer_week=form.get("offer_week") == "1")
 
 
 def record_prices(product, previous):

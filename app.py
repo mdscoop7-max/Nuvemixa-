@@ -1264,6 +1264,8 @@ from nv_db_diagnostic import bp as db_diagnostic_bp
 app.register_blueprint(db_diagnostic_bp)
 
 app.register_blueprint(management_blueprint)
+from nv_public_catalog import bp as public_catalog_bp
+app.register_blueprint(public_catalog_bp)
 
 
 
