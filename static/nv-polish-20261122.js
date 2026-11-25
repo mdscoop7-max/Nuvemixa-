@@ -87,10 +87,10 @@
   var RT = {
     nl: { title: 'Klantenreviews', none: 'Nog geen beoordelingen.', write: 'Schrijf review', all: 'Alle reviews',
           based1: 'beoordeling', basedN: 'beoordelingen',
-          t: ['EU-levering', 'Betrouwbaar', 'Retourinfo', 'Gecontroleerd'] },
+          t: ['Verzendinfo', 'Bestelinformatie', 'Retourinfo', '14 dagen bedenktijd'] },
     en: { title: 'Customer reviews', none: 'No ratings yet.', write: 'Write review', all: 'All reviews',
           based1: 'rating', basedN: 'ratings',
-          t: ['EU delivery', 'Trustworthy', 'Return info', 'Moderated'] }
+          t: ['Shipping info', 'Order information', 'Return info', '14-day cooling-off period'] }
   };
   var SVG = function (d) { return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
   var IC = {
@@ -131,14 +131,14 @@
         '<div class="nvp-rev-text"><h2 id="nm-reviews-heading">' + t.title + '</h2><p>' + sub + '</p></div>' +
         '<div class="nvp-rev-actions">' +
           '<button type="button" class="nvp-rev-write" aria-controls="nv-review-form" aria-expanded="false">' + IC.pen + '<span>' + t.write + '</span></button>' +
-          '<button type="button" class="nvp-rev-all">' + IC.star + '<span>' + t.all + ' (' + count + ')</span></button>' +
+          '<button type="button" class="nvp-rev-all" aria-controls="nv-review-panel" aria-expanded="false">' + IC.star + '<span>' + t.all + ' (' + count + ')</span></button>' +
         '</div>' +
       '</div>' +
       '<ul class="nvp-rev-trust">' +
-        '<li>' + IC.truck + '<span>' + t.t[0] + '</span></li>' +
-        '<li>' + IC.shield + '<span>' + t.t[1] + '</span></li>' +
-        '<li>' + IC.rotate + '<span>' + t.t[2] + '</span></li>' +
-        '<li>' + IC.check + '<span>' + t.t[3] + '</span></li>' +
+        '<li><a href="/bestellen">' + IC.truck + '<span>' + t.t[0] + '</span></a></li>' +
+        '<li><a href="/bestellen">' + IC.shield + '<span>' + t.t[1] + '</span></a></li>' +
+        '<li><a href="/retouren">' + IC.rotate + '<span>' + t.t[2] + '</span></a></li>' +
+        '<li><a href="/retouren">' + IC.check + '<span>' + t.t[3] + '</span></a></li>' +
       '</ul>';
     if (card.getAttribute('data-lang') === L && card.getAttribute('data-count') === String(count)) return;
     // Oude kop-id niet dubbel laten bestaan
@@ -154,11 +154,6 @@
       var open = !!(form && form.classList.contains('open'));
       write.setAttribute('aria-expanded', String(open));
       if (open && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-    card.querySelector('.nvp-rev-all').addEventListener('click', function () {
-      var list = sec.querySelector('.nv-rev-list, .nm-reviews__list, .nv-rev-item');
-      if (list && list.scrollIntoView) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      else if (allEl) allEl.click();
     });
     var close = sec.querySelector('[data-nv-review-close]');
     if (close) close.addEventListener('click', function () { write.setAttribute('aria-expanded', 'false'); });

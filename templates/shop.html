@@ -1,3 +1,4 @@
+{% from "_nv_hero_loading.html" import picture with context %}
 {% extends "base.html" %}
 {% from '_tm_icons.html' import tm_icon %}
 
@@ -18,7 +19,7 @@ Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, bea
 {% endblock %}
 
 {% block extra_css %}
-<link rel="preload" media="(max-width: 991px)" as="image" href="{{ url_for('static', filename='images/hero/alle-producten.png', v='20261120p') }}" fetchpriority="high">
+
 <style>
 .tm-shop-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 38px}
 .tm-shop-grid .item{min-width:0}
@@ -35,7 +36,7 @@ Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, bea
 {% block content %}
 
 <section class="page-section shop-page">
-<a href="#producten" class="tm-shop-hero" aria-label="Bekijk alle producten"><img src="{{ url_for('static', filename='images/hero/alle-producten.png', v='20261120p') }}" alt="Ontdek alle producten van NUVEMIXA" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:auto;border-radius:18px;">{% with nv_hero_key='shop' %}{% include "_nv_desktop_hero.html" %}{% endwith %}</a>
+<a href="#producten" class="tm-shop-hero nv-targeted-clear-text-panel" aria-label="Bekijk alle producten">{{ picture('shop', "Ontdek alle producten van NUVEMIXA") }}{% with nv_hero_key='shop' %}{% include "_nv_desktop_hero.html" %}{% endwith %}</a>
 
 
 <!-- ========================================================
@@ -178,7 +179,7 @@ Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, bea
 
     <!-- PRODUCT TELLER -->
 
-    <div class="product-count">
+    {% if not category %}<div class="product-count">
 
         <strong>
             {{ products|length }}
@@ -190,7 +191,7 @@ Ontdek alle NUVEMIXA-producten in onze vijf collecties: gadgets, smart home, bea
             <span>producten gevonden</span>
         {% endif %}
 
-    </div>
+    </div>{% endif %}
 
 </div>
 

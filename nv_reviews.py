@@ -4,6 +4,8 @@ Klanten sturen via de homepage een review in; die staat eerst op 'wachtend'
 en wordt pas zichtbaar nadat de beheerder hem in het dashboard goedkeurt.
 E-mailadressen worden nooit op de website getoond.
 """
+import base64
+import json
 import hashlib
 import re
 import sqlite3
@@ -54,6 +56,7 @@ def connect():
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        conn.execute("CREATE INDEX IF NOT EXISTS reviews_public_cursor ON reviews(status, created_at DESC, id DESC)")
         conn.commit()
         yield conn
         conn.commit()
@@ -96,7 +99,6 @@ def submit_review(form, language="nl", client="", consent=False):
         return "ongeldig"
     language = "en" if language == "en" else "nl"
     with connect() as conn:
-        conn.execute("BEGIN IMMEDIATE")
         recent_email = conn.execute(
             "SELECT COUNT(*) FROM reviews WHERE email = ? AND created_at >= datetime('now','-1 day')",
             (email,)).fetchone()[0]
@@ -112,19 +114,34 @@ def submit_review(form, language="nl", client="", consent=False):
     return "ok"
 
 
-def published_reviews(limit=6):
+# Reserved .invalid addresses are demonstrably non-deliverable test identities.
+# Preserve every row, including these; never infer tests from a name or star rating.
+PUBLIC_FILTER = "status = 'gepubliceerd' AND lower(trim(email)) NOT LIKE '%.invalid'"
+
+def review_page(cursor=''):
+    args=[];where=PUBLIC_FILTER
+    if cursor:
+        try:
+            if len(cursor)>200:raise ValueError()
+            stamp,ident=json.loads(base64.urlsafe_b64decode(cursor.encode()).decode())
+            if not isinstance(stamp,str) or len(stamp)>30 or not isinstance(ident,int):raise ValueError()
+        except Exception as exc:raise ValueError('invalid_review_cursor') from exc
+        where+=" AND (created_at < ? OR (created_at = ? AND id < ?))"
+        args=[stamp,stamp,ident]
     with connect() as conn:
-        rows = conn.execute(
-            "SELECT id, name, rating, title, body, product, verified, reply, created_at "
-            "FROM reviews WHERE status = 'gepubliceerd' ORDER BY created_at DESC, id DESC LIMIT ?",
-            (int(limit),)).fetchall()
-    return [dict(row) for row in rows]
+        rows=conn.execute("SELECT id,name,rating,title,body,product,verified,reply,created_at FROM reviews WHERE "+where+" ORDER BY created_at DESC,id DESC LIMIT 6",args).fetchall()
+    items=[dict(row) for row in rows[:5]]
+    following=base64.urlsafe_b64encode(json.dumps([items[-1]['created_at'],items[-1]['id']]).encode()).decode() if len(rows)>5 else None
+    return {'reviews':items,'next_cursor':following}
+
+def published_reviews(limit=5):
+    return review_page()['reviews'][:max(0,min(int(limit),5))]
 
 
 def review_stats():
     with connect() as conn:
         rows = conn.execute(
-            "SELECT rating, COUNT(*) AS n FROM reviews WHERE status = 'gepubliceerd' GROUP BY rating"
+            "SELECT rating, COUNT(*) AS n FROM reviews WHERE "+PUBLIC_FILTER+" GROUP BY rating"
         ).fetchall()
     dist = {star: 0 for star in (5, 4, 3, 2, 1)}
     for row in rows:

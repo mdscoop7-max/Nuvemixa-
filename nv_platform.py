@@ -33,7 +33,7 @@ def register(mod):
         messages={
             'invalid_token':('Deze link is ongeldig, verlopen of al gebruikt. Vraag een nieuwe link aan.','This link is invalid, expired or already used. Request a new link.'),
             'invalid_coupon':('Deze code is niet geldig voor dit account of deze bestelling.','This code is not valid for this account or order.'),
-            'unsupported_country':('Kies een ondersteund bezorgland.','Choose a supported delivery country.'),
+            'unsupported_country':('Het ingevulde bezorgland wordt niet ondersteund.','The delivery country you entered is not supported.'),
             'shipping_unconfigured':('Verzendkosten zijn nog niet bevestigd. Commerciële verkoop is geblokkeerd.','Shipping fees are unconfirmed. Commercial sales are blocked.'),
             'invalid_address':('Controleer je naam, e-mailadres, straat, huisnummer, postcode, plaats en land.','Check your name, email, street, house number, postal code, city and country.'),
             'invalid_transition':('Deze statusovergang is niet toegestaan.','This status transition is not allowed.'),
@@ -118,13 +118,13 @@ def register(mod):
             if request.path=='/admin/login':request_limit('admin-login',6)
             if request.path=='/contact':request_limit('contact',5)
             if request.path in ['/reviews','/review-purchase']:request_limit('review',5,86400)
-            if request.path=='/api/nuvemixa-assistant':request_limit('assistant',12,60)
+            if request.path=='/api/trendmix-assistant':request_limit('assistant',12,60)
 
     @app.context_processor
     def context():
         camp=store.active_campaign('welcome')
         review_campaign=store.active_campaign('review')
-        return {'nv_tr':tr,'nv_lang':lang(),'nv_welcome':camp[1] if camp else None,'nv_review_campaign':review_campaign[1] if review_campaign else None,'nv_company':store.setting('company',{}),'nv_demo_notice':True,'nv_money':lambda n:mod.format_eur(store.money(n)),'nv_csrf':mod.csrf_token}
+        return {'nv_tr':tr,'nv_lang':lang(),'nv_welcome':camp[1] if camp else None,'nv_review_campaign':review_campaign[1] if review_campaign else None,'nv_company':store.setting('company',{}),'nv_demo_notice':True,'nv_money':lambda n:mod.format_eur(store.money(n)),'nv_csrf':mod.csrf_token,'nv_admin_authenticated':mod.admin_is_authenticated()}
 
     def account_view():
         a=customer();state=store.account(a['id'],a['email']) if a else None
@@ -216,18 +216,40 @@ def register(mod):
                     result.append(dict(other,reason=tr(relation['reason_nl'],relation['reason_en'])))
                     selected.add(str(other['id']))
         return result[:4]
+    def current_quote(rows,country='NL'):
+        a=customer()
+        return store.quotation(rows,country,session.get('nv_coupon',''),a['id'] if a else None)
     def cart():
         if request.method=='POST':
+            action=request.form.get('action')
+            if action in ['apply_coupon','remove_coupon']:
+                if action=='remove_coupon':session.pop('nv_coupon',None)
+                else:
+                    a=customer();code=request.form.get('coupon','').strip()
+                    try:store.quotation(cart_items(),'NL',code,a['id'] if a else None)
+                    except ValueError as e:return error(e)
+                    if code:session['nv_coupon']=code
+                    else:session.pop('nv_coupon',None)
+                session.pop('nv_checkout_key',None)
+                return redirect('/winkelwagen',code=303)
             p=mod.find_product(request.form.get('product_id',''))
-            if p and not p['demo'] and request.form.get('action') in ['add','change']:
+            if p and not p['demo'] and action in ['add','change']:
                 existing=next((r['qty'] for r in cart_items() if str(r['id'])==str(p['id'])),0)
-                try:desired=existing+(1 if request.form.get('action')=='add' else int(request.form.get('delta',0)))
+                try:desired=existing+(1 if action=='add' else int(request.form.get('delta',0)))
                 except ValueError:return error('invalid_address')
                 if desired>int(p.get('stock_quantity') or 0):return error('insufficient_stock')
             session.pop('nv_checkout_key',None)
+            if action=='clear':session.pop('nv_coupon',None)
             return old_cart()
-        rows=cart_items()
-        return render_template('nv_cart.html',categories=mod.CATEGORIES,cart=rows,cart_total=mod.cart_total(),recommendations=recommendations(rows))
+        rows=cart_items();quote=None;coupon_error=False
+        if rows:
+            try:quote=current_quote(rows)
+            except ValueError as exc:
+                if str(exc)=='invalid_coupon':
+                    session.pop('nv_coupon',None);coupon_error=True;quote=current_quote(rows)
+                elif str(exc)!='shipping_unconfigured':return error(exc)
+        else:session.pop('nv_coupon',None)
+        return render_template('nv_cart.html',categories=mod.CATEGORIES,cart=rows,cart_total=mod.cart_total(),quote=quote,coupon_error=coupon_error,recommendations=recommendations(rows))
     app.view_functions['winkelwagen']=cart
     def offers():
         products=[p for p in mod.load_all_products() if p.get('published') and not p.get('demo') and p.get('old_price')]
@@ -242,27 +264,50 @@ def register(mod):
     app.view_functions['sitemap']=sitemap
     def address():
         a={k:request.form.get(k,'').strip() for k in ['first_name','last_name','email','address_1','postcode','city','country']}
-        a['email']=a['email'].casefold();a['country']=a['country'].upper()
+        a['email']=a['email'].casefold()
+        country=a['country'].casefold()
+        aliases={'nederland':'NL','netherlands':'NL','nl':'NL','belgië':'BE','belgie':'BE','belgium':'BE','belgique':'BE','be':'BE'}
+        a['country']=aliases.get(country,a['country'].upper())
         if not all(a.values()) or any(len(v)>254 for v in a.values()) or not re.fullmatch(r'[^@\s]{1,64}@[^@\s]{1,185}\.[^@\s]{2,}',a['email']):raise ValueError('invalid_address')
         if a['country'] not in store.setting('shipping',{'NL':None,'BE':None}):raise ValueError('unsupported_country')
         pattern={'NL':r'[1-9][0-9]{3}\s?[A-Za-z]{2}','BE':r'[1-9][0-9]{3}'}
         if a['country'] in pattern and not re.fullmatch(pattern[a['country']],a['postcode']):raise ValueError('invalid_address')
         if not re.search(r'\d',a['address_1']) or len(a['city'])<2:raise ValueError('invalid_address')
         return a
+    def quote_country(value):
+        return {'nederland':'NL','netherlands':'NL','belgië':'BE','belgie':'BE','belgium':'BE','belgique':'BE'}.get(value.casefold(),value.upper())
+    def checkout_quote(rows):
+        a=customer();code=request.form.get('coupon',session.get('nv_coupon','')).strip()
+        country=quote_country(request.form.get('country','NL').strip() or 'NL')
+        result=store.quotation(rows,country,code,a['id'] if a else None)
+        if code:session['nv_coupon']=code
+        else:session.pop('nv_coupon',None)
+        return result
+    @app.post('/checkout/quote')
+    def nv_checkout_quote():
+        rows=cart_items()
+        if not rows:abort(400)
+        try:quote=checkout_quote(rows)
+        except ValueError as e:return {'error':str(e)},400
+        response=make_response({'html':render_template('_nv_price_summary.html',quote=quote),'total_cents':quote['total_cents']})
+        response.headers['Cache-Control']='private, no-store';response.headers['X-Robots-Tag']='noindex, nofollow';return response
     def checkout():
         rows=cart_items()
         if not rows:return redirect('/winkelwagen',code=303)
         owner=session.setdefault('nv_guest_owner',secrets.token_urlsafe(32));a=customer()
         if request.method=='POST':
-            if request.form.get('checkout_consent')!='yes':return error('invalid_address')
             try:
-                addr=address();oid=store.create_order(rows,addr,a['id'] if a else None,owner,request.form.get('idempotency',''),request.form.get('coupon',''),lang())
+                quote=checkout_quote(rows)
+                if request.form.get('action')!='quote':
+                    if request.form.get('checkout_consent')!='yes':return error('invalid_address')
+                    addr=address();oid=store.create_order(rows,addr,a['id'] if a else None,owner,request.form.get('idempotency',''),request.form.get('coupon',session.get('nv_coupon','')),lang())
+                    return redirect('/orders/'+oid['id'],code=303)
             except ValueError as e:return error(e)
-            return redirect('/orders/'+oid['id'],code=303)
+        else:
+            try:quote=current_quote(rows)
+            except ValueError as e:return error(e)
         nonce=session.setdefault('nv_checkout_key',secrets.token_urlsafe(24))
-        try:quote=store.quotation(rows,'NL')
-        except ValueError as e:return error(e)
-        profile=json.loads(store.account(a['id'],a['email'])['profile']) if a else {}
+        profile=dict(request.form) if request.method=='POST' else json.loads(store.account(a['id'],a['email'])['profile']) if a else {}
         return render_template('nv_checkout.html',categories=mod.CATEGORIES,cart=rows,quote=quote,idempotency=nonce,countries=store.setting('shipping',{'NL':None,'BE':None}),customer=a,profile=profile)
     app.view_functions['afrekenen']=checkout
     @app.post('/account/address')
@@ -283,6 +328,10 @@ def register(mod):
         order=owned_order(id)
         if order['status']=='pending' and order['expires']<=store.now():order=store.transition(id,'expiry:'+id,'expired')
         return render_template('nv_order.html',categories=mod.CATEGORIES,order=order,totals=json.loads(order['totals']),items=json.loads(order['items']),address=json.loads(order['address']))
+    @app.get('/orders/<id>/receipt')
+    def nv_receipt(id):
+        order=owned_order(id)
+        return render_template('nv_receipt.html',categories=mod.CATEGORIES,order=order,totals=json.loads(order['totals']),items=json.loads(order['items']),address=json.loads(order['address']),order_date=datetime.fromtimestamp(order['created'],timezone.utc).strftime('%d-%m-%Y %H:%M UTC'))
     @app.post('/orders/<id>/simulate')
     def nv_simulate(id):
         owned_order(id);target=request.form.get('event','')
@@ -309,6 +358,23 @@ def register(mod):
             except ValueError as e:return error(e)
             return page(tr('Bedankt voor je eerlijke review','Thank you for your honest review'),message=tr('De beloning hangt nooit af van je sterren of publicatie. Een simulatiereview wordt nooit als echte aankoopreview gepubliceerd.','Your reward never depends on your rating or publication. A simulated review is never published as a genuine purchase review.'))
         return page(tr('Je eerlijke ervaring','Your honest experience'),form='review',token=raw)
+    original_returns=app.view_functions['retouren']
+    def returns_view():
+        fields=['name','email','order_number','product','reason']
+        g.nv_return_values={key:request.form.get(key,'').strip() for key in fields}
+        g.nv_return_errors=[];g.nv_return_validated=False
+        if request.method=='POST':
+            data=g.nv_return_values
+            if not 1<=len(data['name'])<=120:g.nv_return_errors.append(tr('Vul je naam in (maximaal 120 tekens).','Enter your name (up to 120 characters).'))
+            if not re.fullmatch(r'[^@\s]{1,64}@[^@\s]{1,185}\.[^@\s]{2,}',data['email']):g.nv_return_errors.append(tr('Vul een geldig e-mailadres in.','Enter a valid email address.'))
+            if len(data['order_number'])>80 or not re.fullmatch(r'#?[A-Za-z0-9][A-Za-z0-9 ._/-]{0,79}',data['order_number']):g.nv_return_errors.append(tr('Vul een geldig bestelnummer in (maximaal 80 tekens).','Enter a valid order number (up to 80 characters).'))
+            if not 1<=len(data['product'])<=200:g.nv_return_errors.append(tr('Vul het product in (maximaal 200 tekens).','Enter the product (up to 200 characters).'))
+            if len(data['reason'])>2000:g.nv_return_errors.append(tr('De retourreden mag maximaal 2000 tekens bevatten.','The return reason must be at most 2000 characters.'))
+            g.nv_return_validated=not g.nv_return_errors
+        # Local validation only: no database, mail, order or return-state mutation.
+        return make_response(original_returns(),400 if g.nv_return_errors else 200)
+    app.view_functions['retouren']=returns_view
+
     @app.route('/herroepen',methods=['GET','POST'])
     def nv_withdraw():
         if request.method=='POST':
@@ -431,6 +497,15 @@ def register(mod):
         return response
     @app.get('/offline')
     def nv_offline():return page(tr('Je bent offline','You are offline'),message=tr('Verbind met internet om actuele producten, prijzen, je account en winkelwagen te gebruiken. Privégegevens worden niet offline opgeslagen.','Connect to the internet for current products, prices, your account and cart. Private information is not stored offline.'))
+    @app.get('/reviews/page')
+    def nv_public_reviews_page():
+        from nv_reviews import review_page,review_stats
+        try:result=review_page(request.args.get('cursor',''))
+        except ValueError:abort(400)
+        result['stats']=review_stats()
+        response=make_response(result)
+        response.headers['Cache-Control']='no-store'
+        return response
     @app.get('/products.json')
     def nv_catalog_json():
         return {'products':[{'id':p['id'],'name':p['en_name'] if lang()=='en' else p['name'],'url':p['product_url'],'demo':p['demo']} for p in mod.load_all_products()]}

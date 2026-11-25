@@ -1,0 +1,33 @@
+
+#nv-review-panel[hidden],#nv-review-panel [hidden]{display:none!important}
+#nv-review-panel{margin-top:12px;overflow-wrap:anywhere}
+#nv-review-panel .nv-rev-list{display:grid;gap:10px}
+#nv-review-panel .nv-rev-item{margin:0;padding:14px;border:1px solid #dbe5ef;border-radius:14px;background:#fff;color:#334155;min-width:0}
+#nv-review-panel .nv-rev-name{color:#1e293b!important;font-weight:700}
+#nv-review-panel .nv-rev-item p{white-space:pre-wrap;margin:8px 0;color:#334155!important}
+#nv-review-panel .nv-rev-stars{color:#b77900!important}
+#nv-review-panel .nv-rev-date{color:#64748b}
+#nv-review-panel .nv-rev-top{display:flex;gap:10px;align-items:center}
+.nvp-rev-trust a{display:flex;align-items:center;gap:8px;color:inherit!important;text-decoration:none}
+.nv-review-chevron{display:inline-block;transition:transform .15s}
+[aria-expanded=true]>.nv-review-chevron{transform:rotate(180deg)}
+.nv-average-stars{position:relative;display:inline-block;color:#d3b55a;letter-spacing:1px;white-space:nowrap}
+.nv-average-stars>span{position:absolute;left:0;top:0;overflow:hidden;color:#fbbf24;white-space:nowrap}
+.nvp-rev-text{min-width:0}.nvp-rev-text h2{overflow-wrap:normal!important;word-break:normal!important}
+.nvp-rev-trust li{min-width:0}
+html.nv-dock-visible body{padding-bottom:calc(var(--nv-dock-clearance,100px) + 24px)!important}
+html.nv-dock-visible body .tm-assist-fab,html.nv-dock-visible body .tm-ai-fab{bottom:calc(var(--nv-dock-clearance,100px) + 12px)!important}
+html.nv-dock-visible body .tm-assistant-panel,html.nv-dock-visible body .tm-assist-panel{bottom:calc(var(--nv-dock-clearance,100px) + 76px)!important;max-height:calc(100dvh - var(--nv-dock-clearance,100px) - 100px)!important}
+#nv-services-e h3{word-break:normal!important;overflow-wrap:normal!important;hyphens:none!important}
+.nv-workflow dl.nv-price-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(85px,44%);gap:8px 16px;max-width:600px;margin:20px 0}
+.nv-workflow .nv-price-summary dd{margin:0;min-width:0;text-align:right;overflow-wrap:break-word;word-break:normal}.nv-workflow .nv-price-summary dt{min-width:0;overflow-wrap:break-word;word-break:normal}
+.nv-price-summary .nv-discount{color:#166534;font-weight:700}
+.nv-coupon-form{max-width:600px;margin:16px 0}.nv-coupon-form input{max-width:100%}
+.nv-order-logo{width:220px;max-width:70%;height:auto}
+@media(max-width:380px){html body .nm-reviews.nvp-compact .nvp-rev .nvp-rev-text h2{font-size:16px!important;line-height:1.2!important}.nvp-rev-trust{font-size:12px!important}}
+@media(max-width:480px){html body{min-width:0!important}}
+@media(max-width:340px){html body .nm-reviews.nvp-compact .nvp-rev .nvp-rev-text h2{font-size:14px!important}}
+@media print{body>header,body>footer,.tm-dock,.tm-assist-fab,.nv-order-actions{display:none!important}.nv-workflow{max-width:none;margin:0;padding:0}body{padding:0!important}}
+
+html.nv-phone body main .tm-new-hero picture img,html.nv-phone body main .tm-shop-hero picture img,html.nv-phone body main .tm-offers-hero picture img{display:block!important}
+html.nv-phone[lang="nl"] body main .tm-new-hero:not(:has(img[src*="gadgets"])),html.nv-phone[lang="nl"] body main .tm-shop-hero{background-image:none!important}

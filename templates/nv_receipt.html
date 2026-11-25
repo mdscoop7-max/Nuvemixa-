@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}{{ nv_tr('Bestelbon','Order receipt') }} {{ order.id }} | NUVEMIXA{% endblock %}
+{% block content %}<section class="nv-workflow">
+<img class="nv-order-logo" src="/static/nuvemixa-logo-test.png?v=20261110-logo-test" alt="NUVEMIXA" width="220" height="64">
+<h1>{{ nv_tr('Bestelbon / simulatiefactuur','Order receipt / simulated invoice') }}</h1>
+<p class="nv-notice">{{ nv_tr('Geen fiscale factuur. Geen echte betaling of levering. Officiële facturatie blijft geblokkeerd zolang bedrijfsgegevens ontbreken.','Not a tax invoice. No actual payment or delivery. Official invoicing remains blocked while company details are incomplete.') }}</p>
+<p>{{ nv_tr('Bestel- en documentnummer','Order and document number') }}: {{ order.id }}<br>{{ nv_tr('Bestel- en documentdatum','Order and document date') }}: {{ order_date }}<br>{{ nv_tr('Simulatiestatus','Simulation status') }}: <strong>{{ order.status }}</strong></p>
+{% set company=totals.get('invoice',{}).get('company',{}) %}{% if company %}<h2>{{ nv_tr('Vastgelegde bedrijfsgegevens','Recorded company details') }}</h2>{% for key,value in company.items() if key in ['legal_name','address','postcode','city','country','kvk','vat_number','email'] and value %}<p>{{ key }}: {{ value }}</p>{% endfor %}{% endif %}
+<h2>{{ nv_tr('Klant','Customer') }}</h2><p>{{ address.first_name }} {{ address.last_name }}<br>{{ address.address_1 }}<br>{{ address.postcode }} {{ address.city }}<br>{{ address.country }}<br>{{ address.email }}</p>
+<h2>{{ nv_tr('Producten','Products') }}</h2>{% for item in items %}<article><h3>{{ item.en_name if nv_lang=='en' else item.name }}</h3><p>{{ item.qty }} × {{ nv_money(item.unit_cents) }} · {{ nv_tr('Korting','Discount') }} − {{ nv_money(item.discount_cents) }} · {{ nv_tr('Na korting','After discount') }} {{ nv_money(item.total_cents) }}</p></article>{% endfor %}
+{% set quote=totals %}{% include '_nv_price_summary.html' %}<p>{{ nv_tr('Gesimuleerd terugbetaald','Simulated refund') }}: {{ nv_money(order.refunded) }}</p>
+<p class="nv-order-actions"><a href="/orders/{{ order.id }}">{{ nv_tr('Terug naar bestelling','Back to order') }}</a> · {{ nv_tr('Gebruik Afdrukken in je browser om deze bestelbon op te slaan.','Use your browser’s Print option to save this receipt.') }}</p>
+</section>{% endblock %}

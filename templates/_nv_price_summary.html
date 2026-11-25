@@ -1,0 +1,11 @@
+<dl class="nv-price-summary">
+<dt>{{ nv_tr('Subtotaal vóór korting','Subtotal before discount') }}</dt><dd>{{ nv_money(quote.subtotal_cents) }}</dd>
+{% if quote.get('coupon_code') %}<dt>{{ nv_tr('Kortingscode','Coupon') }}</dt><dd>{{ quote.coupon_code }}</dd>{% endif %}
+<dt>{{ nv_tr('Productkorting','Product discount') }}{% if quote.get('discount_percent') %} {{ quote.discount_percent }}%{% endif %}</dt><dd class="nv-discount">− {{ nv_money(quote.discount_cents) }}</dd>
+<dt>{{ nv_tr('Producten na korting','Products after discount') }}</dt><dd>{{ nv_money(quote.subtotal_cents-quote.discount_cents) }}</dd>
+<dt>{{ nv_tr('Verzendkosten','Shipping') }}</dt><dd>{% if quote.get('shipping_known',True) %}{{ nv_money(quote.shipping_cents) }}{% else %}{{ nv_tr('Nog niet bekend · simulatie € 0,00','Not yet known · simulation € 0.00') }}{% endif %}</dd>
+<dt>{{ nv_tr('Totaal exclusief btw','Total excluding VAT') }}</dt><dd>{{ nv_money(quote.total_cents-quote.vat_cents) }}</dd>
+{% for group in quote.get('vat_breakdown',[]) %}<dt>{{ nv_tr('Inbegrepen btw','Included VAT') }} {{ '%g'|format(group.vat_bps/100) }}%</dt><dd>{{ nv_money(group.vat_cents) }}</dd>{% else %}<dt>{{ nv_tr('Inbegrepen btw','Included VAT') }}</dt><dd>{{ nv_money(quote.vat_cents) }}</dd>{% endfor %}
+<dt><strong>{{ nv_tr('Totaal inclusief btw (simulatie)','Total including VAT (simulation)') }}</strong></dt><dd><strong>{{ nv_money(quote.total_cents) }}</strong></dd>
+<dt>{{ nv_tr('Totale besparing','Total savings') }}</dt><dd class="nv-discount">{{ nv_money(quote.discount_cents) }}</dd>
+</dl>

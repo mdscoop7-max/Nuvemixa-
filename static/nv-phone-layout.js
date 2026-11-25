@@ -48,6 +48,7 @@
  }
  function refresh(){
   const phone=isPhone();document.documentElement.classList.toggle('nv-phone',phone);
+  for(const source of document.querySelectorAll('.nv-hero-picture source'))source.media=phone?'not all':'(min-width: 992px)';
   // Portrait retains its original narrow rules; only landscape/wide phone needs copies.
   if(mobileStyle)mobileStyle.media=phone&&innerWidth>760?'all':'not all';
  }

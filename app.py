@@ -6,7 +6,7 @@ import secrets
 import urllib.request
 import urllib.error
 from pathlib import Path
-from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, jsonify
+from flask import Flask, Response, current_app, render_template, request, redirect, url_for, session, abort, jsonify, g
 from werkzeug.security import check_password_hash
 from datetime import datetime, timezone
 import time
@@ -373,7 +373,7 @@ def verify_form_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
     # Read-only JSON assistant handles Origin separately.
-    if request.endpoint == "nuvemixa_assistant":
+    if request.endpoint == "trendmix_assistant":
         return
     origin = request.headers.get("Origin")
     if origin:
@@ -389,7 +389,37 @@ def verify_form_csrf():
 
 @app.context_processor
 def inject_helpers():
-    return {"slugify": slugify, "cart_count": cart_count(), "format_eur": format_eur, "wishlist_ids": set(session.get("trendmix_wishlist", [])), "csrf_token": csrf_token}
+    return {"slugify": slugify, "cart_count": cart_count(), "format_eur": format_eur, "wishlist_ids": wishlist_selection_ids(), "csrf_token": csrf_token}
+
+
+def wishlist_catalog():
+    """Resolve listing IDs and existing detail-page IDs to the same product."""
+    if not hasattr(g, '_nv_wishlist_catalog'):
+        catalog = load_all_products()
+        aliases = {}
+        for item in catalog:
+            key = str(item['id'])
+            slug, index = item['category_slug'], item['index']
+            raw = products[slug][index]
+            legacy = str(raw.get('id', f"tm-{slug}-{slugify(item['name'])}-{index}"))
+            for alias in (key, legacy, f'{slug}-{index}'):
+                aliases[alias] = key
+        g._nv_wishlist_catalog = (catalog, aliases)
+    return g._nv_wishlist_catalog
+
+
+def normalized_wishlist():
+    _, aliases = wishlist_catalog()
+    raw = session.get('trendmix_wishlist', [])
+    if not isinstance(raw, list):
+        return []
+    return list(dict.fromkeys(aliases[str(value)] for value in raw[:100] if str(value) in aliases))
+
+
+def wishlist_selection_ids():
+    saved = set(normalized_wishlist())
+    _, aliases = wishlist_catalog()
+    return {alias for alias, key in aliases.items() if key in saved} | {int(key) for key in saved}
 
 
 
@@ -406,7 +436,7 @@ def home():
     review_list, review_summary = [], {"count": 0, "average": 0.0, "bars": []}
     try:
         from nv_reviews import published_reviews, review_stats
-        review_list, review_summary = published_reviews(6), review_stats()
+        review_list, review_summary = published_reviews(5), review_stats()
     except Exception:
         app.logger.error("NUVEMIXA reviews storage unavailable")
     return render_template("index.html", categories=CATEGORIES, featured_products=featured_mix(), category_images=category_images(), search_query=query, search_results=search_results, counts=counts, total_products=len(all_items), reviews=review_list, review_stats=review_summary)
@@ -516,13 +546,21 @@ def customer_logout():
 
 @app.route("/wishlist", methods=["GET", "POST"])
 def wishlist():
-    saved = session.get("trendmix_wishlist", [])
+    saved = normalized_wishlist()
     if request.method == "POST":
-        product_id = request.form.get("product_id", "").strip()
+        _, aliases = wishlist_catalog()
+        product_id = aliases.get(request.form.get("product_id", "").strip())
         action = request.form.get("action", "toggle")
         if action == "clear":
             saved = []
-        elif product_id:
+        elif action not in ('toggle', 'add', 'remove') or not product_id:
+            abort(400)
+        elif action == 'remove':
+            saved = [key for key in saved if key != product_id]
+        elif action == 'add':
+            if product_id not in saved:
+                saved.append(product_id)
+        else:
             if product_id in saved:
                 saved.remove(product_id)
             else:
@@ -531,9 +569,9 @@ def wishlist():
         session.modified = True
         referrer = request.referrer or ""
         safe_referrer = referrer.startswith(request.host_url.rstrip("/") + "/")
-        return redirect(referrer if safe_referrer else url_for("wishlist"))
+        return redirect(referrer if safe_referrer else url_for("wishlist"), code=303)
     wishlist_products = [item for product_id in saved if (item := find_product(product_id))]
-    return render_template("wishlist.html", categories=CATEGORIES, products=wishlist_products, wishlist_ids=set(saved))
+    return render_template("wishlist.html", categories=CATEGORIES, products=wishlist_products, wishlist_ids=wishlist_selection_ids())
 
 
 @app.route("/cart")
@@ -926,7 +964,7 @@ def control():
 
 
 INFO_PAGES = {
-    "over-nuvemixa": {"title": "Over NUVEMIXA", "description": "Ontdek het verhaal achter NUVEMIXA, onze vijf productcollecties en hoe we bouwen aan een overzichtelijke webshop met betrouwbare informatie vóór de commerciële opening.", "content": """
+    "over-trendmix": {"title": "Over NUVEMIXA", "description": "Ontdek het verhaal achter NUVEMIXA, onze vijf productcollecties en hoe we bouwen aan een overzichtelijke webshop met betrouwbare informatie vóór de commerciële opening.", "content": """
         <p>NUVEMIXA wordt ontwikkeld als een moderne webshop waarin overzicht, duidelijke informatie en een prettige winkelervaring centraal staan. Het assortiment is verdeeld over vijf vaste categorieën: Gadgets, Smart Home, Beauty & Care, Home & Living en Lifestyle & Sport.</p>
         <h2>Waar we voor staan</h2><p>We willen klanten niet door een eindeloze catalogus laten zoeken. NUVEMIXA kiest voor een overzichtelijk assortiment en productpagina’s waarop prijs, belangrijkste kenmerken, voorraad- en leverinformatie zo duidelijk mogelijk worden weergegeven.</p>
         <h2>Van testfase naar echte webshop</h2><p>NUVEMIXA bevindt zich momenteel in ontwikkeling. Producten en prijzen in de testcatalogus kunnen nog wijzigen. Echte bestellingen worden pas geactiveerd nadat leverancier, betaling, verzending, retourproces en bedrijfsgegevens definitief zijn ingericht en gecontroleerd.</p>
@@ -1313,7 +1351,7 @@ def contact():
 @app.route("/over-nuvemixa")
 @app.route("/over-trendmix")
 def over_trendmix():
-    return render_info_page("over-nuvemixa")
+    return render_info_page("over-trendmix")
 
 
 @app.route("/bestellen")
@@ -1326,7 +1364,7 @@ def privacy():
     return render_info_page("privacy")
 
 
-@app.route("/retouren")
+@app.route("/retouren", methods=["GET", "POST"])
 def retouren():
     return render_info_page("retouren")
 
@@ -1397,8 +1435,8 @@ def trendmix_security_headers(response):
 
 
 # Public read-only support endpoint; customer orders remain private.
-from nuvemixa_assistant import register_nuvemixa_assistant
-register_nuvemixa_assistant(app, products, CATEGORIES, live_orders_enabled)
+from trendmix_assistant import register_trendmix_assistant
+register_trendmix_assistant(app, products, CATEGORIES, live_orders_enabled)
 
 
 # NUVEMIXA-REVIEWS-20261121: klantreviews (aparte opslag, moderatie door beheerder).

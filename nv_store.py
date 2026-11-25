@@ -252,8 +252,49 @@ def quotation(lines,country,coupon='',customer_id=None,conn=None,at=None):
     simulation=any(p.get('demo',True) for p in lines)
     fee=0 if simulation else shipping[country]
     if fee is None:raise ValueError('shipping_unconfigured')
-    fee=int(fee);shipping_vat=int((Decimal(fee)*2100/12100).quantize(Decimal('1'),rounding=ROUND_HALF_UP))
-    return {'subtotal_cents':subtotal,'discount_cents':discount,'shipping_cents':fee,'vat_cents':sum(p['vat_cents'] for p in allocated)+shipping_vat,'total_cents':subtotal-discount+fee,'coupon_hash':coupon_hash,'lines':allocated,'simulation':True}
+    fee=int(fee)
+    groups={}
+    for p in allocated:
+        rate=int(p.get('vat_bps',2100))
+        group=groups.setdefault(rate,{'vat_bps':rate,'goods_cents':0,'vat_cents':0})
+        group['goods_cents']+=p['total_cents'];group['vat_cents']+=p['vat_cents']
+    rates=sorted(groups);weights=[groups[r]['goods_cents'] for r in rates]
+    # Shipping may exceed the goods amount: allocate() itself deliberately caps
+    # discounts, so proportionally distribute shipping separately here.
+    denominator=sum(weights)
+    fees=[fee*w//denominator for w in weights] if denominator else [0]*len(rates)
+    if denominator:
+        order=sorted(range(len(rates)),key=lambda i:(-(fee*weights[i]%denominator),i))
+        for i in order[:fee-sum(fees)]:fees[i]+=1
+    elif fee:raise ValueError('shipping_without_taxable_goods')
+    shipping_vat=0
+    for rate,part in zip(rates,fees):
+        tax=int((Decimal(part)*rate/(10000+rate)).quantize(Decimal('1'),rounding=ROUND_HALF_UP))
+        shipping_vat+=tax
+        groups[rate].update(shipping_cents=part,shipping_vat_cents=tax)
+        groups[rate]['vat_cents']+=tax
+        groups[rate]['net_cents']=groups[rate]['goods_cents']+part-groups[rate]['vat_cents']
+    vat=sum(p['vat_cents'] for p in allocated)+shipping_vat
+    total=subtotal-discount+fee
+    return {'subtotal_cents':subtotal,'discount_cents':discount,'after_discount_cents':subtotal-discount,
+            'shipping_cents':fee,'shipping_known':not simulation,'shipping_vat_cents':shipping_vat,
+            'vat_cents':vat,'net_cents':total-vat,'vat_breakdown':[groups[r] for r in rates],
+            'total_cents':total,'coupon_hash':coupon_hash,'coupon_code':coupon.strip() if coupon_hash else '',
+            'discount_percent':int(cam['percent']) if coupon_hash else 0,'lines':allocated,'simulation':True}
+
+def quote_text(quote,en=False):
+    labels=[('Products','Producten',quote['subtotal_cents']),('Discount','Korting',-quote['discount_cents']),
+            ('Products after discount','Producten na korting',quote['subtotal_cents']-quote['discount_cents']),
+            ('Shipping (simulation)' if not quote.get('shipping_known',True) else 'Shipping',
+             'Verzending (simulatie)' if not quote.get('shipping_known',True) else 'Verzending',quote['shipping_cents']),
+            ('Excluding VAT','Exclusief btw',quote['total_cents']-quote['vat_cents'])]
+    result=[(a if en else b)+': EUR '+format(money(v),'.2f') for a,b,v in labels]
+    if quote.get('coupon_code'):result.insert(1,('Coupon: ' if en else 'Kortingscode: ')+quote['coupon_code'])
+    for group in quote.get('vat_breakdown',[]):
+        result.append(('VAT ' if en else 'Btw ')+format(Decimal(group['vat_bps'])/100,'g')+'%: EUR '+format(money(group['vat_cents']),'.2f'))
+    result.extend([('Total: EUR ' if en else 'Totaal: EUR ')+format(money(quote['total_cents']),'.2f'),('Savings: EUR ' if en else 'Besparing: EUR ')+format(money(quote['discount_cents']),'.2f')])
+    return '\n'.join(result)
+
 
 def create_order(lines,address,customer_id,owner,idempotency,coupon='',lang='nl'):
     if not lines:raise ValueError('empty_cart')
@@ -276,7 +317,7 @@ def create_order(lines,address,customer_id,owner,idempotency,coupon='',lang='nl'
         c.execute('INSERT INTO nv_orders(id,customer_id,owner_hash,idempotency,mode,status,items,address,totals,coupon_hash,created,expires) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(oid,customer_id,digest(owner),digest(owner+idempotency),'simulation','pending',json.dumps(quote['lines']),json.dumps(address),json.dumps(quote),quote['coupon_hash'],now(),now()+1800))
         en=lang=='en'
         item_lines='\n'.join(str(p['qty'])+' × '+p.get('en_name' if en else 'name','')+' — EUR '+format(money(p['total_cents']),'.2f') for p in quote['lines'])
-        body=('SIMULATION ONLY — no payment or delivery.\n' if en else 'UITSLUITEND SIMULATIE — geen betaling of levering.\n')+oid+'\n'+item_lines+'\n'+('Total: EUR ' if en else 'Totaal: EUR ')+format(money(quote['total_cents']),'.2f')+'\n/orders/'+oid+'\n'+('This is not a tax invoice.' if en else 'Dit is geen fiscale factuur.')
+        body=('SIMULATION ONLY — no payment or delivery.\n' if en else 'UITSLUITEND SIMULATIE — geen betaling of levering.\n')+oid+'\n'+item_lines+'\n'+quote_text(quote,en)+'\n'+('Status: pending — not paid' if en else 'Status: pending — niet betaald')+'\n/orders/'+oid+'\n'+('This is not a tax invoice.' if en else 'Dit is geen fiscale factuur.')
         queue(c,customer_id,address['email'],'order','NUVEMIXA — '+('Simulated order' if en else 'Simulatiebestelling'),body,lang,'order:'+oid)
         return dict(c.execute('SELECT * FROM nv_orders WHERE id=?',(oid,)).fetchone())
 TRANSITIONS={'pending':{'paid','cancelled','failed','expired'},'paid':{'fulfilled'},'fulfilled':set(),'cancelled':set(),'failed':set(),'expired':set(),'refunded':set()}

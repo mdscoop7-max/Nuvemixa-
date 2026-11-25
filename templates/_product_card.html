@@ -16,5 +16,13 @@
         <button type="submit" class="card-add" aria-label="Toevoegen aan winkelwagen">{{ tm_icon('plus') }} <span data-i18n="addShort">Toevoegen</span></button>
       </form>
     </div>
+    {% if wishlist_view|default(false) %}
+    <form class="wishlist-remove-form" action="/wishlist" method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="remove">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <button class="wishlist-remove" type="submit" aria-label="{{ nv_tr('Verwijderen uit favorieten: ','Remove from favourites: ') }}{{ product.name }}">{{ nv_tr('Verwijderen','Remove') }}</button>
+    </form>
+    {% endif %}
   </div>
 </article>

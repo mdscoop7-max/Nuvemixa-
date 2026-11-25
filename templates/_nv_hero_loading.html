@@ -1,0 +1,14 @@
+{# Same artwork/pixels. The desktop picture source prevents a second mobile download. #}
+{% macro mobile_url(key, language) -%}
+{%- set nl = {'gadgets': 'gadgets-mobile-clear-20261124-lossless.webp', 'smart-home': 'smart-home-mobile-cleantext-20261124-lossless.webp', 'beauty-care': 'beauty-care-mobile-cleantext-20261124-lossless.webp', 'home-living': 'home-living-mobile-cleantext-20261124-lossless.webp', 'lifestyle-sport': 'lifestyle-sport-mobile-cleantext-20261124-lossless.webp', 'shop': 'alle-producten-mobile-cleantext-20261124-lossless.webp', 'offers': 'aanbiedingen-lossless.webp'} -%}
+{%- set en = {'gadgets':'gadgets-2026-en.jpg','smart-home':'smart-home-en.jpg','beauty-care':'beauty-care-en.jpg','home-living':'home-living-2026-en.jpg','lifestyle-sport':'lifestyle-sport-en.jpg','shop':'alle-producten-en.jpg','offers':'aanbiedingen-en.jpg'} -%}
+{{- '/static/images/hero/' ~ (en[key] ~ '?v=20261120v' if language == 'en' else nl[key] ~ '?v=20261124-speed1') -}}
+{%- endmacro %}
+{% macro picture(key, alt) -%}
+<picture class="nv-hero-picture"><source media="(min-width: 992px)" srcset="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="><img src="{{ mobile_url(key, nv_lang|default('nl')) }}" data-nv-nl="{{ mobile_url(key, 'nl') }}" data-nv-en="{{ mobile_url(key, 'en') }}" alt="{{ alt|replace('&amp;', '&') }}" loading="eager" fetchpriority="high" decoding="async"></picture>
+{%- endmacro %}
+{% macro preload(key) -%}
+{%- set desktop = {'shop':'alle-producten','offers':'aanbiedingen'} -%}
+<link rel="preload" as="image" media="(min-width: 992px)" href="/static/images/hero/{{ desktop.get(key,key) }}-desktop-photo-20261123.webp" fetchpriority="high">
+<link rel="preload" as="image" media="(max-width: 991px)" href="{{ mobile_url(key, nv_lang|default('nl')) }}" fetchpriority="high">
+{%- endmacro %}

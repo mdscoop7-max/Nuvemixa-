@@ -8,10 +8,10 @@
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ url_for('static', filename='design-tokens.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='ux.css') }}">
   <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='app.js', v='20261120w') }}"></script>
   <script nonce="{{ g.nv_nonce }}" defer src="{{ url_for('static', filename='languages.js', v='20261122b') }}"></script>
-  <link rel="stylesheet" href="{{ url_for('static',filename='nuvemixa-info.css',v='20261019-1') }}">
-<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='nuvemixa-footer-unified.css', v='20261110-footer-allpages') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='trendmix-info.css',v='20261019-1') }}">
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><meta name="theme-color" content="#063cbb"><link rel="stylesheet" href="{{ url_for('static', filename='trendmix-footer-unified.css', v='20261110-footer-allpages') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='nuvemixa-refresh.css', v='20261110-footer-allpages') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='nuvemixa-ui-2026.css', v='20261110-flitsfix') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='trendmix-ui-2026.css', v='20261110-flitsfix') }}">
 {% raw %}<!-- NUVEMIXA 2026-11-20e head -->
 
 <style>@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}</style>
@@ -57,6 +57,7 @@
         {% endfor %}
       </div>
     </div>
+    {% if info_slug == 'retouren' %}{% include '_nv_return_form.html' %}{% endif %}
     <footer class="tm-info-related">
       <h2 data-tm-info-nl="Meer informatie over NUVEMIXA" data-tm-info-en="More information about NUVEMIXA">Meer informatie over NUVEMIXA</h2>
       <div class="tm-info-related-links">
@@ -85,6 +86,6 @@
   {% endif %}
 </main>
 {% include '_footer.html' %}
-<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-polish-20261122.js?v=20261122c"></script>
+<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-polish-20261122.js?v=20261125-final1"></script>
 </body>
 </html>

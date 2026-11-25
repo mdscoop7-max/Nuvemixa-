@@ -20,7 +20,7 @@ main .tm-shop-hero {
   padding: 0;
   overflow: hidden;
   border-radius: 18px;
-  background: #0b172c;
+  background: #eaf2ff;
   line-height: 0;
 }
 main .tm-new-hero > a {
@@ -150,4 +150,24 @@ main a.tm-shop-hero:focus-visible {
   main .tm-new-hero,
   main .tm-offers-hero,
   main .tm-shop-hero { margin-top: 12px; margin-bottom: 20px; }
+}
+
+/* Loading only: preserve geometry and artwork; avoid hidden/duplicate hero transfers. */
+.nv-hero-picture { display: contents; }
+main .tm-new-hero picture img,
+main .tm-offers-hero picture img,
+main .tm-shop-hero picture img {
+  display:block;position:absolute;inset:0;width:100%;height:100%!important;
+  max-width:100%;max-height:none;margin:0;object-fit:contain;object-position:center;
+  border-radius:0!important;
+}
+@media (max-width:991px) {
+  /* Gadgets and original English art retain their existing photographic side fill. */
+  html[lang="nl"] main .tm-new-hero:not(:has(img[src*="gadgets"])),
+  html[lang="nl"] main .tm-shop-hero { background-image:none!important; }
+}
+@media (min-width:992px) {
+  main .tm-new-hero picture img,
+  main .tm-offers-hero picture img,
+  main .tm-shop-hero picture img { display:none!important; }
 }

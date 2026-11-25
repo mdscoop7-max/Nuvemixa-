@@ -45,14 +45,15 @@
         </div>
       </form>
 
-      {% if reviews %}<div class="nv-rev-list">
+      <div id="nv-review-panel" hidden><div class="nv-rev-list" aria-live="polite">
+      {% if reviews %}
         {% set colors = ['#1e6fe0', '#14864b', '#c2410c', '#7c3aed', '#0e7490', '#be185d'] %}
         {% for rv in reviews %}
         <article class="nv-rev-item" data-rating="{{ rv.rating }}">
           <div class="nv-rev-top">
             <div class="nv-rev-av" style="background:{{ colors[loop.index0 % 6] }}" aria-hidden="true">{{ rv.name[:1]|upper }}</div>
             <div>
-              <div class="nv-rev-name">{{ rv.name }}{% if rv.verified %} <span class="nv-rev-ver" {{ tr('✓ Geverifieerde aankoop', '✓ Verified purchase') }}>✓ Geverifieerde aankoop</span>{% endif %}</div>
+              <div class="nv-rev-name">{{ rv.name }}</div>
               <div class="nv-rev-date">{{ rv.created_at[8:10] }}-{{ rv.created_at[5:7] }}-{{ rv.created_at[:4] }}</div>
             </div>
           </div>
@@ -63,8 +64,10 @@
           {% if rv.reply %}<div class="nv-rev-reply"><b {{ tr('Reactie van NUVEMIXA:', 'Reply from NUVEMIXA:') }}>Reactie van NUVEMIXA:</b> {{ rv.reply }}</div>{% endif %}
         </article>
         {% endfor %}
-      </div>
-      {% endif %}</div><div class="nm-reviews__trust">
+      {% endif %}</div>
+      <p data-review-message role="status"></p>
+      <button type="button" class="nv-rev-btn" data-review-more hidden>Meer reviews laden</button>
+      </div></div><div class="nm-reviews__trust">
       <div><span aria-hidden="true">♧</span><strong>Levering vanuit<br>de EU</strong></div>
       <div><span aria-hidden="true">↶</span><strong>Retourinformatie<br>vóór bestellen</strong></div>
       <div><span aria-hidden="true">♢</span><strong>Betrouwbare<br>reviews</strong></div>

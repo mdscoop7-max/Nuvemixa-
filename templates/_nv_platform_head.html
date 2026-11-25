@@ -1,6 +1,13 @@
 <link rel="stylesheet" href="/static/nv-platform.css?v=20261123-1d225eae51bf">
+<link rel="stylesheet" href="/static/nv-final-20261125.css?v=4">
+<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-final-20261125.js?v=1"></script>
 <link rel="apple-touch-icon" sizes="180x180" href="/static/nuvemixa-app-180-20261123.png">
-<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-phone-layout.js?v=20261123-1d225eae51bf"></script>
+<link rel="stylesheet" href="/static/nv-targeted-20261124.css?v=3">
+<script nonce="{{ g.nv_nonce }}" defer src="/static/nv-phone-layout.js?v=20261125-final1"></script>
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="NUVEMIXA"><meta name="mobile-web-app-capable" content="yes">
 <script nonce="{{ g.nv_nonce }}">try{localStorage.setItem('trendmix-language',{{ nv_lang|tojson }})}catch(e){}</script>
 <script nonce="{{ g.nv_nonce }}" defer src="/static/nv-platform.js?v=20261123-1d225eae51bf"></script>
+
+{% from "_nv_hero_loading.html" import preload with context %}
+{% set hero_route = {'/':'gadgets','/gadgets':'gadgets','/smart-home':'smart-home','/beauty-care':'beauty-care','/home-living':'home-living','/lifestyle-sport':'lifestyle-sport','/shop':'shop','/aanbiedingen':'offers'}.get(request.path) %}
+{% if hero_route %}{{ preload(hero_route) }}{% endif %}
