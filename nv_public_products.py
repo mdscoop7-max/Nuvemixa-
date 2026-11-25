@@ -63,7 +63,7 @@ def fetch_extra_products():
     with _cache_lock:
         if monotonic() >= _cache_until:
             _cache_products = _fetch_extra_products()
-            _cache_until = monotonic()  # Prices and offers always come from the current permanent source.
+            _cache_until = monotonic() + 30.0
         return deepcopy(_cache_products)
 
 from flask import g, has_request_context
