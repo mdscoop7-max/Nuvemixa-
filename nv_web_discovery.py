@@ -282,10 +282,15 @@ def ai_candidates(term, kind, category, country, scope, exclude):
     tool = {"type": "web_search", "search_context_size": "medium"}
     if country:
         tool["user_location"] = {"type": "approximate", "country": country}
+    more = ""
+    if exclude:  # live 27-11: zonder deze zin gaf 'Meer zoeken' dezelfde bedrijven terug
+        more = ("The user already has the companies on exclude_domains: never return those domains; search with "
+                "different queries (other synonyms, other countries or regions, manufacturers instead of "
+                "distributors) to find OTHER companies. ")
     data = {
         "model": nv_openai.search_model(), "store": False, "max_output_tokens": 1400, "max_tool_calls": 3,
         "tools": [tool], "tool_choice": {"type": "web_search"},
-        "instructions": instructions(kind, category, country, scope),
+        "instructions": more + instructions(kind, category, country, scope),
         "input": json.dumps({"product_or_niche": term, "category": CATEGORIES.get(category, ""),
                              "target_country": country or scope, "exclude_domains": sorted(exclude)[:40]},
                             ensure_ascii=False),
@@ -582,9 +587,11 @@ def search(term, kind="suppliers", category="", country="", scope="all", exclude
     candidates, meta = ai_candidates(term, kind, category, country, scope, exclude)
     skipped = []
     usable = []
+    repeated = 0
     for row in candidates:
         host = urlsplit(row["url"]).hostname or ""
         if row["domain"] in exclude:
+            repeated += 1
             continue
         if EXCLUDED.search(host):
             skipped.append(f"{row['domain']}: consumentenwinkel, zoekmachine of social media")
@@ -620,8 +627,8 @@ def search(term, kind="suppliers", category="", country="", scope="all", exclude
         "term": term, "kind": kind, "kind_label": KINDS[kind][0], "category": category,
         "category_label": CATEGORIES.get(category, "Alle categorieën"), "country": country, "scope": scope,
         "results": results, "verified_count": sum(1 for c in results if c["verified"]),
-        "unique_companies": len(results), "skipped": skipped[:20], "outside_scope": outside,
-        "meta": {**meta, "candidates": len(candidates), "checked": len(usable),
+        "unique_companies": len(results), "skipped": list(dict.fromkeys(skipped))[:20], "outside_scope": outside,
+        "meta": {**meta, "candidates": len(candidates), "checked": len(usable), "repeated": repeated,
                  "elapsed_ms": round((time.monotonic() - started) * 1000), "model": nv_openai.search_model()},
         "cached": False,
     }

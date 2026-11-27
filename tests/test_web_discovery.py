@@ -105,6 +105,18 @@ def test_prompt_uses_language_of_target_country_and_category(ai):
     assert json.loads(data["input"])["target_country"] == "DE"
 
 
+def test_more_button_tells_ai_to_skip_shown_companies_and_counts_repeats(ai):
+    """Live 27-11: de tweede ronde gaf dezelfde bedrijven terug en toonde niets nieuws zonder uitleg."""
+    calls, state = ai
+    state["reply"] = response([row("https://www.powerhandel.de/b2b"), row("https://www.chargefactory.cn/oem")])
+    result = wd.search("powerbank", "wholesale", "gadgets", exclude=["powerhandel.de"])
+    assert "never return those domains" in calls[0]["instructions"]
+    assert json.loads(calls[0]["input"])["exclude_domains"] == ["powerhandel.de"]
+    assert result["meta"]["repeated"] == 1 and [c["domain"] for c in result["results"]] == ["chargefactory.cn"]
+    first = wd.search("powerbank", "wholesale", "gadgets")
+    assert "never return those domains" not in calls[-1]["instructions"] and first["meta"]["repeated"] == 0
+
+
 def test_china_is_searched_in_english_with_factory_queries(ai):
     calls, _ = ai
     wd.search("powerbank", "wholesale", "gadgets", "CN", "international")

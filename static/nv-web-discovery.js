@@ -82,8 +82,10 @@
       .then(function (data) {
         clearInterval(tick); clearTimeout(stop);
         if (!data.ok) { finish("Niet voltooid"); errorBox.textContent = data.message || "Zoekopdracht mislukt."; errorBox.hidden = false; return; }
+        var added = 0;
         data.results.forEach(function (item) {
           if (shown.indexOf(item.domain) !== -1) return;
+          added += 1;
           shown.push(item.domain); total += 1; if (item.verified) verified += 1;
           (item.verified ? results : hintList).appendChild(card(item));
         });
@@ -94,11 +96,17 @@
           + data.kind_label + " · " + data.category_label + (data.cached ? " · uit cache, geen kosten" :
           " · AI-zoekacties: " + (m.searches || 0) + ", kandidaten: " + (m.candidates || 0) + ", tijd: " + Math.round((m.elapsed_ms || 0) / 1000) + " s");
         var list = skipped.querySelector("ul");
-        (data.skipped || []).forEach(function (reason) { list.appendChild(text("li", reason)); });
+        var known = [].map.call(list.children, function (li) { return li.textContent; });
+        (data.skipped || []).forEach(function (reason) { if (known.indexOf(reason) === -1) list.appendChild(text("li", reason)); });
         if (data.outside_scope) list.appendChild(text("li", data.outside_scope + " bedrijf/bedrijven buiten het gekozen land of de regio."));
         skipped.hidden = !list.children.length;
         more.hidden = false;
         finish(verified ? "Klaar" : "Klaar · geen gecontroleerde bedrijven");
+        if (append && !added) {
+          errorBox.textContent = "Deze extra zoekronde vond geen nieuwe bedrijven" + ((data.meta || {}).repeated ? " (AI noemde " + data.meta.repeated + " al getoonde bedrijven opnieuw; die zijn weggelaten)" : "") + ". Probeer een andere zoekterm, categorie of land.";
+          errorBox.hidden = false;
+          return;
+        }
         if (!verified) { errorBox.textContent = "Nog geen bedrijf gevonden waarvan de pagina het product en een zakelijk signaal bevat (zie eventueel de aanwijzingen hieronder). Probeer een bredere zoekterm, een andere categorie of een ander land."; errorBox.hidden = false; }
       })
       .catch(function (error) {
