@@ -393,8 +393,8 @@ def hint_reason(kind, strong, signals, hits):
     """Waarom een bedrijf geen 'Gecontroleerd' krijgt, in gewone taal."""
     wanted = " of ".join(SIGNAL_LABELS[name] for name in REQUIRED[kind])
     found = [SIGNAL_LABELS[name] for name in SIGNAL_LABELS if name in strong]
-    if kind == "products" and not hits and any(name in strong for name in REQUIRED[kind]):
-        return "Aanwijzing: zakelijke leverancier, maar het gezochte product staat niet op deze pagina"
+    if kind != "partners" and not hits and any(name in strong for name in REQUIRED[kind]):
+        return "Aanwijzing: zakelijke leverancier in deze categorie, maar het gezochte artikel staat niet op deze pagina"
     if found:
         return f"Aanwijzing: wel {', '.join(found)}, maar {wanted} niet bevestigd op deze pagina"
     if signals:
@@ -426,8 +426,9 @@ def verify(candidate, term, tokens, kind, category, deadline):
             if _STRONG_RE[name].search(match.group(0)):
                 strong.add(name)
     required = REQUIRED[kind]
-    # Producten: de zoekterm zelf moet op de pagina staan. Leveranciers: een sterk zakelijk signaal is genoeg.
-    verified = any(name in strong for name in required) and (bool(hits) or kind != "products")
+    # Het artikel (of de vertaling) moet letterlijk op de pagina staan: live 27-11 werd een verpakkingsfabriek zonder
+    # opbergboxen anders 'Gecontroleerd'. Alleen bij Partners volstaat de categorie (programma's gaan over merken).
+    verified = any(name in strong for name in required) and (bool(hits) or kind == "partners")
     host = urlsplit(final).hostname or ""
     domain = registrable(host)
     # Rol uit de gevraagde signalen eerst; een webwinkel met alleen een affiliateprogramma blijft bij Leveranciers

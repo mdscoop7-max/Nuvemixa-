@@ -18,7 +18,7 @@ PAGES = {
                                       "Händler werden – B2B-Preise, Dropshipping möglich, WooCommerce Plugin.</p>"
                                       "<a href='/kontakt'>Kontakt</a>",
     "https://shop.powerhandel.de/powerbank": "<p>Powerbank wholesale</p>",
-    "https://www.chargefactory.cn/oem": "<p>We are a factory for power bank OEM and ODM orders, MOQ 500.</p>",
+    "https://www.chargefactory.cn/oem": "<p>We are a factory for powerbank OEM and ODM orders, MOQ 500.</p>",
     "https://www.blog-tech.nl/beste-powerbanks": "<p>De beste powerbanks van 2026 getest.</p>",
     "https://www.lampen.fr/": "<p>Lampes design pour la maison.</p>",
     "https://grossiste-energie.fr/powerbank": "<p>Grossiste powerbank pour revendeurs.</p>",
@@ -143,7 +143,7 @@ def test_retailer_with_affiliate_footer_or_oem_part_number_is_no_supplier(ai):
     PAGES["https://www.viking-test.nl/opbergbox"] = ("<p>Opbergbox met deksel 5,6 l.</p><footer>Viking Shop · Affiliate "
                                                      "Partnerprogramma · Herroepingsrecht</footer>")
     PAGES["https://www.xoffice-test.nl/opbergbox"] = "<p>Opbergbox met deksel. EAN 3086960265977 OEM nummer 010438</p>"
-    PAGES["https://www.oem-factory-test.cn/box"] = "<p>Storage box with lid. OEM/ODM service, MOQ 1000.</p>"
+    PAGES["https://www.oem-factory-test.cn/box"] = "<p>Opbergbox / storage box with lid. OEM/ODM service, MOQ 1000.</p>"
     state["reply"] = response([row("https://www.viking-test.nl/opbergbox", "Viking"),
                                row("https://www.xoffice-test.nl/opbergbox", "XOffice"),
                                row("https://www.oem-factory-test.cn/box", "OEM Factory")])
@@ -195,6 +195,9 @@ def test_products_need_the_term_on_the_page(ai):
     result = wd.search("bureaulamp", "products", "home-living")
     lampen = next(card for card in result["results"] if card["domain"] == "lampen.fr")
     assert lampen["verified"] is False   # categorie past, maar het product zelf staat er niet
+    assert lampen["status"].endswith("het gezochte artikel staat niet op deze pagina")
+    supplier = wd.search("bureaulamp", "suppliers", "home-living")["results"]
+    assert next(c for c in supplier if c["domain"] == "lampen.fr")["verified"] is False   # ook bij Leveranciers
 
 
 def test_urls_are_normalised_and_internal_addresses_refused():
