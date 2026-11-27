@@ -97,7 +97,7 @@
     body.textContent = "";
     title.textContent = "Onderzoek: “" + r.term + "”";
     var ai = r.ai;
-    var summary = el("p", r.counts.products + " product(en) (" + r.counts.offers + " vermeldingen) · " + r.counts.suppliers +
+    var summary = el("p", (r.counts.exact_products != null ? r.counts.exact_products + " passend, " : "") + r.counts.products + " product(en) totaal (" + r.counts.offers + " vermeldingen) · " + r.counts.suppliers +
       " unieke leverancier(s), waarvan " + r.counts.verified_suppliers + " gecontroleerd · categorie " + r.category_label +
       " (" + r.category_source + ") · " + r.filter_label + " · " + r.elapsed_s + " s");
     summary.className = "nv-rj-meta"; body.appendChild(summary);
@@ -108,12 +108,21 @@
     body.appendChild(el("p", aiText, "nv-rj-meta"));
     if (r.fallback) body.appendChild(el("p", r.fallback, "nv-rj-meta"));
 
-    body.appendChild(el("h3", "Producten (" + r.products.length + ")"));
-    if (r.products.length) {
+    var exact = r.products.filter(function (p) { return p.match !== "related"; });
+    var related = r.products.filter(function (p) { return p.match === "related"; });
+    body.appendChild(el("h3", "Passende producten (" + exact.length + ")"));
+    if (exact.length) {
       var g = el("div", null, "nv-rj-grid");
-      r.products.forEach(function (p) { g.appendChild(productCard(p, r.category)); });
+      exact.forEach(function (p) { g.appendChild(productCard(p, r.category)); });
       body.appendChild(g);
-    } else body.appendChild(el("p", "Geen passend product gevonden in de catalogi en Syncee. Zie de leveranciers hieronder; die zijn op het open web gezocht.", "nv-rj-meta"));
+    } else body.appendChild(el("p", "Geen product waarvan de naam de volledige zoekterm bevat. " + (related.length ? "Bekijk de verwante producten hieronder of " : "") + "zie de leveranciers hieronder; die zijn op het open web gezocht.", "nv-rj-meta"));
+    if (related.length) {
+      var rel = el("details");
+      rel.appendChild(el("summary", "Verwante producten (" + related.length + "): passen alleen op een algemener zoekwoord"));
+      var rg = el("div", null, "nv-rj-grid");
+      related.forEach(function (p) { rg.appendChild(productCard(p, r.category)); });
+      rel.appendChild(rg); body.appendChild(rel);
+    }
 
     [["nl", "Leveranciers in Nederland"], ["eu", "Leveranciers in de EU"], ["unknown", "Leveranciers, land niet bevestigd"], ["international", "Internationale leveranciers (buiten de EU)"]].forEach(function (sec) {
       var list = r.suppliers[sec[0]] || [];

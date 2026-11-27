@@ -73,7 +73,7 @@ def parse(form):
 def cache_key(values):
     raw = json.dumps([values["term"].casefold(), values["category"], values["mode"], values["country"],
                       values["filter"]], ensure_ascii=False)
-    return "research:v2:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
+    return "research:v3:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
 
 
 def fresh_seconds(values):
@@ -206,6 +206,22 @@ def norm_title(title):
     return " ".join(re.findall(r"[0-9a-zà-ɏ]+", (title or "").casefold()))
 
 
+def exact_match(title, phrases):
+    """Live 27-11 'magnetische powerbank': het algemene AI-woord 'power bank' haalde ook gewone powerbanks binnen.
+    Passend = alle betekenisvolle woorden van de zoekterm (of de meest specifieke vertaling) staan in de productnaam,
+    spaties/streepjes genegeerd ('yogamat' = 'yoga mat')."""
+    lower = (title or "").casefold()
+    flat = web.compact(lower)
+    for phrase in phrases:
+        words = [w for w in re.findall(r"[0-9a-zà-ɏ]+", (phrase or "").casefold())
+                 if w not in web.GENERIC_WORDS and (len(w) >= 3 or w.isdigit())]
+        if words and all(w in lower or w in flat for w in words):
+            return True
+        if words and web.compact(" ".join(words)) in flat:
+            return True
+    return False
+
+
 def relevant_products(products, term, keywords, category, use_ai):
     """Deterministisch: zoekterm of vertaling moet in de productnaam staan. Daarna AI-controle op ander producttype
     of andere toepassing (bijv. camping bij keuken). Alles wat wegvalt blijft zichtbaar met de reden."""
@@ -237,7 +253,8 @@ def group_products(products, fx_rates):
     for item in products:
         price = item.get("price")
         key = (norm_title(item["title"]), price["amount"] if price else None, price["currency"] if price else None)
-        group = groups.setdefault(key, {"title": item["title"], "image": item.get("image", ""), "offers": []})
+        group = groups.setdefault(key, {"title": item["title"], "image": item.get("image", ""), "offers": [],
+                                        "exact": item.get("exact", False)})
         if any(offer["url"] == item["url"] for offer in group["offers"]):
             continue
         offer = {k: item.get(k) for k in ("supplier", "url", "source", "own_website", "warehouse", "price",
@@ -248,6 +265,7 @@ def group_products(products, fx_rates):
     rows = list(groups.values())
     for row in rows:
         row["offer_count"] = len(row["offers"])
+        row["match"] = "exact" if row.get("exact") else "related"
         row["same_product_note"] = ("Zelfde product en prijs bij meerdere aanbieders: mogelijk dezelfde leverancier "
                                     "of hetzelfde magazijn." if len(row["offers"]) > 1 else "")
     return rows
@@ -408,13 +426,16 @@ def run(key, values, created_at):
         keywords += [kw for run_ in web_runs for kw in run_["meta"].get("keywords", [])]
         unique_listings = list({item["url"] or item["title"]: item for item in reversed(catalog["products"])}.values())[::-1]
         products, removed = relevant_products(unique_listings, values["term"], keywords, category, info["ai"])
+        specific = [values["term"], *info["keywords_en"][:1], *info["keywords_nl"][:1]]
+        for item in products:
+            item["exact"] = exact_match(item["title"], specific)
         try:
             import nv_fx
             nv_fx.rates()
             fx = lambda price: _fx_safe(nv_fx, price)
         except Exception:  # noqa: BLE001
             fx = lambda price: None
-        grouped = group_products(products, fx)
+        grouped = sorted(group_products(products, fx), key=lambda g: g["match"] != "exact")
         web_cards = [card for run_ in web_runs for card in run_["results"]]
         suppliers = merge_suppliers(catalog["suppliers"], web_cards, grouped)
         suppliers, hidden = apply_filter(suppliers, values["filter"])
@@ -456,6 +477,7 @@ def run(key, values, created_at):
             if len(suppliers) < 5 else [], "saved_suppliers": saved[:10],
             "sources": sources, "fallback": fallback, "per_query": catalog["per_query"],
             "counts": {"products": len(grouped), "offers": sum(g["offer_count"] for g in grouped),
+                       "exact_products": sum(1 for g in grouped if g["match"] == "exact"),
                        "suppliers": len(suppliers), "verified_suppliers": sum(1 for s in suppliers if s["verified"]),
                        "syncee_products": catalog_only},
             "elapsed_s": round(time.time() - created_at, 1),

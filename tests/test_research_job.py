@@ -112,6 +112,18 @@ def test_unrelated_and_other_use_products_are_removed_with_a_reason(monkeypatch)
     assert seen["task"] == "category_filter" and seen["payload"]["shop_category"] == "Home & Living"
 
 
+def test_exact_versus_related_products():
+    """Live 27-11: 'magnetische powerbank' toonde ook gewone powerbanks via het algemene woord 'power bank'."""
+    phrases = ["magnetische powerbank", "magnetic power bank"]
+    assert job.exact_match("UGREEN MagFlow Air Magnetic Power Bank (10000mAh, Qi2 15W)", phrases)
+    assert job.exact_match("FS5 - Magnetic Powerbank - 5.000 mAh", phrases)
+    assert not job.exact_match("UGREEN Nexode Power Bank 25000mAh 200W", phrases)
+    assert job.exact_match("Yoga Mat 6mm TPE", ["yogamat"]) and not job.exact_match("Yoga Block", ["yogamat"])
+    rows = job.group_products([{**offer("Magnetic Power Bank 5000", "A", 10), "exact": True},
+                               {**offer("Power Bank 20000", "B", 12), "exact": False}], lambda price: None)
+    assert {r["title"]: r["match"] for r in rows} == {"Magnetic Power Bank 5000": "exact", "Power Bank 20000": "related"}
+
+
 def test_ai_filter_that_rejects_almost_everything_is_ignored(monkeypatch):
     monkeypatch.setattr(nv_openai, "chat_json", lambda *a, **k: {"reject": [0, 1, 2, 3]})
     items = [offer(f"Kitchen Organizer {n}", "S", n) for n in range(4)]
