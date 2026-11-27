@@ -7,6 +7,7 @@
   var errorBox = $("nv-wd-error"), results = $("nv-wd-results"), summary = $("nv-wd-summary");
   var more = $("nv-wd-more"), exclude = $("nv-wd-exclude"), skipped = $("nv-wd-skipped"), hints = $("nv-wd-hints");
   var hintList = hints.querySelector(".nv-ai-results"), hintCount = hints.querySelector("summary span");
+  var register = $("nv-wd-register"), registerList = register ? register.querySelector(".nv-ai-results") : null;
   var label0 = button.textContent, running = false, shown = [], total = 0, verified = 0;
   var CLIENT_TIMEOUT_MS = 29000;
 
@@ -49,6 +50,23 @@
     if (form.dataset.saveUrl) el.appendChild(saveButton(item));
     return el;
   }
+  function registerCard(r) {
+    var el = document.createElement("article");
+    el.className = "nv-ai-card";
+    el.appendChild(text("span", "Registergegevens · handmatig onderzocht " + r.checked, "nv-wd-badge reg"));
+    el.appendChild(text("span", "Niet live gecontroleerd", "nv-wd-badge hint"));
+    el.appendChild(text("h3", r.name));
+    var list = document.createElement("dl");
+    [["Samenwerkingsmodel", r.models.join(" + ")], ["Status (register)", r.status], ["Land", r.country],
+     ["Soort", r.type], ["Categorieën", r.categories.join(", ") || "buiten onze categorieën"], ["Kosten", r.cost],
+     ["Producten", r.products.join(", ") || "niet vastgelegd"]].forEach(function (pair) {
+      list.appendChild(text("dt", pair[0])); list.appendChild(text("dd", pair[1]));
+    });
+    el.appendChild(list);
+    var a = link(r.url, "Website (register)");
+    if (a) { var p = document.createElement("p"); p.className = "nv-wd-links"; p.appendChild(a); el.appendChild(p); }
+    return el;
+  }
   function saveButton(item) {
     var b = text("button", "Bewaar op kandidatenlijst", "nv-blue-action");
     b.type = "button";
@@ -65,6 +83,21 @@
     });
     return b;
   }
+  // Internationaal -> Productonderzoek: zelfde term, categorie en land; daar draait het gecombineerde onderzoek
+  // (catalogi, Syncee, register en AI) met het gekozen land als verkoopland. Eén klik, geen automatische AI-kosten.
+  function handoff(data) {
+    var box = $("nv-wd-handoff");
+    if (!box || form.dataset.section !== "internationaal" || !form.dataset.researchUrl) return;
+    var country = form.elements.country.value, params = new URLSearchParams({research_term: (data.term || form.elements.term.value).slice(0, 100), autorun: "1"});
+    params.set("section", "onderzoek");
+    if (form.elements.category.value) params.set("research_category", form.elements.category.value);
+    if (country) params.set("research_country", country);
+    box.textContent = "";
+    var a = text("a", "Onderzoek “" + (data.term || "") + "” in Productonderzoek" + (country ? " voor " + form.elements.country.options[form.elements.country.selectedIndex].text : ""), "nv-blue-action");
+    a.href = form.dataset.researchUrl.split("?")[0] + "?" + params.toString();
+    box.appendChild(a);
+    box.hidden = false;
+  }
   function finish(label) {
     status.textContent = label;
     box.className = "nv-ai-progress done";
@@ -73,6 +106,7 @@
   function run(append) {
     if (running || !form.reportValidity()) return;
     running = true;
+    if (!append && register) { register.hidden = true; registerList.textContent = ""; }
     if (!append) { shown = []; total = 0; verified = 0; results.textContent = ""; hintList.textContent = ""; hints.hidden = true; skipped.hidden = true; skipped.querySelector("ul").textContent = ""; }
     exclude.value = shown.join(",");
     button.disabled = true; more.disabled = true; button.textContent = "Bezig met zoeken…";
@@ -95,11 +129,16 @@
           shown.push(item.domain); total += 1; if (item.verified) verified += 1;
           (item.verified ? results : hintList).appendChild(card(item));
         });
+        if (register && !append && data.register_only) {
+          data.register_only.forEach(function (r) { registerList.appendChild(registerCard(r)); });
+          register.hidden = !data.register_only.length;
+        }
         hintCount.textContent = hintList.children.length; hints.hidden = !hintList.children.length;
         var m = data.meta || {};
         summary.hidden = false;
         summary.textContent = total + " unieke bedrijven (" + verified + " gecontroleerd) voor “" + data.term + "” · "
-          + data.kind_label + " · " + data.category_label + (data.cached ? " · uit cache, geen kosten" :
+          + data.kind_label + " · " + data.category_label
+          + (data.register_only ? " · " + (data.register_matches || 0) + " daarvan ook in register, " + data.register_only.length + " extra uit register" : "") + (data.cached ? " · uit cache, geen kosten" :
           " · AI-zoekacties: " + (m.searches || 0) + ", kandidaten: " + (m.candidates || 0) + ", tijd: " + Math.round((m.elapsed_ms || 0) / 1000) + " s");
         var list = skipped.querySelector("ul");
         var known = [].map.call(list.children, function (li) { return li.textContent; });
@@ -107,6 +146,7 @@
         if (data.outside_scope) list.appendChild(text("li", data.outside_scope + " bedrijf/bedrijven buiten het gekozen land of de regio."));
         skipped.hidden = !list.children.length;
         more.hidden = false;
+        handoff(data);
         finish(verified ? "Klaar" : "Klaar · geen gecontroleerde bedrijven");
         if (append && !added) {
           errorBox.textContent = "Deze extra zoekronde vond geen nieuwe bedrijven" + ((data.meta || {}).repeated ? " (AI noemde " + data.meta.repeated + " al getoonde bedrijven opnieuw; die zijn weggelaten)" : "") + ". Probeer een andere zoekterm, categorie of land.";

@@ -1,0 +1,34 @@
+{# Viral Product Finder <- Onderzoeksplatforms & trends. Alleen bewaarde trendonderzoeken (Neon); nooit een AI-aanroep. #}
+{% set tf = v.trend_feed %}
+{% macro trend_row(t) %}
+<li class="nv-vt-item">
+  <strong>{{ t.name }}</strong> <span class="nv-vt-badge">{{ t.category_label }}</span> <span class="nv-vt-badge">{{ t.status }}</span>
+  <br><small>{{ t.reason }} · {{ t.period_label }} · gecontroleerd {{ t.checked }}</small>
+  {% for e in t.evidence[:3] %}<br><small>{% if e.url and e.url.startswith('https://') %}<a href="{{ e.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %} · {{ e.source }} · {{ e.date }}</small>{% endfor %}
+  <br><a class="nv-vt-act" href="{{ url_for('control', section='onderzoek', research_term=t.name[:100], research_category=t.category, autorun='1') }}">Onderzoek dit product</a>
+  · <a class="nv-vt-act" href="{{ url_for('control', section='viral', viral_title=t.name[:120], viral_niche=t.niche) }}#nv-vt-add">Leg vast als viral-kandidaat</a>
+</li>
+{% endmacro %}
+<section class="panel nv-vt" id="nv-vt" aria-labelledby="nv-vt-title">
+<h2 id="nv-vt-title">Uit Onderzoeksplatforms &amp; trends</h2>
+<p>Deze lijst gebruikt de <strong>bewaarde trendonderzoeken</strong> (permanente cache): er wordt hier geen AI gebruikt en er ontstaan geen kosten. Nieuwe trends haal je op via <a href="{{ url_for('control', section='trends') }}">Onderzoeksplatforms &amp; trends</a>. Er worden geen verkoopcijfers, views of virale scores getoond of berekend.</p>
+{% if tf.error %}<p class="notice" role="alert">{{ tf.error }}</p>
+{% else %}
+<p><small>{{ tf.studies }} bewaard(e) trendonderzoek(en) van de afgelopen 3 dagen{% if tf.latest %} · nieuwste {{ tf.latest }}{% endif %}. Hetzelfde product telt één keer.</small></p>
+<h3>Aantoonbaar snel stijgende belangstelling <small>({{ tf.rising|length }})</small></h3>
+<p><small>Alleen producten die Google Trends zelf als trending zoekonderwerp meldt in Nederland, België of Duitsland (met het door Google geschatte aantal zoekopdrachten). NUVEMIXA rekent geen groei uit.</small></p>
+{% if tf.rising %}<ul class="nv-vt-list">{% for t in tf.rising %}{{ trend_row(t) }}{% endfor %}</ul>
+{% else %}<p class="nv-vt-empty">Geen product met aantoonbaar snel stijgende belangstelling in de bewaarde trendonderzoeken. Google Trends-onderwerpen zijn meestal nieuws, sport of personen; die tellen niet mee.</p>{% endif %}
+<details{% if not tf.rising %} open{% endif %}><summary><strong>Gewone trends</strong> ({{ tf.trends|length }}) · lancering, meerdere publicaties of één publicatie</summary>
+{% if tf.trends %}<ul class="nv-vt-list">{% for t in tf.trends %}{{ trend_row(t) }}{% endfor %}</ul>{% else %}<p class="nv-vt-empty">Nog geen bewaarde trends. Start een trendonderzoek.</p>{% endif %}
+</details>
+{% if tf.deals %}<details><summary>Alleen in aanbiedingen genoemd ({{ tf.deals|length }}) · geen trendbewijs</summary><ul class="nv-vt-list">{% for t in tf.deals %}{{ trend_row(t) }}{% endfor %}</ul></details>{% endif %}
+{% endif %}
+</section>
+<style>
+.nv-vt .nv-vt-list{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}
+.nv-vt .nv-vt-item{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere}
+.nv-vt .nv-vt-badge{display:inline-block;font-size:.78em;padding:1px 8px;border-radius:999px;border:1px solid currentColor;margin:2px 4px 2px 0}
+.nv-vt .nv-vt-empty{opacity:.8;font-style:italic}
+.nv-vt .nv-vt-act{display:inline-block;margin-top:6px}
+</style>

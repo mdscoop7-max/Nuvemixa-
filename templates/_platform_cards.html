@@ -1,0 +1,46 @@
+{# Platformkaarten uit het centrale register (nv_platforms). Gebruik: {% set pv = platforms_view(...) %}{% include %}.
+   Categorie, periode, zoekterm en land komen uit bestaande velden op de pagina (data-*-source) of uit de eigen
+   compacte bediening hieronder. Een kaart is één link; niets wordt automatisch geopend of opgehaald. #}
+<section class="nv-pcs{{ ' nv-pcs--compact' if pv.compact }}{{ ' panel' if pv.panel }}" id="{{ pv.id }}" aria-labelledby="{{ pv.id }}-t"
+         data-cat-source="{{ pv.cat_source }}" data-period-source="{{ pv.period_source }}"
+         data-term-source="{{ pv.term_source }}" data-country-source="{{ pv.country_source }}">
+  <div class="nv-pcs__head">
+    <h3 id="{{ pv.id }}-t">{{ pv.title }}</h3>
+    <p class="nv-pcs__lead">{{ pv.lead }} <span class="nv-pcs__legend"><i class="nv-pc__tag nv-pc__tag--auto">Automatisch geraadpleegd</i> = NUVEMIXA haalt deze bron zelf op · <i class="nv-pc__tag nv-pc__tag--link">Externe snelkoppeling</i> = opent het platform; niet door NUVEMIXA doorzocht.</span></p>
+  </div>
+  {% if not pv.cat_source or not pv.period_source %}
+  <div class="nv-pcs__controls" role="group" aria-label="Categorie en periode voor de platformlinks">
+    {% if not pv.cat_source %}<label>Webshopcategorie <select data-pcs-cat><option value="all">Algemeen / alle categorieën</option>{% for k, n in pv.categories.items() %}<option value="{{ k }}">{{ n }}</option>{% endfor %}</select></label>{% endif %}
+    {% if not pv.period_source %}<span class="nv-pcs__periods" role="radiogroup" aria-label="Periode">{% for v, n in [('7','7 dagen'),('14','14 dagen'),('30','30 dagen')] %}<label><input type="radio" name="{{ pv.id }}-period" value="{{ v }}" data-pcs-period {{ 'checked' if v == '14' }}><span>{{ n }}</span></label>{% endfor %}</span>{% endif %}
+  </div>
+  {% endif %}
+  <p class="nv-pcs__state" aria-live="polite" data-pcs-state></p>
+  {% for key, label, rows in pv.groups %}{% if rows %}
+  <details class="nv-pcs__group" {{ 'open' if (loop.first and pv.open_first) or pv.open_all }}>
+    <summary><span>{{ label }}</span> <small>{{ rows|length }}{% set n_auto = rows|selectattr('auto')|list|length %}{% if n_auto %} · {{ n_auto }} automatisch geraadpleegd{% endif %}</small></summary>
+    <div class="nv-pcs__grid">
+      {% for p in rows %}
+      <a class="nv-pc" href="{{ p.href }}" target="_blank" rel="noopener noreferrer nofollow" data-links="{{ p.links|tojson|forceescape }}"
+         data-period="{{ p.period }}" data-catlink="{{ '1' if p.category_link else '' }}" data-key="{{ p.key }}"
+         aria-label="{{ p.name }} openen (nieuw tabblad)">
+        <span class="nv-pc__logo" aria-hidden="true"><span class="nv-pc__init">{{ p.initial }}</span>{% if p.logo_url %}<img src="{{ p.logo_url }}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">{% endif %}</span>
+        <span class="nv-pc__body">
+          <b class="nv-pc__name">{{ p.name }}</b>
+          <span class="nv-pc__desc">{{ p.desc }}</span>
+          <span class="nv-pc__tags">
+            {% if p.auto %}<i class="nv-pc__tag nv-pc__tag--auto" title="{{ p.auto }}">Automatisch geraadpleegd</i>{% else %}<i class="nv-pc__tag nv-pc__tag--link">Externe snelkoppeling</i>{% endif %}
+            <i class="nv-pc__tag nv-pc__tag--{{ p.cost_key }}">{{ p.cost }}</i>
+            <i class="nv-pc__tag">{{ p.account }}</i>
+          </span>
+          <span class="nv-pc__meta"><b>Functie:</b> {{ p.function }}{% if p.auto %} · {{ p.auto }}{% endif %}{% if p.api %} · {{ p.api }}{% endif %}{% if p.region %} · <b>Regio:</b> {{ p.region }}{% endif %}</span>
+          <span class="nv-pc__period" data-pcs-note>{{ p.period_label }}</span>
+        </span>
+        <span class="nv-pc__open" aria-hidden="true">Openen ↗</span>
+      </a>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}{% endfor %}
+</section>
+<link rel="stylesheet" href="{{ url_for('static', filename='nv-platforms.css') }}?v={{ nv_static_version('nv-platforms.css') }}">
+<script src="{{ url_for('static', filename='nv-platforms.js') }}?v={{ nv_static_version('nv-platforms.js') }}" defer></script>

@@ -17,6 +17,7 @@
     <ul>{% for name, how in tv.platforms %}<li><b>{{ name }}</b> · {{ how }}</li>{% endfor %}</ul>
     <p><small>TikTok Creative Center en Pinterest Trends vereisen een account en hebben geen gratis openbare API; ze zijn niet aangesloten en worden alleen als handmatige link getoond.</small></p>
   </details>
+  {% set pv = platforms_view('nv-pcs-tr', 'Onderzoeksplatforms', 'Kies hierboven een webshopcategorie en periode en klik direct op een platform: bij Algemeen opent de algemene trendpagina, bij een categorie de passende categoriepagina of zoekopdracht. Je hoeft niets in te typen. Met Zoeken onderzoekt AI daarnaast zelf de gedateerde bronnen.', cat_source='#nv-tr-form [name=trend_category]', period_source='#nv-tr-form [name=trend_period]', panel=False) %}{% include "_platform_cards.html" %}
   <div id="nv-tr-progress" class="nv-tr-progress" hidden><span class="nv-tr-spinner" aria-hidden="true"></span><strong id="nv-tr-status">Bezig…</strong><span id="nv-tr-timer" class="nv-tr-timer">0 s</span></div>
   <ol id="nv-tr-steps" class="nv-tr-steps"></ol>
   <div id="nv-tr-error" class="notice" role="alert" hidden></div>
@@ -32,6 +33,11 @@
 .nv-tr .nv-tr-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start}
 .nv-tr .nv-tr-card{border:1px solid rgba(128,128,128,.4);border-radius:12px;padding:12px 14px;overflow-wrap:anywhere}
 .nv-tr .nv-tr-card h4{margin:2px 0 6px}
+.nv-tr .nv-tr-img{margin:0 0 8px}.nv-tr .nv-tr-img img{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:8px}
+.nv-tr .nv-tr-img figcaption{font-size:.75em;opacity:.75;margin-top:2px}
+.nv-tr .nv-tr-ph{display:grid;place-items:center;align-content:center;gap:2px;height:110px;margin:0 0 8px;border-radius:8px;background:repeating-linear-gradient(135deg,#f2f6fb 0 10px,#eaf0f8 10px 20px);color:#5b6d82;text-align:center}
+.nv-tr .nv-tr-ph b{font-size:1.6rem;color:#8aa3c2}.nv-tr .nv-tr-ph small{font-size:.75em}
+.nv-tr .nv-tr-sup{font-weight:600}
 .nv-tr .nv-tr-badge{display:inline-block;font-size:.78em;padding:1px 8px;border-radius:999px;border:1px solid currentColor;margin:0 6px 4px 0}
 .nv-tr .nv-tr-meta{font-size:.88em;opacity:.85;margin:2px 0}
 .nv-tr .nv-tr-ev{margin:6px 0;padding-left:18px;font-size:.88em}

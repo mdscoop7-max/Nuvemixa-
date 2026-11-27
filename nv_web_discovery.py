@@ -634,8 +634,11 @@ def verify(candidate, term, tokens, kind, category, deadline):
 
 
 def in_scope(card, country, scope):
+    """Landfilter: vestigingsland, of een magazijn/verzendland dat op de pagina zelf staat (Internationaal 27-11:
+    een Spaanse groothandel met magazijn in Duitsland hoort bij 'Duitsland')."""
     if country:
-        return card["country"] in ("", country) or card["region"] == "unknown"
+        return (card["country"] in ("", country) or card["region"] == "unknown"
+                or country in card.get("warehouse_countries", []) or country in card.get("ships_from", []))
     if scope == "eu":
         return card["region"] in ("eu", "unknown")
     if scope == "international":

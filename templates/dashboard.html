@@ -177,9 +177,11 @@
 {% include "_dashboard_concepten.html" %}
 {% elif section == "partners" %}
 {% include "_dashboard_web_discovery.html" %}
+{% set pv = platforms_view('nv-pcs-partners', 'Onderzoeksplatforms voor partners en leveranciers', 'Volgt de zoekterm en categorie van de live zoekopdracht hierboven (of de algemene pagina als je niets invult).', ['suppliers', 'tools', 'markets'], cat_source='#nv-wd-form [name=category]', term_source='#nv-wd-form [name=term]', country_source='#nv-wd-form [name=country]', open_first=False) %}{% include "_platform_cards.html" %}
 {% include "_dashboard_partners.html" %}
 {% elif section == "internationaal" %}
 {% include "_dashboard_web_discovery.html" %}
+{% set pv = platforms_view('nv-pcs-int', 'Internationale onderzoeksplatforms', 'Marktplaatsen, leveranciers en trendbronnen. De links volgen de zoekterm, categorie en het land van de zoekopdracht hierboven.', ['markets', 'suppliers', 'trends'], cat_source='#nv-wd-form [name=category]', term_source='#nv-wd-form [name=term]', country_source='#nv-wd-form [name=country]', open_first=False) %}{% include "_platform_cards.html" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "trends" %}
 {% include "_dashboard_trends.html" %}
@@ -245,11 +247,13 @@
   </form>
 
   <div class="nv-rblock nv-rblock--info" aria-labelledby="nv-rb2">
-    <h3 id="nv-rb2" class="nv-rblock__title"><span>2</span> Trends zonder artikelnaam?</h3>
+    <h3 id="nv-rb2" class="nv-rblock__title"><span>2</span> Onderzoeksplatforms</h3>
+    <p>TikTok, Instagram, Facebook, YouTube, Pinterest, Google, marktplaatsen en meer staan <a href="#nv-pcs-po">hieronder als kaarten</a>. Ze volgen het artikel, de categorie, de periode en het land die je bij <b>1</b> kiest.</p>
     <p>Wil je weten wélke producten nu aandacht krijgen, zonder vooraf een artikel te kiezen? Gebruik <a href="{{ url_for('control', section='trends') }}">Onderzoeksplatforms &amp; trends</a>: kies een categorie en periode, AI zoekt zelf.</p>
     {% if product_discovery and product_discovery.period %}<p class="nv-rperiod-used">Gebruikt bij deze zoekopdracht: <strong>{{ product_discovery.period.label }}</strong>{% if product_discovery.period.removed %} · {{ product_discovery.period.removed }} oudere publicaties weggelaten{% endif %}{% if product_discovery.period.undated %} · {{ product_discovery.period.undated }} zonder datum niet als trend getoond{% endif %}</p>{% endif %}
   </div>
   </div>
+  {% set pv = platforms_view('nv-pcs-po', 'Onderzoeksplatforms', 'Zelf verder kijken op sociale media, trendbronnen en marktplaatsen. Met een artikelnaam bij 1 openen de kaarten direct die zoekopdracht; zonder artikelnaam de pagina van de gekozen categorie.', ['social', 'trends', 'markets', 'tools'], cat_source='form.nv-research-form [name=research_category]', period_source='form.nv-research-form [name=research_period]', term_source='form.nv-research-form [name=research_term]', country_source='form.nv-research-form [name=research_country]', panel=False) %}{% include "_platform_cards.html" %}
       {% if source_coverage %}
       <details class="nv-coverage" id="nv-source-coverage">
         <summary>Bronnen en dekking</summary>
@@ -723,6 +727,7 @@
   </form>
 </section>
 {% include "_dashboard_web_discovery.html" %}
+{% set pv = platforms_view('nv-pcs-lev', 'Leveranciers- en dropshippingplatforms', 'Volgt de zoekterm en categorie van de live zoekopdracht hierboven (of de algemene pagina als je niets invult).', ['suppliers', 'markets', 'tools'], cat_source='#nv-wd-form [name=category]', term_source='#nv-wd-form [name=term]', country_source='#nv-wd-form [name=country]', open_first=False) %}{% include "_platform_cards.html" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
 <form method="post" action="{{ url_for('admin_supplier_feed_preview') }}" enctype="multipart/form-data" class="nv-admin-feed-form">

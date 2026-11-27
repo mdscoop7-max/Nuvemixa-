@@ -369,3 +369,39 @@ def test_live_cards_show_logistics_and_register_match(ai, monkeypatch):
     annotated = view.with_register({"results": [dict(card)]})
     assert annotated["results"][0]["register"]["name"] == "BigBuy" and annotated["register_matches"] == 1
     assert annotated["results"][0]["model_label"] == "A · Directe dropshipping"
+
+
+def test_partner_search_combines_live_and_register_without_duplicates():
+    import nv_partners
+    live = {"name": "BigBuy", "domain": "bigbuy.eu", "model": "A", "results": None}
+    payload = view.with_register({"results": [dict(live)]}, {"term": "dropshipping", "category": "", "country": ""})
+    names = [r["name"] for r in payload["register_only"]]
+    assert "BigBuy" not in names                                     # al live gevonden: niet nog eens uit register
+    assert names and all(r["checked"] == nv_partners.CHECKED for r in payload["register_only"])
+    assert all(set(r) >= {"models", "status", "country", "type"} for r in payload["register_only"])
+    register_rows = {r["name"] for r in nv_partners.search({"q": "dropshipping"}) if r["status"] != "ongeschikt"}
+    assert set(names) <= register_rows
+    # Zonder het Partners-formulier (andere menu's) geen registerlijst
+    assert "register_only" not in view.with_register({"results": []})
+
+
+def test_partner_live_form_asks_for_the_combined_result(administrator):
+    page = administrator.get("/dashboard?section=partners").get_data(as_text=True)
+    assert 'name="with_register" value="1"' in page and 'id="nv-wd-register"' in page
+    other = administrator.get("/dashboard?section=leveranciers").get_data(as_text=True)
+    assert 'name="with_register"' not in other
+
+
+def test_country_filter_also_accepts_a_warehouse_in_that_country(ai):
+    _, state = ai
+    PAGES["https://almacen-power.es/b2b"] = ("<p>Wholesale powerbank distributor for resellers. "
+                                             "Our warehouse in Germany ships to the EU.</p>")
+    PAGES["https://grossiste-power.fr/b2b"] = "<p>Grossiste powerbank pour revendeurs B2B.</p>"
+    state["reply"] = response([row("https://almacen-power.es/b2b", "Almacen Power"),
+                               row("https://grossiste-power.fr/b2b", "Grossiste Power")])
+    germany = wd.search("powerbank", "wholesale", "gadgets", "DE")
+    assert [c["domain"] for c in germany["results"]] == ["almacen-power.es"]
+    assert germany["results"][0]["country"] == "ES" and germany["results"][0]["warehouse_countries"] == ["DE"]
+    assert germany["outside_scope"] == 1                                    # Franse groothandel valt af
+    eu = wd.search("powerbank", "wholesale", "gadgets", "", "international")
+    assert eu["results"] == [] or all(c["region"] in ("international", "unknown") for c in eu["results"])

@@ -36,7 +36,8 @@ def test_period_only_filters_dated_publications_never_products_or_suppliers():
 def test_research_page_and_separate_trends_page_with_honest_platform_labels(administrator):
     """Sinds 27-11-2026 staat trendonderzoek (zonder artikelnaam) in een eigen menu: Onderzoeksplatforms & trends."""
     html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
-    assert "1</span> Product zoeken" in html and "2</span> Trends zonder artikelnaam?" in html
+    assert "1</span> Product zoeken" in html and "2</span> Onderzoeksplatforms" in html   # hersteld 27-11 (kaarten)
+    assert 'id="nv-pcs-po"' in html
     assert "section=trends" in html and "nv-rblock--platforms" not in html
     trends = administrator.get("/dashboard?section=trends").get_data(as_text=True)
     form = trends.split('id="nv-tr-form"')[1].split("</form>")[0]

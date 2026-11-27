@@ -103,7 +103,8 @@ def web_research():
                                 payload["kind"], payload["meta"]["candidates"], payload["unique_companies"],
                                 payload["verified_count"], payload["meta"]["elapsed_ms"],
                                 " (cache)" if payload.get("cached") else "")
-        return reply({"ok": True, **with_register(payload), "usage": usage()})
+        return reply({"ok": True, **with_register(payload, form if form.get("with_register") == "1" else None),
+                      "usage": usage()})
     finally:
         _busy.release()
 
@@ -112,9 +113,12 @@ MODEL_LABELS = {"A": "A · Directe dropshipping", "B": "B · Potentiële dropshi
                 "C": "C · Affiliatepartner"}
 
 
-def with_register(payload):
+def with_register(payload, form=None):
     """Live gevonden bedrijven naast het bestaande partnerregister leggen: zelfde domein of naam = 'ook in register'.
-    Registergegevens blijven herkenbaar als registergegevens (handmatig onderzocht, met datum)."""
+    Registergegevens blijven herkenbaar als registergegevens (handmatig onderzocht, met datum).
+
+    Met form (Partners zoeken): één resultaat dat bestaande en nieuwe partners samenbrengt. Registerbedrijven die bij de
+    zoekterm passen maar niet live zijn gevonden komen in 'register_only'; een bedrijf staat nooit twee keer in beeld."""
     import nv_partners
     by_domain, by_name = {}, {}
     for partner in nv_partners.all_partners():
@@ -128,6 +132,16 @@ def with_register(payload):
         card["register"] = by_domain.get(card.get("domain")) or by_name.get(" ".join(card.get("name", "").casefold().split()))
         card["model_label"] = MODEL_LABELS.get(card.get("model"), "")
     payload["register_matches"] = sum(1 for card in payload.get("results", []) if card.get("register"))
+    if form is not None:
+        found = {card["register"]["name"] for card in payload.get("results", []) if card.get("register")}
+        rows = nv_partners.search({"q": form.get("term", ""), "cat": form.get("category", ""),
+                                   "land": (form.get("country") or "").upper()})
+        payload["register_only"] = [
+            {"name": r["name"], "url": r["url"] if (r.get("url") or "").startswith("https://") else "",
+             "country": r["country"], "type": r["type_label"], "models": r["model_labels"],
+             "status": r["status_label"], "categories": r["cat_labels"], "cost": r["cost"],
+             "products": list(r.get("products") or [])[:6], "checked": nv_partners.CHECKED}
+            for r in rows if r["name"] not in found and r["status"] != "ongeschikt"][:12]
     return payload
 
 
@@ -139,4 +153,17 @@ def view_context(section):
             "categories": list(engine.CATEGORIES.items()), "countries": sorted(engine.COUNTRY_NAMES.items(),
                                                                                 key=lambda item: item[1]),
             "scopes": list(engine.SCOPES.items()), "usage": usage(), "country_required": section == "internationaal",
-            "can_save": bool(admin())}
+            "can_save": bool(admin()), "ai": ai_usage()}
+
+
+def ai_usage():
+    """Twee verschillende grenzen, naast elkaar getoond (27-11: '0 van 60' terwijl AI al uit stond verwarde):
+    * NUVEMIXA_WEB_RESEARCH_DAILY_LIMIT (60): aantal live webzoekopdrachten via deze knop per dag;
+    * NUVEMIXA_AI_DAILY_CALLS (80) en US$ 3/maand (nv_openai): álle AI-aanroepen samen. Eén zoekopdracht gebruikt er
+      meestal 2-3 (zoekwoorden, webzoeken, relevantiefilter); trends en productonderzoek tellen ook mee."""
+    try:
+        info = nv_openai.usage()
+    except Exception:  # noqa: BLE001
+        return None
+    return {**info, "reached": info["blocked"] or info["day_calls"] >= info["day_limit"]
+            or info["month_usd"] >= info["month_limit_usd"]}
