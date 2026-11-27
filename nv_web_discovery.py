@@ -389,6 +389,34 @@ def blocked_card(candidate):
     }
 
 
+# Woorden die AI aan zoektermen toevoegt maar niets over het artikel zeggen ("yoga mat wholesale germany").
+GENERIC_WORDS = frozenset(
+    "wholesale wholesaler wholesalers groothandel grosshandel großhandel grossiste mayorista ingrosso hurtownia "
+    "supplier suppliers leverancier leveranciers lieferant lieferanten fournisseur proveedor fornitore dostawca "
+    "manufacturer manufacturers fabrikant hersteller fabricant fabricante produttore producent factory b2b oem "
+    "dropshipping dropship distributor distributeur reseller bulk buy kopen kaufen acheter comprar online shop "
+    "europe european eu europa germany deutschland netherlands nederland holland belgium belgie belgië belgique "
+    "france frankreich spain españa italy italia poland polska china uk usa".split())
+
+
+def compact(text):
+    return re.sub(r"[\s\-_/]+", "", text)
+
+
+def matching_terms(lower, tokens, keywords):
+    """Welke termen van het artikel staan op de pagina. Spaties/streepjes tellen niet ('yogamat' = 'yoga mat');
+    algemene woorden uit AI-zoektermen worden eerst weggelaten."""
+    flat = compact(lower)
+    hits = []
+    for term in list(tokens) + list(keywords):
+        core = " ".join(word for word in term.split() if word not in GENERIC_WORDS).strip()
+        if len(compact(core)) < 4 or core in hits:
+            continue
+        if core in lower or compact(core) in flat:
+            hits.append(core)
+    return hits
+
+
 def hint_reason(kind, strong, signals, hits):
     """Waarom een bedrijf geen 'Gecontroleerd' krijgt, in gewone taal."""
     wanted = " of ".join(SIGNAL_LABELS[name] for name in REQUIRED[kind])
@@ -413,8 +441,7 @@ def verify(candidate, term, tokens, kind, category, deadline):
         return None, f"{candidate['domain']}: niet bereikbaar ({clean(exc, 40)})"
     text = visible_text(html)
     lower = text.casefold()
-    hits = [token for token in tokens if token in lower]
-    hits += [phrase for phrase in candidate.get("keywords", ()) if phrase in lower and phrase not in hits]
+    hits = matching_terms(lower, tokens, candidate.get("keywords", ()))
     hint = re.search(CATEGORY_HINTS[category], text, re.I) if category in CATEGORY_HINTS else None
     if not hits and not hint:
         return None, f"{candidate['domain']}: product en categorie staan niet op de pagina"

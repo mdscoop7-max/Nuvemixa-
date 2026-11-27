@@ -168,6 +168,15 @@ def test_partners_need_a_real_partner_programme_and_wholesalers_get_a_clear_reas
                                    "op deze pagina")
 
 
+def test_relevance_ignores_spacing_and_generic_ai_words():
+    """Live 27-11 (DE): 'yogamat' stond als 'Yoga Mats' op de pagina en AI gaf 'yogamatte grosshandel deutschland'."""
+    page = "wholesale yoga mats for studios. sticky yoga-mat 4.5 mm".casefold()
+    assert wd.matching_terms(page, wd.term_tokens("yogamat"), []) == ["yogamat"]
+    assert wd.matching_terms(page, [], ["yoga mat wholesale germany"]) == ["yoga mat"]
+    assert wd.matching_terms("wholesale germany only", [], ["yoga mat wholesale germany"]) == []
+    assert wd.matching_terms("power banks", wd.term_tokens("mat"), []) == []      # te kort: geen toevalstreffer
+
+
 def test_cache_period_depends_on_research_type():
     assert wd.cache_seconds("products") == 12 * 3600
     for kind in ("suppliers", "dropship", "wholesale", "partners"):
