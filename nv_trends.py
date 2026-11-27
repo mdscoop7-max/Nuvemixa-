@@ -401,6 +401,14 @@ def run(key, values, created_at, fetch=None):
             except nv_openai.AIUnavailable as exc:
                 ai_message = "AI niet beschikbaar: " + exc.message
                 break
+        if ai_message and not products:
+            # AI-daggrens of -budget bereikt: niet als 'klaar' bewaren, anders blijft een leeg resultaat tot 24 uur in
+            # de cache staan nadat AI weer beschikbaar is. Bronnen zijn gelezen; er is niets verzonnen.
+            steps.append({"t": round(time.time() - created_at, 1), "text": ai_message})
+            store.save(key, "failed", {"values": values, "steps": steps, "error": ai_message + " Er is niets "
+                                       "bewaard; probeer het later opnieuw (een identieke zoekopdracht kost dan wel AI)."},
+                       created_at)
+            return
         trends = merge(products)
         step(f"{len(trends)} producten met trendbewijs")
         links = []
@@ -464,7 +472,8 @@ def known_suppliers(trends):
                               "cache_key IN (" + ",".join("?" * len(keys)) + ")", tuple(keys)).fetchall()
     except Exception:  # noqa: BLE001 - zonder opslag: geen leveranciersregel, kaart blijft werken
         return trends
-    for key, payload, created in rows:
+    for row in rows:
+        key, payload, created = row[0], row[1], row[2]   # Postgres-rijen zijn dict-achtig: altijd op index
         result = (json.loads(payload) or {}).get("result") or {}
         names = [s["name"] for part in ("nl", "eu", "international", "unknown")
                  for s in (result.get("suppliers") or {}).get(part, [])]
@@ -551,7 +560,8 @@ def latest_trends(max_age_s=3 * 86400):
     except Exception:  # noqa: BLE001 - opslag tijdelijk weg: Viral Product Finder toont dan een melding
         return None
     out = []
-    for key, payload, created in rows:
+    for row in rows:
+        key, payload, created = row[0], row[1], row[2]   # Postgres-rijen zijn dict-achtig: altijd op index
         data = json.loads(payload)
         result = present(data.get("result"), data.get("values") or {})
         if result:
