@@ -66,5 +66,5 @@ def history_change():
         items = []
     else:
         abort(400)
-    store.save(key, "done", {"items": items})
+    store.save(key, "done", {"items": items}, wait=False)   # geheugen direct, database op de achtergrond
     return reply(items)

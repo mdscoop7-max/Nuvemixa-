@@ -216,7 +216,7 @@ def run(key, values, created_at, fetch=None):
 
     def step(text):
         steps.append({"t": round(time.time() - created_at, 1), "text": text})
-        store.save(key, "running", {"values": values, "steps": steps}, created_at)
+        store.save(key, "running", {"values": values, "steps": steps}, created_at, wait=False)
 
     try:
         label, days = PERIODS[values["period"]]
@@ -323,7 +323,7 @@ def trends_start():
         return reply({**public(row, key), "cached": True})
     if row and row["state"] == "running" and now - row["updated_at"] < 240:
         return reply({**public(row, key), "cached": False})
-    store.save(key, "running", {"values": values, "steps": [{"t": 0, "text": "Trendonderzoek gestart"}]}, now)
+    store.save(key, "running", {"values": values, "steps": [{"t": 0, "text": "Trendonderzoek gestart"}]}, now, wait=False)
     _pool.submit(run, key, values, now)
     return reply({"ok": True, "key": key, "state": "running", "steps": [{"t": 0, "text": "Trendonderzoek gestart"}],
                   "cached": False})

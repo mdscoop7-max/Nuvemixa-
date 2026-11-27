@@ -56,7 +56,7 @@
     p.offers.forEach(function (o) {
       var li = el("li");
       li.appendChild(el("strong", o.supplier || "Onbekende aanbieder"));
-      var bits = [o.source, o.warehouse ? "magazijn " + o.warehouse : "", money(o.price)];
+      var bits = [o.source, o.warehouse ? "magazijn " + o.warehouse : "", (o.variants > 1 ? "vanaf " : "") + money(o.price), o.variants > 1 ? o.variants + " varianten" : ""];
       if (o.eur && o.price && o.price.currency !== "EUR") bits.push("≈ € " + o.eur.eur.toFixed(2).replace(".", ",") + " (ECB " + o.eur.date + ")");
       if (o.dropship) bits.push("dropshipping bevestigd door platform");
       li.appendChild(document.createTextNode(" · " + bits.filter(Boolean).join(" · ") + " "));

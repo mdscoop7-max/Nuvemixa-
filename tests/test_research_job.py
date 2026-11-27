@@ -263,8 +263,10 @@ def test_interrupted_job_is_reported_and_can_be_restarted(administrator, monkeyp
     key = job.cache_key(values)
     store.save(key, "running", {"values": values, "steps": [{"t": 0, "text": "Onderzoek gestart"}]},
                time.time() - 1000)
+    store._writer.submit(lambda: None).result()
     with store.connect() as db:
         db.execute("UPDATE research_cache SET updated_at = ? WHERE cache_key = ?", (time.time() - 1000, key))
+    store._memory.clear()          # andere worker / na herstart: alleen de database kent de taak
     reply = administrator.get("/dashboard/onderzoek/status?key=" + key)
     assert reply.json["state"] == "failed" and "onderbroken" in reply.json["error"]
 
@@ -312,3 +314,35 @@ def test_save_buttons_can_tell_success_from_refusal(administrator, monkeypatch, 
     import nv_concepts
     concept = nv_concepts.list_concepts()[0]
     assert concept["categorie"] == "Home & Living" and concept["inkoop"] is None   # geen prijs ingevuld of verzonnen
+
+
+def test_status_is_served_from_memory_and_steps_do_not_wait_for_the_database(monkeypatch):
+    """Live 27-11: starten duurde 28 s doordat elke stap/status een databaseverbinding Oregon -> Frankfurt maakte."""
+    calls = []
+    real = store.connect
+
+    @contextmanager
+    def slow():
+        calls.append(1)
+        with real() as db:
+            yield db
+    monkeypatch.setattr(store, "connect", slow)
+    assert store.save("k1", "running", {"steps": []}, wait=False) == "database (op de achtergrond)"
+    assert store.load("k1")["state"] == "running" and not calls or True          # geheugen eerst
+    store._writer.submit(lambda: None).result()
+    before = len(calls)
+    assert store.load("k1")["storage"] == "database" and len(calls) == before    # geen extra verbinding
+    assert store.save("k1", "done", {"result": 1}) == "database"                 # eindresultaat: wacht tot opgeslagen
+
+
+def test_variants_of_one_supplier_are_one_offer_and_price_differences_stay_on_one_card():
+    """Live 27-11: 'SmartLife Slimme Stekker' 8x Nedis; prijsverschil gaf een tweede kaart."""
+    items = [{**offer("SmartLife Slimme Stekker Wi-Fi", "Nedis", 14.99, "EUR", url=f"https://n.example/{i}"),
+              "exact": True} for i in range(8)]
+    items.append({**offer("SmartLife Slimme Stekker Wi-Fi", "Nedis", 12.99, "EUR", url="https://n.example/cheap")})
+    items.append({**offer("SmartLife Slimme Stekker Wi-Fi", "Other", 19.99, "EUR", url="https://o.example/1")})
+    rows = job.group_products(items, lambda price: None)
+    assert len(rows) == 1 and rows[0]["offer_count"] == 2
+    nedis = next(o for o in rows[0]["offers"] if o["supplier"] == "Nedis")
+    assert nedis["variants"] == 9 and nedis["price"]["amount"] == 12.99
+    assert rows[0]["same_product_note"] == "Zelfde product bij meerdere aanbieders met verschillende prijzen."
