@@ -91,14 +91,19 @@ STRONG = {
     "groothandel": r"wholesale\w*|groothandel\w*|gro(?:ß|ss)h(?:a|ä)nd\w*|grossiste\w*|vente en gros|mayorista\w*|"
                    r"al por mayor|ingrosso|grossista|hurtowni\w*|engros\w*|tukku\w*|velkoobchod\w*|atacado|toptan|"
                    r"bulk order\w*|\bmoq\b|minimum order",
-    "fabrikant": SIGNALS["fabrikant"],
+    # Live 27-11: "OEM nummer 010438" in een productspecificatie is geen fabrikant; alleen OEM in zakelijke context.
+    "fabrikant": r"\bfactory\b|\bfactories\b|\bfabriek\w*|we manufacture|our manufacturing|own production|"
+                 r"eigen productie|fabrikant van|hersteller (?:von|f(?:ü|u)r)|eigene produktion|fabricant (?:de|fran)\w*|"
+                 r"fabricante de|produttore di|\bproducent \w+|üretici\w*|\boem\s*(?:/|&|and|en)\s*odm\b|\bodm\b|"
+                 r"\boem (?:service|production|orders?|manufactur\w*|supplier|factory|customi[sz]ation)",
     "partnerprogramma": r"partner\s?program\w*|partnerprogramm\w*|affiliate\s?program\w*|reseller\s?program\w*|"
                         r"become a (?:retailer|stockist|reseller|partner|dealer|distributor)|wederverkoper worden|"
                         r"dealer worden|h(?:ä|a)ndler werden|devenir (?:revendeur|distributeur)|"
                         r"stockist (?:enquir|applica)\w*|wholesale (?:application|account)|trade account",
 }
 _STRONG_RE = {name: re.compile(pattern, re.I) for name, pattern in STRONG.items()}
-REQUIRED = {"suppliers": ("groothandel", "dropshipping", "fabrikant", "partnerprogramma"),
+# Een (affiliate)partnerprogramma maakt een winkel geen leverancier (live 27-11: Viking Direct); alleen bij Partners.
+REQUIRED = {"suppliers": ("groothandel", "dropshipping", "fabrikant"),
             "dropship": ("dropshipping",), "wholesale": ("groothandel", "fabrikant"),
             "partners": ("partnerprogramma",),
             "products": ("groothandel", "dropshipping", "fabrikant")}
@@ -425,7 +430,11 @@ def verify(candidate, term, tokens, kind, category, deadline):
     verified = any(name in strong for name in required) and (bool(hits) or kind != "products")
     host = urlsplit(final).hostname or ""
     domain = registrable(host)
-    role = next((label for name, label in ROLE_ORDER if name in strong), "Webwinkel of merk (rol niet bevestigd)")
+    # Rol uit de gevraagde signalen eerst; een webwinkel met alleen een affiliateprogramma blijft bij Leveranciers
+    # een webwinkel, maar is bij Partners een "Merk met partner- of resellerprogramma".
+    role = next((label for name, label in ROLE_ORDER if name in strong and name in required),
+                next((label for name, label in ROLE_ORDER if name in strong and name != "partnerprogramma"),
+                     "Webwinkel of merk (rol niet bevestigd)"))
     if MARKETPLACES.search(host):
         role = "B2B-marktplaats of platform"
     if DIRECTORIES.search(host):

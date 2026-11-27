@@ -137,6 +137,23 @@ def test_weak_footer_words_do_not_make_a_shop_verified(ai):
     assert weak and all(fact["status"] == "aanwijzing" for fact in weak)
 
 
+def test_retailer_with_affiliate_footer_or_oem_part_number_is_no_supplier(ai):
+    """Live 27-11: Viking Direct ('Affiliate Partnerprogramma' in voettekst) en XtremeOffice ('OEM nummer')."""
+    _, state = ai
+    PAGES["https://www.viking-test.nl/opbergbox"] = ("<p>Opbergbox met deksel 5,6 l.</p><footer>Viking Shop · Affiliate "
+                                                     "Partnerprogramma · Herroepingsrecht</footer>")
+    PAGES["https://www.xoffice-test.nl/opbergbox"] = "<p>Opbergbox met deksel. EAN 3086960265977 OEM nummer 010438</p>"
+    PAGES["https://www.oem-factory-test.cn/box"] = "<p>Storage box with lid. OEM/ODM service, MOQ 1000.</p>"
+    state["reply"] = response([row("https://www.viking-test.nl/opbergbox", "Viking"),
+                               row("https://www.xoffice-test.nl/opbergbox", "XOffice"),
+                               row("https://www.oem-factory-test.cn/box", "OEM Factory")])
+    cards = {card["name"]: card for card in wd.search("opbergbox", "suppliers", "home-living")["results"]}
+    assert cards["Viking"]["verified"] is False and cards["XOffice"]["verified"] is False
+    assert cards["OEM Factory"]["verified"] is True and cards["OEM Factory"]["role"] == "Groothandel / distributeur"
+    as_partner = wd.search("opbergbox", "partners", "home-living")["results"]
+    assert next(c for c in as_partner if c["name"] == "Viking")["verified"] is True   # affiliate = partner (model C)
+
+
 def test_partners_need_a_real_partner_programme_and_wholesalers_get_a_clear_reason(ai):
     _, state = ai
     PAGES["https://serumbrand.eu/partners"] = "<p>Face serum. Join our affiliate program or become a stockist.</p>"
