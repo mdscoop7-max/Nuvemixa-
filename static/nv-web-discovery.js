@@ -40,7 +40,24 @@
     [[item.url, "Gecontroleerde pagina"], [item.contact, "Contact / B2B-pagina"], [item.home, item.domain]]
       .forEach(function (pair) { var a = link(pair[0], pair[1]); if (a) links.appendChild(a); });
     el.appendChild(links);
+    if (form.dataset.saveUrl) el.appendChild(saveButton(item));
     return el;
+  }
+  function saveButton(item) {
+    var b = text("button", "Bewaar op kandidatenlijst", "nv-blue-action");
+    b.type = "button";
+    b.addEventListener("click", function () {
+      var fd = new FormData();
+      fd.set("_csrf_token", form._csrf_token.value);
+      fd.set("name", item.name); fd.set("url", item.url);
+      fd.set("model", item.role === "Dropshippingleverancier" ? "A" : "B");
+      fd.set("notes", "Live webonderzoek " + new Date().toISOString().slice(0, 10) + ": " + item.status + " · " + item.role + " · " + item.url);
+      b.disabled = true; b.textContent = "Bezig met bewaren…";
+      fetch(form.dataset.saveUrl, {method: "POST", body: fd, credentials: "same-origin"})
+        .then(function (r) { b.textContent = r.ok ? "Bewaard op kandidatenlijst (Partners zoeken)" : "Bewaren mislukt (HTTP " + r.status + ")"; })
+        .catch(function () { b.textContent = "Bewaren mislukt"; b.disabled = false; });
+    });
+    return b;
   }
   function finish(label) {
     status.textContent = label;

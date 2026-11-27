@@ -138,7 +138,8 @@ def test_score_wordt_als_voorlopige_indicatie_gepresenteerd(administrator):
 def test_interface_is_eerlijk_over_register_en_tijdelijke_opslag(administrator):
     html = administrator.get("/dashboard?section=partners").get_data(as_text=True)
     assert "onderzocht register" in html and "handmatige ontdekkingslinks" in html
-    assert "geen live, automatische internetzoekmachine" in html
+    # Sinds 27-11-2026 staat er een apart live zoekblok boven; het register zelf blijft eerlijk "niet live".
+    assert "Dit register zelf zoekt niet live" in html and "Partners live zoeken op het web" in html
     assert "Render Free" in html and "tijdelijk" in html and "geen goedgekeurde leverancier" in html
 
 

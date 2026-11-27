@@ -13,7 +13,7 @@ from flask import abort, current_app, jsonify, request, session
 
 import nv_openai
 import nv_web_discovery as engine
-from nv_dashboard_manager import bp
+from nv_dashboard_manager import admin, bp
 from nv_permissions import allowed
 
 DAILY_VARIABLE = "NUVEMIXA_WEB_RESEARCH_DAILY_LIMIT"
@@ -115,4 +115,5 @@ def view_context(section):
             "kind": SECTION_KIND[section], "kinds": [(k, v[0]) for k, v in engine.KINDS.items()],
             "categories": list(engine.CATEGORIES.items()), "countries": sorted(engine.COUNTRY_NAMES.items(),
                                                                                 key=lambda item: item[1]),
-            "scopes": list(engine.SCOPES.items()), "usage": usage(), "country_required": section == "internationaal"}
+            "scopes": list(engine.SCOPES.items()), "usage": usage(), "country_required": section == "internationaal",
+            "can_save": bool(admin())}

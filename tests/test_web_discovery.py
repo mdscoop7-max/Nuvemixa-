@@ -258,3 +258,17 @@ def test_ai_unavailable_gives_clear_message(administrator, monkeypatch):
     monkeypatch.setattr(nv_openai, "post", refuse)
     reply = administrator.post(ROUTE, data={"_csrf_token": CSRF_TOKEN, "term": "powerbank"})
     assert reply.status_code == 200 and reply.json["code"] == "budget" and "maandbudget" in reply.json["message"]
+
+
+def test_owner_can_save_a_live_result_to_the_permanent_candidate_list(administrator, monkeypatch):
+    text = administrator.get("/dashboard?section=partners").get_data(as_text=True)
+    assert 'data-save-url="/dashboard/partners/kandidaat"' in text
+    assert "geen live, automatische internetzoekmachine" not in text   # verouderde uitleg is aangepast
+    saved = []
+    import nuvemixa_admin_store
+    monkeypatch.setattr(nuvemixa_admin_store, "add_supplier", lambda *args: saved.append(args))
+    reply = administrator.post("/dashboard/partners/kandidaat", data={
+        "_csrf_token": CSRF_TOKEN, "name": "PowerHandel", "url": "https://www.powerhandel.de/b2b", "model": "A",
+        "notes": "Live webonderzoek: Gecontroleerd"})
+    assert reply.status_code == 303 and saved and saved[0][0] == "PowerHandel"
+    assert saved[0][3].startswith("[Kandidaat · model A · eigen vondst")
