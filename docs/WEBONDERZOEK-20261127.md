@@ -26,3 +26,14 @@ De oude AI-route `/dashboard/leveranciers/ai-zoeken` blijft bestaan, maar slaat 
 * Sommige sites blokkeren automatische controle (bijv. HTTP 403); die verschijnen alleen als de AI-zoekmachine ze citeerde, en nooit als gecontroleerd.
 * Land is een aanwijzing (afgeleid uit het domein of opgave AI), geen gecontroleerd vestigingsadres.
 * Kosten per live zoekopdracht ca. US$ 0,05–0,10; met het interne maandbudget van US$ 3 zijn dat grofweg 30–60 nieuwe zoekopdrachten per maand (herhalingen uit cache zijn gratis).
+
+## Live getest op 27-11-2026 (zelfde dag, na deploy)
+Het volledige eindrapport met alle live zoekresultaten staat in de map 'Werk Map AI' op het bureaublad
+(`NUVEMIXA-onderzoeksdashboard-2026-11-27\EINDRAPPORT.md`). Samenvatting:
+* 14 live zoekscenario's (5 categorieën × 2 artikelen, NL/BE/DE/CN, 4 zoeksoorten) + 'Meer andere bedrijven zoeken'.
+* 42 unieke gecontroleerde bedrijven; geen dubbele bedrijven binnen één resultaat.
+* Werkelijke kosten: ca. US$ 0,03 per nieuwe zoekopdracht (1 webzoekactie); cache = US$ 0.
+* Render-logs na deploy: alle 27 aanvragen HTTP 200, geen HTTP 400 en geen fouten.
+* Tijdens de live tests gevonden en opgelost: vertaalde zoektermen, max. 2 marktplaatsen, 403 als niet
+  controleerbaar, sterke vs. zwakke signalen, affiliate-voettekst/OEM-artikelnummer, artikel moet op de pagina
+  staan, spatieloze match + citaatfout, exportlanden in het Engels, 'Meer zoeken' vraagt echt andere bedrijven.
