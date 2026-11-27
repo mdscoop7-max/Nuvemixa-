@@ -271,3 +271,31 @@ def test_ai_limit_does_not_store_an_empty_trend_result_in_the_cache(administrato
     assert again["cached"] is False
     done = administrator.get("/dashboard/trends/status?key=" + again["key"]).json
     assert [t["name"] for t in done["result"]["trends"]] == ["Philips Hue"]
+
+
+def test_viral_and_suppliers_work_with_postgres_dict_rows(monkeypatch):
+    """Live 27-11: Postgres levert DashboardRow (dict); uitpakken gaf de kolomnamen en Viral meldde 'niet beschikbaar'."""
+    import json as _json
+    from nv_dashboard_postgres import DashboardRow
+    result = {"checked": "x", "period_label": "7 dagen", "trends": [
+        {"name": "Philips Hue", "category": "smart-home", "status": "Voorlopige trendindicatie", "reason": "r",
+         "evidence": [{"title": "Philips Hue review", "url": "https://e.com/a", "date": "2026-11-27", "source": "S",
+                       "kind": "publicatie", "region": "NL"}]}]}
+    row = DashboardRow({"cache_key": "trends:v1:" + "a" * 40, "payload": _json.dumps({"values": {"category": "all"},
+                                                                                   "result": result}),
+                        "created_at": time.time()})
+
+    class Cursor:
+        def fetchall(self):
+            return [row]
+
+    class DB:
+        def execute(self, *a):
+            return Cursor()
+
+    @contextmanager
+    def connect():
+        yield DB()
+    monkeypatch.setattr(store, "connect", connect)
+    monkeypatch.setattr(store, "_sqlite", lambda db: None)
+    assert [t["name"] for t in trends.viral_view()["trends"]] == ["Philips Hue"]

@@ -472,7 +472,8 @@ def known_suppliers(trends):
                               "cache_key IN (" + ",".join("?" * len(keys)) + ")", tuple(keys)).fetchall()
     except Exception:  # noqa: BLE001 - zonder opslag: geen leveranciersregel, kaart blijft werken
         return trends
-    for key, payload, created in rows:
+    for row in rows:
+        key, payload, created = row[0], row[1], row[2]   # Postgres-rijen zijn dict-achtig: altijd op index
         result = (json.loads(payload) or {}).get("result") or {}
         names = [s["name"] for part in ("nl", "eu", "international", "unknown")
                  for s in (result.get("suppliers") or {}).get(part, [])]
@@ -559,7 +560,8 @@ def latest_trends(max_age_s=3 * 86400):
     except Exception:  # noqa: BLE001 - opslag tijdelijk weg: Viral Product Finder toont dan een melding
         return None
     out = []
-    for key, payload, created in rows:
+    for row in rows:
+        key, payload, created = row[0], row[1], row[2]   # Postgres-rijen zijn dict-achtig: altijd op index
         data = json.loads(payload)
         result = present(data.get("result"), data.get("values") or {})
         if result:
