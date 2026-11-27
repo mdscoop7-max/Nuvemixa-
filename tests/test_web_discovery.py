@@ -125,6 +125,38 @@ def test_blocked_site_is_shown_as_not_verifiable_never_as_verified(ai):
         assert card["verified"] is False and "blokkeert" in card["status"]
 
 
+def test_weak_footer_words_do_not_make_a_shop_verified(ai):
+    """Live 27-11: kantoorwinkels met 'B2B' of 'affiliate' in de voettekst kregen ten onrechte 'Gecontroleerd'."""
+    _, state = ai
+    PAGES["https://www.kantoorwinkel.nl/opbergbox"] = ("<p>Opbergbox met deksel 20 liter, op voorraad.</p>"
+                                                       "<footer>Zakelijk bestellen (B2B) · Affiliate · Reseller</footer>")
+    state["reply"] = response([row("https://www.kantoorwinkel.nl/opbergbox", "Kantoorwinkel")])
+    card = wd.search("opbergbox", "suppliers", "home-living")["results"][0]
+    assert card["verified"] is False and card["status"].startswith("Aanwijzing: alleen zwakke signalen")
+    weak = [fact for fact in card["facts"] if fact["value"].startswith("Alleen los genoemd")]
+    assert weak and all(fact["status"] == "aanwijzing" for fact in weak)
+
+
+def test_partners_need_a_real_partner_programme_and_wholesalers_get_a_clear_reason(ai):
+    _, state = ai
+    PAGES["https://serumbrand.eu/partners"] = "<p>Face serum. Join our affiliate program or become a stockist.</p>"
+    PAGES["https://serum-wholesale.de/"] = "<p>Face serum wholesale for retailers, MOQ 50.</p>"
+    state["reply"] = response([row("https://serumbrand.eu/partners", "SerumBrand"),
+                               row("https://serum-wholesale.de/", "Serum Wholesale")])
+    cards = {card["domain"]: card for card in wd.search("face serum", "partners", "beauty-care")["results"]}
+    assert cards["serumbrand.eu"]["verified"] is True
+    wholesale = cards["serum-wholesale.de"]
+    assert wholesale["verified"] is False
+    assert wholesale["status"] == ("Aanwijzing: wel groothandel, maar partner-/resellerprogramma niet bevestigd "
+                                   "op deze pagina")
+
+
+def test_cache_period_depends_on_research_type():
+    assert wd.cache_seconds("products") == 12 * 3600
+    for kind in ("suppliers", "dropship", "wholesale", "partners"):
+        assert wd.cache_seconds(kind) == 24 * 3600
+
+
 def test_translated_keywords_from_ai_count_for_relevance_only(ai):
     _, state = ai
     PAGES["https://earbud-wholesale.com/tws"] = "<p>TWS earbuds wholesale for retailers, MOQ 100.</p>"

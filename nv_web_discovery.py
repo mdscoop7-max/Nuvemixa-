@@ -84,10 +84,26 @@ SIGNALS = {
                         r"devenir (?:revendeur|distributeur)",
 }
 _SIGNAL_RE = {name: re.compile(pattern, re.I) for name, pattern in SIGNALS.items()}
+# Live test 27-11: losse woorden als "B2B", "distributeur", "reseller" of "affiliate" staan ook in de voettekst van
+# gewone webwinkels (Viking Direct, XtremeOffice). Alleen deze sterke formuleringen maken een bedrijf "Gecontroleerd".
+STRONG = {
+    "dropshipping": SIGNALS["dropshipping"],
+    "groothandel": r"wholesale\w*|groothandel\w*|gro(?:ß|ss)h(?:a|ä)nd\w*|grossiste\w*|vente en gros|mayorista\w*|"
+                   r"al por mayor|ingrosso|grossista|hurtowni\w*|engros\w*|tukku\w*|velkoobchod\w*|atacado|toptan|"
+                   r"bulk order\w*|\bmoq\b|minimum order",
+    "fabrikant": SIGNALS["fabrikant"],
+    "partnerprogramma": r"partner\s?program\w*|partnerprogramm\w*|affiliate\s?program\w*|reseller\s?program\w*|"
+                        r"become a (?:retailer|stockist|reseller|partner|dealer|distributor)|wederverkoper worden|"
+                        r"dealer worden|h(?:ä|a)ndler werden|devenir (?:revendeur|distributeur)|"
+                        r"stockist (?:enquir|applica)\w*|wholesale (?:application|account)|trade account",
+}
+_STRONG_RE = {name: re.compile(pattern, re.I) for name, pattern in STRONG.items()}
 REQUIRED = {"suppliers": ("groothandel", "dropshipping", "fabrikant", "partnerprogramma"),
             "dropship": ("dropshipping",), "wholesale": ("groothandel", "fabrikant"),
-            "partners": ("partnerprogramma", "groothandel", "dropshipping"),
+            "partners": ("partnerprogramma",),
             "products": ("groothandel", "dropshipping", "fabrikant")}
+SIGNAL_LABELS = {"dropshipping": "dropshipping", "groothandel": "groothandel", "fabrikant": "fabrikant",
+                 "partnerprogramma": "partner-/resellerprogramma"}
 ROLE_ORDER = (("dropshipping", "Dropshippingleverancier"), ("groothandel", "Groothandel / distributeur"),
               ("fabrikant", "Fabrikant"), ("partnerprogramma", "Merk met partner- of resellerprogramma"))
 INTEGRATIONS = (("WooCommerce", r"woo\s?commerce"), ("Shopify", r"shopify"), ("API / productfeed",
@@ -368,6 +384,19 @@ def blocked_card(candidate):
     }
 
 
+def hint_reason(kind, strong, signals, hits):
+    """Waarom een bedrijf geen 'Gecontroleerd' krijgt, in gewone taal."""
+    wanted = " of ".join(SIGNAL_LABELS[name] for name in REQUIRED[kind])
+    found = [SIGNAL_LABELS[name] for name in SIGNAL_LABELS if name in strong]
+    if kind == "products" and not hits and any(name in strong for name in REQUIRED[kind]):
+        return "Aanwijzing: zakelijke leverancier, maar het gezochte product staat niet op deze pagina"
+    if found:
+        return f"Aanwijzing: wel {', '.join(found)}, maar {wanted} niet bevestigd op deze pagina"
+    if signals:
+        return f"Aanwijzing: alleen zwakke signalen (bijv. 'B2B' of 'reseller'), {wanted} niet bevestigd"
+    return "Aanwijzing: geen zakelijk signaal op deze pagina"
+
+
 def verify(candidate, term, tokens, kind, category, deadline):
     """Opent de pagina en legt vast wat er letterlijk staat. Geeft een resultaatkaart of None (met reden)."""
     url = candidate["url"]
@@ -384,17 +413,19 @@ def verify(candidate, term, tokens, kind, category, deadline):
     hint = re.search(CATEGORY_HINTS[category], text, re.I) if category in CATEGORY_HINTS else None
     if not hits and not hint:
         return None, f"{candidate['domain']}: product en categorie staan niet op de pagina"
-    signals = {}
+    signals, strong = {}, set()
     for name, pattern in _SIGNAL_RE.items():
-        match = pattern.search(text)
+        match = _STRONG_RE[name].search(text) or pattern.search(text)
         if match:
             signals[name] = snippet(text, match)
+            if _STRONG_RE[name].search(match.group(0)):
+                strong.add(name)
     required = REQUIRED[kind]
-    # Producten: de zoekterm zelf moet op de pagina staan. Leveranciers: een zakelijk signaal is genoeg.
-    verified = any(name in signals for name in required) and (bool(hits) or kind != "products")
+    # Producten: de zoekterm zelf moet op de pagina staan. Leveranciers: een sterk zakelijk signaal is genoeg.
+    verified = any(name in strong for name in required) and (bool(hits) or kind != "products")
     host = urlsplit(final).hostname or ""
     domain = registrable(host)
-    role = next((label for name, label in ROLE_ORDER if name in signals), "Webwinkel of merk (rol niet bevestigd)")
+    role = next((label for name, label in ROLE_ORDER if name in strong), "Webwinkel of merk (rol niet bevestigd)")
     if MARKETPLACES.search(host):
         role = "B2B-marktplaats of platform"
     if DIRECTORIES.search(host):
@@ -424,8 +455,10 @@ def verify(candidate, term, tokens, kind, category, deadline):
         if name_signal in signals:
             quote = signals[name_signal]
             shown = {fact.get("quote") for fact in facts}
-            facts.append({"label": label, "value": "Genoemd op de pagina" + (" (zelfde citaat als hierboven)"
-                          if quote in shown else ""), "status": "feit", **({} if quote in shown else {"quote": quote})})
+            value = "Genoemd op de pagina" if name_signal in strong else "Alleen los genoemd (zwak signaal)"
+            facts.append({"label": label, "value": value + (" (zelfde citaat als hierboven)" if quote in shown else ""),
+                          "status": "feit" if name_signal in strong else "aanwijzing",
+                          **({} if quote in shown else {"quote": quote})})
     facts.append({"label": "Koppelingen", "value": ", ".join(integrations) + " genoemd op de pagina"
                   if integrations else UNCONFIRMED, "status": "feit" if integrations else "onbekend"})
     for label in ("Prijzen en marge", "Levertijd naar NL", "Voorwaarden"):
@@ -435,7 +468,7 @@ def verify(candidate, term, tokens, kind, category, deadline):
         "contact": contact_link(html, final), "country": country or "", "region": (
             "eu" if country in EU else "international" if country else "unknown"),
         "role": role, "verified": verified, "relevant": bool(hits),
-        "status": "Gecontroleerd" if verified else "Aanwijzing (geen zakelijk signaal op deze pagina)",
+        "status": "Gecontroleerd" if verified else hint_reason(kind, strong, signals, hits),
         "signals": sorted(signals), "integrations": integrations, "facts": facts,
         "ai_cited": bool(candidate.get("cited")), "directory": bool(DIRECTORIES.search(host)),
     }, None
@@ -479,9 +512,14 @@ def cached(key, now=None):
     now = now or time.time()
     with _cache_lock:
         hit = _cache.get(key)
-    if hit and now - hit[0] < CACHE_SECONDS:
+    if hit and now - hit[0] < cache_seconds(hit[1].get("kind")):
         return {**json.loads(json.dumps(hit[1])), "cached": True}
     return None
+
+
+def cache_seconds(kind):
+    """Leveranciers, groothandels, dropshipping en partners veranderen traag: 24 uur. Producten/niches: 12 uur."""
+    return CACHE_SECONDS if kind == "products" else 2 * CACHE_SECONDS
 
 
 def search(term, kind="suppliers", category="", country="", scope="all", exclude=(), *, now=None):

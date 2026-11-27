@@ -12,7 +12,7 @@
 <label>Regio <select name="scope">{% for key, label in wd.scopes %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
 <label>Land {% if wd.country_required %}(verplicht){% else %}(optioneel){% endif %} <select name="country" {{ 'required' if wd.country_required }}><option value="">{{ 'Kies een land' if wd.country_required else 'Geen voorkeur' }}</option>{% for code, name in wd.countries %}<option value="{{ code }}">{{ name }}</option>{% endfor %}</select></label>
 <button type="submit" id="nv-wd-submit" {% if not wd.configured %}disabled{% endif %}>Live zoeken met AI</button>
-<p class="nv-ai-usage">Vandaag {{ wd.usage.used }} van {{ wd.usage.limit }} live zoekopdrachten. Een identieke zoekopdracht binnen 12 uur komt uit de cache en kost niets. Alle AI-kosten vallen onder hetzelfde bewaakte maandbudget als de andere AI-functies.</p>
+<p class="nv-ai-usage">Vandaag {{ wd.usage.used }} van {{ wd.usage.limit }} live zoekopdrachten. Een identieke zoekopdracht komt uit de cache en kost niets (producten 12 uur, leveranciers en partners 24 uur). Alle AI-kosten vallen onder hetzelfde bewaakte maandbudget als de andere AI-functies.</p>
 </form>
 <div id="nv-wd-progress" class="nv-ai-progress" hidden aria-live="polite">
 <div class="nv-ai-head"><span class="nv-ai-spinner" aria-hidden="true"></span><strong id="nv-wd-status">Bezig…</strong><span id="nv-wd-timer" class="nv-ai-timer">0 s</span></div>
