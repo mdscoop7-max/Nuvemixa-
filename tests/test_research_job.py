@@ -295,3 +295,20 @@ def test_research_page_has_one_combined_search_and_only_five_categories(administ
     assert 'id="nv-wd-form"' not in text                     # geen tweede, losse zoekfunctie meer
     assert "Huisdieren" not in text
     assert 'data-start="/dashboard/onderzoek/start"' in text and 'data-can-save="1"' in text
+
+
+def test_save_buttons_can_tell_success_from_refusal(administrator, monkeypatch, tmp_path):
+    """De knoppen in het onderzoeksresultaat lezen het echte resultaat (niet alleen HTTP 200)."""
+    import nuvemixa_admin_store as admin_store
+    monkeypatch.setattr(admin_store, "ADMIN_DB", tmp_path / "admin.sqlite3")
+    monkeypatch.setattr(admin_store, "database_path", lambda: tmp_path / "admin.sqlite3")
+    good = {"_csrf_token": CSRF_TOKEN, "titel": "Mobile Kitchen Organizer Cart with Wheels",
+            "bron_url": "https://syncee.com/product/1/cart", "bron_naam": "Syncee", "leverancier": "Primebay",
+            "categorie": "home-living"}
+    saved = administrator.post("/dashboard/concepten/nieuw", data=good)
+    assert saved.status_code == 303 and "open=" in saved.headers["Location"]
+    refused = administrator.post("/dashboard/concepten/nieuw", data={**good, "titel": "x"})
+    assert refused.status_code == 303 and "open=" not in refused.headers["Location"]
+    import nv_concepts
+    concept = nv_concepts.list_concepts()[0]
+    assert concept["categorie"] == "Home & Living" and concept["inkoop"] is None   # geen prijs ingevuld of verzonnen

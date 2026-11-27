@@ -19,12 +19,20 @@
   }
   function money(p) { return p ? p.currency + " " + p.amount.toFixed(2).replace(".", ",") : "Prijs onbekend"; }
   function regionName(code) { return {nl: "Nederland", eu: "Europese Unie", international: "Internationaal (buiten de EU)", unknown: "Land niet bevestigd"}[code]; }
-  function post(url, fields, button, done) {
+  // Controleert het echte resultaat: de server stuurt ook bij een geweigerde invoer een gewone pagina terug.
+  // Concept: succes = doorverwijzing naar het nieuwe concept (open=...). Kandidaat: bevestigingstekst op de pagina.
+  function post(url, fields, button, done, kind) {
     var fd = new FormData(); fd.set("_csrf_token", box.dataset.csrf);
     Object.keys(fields).forEach(function (k) { fd.set(k, fields[k]); });
     button.disabled = true; button.textContent = "Bezig…";
     fetch(url, {method: "POST", body: fd, credentials: "same-origin"})
-      .then(function (r) { button.textContent = r.ok ? done : "Opslaan mislukt (HTTP " + r.status + ")"; })
+      .then(function (r) { return r.text().then(function (t) { return {r: r, t: t}; }); })
+      .then(function (x) {
+        var ok = x.r.ok && (kind === "concept" ? /[?&]open=\d+/.test(x.r.url) : !/staat al in de leverancierslijst|Opslaan is nu niet gelukt/i.test(x.t));
+        var dup = /staat al in de leverancierslijst/i.test(x.t);
+        button.textContent = ok ? done : dup ? "Stond al op de kandidatenlijst" : "Niet opgeslagen: controleer de gegevens";
+        if (!ok && !dup) button.disabled = false;
+      })
       .catch(function () { button.textContent = "Opslaan mislukt"; button.disabled = false; });
   }
 
@@ -55,7 +63,7 @@
       var b = el("button", "Bewaar als concept"); b.type = "button";
       b.addEventListener("click", function () {
         post(box.dataset.concept, {titel: p.title.slice(0, 120), bron_url: first.url || "", bron_naam: (first.source || "").slice(0, 80),
-          leverancier: (first.supplier || "").slice(0, 120), categorie: category || ""}, b, "Bewaard als conceptproduct");
+          leverancier: (first.supplier || "").slice(0, 120), categorie: category || ""}, b, "Bewaard als conceptproduct", "concept");
       });
       actions.appendChild(b);
     }
@@ -77,7 +85,7 @@
       var b = el("button", "Bewaar als kandidaat"); b.type = "button";
       b.addEventListener("click", function () {
         post(box.dataset.candidate, {name: s.name.slice(0, 120), url: s.page || s.website || "", model: s.dropship ? "A" : "B",
-          notes: "Onderzoek " + new Date().toISOString().slice(0, 10) + ": " + (s.verified ? "gecontroleerd" : "aanwijzing") + " · " + s.sources.join(", ") + " · " + (s.role || "")}, b, "Bewaard op kandidatenlijst");
+          notes: "Onderzoek " + new Date().toISOString().slice(0, 10) + ": " + (s.verified ? "gecontroleerd" : "aanwijzing") + " · " + s.sources.join(", ") + " · " + (s.role || "")}, b, "Bewaard op kandidatenlijst", "candidate");
       });
       links.appendChild(b);
     }
