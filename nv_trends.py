@@ -401,6 +401,14 @@ def run(key, values, created_at, fetch=None):
             except nv_openai.AIUnavailable as exc:
                 ai_message = "AI niet beschikbaar: " + exc.message
                 break
+        if ai_message and not products:
+            # AI-daggrens of -budget bereikt: niet als 'klaar' bewaren, anders blijft een leeg resultaat tot 24 uur in
+            # de cache staan nadat AI weer beschikbaar is. Bronnen zijn gelezen; er is niets verzonnen.
+            steps.append({"t": round(time.time() - created_at, 1), "text": ai_message})
+            store.save(key, "failed", {"values": values, "steps": steps, "error": ai_message + " Er is niets "
+                                       "bewaard; probeer het later opnieuw (een identieke zoekopdracht kost dan wel AI)."},
+                       created_at)
+            return
         trends = merge(products)
         step(f"{len(trends)} producten met trendbewijs")
         links = []

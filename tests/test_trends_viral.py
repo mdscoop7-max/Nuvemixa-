@@ -248,3 +248,26 @@ def test_both_daily_limits_are_shown_separately(administrator, monkeypatch):
     assert "AI-aanroepen vandaag 81 van 80" in page and "US$ 1,57 van US$ 3,00" in page
     assert "De AI-daggrens is bereikt" in page
     assert view.ai_usage()["reached"] is True
+
+
+def test_ai_limit_does_not_store_an_empty_trend_result_in_the_cache(administrator, monkeypatch):
+    monkeypatch.setattr(trends._pool, "submit", lambda fn, *args: fn(*args))
+    monkeypatch.setattr(trends, "read_feed", lambda name, url, region, fetch=None:
+                        [item("Philips Hue launches new smart bulb", 2, "The Verge – Smart Home")]
+                        if name == "The Verge – Smart Home" else [])
+    monkeypatch.setattr(trends, "google_trends", lambda *a, **k: [])
+
+    def blocked(*a, **k):
+        raise nv_openai.AIUnavailable("limit", "De interne AI-limiet van NUVEMIXA is bereikt.")
+    monkeypatch.setattr(nv_openai, "chat_json", blocked)
+    form = {"_csrf_token": CSRF_TOKEN, "trend_category": "smart-home", "trend_period": "14"}
+    first = administrator.post("/dashboard/trends/start", data=form).json
+    status = administrator.get("/dashboard/trends/status?key=" + first["key"]).json
+    assert status["state"] == "failed" and "AI-limiet" in status["error"]
+    # Zodra AI weer werkt, start dezelfde vraag opnieuw in plaats van een leeg cacheresultaat te tonen
+    monkeypatch.setattr(nv_openai, "chat_json", lambda *a, **k: {"products": [
+        {"name": "Philips Hue", "category": "smart-home", "ids": [0]}]})
+    again = administrator.post("/dashboard/trends/start", data=form).json
+    assert again["cached"] is False
+    done = administrator.get("/dashboard/trends/status?key=" + again["key"]).json
+    assert [t["name"] for t in done["result"]["trends"]] == ["Philips Hue"]
