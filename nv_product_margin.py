@@ -113,6 +113,11 @@ UNIFIED_COSTS = (
 UNIFIED_DEFAULTS = {"shipping": 495, "advertising": 300, "returns": 100, "fee_fixed": 35, "fee_pct": 2.5,
                     "platform": 0, "other": 0}
 MARGIN_TARGETS = (15, 20, 25, 30, 35, 40)
+# Voorlopige gewenste marges per categorie (28-11-2026); in de calculator altijd handmatig aan te passen.
+MARGIN_PRESETS = {"gadgets": ("Gadgets", 35), "beauty-care": ("Beauty & Care", 40), "smart-home": ("Smart Home", 30),
+                  "lifestyle-sport": ("Lifestyle & Sport", 35), "home-living": ("Home & Living", 35),
+                  "pc-components": ("PC-componenten", 20)}
+MARGIN_CHOICES = tuple(range(5, 65, 5))
 
 
 def _round_half_up(value):
@@ -144,7 +149,9 @@ def _figures(selling, purchase, used, factor, customer=0):
             "costs": int(_round_half_up(costs)), "gross": int(_round_half_up(revenue - purchase)),
             "profit": int(_round_half_up(profit)),
             "gross_pct": 100 * (revenue - purchase) / revenue if revenue else 0,
-            "margin": 100 * profit / revenue if revenue else 0}
+            "margin": 100 * profit / revenue if revenue else 0,
+            # Prijsopslag (markup) = winst / totale kosten; winstmarge = winst / omzet excl. btw.
+            "markup": 100 * profit / costs if costs else 0}
 
 
 def unified_margin(data):

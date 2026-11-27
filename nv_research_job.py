@@ -164,7 +164,35 @@ def catalog_search(values, queries, category, deadline):
             found["suppliers"].append({key: company.get(key) for key in (
                 "name", "origin", "own_website", "website", "role", "kind", "dropshipping", "shipping_nl",
                 "warehouse_label", "product_count", "business")})
+    cj_products(found, queries)
     return found
+
+
+def cj_products(found, queries):
+    """CJdropshipping meenemen, alleen als de koppeling verbonden én geactiveerd is (nv_supplier_integrations).
+    Eén zoekopdracht (QPS 1); alleen-lezen. Uit = niets opgevraagd en eerlijk vermeld in de bronstatus."""
+    import nv_supplier_integrations as links
+    try:
+        if not links.active("cj"):
+            found["sources"]["CJdropshipping API"] = {"status": "niet doorzocht: " + links.status("cj").lower(),
+                                                      "count": 0}
+            return
+        query = queries[-1] if queries else ""
+        rows = links.CJ.search(query, size=20)
+    except links.IntegrationError as exc:
+        found["sources"]["CJdropshipping API"] = {"status": "niet bruikbaar: " + str(exc)[:80], "count": 0}
+        return
+    except Exception:  # noqa: BLE001 - een leverancier mag het onderzoek nooit stoppen
+        found["sources"]["CJdropshipping API"] = {"status": "niet bruikbaar: onverwachte fout", "count": 0}
+        return
+    for p in rows:
+        found["products"].append({
+            "title": web.clean(p["name"], 160), "url": "", "image": p["image"], "supplier": "CJdropshipping",
+            "source": "CJdropshipping API", "own_website": "https://cjdropshipping.com/", "warehouse": "",
+            "price": {"amount": p["price_usd"], "currency": "USD"} if p["price_usd"] else None, "dropship": True,
+            "shipping_nl": "", "lead_time": (p["delivery_cycle"] + " dagen verwerking") if p["delivery_cycle"] else "",
+            "query": query, "sku": p["sku"]})
+    found["sources"]["CJdropshipping API"] = {"status": "doorzocht", "count": len(rows)}
 
 
 def _discover_countries():

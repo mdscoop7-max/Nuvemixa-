@@ -35,6 +35,8 @@
       fee: roundHalfUp(fee), costs: roundHalfUp(costs), gross: roundHalfUp(revenue - purchase),
       profit: roundHalfUp(profit), gross_pct: revenue ? 100 * (revenue - purchase) / revenue : 0,
       margin: revenue ? 100 * profit / revenue : 0,
+      // Prijsopslag (markup) = winst / totale kosten; winstmarge = winst / omzet excl. btw. Niet hetzelfde.
+      markup: costs ? 100 * profit / costs : 0,
     };
   }
 

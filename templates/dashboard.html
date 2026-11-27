@@ -728,6 +728,7 @@
 </section>
 {% include "_dashboard_web_discovery.html" %}
 {% set pv = platforms_view('nv-pcs-lev', 'Leveranciers- en dropshippingplatforms', 'Volgt de zoekterm en categorie van de live zoekopdracht hierboven (of de algemene pagina als je niets invult).', ['suppliers', 'markets', 'tools'], cat_source='#nv-wd-form [name=category]', term_source='#nv-wd-form [name=term]', country_source='#nv-wd-form [name=country]', open_first=False) %}{% include "_platform_cards.html" %}
+{% include "_dashboard_supplier_links.html" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
 <form method="post" action="{{ url_for('admin_supplier_feed_preview') }}" enctype="multipart/form-data" class="nv-admin-feed-form">

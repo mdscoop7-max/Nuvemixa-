@@ -113,7 +113,7 @@ def test_both_pages_show_the_same_result(administrator):
     assert _table(onderzoek, "nv-margin-live") == _table(calculator, "nv-calc-live")
     assert "€ 42,56" in _table(calculator, "nv-calc-live")
     for html in (onderzoek, calculator):
-        assert 'name="std_fee_fixed"' in html and 'value="0.35"' in html and 'name="target_margin" value="40"' in html
+        assert 'name="std_fee_fixed"' in html and 'value="0.35"' in html and 'name="target_margin" data-margin-target' in html and '<option value="40" >40%</option>' in html  # dropdown sinds 28-11
         assert "A · Voorlopige adviesprijs" in html
 
 

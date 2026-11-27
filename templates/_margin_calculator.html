@@ -17,11 +17,23 @@
   <label>Inkoopprijs excl. btw (€) <input name="purchase_cost" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" required
     value="{{ args.get('purchase_cost', '') if filled else (margin_fx.eur if margin_fx and margin_fx.eur is defined else '') }}"></label>
   {% if margin_fx %}<p class="nv-mfx" role="note"><small>{% if margin_fx.error %}{{ margin_fx.error }}{% else %}Omgerekend: {{ margin_fx.text }}. Controleer of de leveranciersprijs exclusief btw is; bankkosten en koersverschillen zitten hier niet in.{% endif %}</small></p>{% endif %}
-  <fieldset class="nv-pperiod nv-marginbar">
-    <legend>Gewenste winstmarge</legend>
-    {% set chosen = args.get('target_margin', '25') %}
-    {% for p in ['15', '20', '25', '30', '35', '40'] %}<label><input type="radio" name="target_margin" value="{{ p }}" {% if chosen == p %}checked{% endif %}><span>{{ p }}%</span></label>{% endfor %}
-  </fieldset>
+  {% set presets = margin_presets %}
+  {% set cat = args.get('margin_category', '') if args.get('margin_category', '') in presets else '' %}
+  {% set chosen = args.get('target_margin') or (presets[cat][1]|string if cat else '25') %}
+  <div class="nv-marginbar nv-mtarget">
+    <label>Productcategorie
+      <select name="margin_category" data-margin-category>
+        <option value="" {{ 'selected' if not cat }}>Geen categorie (zelf kiezen)</option>
+        {% for key, preset in presets.items() %}<option value="{{ key }}" data-margin="{{ preset[1] }}" {{ 'selected' if cat == key }}>{{ preset[0] }} ({{ preset[1] }}%)</option>{% endfor %}
+      </select>
+    </label>
+    <label>Gewenste winstmarge
+      <select name="target_margin" data-margin-target>
+        {% for p in margin_choices %}<option value="{{ p }}" {{ 'selected' if chosen == p|string }}>{{ p }}%</option>{% endfor %}
+      </select>
+    </label>
+    <p class="nv-mtarget__note"><small>Voorlopige marges per categorie; altijd handmatig aan te passen. Winstmarge = winst ÷ omzet excl. btw. Prijsopslag = winst ÷ totale kosten (dat is een ander, hoger percentage). Verkoopprijs excl. btw = totale kosten ÷ (1 − marge).</small></p>
+  </div>
   <div class="nv-mship">
     <label>Verzendkosten voor jou (verkoper)
       <select name="shipping_choice" data-margin-shipping>
@@ -78,7 +90,7 @@
   <div class="nv-msum__key"><span>Adviesverkoopprijs incl. btw</span><strong>{{ eur(r.advice.selling) }}</strong>{% if r.advice.customer %}<small>+ {{ eur(r.advice.customer) }} verzending klant = {{ eur(r.advice.total) }}</small>{% else %}<small>excl. btw {{ eur(r.advice.revenue) }}</small>{% endif %}</div>
   <div><span>Btw-bedrag</span><strong>{{ eur(r.advice.vat) }}</strong></div>
   <div><span>Geschatte winst</span><strong>{{ eur(r.advice.profit) }}</strong></div>
-  <div><span>Winstmarge</span><strong>{{ pct(r.advice.margin) }}</strong></div>
+  <div><span>Winstmarge</span><strong>{{ pct(r.advice.margin) }}</strong><small>prijsopslag {{ pct(r.advice.markup) }}</small></div>
 </div>
 <p class="nv-msum__costs"><small>Gebruikt: verzending {{ eur(r.used.shipping) }} ({{ r.sources.shipping }}) · advertenties {{ eur(r.used.advertising) }} ({{ r.sources.advertising }}) · retouren {{ eur(r.used.returns) }} ({{ r.sources.returns }}) · betaalprovider {{ eur(r.used.fee_fixed) }} + {{ ('%g' % r.used.fee_pct).replace('.', ',') }}%</small></p>
 {% if r.own %}<p class="nv-msum__own"><strong>Jouw prijs {{ eur(r.own.selling) }}:</strong> winst {{ eur(r.own.profit) }} · {{ pct(r.own.margin) }} — {{ 'haalt het doel' if r.own.reaches else eur(r.own.short) ~ ' te laag voor ' ~ (r.target|int) ~ '%' }}</p>{% endif %}
@@ -102,7 +114,9 @@
   <tr><th>Totale kosten incl. inkoop</th><td>{{ eur(r.advice.costs) }}</td></tr>
   <tr><th>Brutowinst (na inkoop)</th><td>{{ eur(r.advice.gross) }} · {{ pct(r.advice.gross_pct) }}</td></tr>
   <tr class="nv-mkey"><th>Geschatte nettowinst</th><td>{{ eur(r.advice.profit) }} · {{ pct(r.advice.margin) }}</td></tr>
+  <tr><th>Prijsopslag op totale kosten</th><td>{{ pct(r.advice.markup) }}</td></tr>
 </tbody></table>
+<p class="nv-margin-missing"><small>Geschatte winst op basis van de ingevulde en aangenomen kosten: geen gegarandeerde winst.</small></p>
 {% if r.own %}
 <p class="nv-margin-title"><strong>Jouw verkoopprijs {{ eur(r.own.selling) }}</strong></p>
 <table class="admin-table"><tbody>

@@ -19,6 +19,7 @@ _TRUE = {"1", "true", "yes", "on"}
 # Routes (Flask-endpointnamen) die in de dashboarddatabase schrijven.
 WRITE_ENDPOINTS = frozenset({
     "nv_manage.history_change",
+    "nv_manage.integration_action",   # koppelingsstatus (research_cache); verstuurt niets naar de leverancier
     "admin_add_research_note",
     "admin_add_supplier",
     "admin_create_customer",
@@ -61,6 +62,7 @@ ALLOWED_ENDPOINTS = frozenset({
     "customer_logout",
     "nuvemixa_woo.commerce_refresh",      # alleen-lezen WooCommerce, schrijft niets in de database
     "nuvemixa_woo.commerce_test",         # idem: één alleen-lezen aanroep
+    "nv_manage.cj_query",                 # alleen-lezen CJ-API (zoeken, voorraad, verzending, tracking)
     "nv_manage.publicatie_goedkeuren",   # schrijft alleen in de sessie, niet in de database
     "nv_manage.publicatie_publiceren",   # verzendt nooit zonder schrijfkoppeling
     "trendmix_assistant",

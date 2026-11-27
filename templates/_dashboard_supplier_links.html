@@ -1,0 +1,68 @@
+{% if supplier_links %}{% set sl = supplier_links %}
+<section class="panel nv-sl" id="nv-koppelingen" aria-labelledby="nv-sl-title"
+         data-csrf="{{ csrf_token() }}" data-concept="{{ url_for('nv_manage.concept_new') }}"
+         data-cj="{{ url_for('nv_manage.cj_query', what='zoeken')[:-6] }}" data-can-save="{{ '1' if sl.can_manage else '' }}">
+  <h2 id="nv-sl-title">Leverancierskoppelingen</h2>
+  <p class="nv-sl__lead">Koppelingen staan standaard <strong>uit</strong>. Een API-sleutel staat alleen als omgevingsvariabele op Render, nooit in het dashboard of de database. Activeren kan pas na een geslaagde verbindingstest. Er worden <strong>geen bestellingen, betalingen of retouraanmeldingen</strong> verstuurd en producten komen alleen als <strong>concept</strong> binnen: Productonderzoek → Leverancier vergelijken → Kandidatenlijst → Conceptproduct → Controle → Publicatie.</p>
+  {% for category, message in get_flashed_messages(with_categories=true) %}<p class="notice" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</p>{% endfor %}
+  <div class="nv-sl__grid">
+  {% for s in sl.suppliers %}
+    <article class="nv-sl__card" id="nv-sl-{{ s.slug }}">
+      <header class="nv-sl__head">
+        <span class="nv-sl__logo" aria-hidden="true"><span>{{ s.name[:1] }}</span>{% if s.logo %}<img src="{{ s.logo }}" alt="" width="40" height="40" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">{% endif %}</span>
+        <div>
+          <h3>{{ s.name }}</h3>
+          <p class="nv-sl__tags"><span class="nv-sl__pill nv-sl__pill--{{ s.status|lower|replace(' ', '-') }}">{{ s.status }}</span>
+            {% if s.kind == 'directory' %}<span class="nv-sl__pill">Leveranciersgids, geen leverancier</span>{% else %}<span class="nv-sl__pill">Dropshippingleverancier</span>{% endif %}</p>
+          <p class="nv-sl__meta">Laatste broncontrole {{ sl.checked }}{% if s.test %} · verbindingstest {{ s.test.at }}: {{ s.test.message }}{% endif %}</p>
+        </div>
+      </header>
+      <details class="nv-sl__facts" open><summary>Leveranciersgegevens</summary>
+        <dl>{% for label, f in s.facts %}<dt>{{ label }}</dt><dd class="{{ '' if f.confirmed else 'nv-sl__nb' }}">{{ f.value }}{% if f.url %} <a href="{{ f.url }}" target="_blank" rel="noopener noreferrer nofollow">bron ↗</a>{% endif %}</dd>{% endfor %}</dl>
+      </details>
+      <details class="nv-sl__caps"><summary>Automatische koppelingen ({{ s.capabilities|selectattr(2, 'equalto', 'gebouwd')|list|length }} gebouwd)</summary>
+        <ul class="nv-sl__caplist">
+        {% for label, state_label, state, how in s.capabilities %}<li><b>{{ label }}</b> <span class="nv-sl__cap nv-sl__cap--{{ state }}">{{ state_label }}</span><small>{{ how }}</small></li>{% endfor %}
+        </ul>
+      </details>
+      <details class="nv-sl__setup"><summary>Verbinding instellen</summary>
+        <p>{{ s.setup }}</p>
+        {% if s.env %}<p>Omgevingsvariabele: <code>{{ s.env }}</code> (alleen op Render instellen; nooit in een formulier of bericht).</p>{% endif %}
+        <p><a href="{{ s.docs }}" target="_blank" rel="noopener noreferrer nofollow">Officiële documentatie ↗</a></p>
+      </details>
+      <div class="nv-sl__actions">
+        {% if sl.can_manage %}
+        {% for action, label, enabled in [('test', 'Verbinding testen', s.env and s.status != 'API-sleutel vereist'),
+                                         ('activeren', 'Activeren', s.status == 'Uitgeschakeld'),
+                                         ('deactiveren', 'Deactiveren', s.status == 'Verbonden')] %}
+        <form method="post" action="{{ url_for('nv_manage.integration_action', slug=s.slug, action=action) }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" {{ '' if enabled else 'disabled' }} title="{{ '' if enabled else 'Niet mogelijk bij status: ' ~ s.status }}">{{ label }}</button>
+        </form>
+        {% endfor %}
+        {% endif %}
+        <a href="{{ url_for('control', section='onderzoek', research_mode='suppliers') }}">Producten vergelijken</a>
+        <a href="{{ s.website }}" target="_blank" rel="noopener noreferrer nofollow">Website bezoeken ↗</a>
+        <a href="{{ s.terms }}" target="_blank" rel="noopener noreferrer nofollow">Voorwaarden bekijken ↗</a>
+      </div>
+      {% if s.slug == 'cj' %}
+      <form class="nv-sl__search" data-cj-search {{ '' if s.status == 'Verbonden' else 'data-inactive' }}>
+        <label>Producten zoeken bij CJ <input type="search" name="q" maxlength="100" placeholder="Bijvoorbeeld powerbank" data-history="leveranciers:cj"></label>
+        <label>Webshopcategorie <select name="category"><option value="">Kies (voor de marge)</option>{% for key, preset in sl.presets.items() %}<option value="{{ key }}">{{ preset[0] }} ({{ preset[1] }}%)</option>{% endfor %}</select></label>
+        <label>Voorraad in land <select name="country"><option value="">Alle magazijnen</option>{% for c in ['NL','DE','FR','ES','IT','PL','GB','US','CN'] %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></label>
+        <button type="submit" {{ '' if s.status == 'Verbonden' else 'disabled' }}>Zoeken bij CJ</button>
+        {% if s.status != 'Verbonden' %}<p class="nv-sl__nb">Zoeken kan zodra de koppeling verbonden en geactiveerd is (status nu: {{ s.status }}). Er wordt niets opgevraagd.</p>{% endif %}
+      </form>
+      <div class="nv-sl__results" data-cj-results aria-live="polite"></div>
+      {% endif %}
+    </article>
+  {% endfor %}
+  </div>
+  <details class="nv-sl__returns"><summary>Retouren en Track &amp; Trace</summary>
+    <p>Voorbereid voor het toekomstige centrale retoursysteem: bij CJdropshipping kunnen retouraanmeldingen en de status ervan via de officiële geschillen-API (Dispute) lopen; trackinggegevens zijn nu al op te vragen via de koppeling. Het doorsturen van een retour is bewust nog niet aan een knop gekoppeld.</p>
+    <p><strong>NUVEMIXA blijft verantwoordelijk</strong> voor de communicatie met de klant en de wettelijke terugbetaling (14 dagen bedenktijd). Retourvoorwaarden van een leverancier beperken de wettelijke rechten van de consument nooit.</p>
+  </details>
+</section>
+<link rel="stylesheet" href="{{ url_for('static', filename='nv-supplier-links.css') }}?v={{ nv_static_version('nv-supplier-links.css') }}">
+<script src="{{ url_for('static', filename='nv-supplier-links.js') }}?v={{ nv_static_version('nv-supplier-links.js') }}" defer></script>
+{% endif %}

@@ -57,7 +57,17 @@
       const n = Number(String(input.value).replace(',', '.'));
       return percent ? n : Math.round(n * 100);
     };
-    const target = () => { const r = form.querySelector('input[name="target_margin"]:checked'); return r ? Number(r.value) : 25; };
+    const target = () => {
+      const r = form.querySelector('input[name="target_margin"]:checked, select[name="target_margin"]');
+      return r ? Number(r.value) : 25;
+    };
+    // Categorie kiezen = voorgestelde marge invullen; de marge blijft daarna handmatig aan te passen.
+    const category = form.querySelector('[data-margin-category]');
+    const targetSelect = form.querySelector('[data-margin-target]');
+    if (category && targetSelect) category.addEventListener('change', () => {
+      const option = category.selectedOptions[0];
+      if (option && option.dataset.margin) targetSelect.value = option.dataset.margin;
+    });
     const shippingSelect = form.querySelector('[data-margin-shipping]');
     const ownShipping = form.querySelector('[data-margin-own-shipping]');
     const syncShipping = () => {
@@ -102,7 +112,8 @@
       tiles.append(
         tile('Adviesverkoopprijs incl. btw', eur(a.selling),
           a.customer ? '+ ' + eur(a.customer) + ' verzending klant = ' + eur(a.total) : 'excl. btw ' + eur(a.revenue), true),
-        tile('Btw-bedrag', eur(a.vat)), tile('Geschatte winst', eur(a.profit)), tile('Winstmarge', pct(a.margin)));
+        tile('Btw-bedrag', eur(a.vat)), tile('Geschatte winst', eur(a.profit)),
+        tile('Winstmarge', pct(a.margin), 'prijsopslag ' + pct(a.markup)));
       const used = el('p', 'nv-msum__costs');
       used.append(el('small', '', 'Gebruikt: verzending ' + eur(r.used.shipping) + ' (' + r.sources.shipping + ') · advertenties ' +
         eur(r.used.advertising) + ' (' + r.sources.advertising + ') · retouren ' + eur(r.used.returns) + ' (' + r.sources.returns +
@@ -130,7 +141,8 @@
       rows.push(['Betaalproviderkosten (' + eur(r.used.fee_fixed) + ' + ' + num(r.used.fee_pct) + '%)', eur(a.fee)]);
       for (const key of ['platform', 'other']) rows.push([LABELS[key], eur(r.used[key]), r.sources[key]]);
       rows.push(['Totale kosten incl. inkoop', eur(a.costs)], ['Brutowinst (na inkoop)', eur(a.gross) + ' · ' + pct(a.gross_pct)],
-        ['Geschatte nettowinst', eur(a.profit) + ' · ' + pct(a.margin), null, true]);
+        ['Geschatte nettowinst', eur(a.profit) + ' · ' + pct(a.margin), null, true],
+        ['Prijsopslag op totale kosten', pct(a.markup)]);
       const tableParts = [table(rows)];
       if (r.own) {
         const o = r.own;
