@@ -11,6 +11,18 @@
   var canSave = box.dataset.canSave === "1";
   var POLL_MS = 2500, MAX_WAIT_MS = 180000, running = false;
   form.parentNode.insertBefore(box, form.nextSibling);
+  // 'Onderzoek dit product' vanuit Onderzoeksplatforms & trends: naam en categorie overnemen en direct onderzoeken.
+  var start = new URLSearchParams(location.search);
+  if (start.get("autorun") === "1" && start.get("research_term")) {
+    setTimeout(function () {
+      form.elements.research_term.value = start.get("research_term").slice(0, 100);
+      var cat = start.get("research_category");
+      if (cat && form.elements.research_category && [].some.call(form.elements.research_category.options, function (o) { return o.value === cat; })) {
+        form.elements.research_category.value = cat;
+      }
+      if (typeof form.requestSubmit === "function") form.requestSubmit(); else form.dispatchEvent(new Event("submit", {cancelable: true}));
+    }, 300);
+  }
 
   function el(tag, text, cls) { var e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
   function link(href, text) {

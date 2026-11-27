@@ -1261,6 +1261,8 @@ from nv_supplier_finder import directories as supplier_directories
 import nv_supplier_ai
 import nv_web_discovery_view
 import nv_research_job  # noqa: F401  (routes: gecombineerd onderzoeksproces)
+import nv_trends  # noqa: F401  (routes: Onderzoeksplatforms & trends)
+import nv_search_history  # noqa: F401  (routes: zoekgeschiedenis per gebruiker)
 from nv_viral_research import viral_dashboard
 from nv_market_search import search_view as market_search_view
 
@@ -2229,6 +2231,7 @@ def control():
         "partners": "Partners zoeken",
         "concepten": "Kandidaten en concepten",
         "viral": "Viral Product Finder",
+        "trends": "Onderzoeksplatforms & trends",
 
         "dashboard": "Dashboard", "woocommerce": "WooCommerce & Leveranciers", "producten": "Producten", "extra-producten": "Extra producten", "categorieen": "Categorieën",
 
@@ -2267,6 +2270,7 @@ def control():
         "partners": "Zoek dropshipping-, reseller- en affiliatepartners. Niets wordt automatisch aangevraagd.",
         "concepten": "Bewaar gevonden producten, beoordeel ze en bereid conceptproducten voor. Er wordt niets gepubliceerd.",
         "viral": "Leg trendsignalen vast en beoordeel commerciële kansen per land.",
+        "trends": "Zonder artikelnaam: AI ontdekt welke producten in een categorie en periode aandacht krijgen, met bron en datum.",
 
         "producten": "Zoek en bekijk producten, prijzen en voorraad in de testcatalogus.",
 
@@ -2613,6 +2617,7 @@ def control():
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
         web_discovery=nv_web_discovery_view.view_context(section),
         research_job={'can_save': bool(is_admin)} if section == 'onderzoek' else None,
+        trends_view={**nv_trends.view_context(), 'can_save': bool(is_admin)} if section == 'trends' else None,
         margin_fx=margin_fx_context(request.args) if section in ('onderzoek', 'calculator') else None,
         ai_status=__import__('nv_ai_search').safe_status(),
         nv_supplier_rows=nv_product_rows.suppliers,
