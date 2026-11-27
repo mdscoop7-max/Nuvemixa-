@@ -236,3 +236,21 @@ def test_platform_register_has_eprolo_and_salehoo():
     by = {p["key"]: p for p in nv_platforms.all_platforms()}
     assert by["eprolo"]["cost"] == "free" and by["salehoo"]["cost"] == "paid"
     assert not by["eprolo"]["auto"] and not by["salehoo"]["auto"]
+
+
+def test_research_without_ai_is_cached_at_most_one_hour():
+    import nv_research_job as job
+    values = {"term": "powerbank", "category": "gadgets", "mode": "products", "country": "NL", "filter": "all"}
+    full = {"payload": {"result": {"ai": {"used": True, "message": ""}}}}
+    missing = {"payload": {"result": {"ai": {"used": False, "message": "AI niet beschikbaar: Daglimiet bereikt"}}}}
+    assert job.fresh_seconds(values, full) > 3600 and job.fresh_seconds(values, missing) == 3600
+    assert job.fresh_seconds(values) == job.fresh_seconds(values, full)
+    web_only = {"payload": {"result": {"ai": {"message": ""}, "sources": [
+        {"name": "AI-webonderzoek", "status": "AI niet beschikbaar: Daglimiet voor AI-aanroepen bereikt"}]}}}
+    assert job.fresh_seconds(values, web_only) == 3600
+
+
+def test_eprolo_eu_warehouses_are_3pl_for_own_stock():
+    fact = links.SUPPLIERS["eprolo"]["facts"]["eu_warehouses"]
+    assert "3PL" in fact["value"] and "NL" in fact["value"] and "eigen ingekochte voorraad" in fact["value"]
+    assert fact["url"] == "https://eprolo.com/warehousing-and-fulfillment/"
