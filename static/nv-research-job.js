@@ -68,7 +68,7 @@
     c.appendChild(el("span", s.verified ? "Gecontroleerd" : "Aanwijzing", "nv-rj-badge " + (s.verified ? "ok" : "hint")));
     s.sources.forEach(function (src) { c.appendChild(el("span", src, "nv-rj-badge")); });
     c.appendChild(el("h4", s.name));
-    c.appendChild(el("p", [s.role, s.country ? s.country : "land niet bevestigd", s.products ? s.products + " product(en) hierboven" : ""].filter(Boolean).join(" · "), "nv-rj-meta"));
+    c.appendChild(el("p", [s.role, s.country ? s.country + (s.country_note ? " (" + s.country_note + ")" : "") : "land niet bevestigd", s.products ? s.products + " product(en) hierboven" : ""].filter(Boolean).join(" · "), "nv-rj-meta"));
     if (s.status && !s.verified) c.appendChild(el("p", s.status, "nv-rj-meta"));
     if (s.evidence) c.appendChild(el("blockquote", (s.sources.indexOf("AI-webonderzoek") >= 0 ? "Op de pagina: “" + s.evidence + "”" : s.evidence)));
     var links = el("div", null, "nv-rj-actions");
@@ -158,7 +158,7 @@
       .then(function (d) {
         showSteps(d.steps);
         timer.textContent = Math.round((Date.now() - started) / 1000) + " s";
-        if (d.state === "done" && d.result) { finish(d.cached && d.age_s > 5 ? "Klaar (uit permanente cache, geen kosten)" : "Klaar"); render(d.result); return; }
+        if (d.state === "done" && d.result) { finish("Klaar"); render(d.result); return; }   // nieuw onderzoek, net afgerond
         if (d.state === "failed" || d.ok === false) { finish("Niet voltooid"); errorBox.textContent = d.error || d.message || "Onderzoek mislukt."; errorBox.hidden = false; return; }
         if (Date.now() - started > MAX_WAIT_MS) { finish("Duurt erg lang"); errorBox.textContent = "Het onderzoek loopt nog op de server. Vernieuw de pagina en zoek opnieuw; het resultaat komt dan uit de cache."; errorBox.hidden = false; return; }
         setTimeout(function () { poll(key, started); }, POLL_MS);
@@ -185,7 +185,11 @@
       .then(function (d) {
         if (!d.ok) { finish("Niet gestart"); errorBox.textContent = d.message || "Onderzoek kon niet starten."; errorBox.hidden = false; return; }
         showSteps(d.steps);
-        if (d.state === "done" && d.result) { finish("Klaar (uit permanente cache, geen kosten)"); render(d.result); return; }
+        if (d.state === "done" && d.result) {
+          var age = Math.round((d.age_s || 0) / 60);
+          finish("Klaar (uit de permanente cache van " + (age < 60 ? age + " min" : Math.round(age / 60) + " uur") + " geleden, geen kosten)");
+          render(d.result); return;
+        }
         poll(d.key, started);
       })
       .catch(function () { finish("Niet gestart"); errorBox.textContent = "Verbinding met het dashboard mislukt."; errorBox.hidden = false; });

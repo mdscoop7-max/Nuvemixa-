@@ -130,7 +130,8 @@ def test_suppliers_are_deduplicated_and_split_by_region():
               "country": "NL", "role": "Groothandel / distributeur", "verified": True, "signals": [], "facts": []},
              {"name": "Kuche GmbH", "domain": "kuche.de", "home": "https://kuche.de/", "url": "https://kuche.de/",
               "country": "DE", "role": "Fabrikant", "verified": False, "signals": [], "facts": []}]
-    rows = job.merge_suppliers(catalog, cards, [])
+    products = [{"offers": [{"supplier": "Lifebay"}, {"supplier": "Primebay"}]}]
+    rows = job.merge_suppliers(catalog, cards, products)
     lifebay = [row for row in rows if row["domain"] == "lifebay.com.au"]
     assert len(lifebay) == 1 and lifebay[0]["sources"] == ["Syncee", "AI-webonderzoek"]
     split = job.sections(rows)
@@ -138,6 +139,31 @@ def test_suppliers_are_deduplicated_and_split_by_region():
     assert [r["name"] for r in split["international"]] == ["Lifebay"] and [r["name"] for r in split["unknown"]] == ["Primebay"]
     eu_only, hidden = job.apply_filter(rows, "eu")
     assert {r["name"] for r in eu_only} == {"Keuken BV", "Kuche GmbH"} and hidden == 2
+
+
+def test_live_found_supplier_problems_are_fixed():
+    """Live 27-11 'Keukenorganizer': Lifebay dubbel, Ferm Living/Naturexplore zonder producten, Primebay zonder land."""
+    catalog = [
+        {"name": "Lifebay", "origin": "AU", "own_website": "https://www.lifebay.com.au", "website": "https://syncee.com/s/1"},
+        {"name": "Lifebay", "origin": "AU", "own_website": "", "website": "https://syncee.com/s/1",
+         "role": "Leverancier via marktplaats"},
+        {"name": "Primebay", "origin": "", "own_website": "https://primebay.com.au", "website": "https://syncee.com/s/2"},
+        {"name": "Ferm Living", "origin": "DK", "own_website": "", "website": "https://fermliving.com"},
+        {"name": "Naturexplore", "origin": "", "own_website": "https://naturexplore.com.au", "website": "https://syncee.com/s/3"},
+    ]
+    products = [{"offers": [{"supplier": "Lifebay"}, {"supplier": "Primebay"}]}]
+    rows = {row["name"]: row for row in job.merge_suppliers(catalog, [], products)}
+    assert sorted(rows) == ["Lifebay", "Primebay"]                       # geen dubbele Lifebay, geen lege leveranciers
+    assert rows["Lifebay"]["domain"] == "lifebay.com.au"
+    assert rows["Primebay"]["country"] == "AU" and rows["Primebay"]["region"] == "international"
+    assert rows["Primebay"]["country_note"] == "afgeleid uit domein primebay.com.au"
+
+
+def test_two_companies_with_same_name_but_different_websites_stay_apart():
+    catalog = [{"name": "Home Co", "origin": "NL", "own_website": "https://homeco.nl", "website": "x"},
+               {"name": "Home Co", "origin": "US", "own_website": "https://homeco.com", "website": "y"}]
+    rows = job.merge_suppliers(catalog, [], [{"offers": [{"supplier": "Home Co"}]}])
+    assert len(rows) == 2
 
 
 def test_only_the_five_webshop_categories_and_valid_input():
