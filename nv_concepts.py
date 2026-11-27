@@ -32,6 +32,10 @@ CHECKS = {
     "returns": "Retour- en zakelijke voorwaarden gecontroleerd",
     "rights": "Merk- en afbeeldingsrechten gecontroleerd",
     "margin": "Marge zelf berekend en goedgekeurd",
+    # Europese productveiligheid (GPSR, Verordening (EU) 2023/988) en CE: altijd vóór publicatie zelf vaststellen.
+    "gpsr": "GPSR: fabrikant of EU-verantwoordelijke, productidentificatie en veiligheidsinformatie bekend",
+    "ce": "CE-markering en conformiteitsverklaring gecontroleerd waar verplicht (o.a. elektronica, speelgoed)",
+    "docs": "Handleiding en waarschuwingen in het Nederlands aanwezig",
 }
 IMAGE = re.compile(r"\.(jpe?g|png|webp)$", re.I)
 

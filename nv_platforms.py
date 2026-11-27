@@ -189,6 +189,12 @@ PLATFORMS = [
     P("cj", "CJdropshipping", "suppliers", "cjdropshipping.com", "Dropshipping met magazijnen in China, EU en VS.",
       "Producten en verzendopties", "free", "yes", "https://cjdropshipping.com/",
       api="API voor geregistreerde gebruikers"),   # zoeklink vraagt menselijke verificatie: alleen homepage
+    P("eprolo", "EPROLO", "suppliers", "eprolo.com", "Gratis dropshippingplatform met sourcing en eigen merklabel.",
+      "Dropshipping, sourcing en branding", "free", "yes", "https://eprolo.com/",
+      api="API alleen op aanvraag via de accountbeheerder (documentatie niet openbaar)"),
+    P("salehoo", "SaleHoo", "suppliers", "salehoo.com", "Betaalde gids met gecontroleerde leveranciers; geen leverancier zelf.",
+      "Leveranciersdirectory", "paid", "yes", "https://www.salehoo.com/",
+      api="Geen openbare API; export via CSV, directe import alleen voor Shopify"),
     P("hertwill", "Hertwill", "suppliers", "hertwill.com", "Europese dropshipping-leverancier.",
       "EU-dropshipping", "limited", "yes", "https://www.hertwill.com/"),
     P("spocket", "Spocket", "suppliers", "spocket.co", "Dropshipping met EU- en VS-leveranciers.",

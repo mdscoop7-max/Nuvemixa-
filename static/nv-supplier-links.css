@@ -1,0 +1,37 @@
+/* Leverancierskoppelingen, in de bestaande dashboardstijl. */
+.nv-sl__lead{font-size:.9rem;color:#41536a}
+.nv-sl__grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
+.nv-sl__card{border:1px solid #d6e0ee;border-radius:12px;background:#fff;padding:14px;min-width:0;overflow-wrap:anywhere}
+.nv-sl__head{display:flex;gap:12px;align-items:flex-start}
+.nv-sl__head h3{margin:0 0 4px;font-size:1.05rem}
+.nv-sl__logo{position:relative;flex:none;width:48px;height:48px;border:1px solid #e3ebf5;border-radius:10px;display:grid;place-items:center;overflow:hidden;background:#eaf2fd;color:#0755c4;font-weight:800}
+.nv-sl__logo img{position:absolute;inset:7px;width:32px;height:32px;object-fit:contain;background:#fff}
+.nv-sl__tags{display:flex;flex-wrap:wrap;gap:4px;margin:0}
+.nv-sl__pill{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid #c9d6e6;background:#f2f5f9;color:#334a63}
+.nv-sl__pill--verbonden{border-color:#9fd3b0;background:#eaf7ee;color:#11652f}
+.nv-sl__pill--verbindingsfout{border-color:#efb3b3;background:#fdeeee;color:#a12a2a}
+.nv-sl__pill--api-sleutel-vereist,.nv-sl__pill--account-vereist{border-color:#f0d28a;background:#fff8e6;color:#8a5a00}
+.nv-sl .nv-sl__meta,.nv-sl .nv-sl__prod .nv-sl__meta{font-size:.78rem;line-height:1.35;color:#5b6d82;margin:4px 0}
+.nv-sl__card details{margin-top:8px;border-top:1px solid #edf2f8;padding-top:6px}
+.nv-sl__card summary{cursor:pointer;font-weight:700;color:#173a63;font-size:.9rem}
+.nv-sl__facts dl{display:grid;grid-template-columns:minmax(130px,38%) 1fr;gap:4px 10px;margin:6px 0 0;font-size:.82rem}
+.nv-sl__facts dt{font-weight:600;color:#253e5b;overflow-wrap:normal;word-break:normal;hyphens:auto}.nv-sl__facts dd{margin:0}
+.nv-sl__nb{font-style:italic;color:#6b7b8f}
+.nv-sl .nv-sl__caplist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
+.nv-sl .nv-sl__caplist li{font-size:.82rem;line-height:1.35;padding:6px 0;border-bottom:1px solid #edf2f8;overflow-wrap:normal}
+.nv-sl .nv-sl__caplist small{display:block;font-size:.74rem;color:#5b6d82;margin-top:2px;overflow-wrap:anywhere}
+.nv-sl__cap{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:999px;border:1px solid #c9d6e6;white-space:nowrap}
+.nv-sl__cap--gebouwd{border-color:#9fd3b0;background:#eaf7ee;color:#11652f}
+.nv-sl__cap--voorbereid{border-color:#b9cdf0;background:#eef4fd;color:#1c4f9c}
+.nv-sl__cap--onbekend,.nv-sl__cap--niet{color:#6b7b8f}
+.nv-sl__actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.nv-sl__actions form{margin:0}
+.nv-sl__actions button[disabled]{opacity:.5;cursor:not-allowed}
+.nv-sl__search{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end;margin-top:12px;padding-top:10px;border-top:1px solid #edf2f8}
+.nv-sl__search label{display:grid;gap:4px;font-size:.8rem;font-weight:600}
+.nv-sl__search .nv-sl__nb{grid-column:1/-1;margin:0;font-size:.78rem}
+.nv-sl__prod{display:flex;gap:10px;border:1px solid #e3ebf5;border-radius:10px;padding:8px;margin-top:8px}
+.nv-sl__prod img{width:72px;height:72px;object-fit:cover;border-radius:8px;flex:none}
+.nv-sl__prod h4{margin:0 0 2px;font-size:.88rem}
+.nv-sl__returns{margin-top:14px;font-size:.88rem}
+@media (max-width:520px){.nv-sl__facts dl{grid-template-columns:1fr}.nv-sl__facts dd{margin-bottom:4px}}

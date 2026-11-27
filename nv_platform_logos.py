@@ -3,6 +3,8 @@ declareert (of /favicon.ico), opgehaald en als afbeelding gecontroleerd op 27-11
 bewerkt. Ontbreekt een icoon of laadt het niet, dan toont de kaart een neutrale lettertegel. Opnieuw opbouwen: zie
 EINDRAPPORT (scriptbeschrijving)."""
 LOGOS = {
+    'eprolo': 'https://eprolo.com/wp-content/uploads/2020/11/cropped-EPROLO-logo-192x192.png',   # 28-11-2026
+    'salehoo': 'https://www.salehoo.com/img/favicon-196x196.png',   # 28-11-2026
     '1688': 'https://www.1688.com/favicon.ico',
     'alibaba': 'https://s.alicdn.com/favicon.ico',
     'aliexpress': 'https://aliexpress.com/favicon.ico',

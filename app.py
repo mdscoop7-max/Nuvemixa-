@@ -1263,6 +1263,7 @@ import nv_web_discovery_view
 import nv_research_job  # noqa: F401  (routes: gecombineerd onderzoeksproces)
 import nv_trends  # noqa: F401  (routes: Onderzoeksplatforms & trends)
 import nv_search_history  # noqa: F401  (routes: zoekgeschiedenis per gebruiker)
+import nv_supplier_integrations  # noqa: F401  (routes: leverancierskoppelingen CJ, EPROLO, SaleHoo)
 from nv_viral_research import viral_dashboard
 from nv_market_search import search_view as market_search_view
 
@@ -1319,6 +1320,9 @@ def nv_static_version(filename):
 app.jinja_env.globals["nv_static_version"] = nv_static_version
 import nv_platforms  # noqa: E402  centraal register van onderzoeksplatforms
 app.jinja_env.globals["platforms_view"] = nv_platforms.view
+import nv_product_margin as _nv_margin  # noqa: E402
+app.jinja_env.globals["margin_presets"] = _nv_margin.MARGIN_PRESETS
+app.jinja_env.globals["margin_choices"] = _nv_margin.MARGIN_CHOICES
 
 
 @app.context_processor
@@ -2387,6 +2391,7 @@ def control():
     }
 
     supplier_rows, supplier_error = (admin_local_records("suppliers") if section == "leveranciers" else (None, None))
+    supplier_links = nv_supplier_integrations.view() if section == "leveranciers" else None
 
     research_rows, research_error = (admin_local_records("research") if section == "onderzoek" else (None, None))
     product_margin = None
@@ -2615,6 +2620,7 @@ def control():
         merchant_preview_rows=merchant_preview_rows,
 
         supplier_rows=supplier_rows,
+        supplier_links=supplier_links,
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
         web_discovery=nv_web_discovery_view.view_context(section),
