@@ -332,3 +332,40 @@ def test_owner_can_save_a_live_result_to_the_permanent_candidate_list(administra
         "notes": "Live webonderzoek: Gecontroleerd"})
     assert reply.status_code == 303 and saved and saved[0][0] == "PowerHandel"
     assert saved[0][3].startswith("[Kandidaat · model A · eigen vondst")
+
+
+def test_country_logistics_and_commercial_facts_only_from_the_page():
+    text = ("Our warehouses in Germany and Poland ship within 24h. We ship from the Netherlands. "
+            "Shipping to Belgium, France and the UK. Earn 8% commission. Plans from €29/month. MOQ: 50 pcs")
+    found = wd.logistics_facts(text)
+    assert found["warehouse"]["countries"] == ["DE", "PL"]                 # 'Poland' bevat 'and': niet splitsen
+    assert found["ships_from"]["countries"] == ["NL"]
+    assert found["ships_to"]["countries"] == ["BE", "FR", "GB"]
+    assert "Germany and Poland" in found["warehouse"]["quote"]
+    money = wd.commercial_facts(text)
+    assert money["commission"]["value"] == "8%" and money["monthly_fee"]["value"] == "€29/month"
+    assert money["minimum"]["value"] == "MOQ: 50 pcs"
+    assert wd.logistics_facts("Wij leveren naar Nederland, België en Duitsland")["ships_to"]["countries"] == ["NL", "BE", "DE"]
+    assert wd.logistics_facts("Great products for your shop") == {} and wd.commercial_facts("no numbers") == {}
+
+
+def test_partner_model_follows_the_page_signals():
+    assert wd.partner_model({"dropshipping", "groothandel"}) == "A"
+    assert wd.partner_model({"partnerprogramma"}, {"partnerprogramma": "Join our affiliate program"}) == "C"
+    assert wd.partner_model({"partnerprogramma"}, {"partnerprogramma": "Become a reseller"}) == "B"
+    assert wd.partner_model({"groothandel"}) == "B" and wd.partner_model(set()) == ""
+
+
+def test_live_cards_show_logistics_and_register_match(ai, monkeypatch):
+    _, state = ai
+    PAGES["https://bigbuy.eu/dropshipping"] = ("<p>Dropshipping powerbank supplier. Our warehouse in Spain ships to the EU. "
+                                               "WooCommerce plugin.</p>")
+    state["reply"] = response([row("https://bigbuy.eu/dropshipping", "BigBuy")])
+    card = wd.search("powerbank", "dropship", "gadgets")["results"][0]
+    assert card["warehouse_countries"] == ["ES"] and card["ships_to"] == ["EU"] and card["model"] == "A"
+    labels = {fact["label"]: fact for fact in card["facts"]}
+    assert labels["Magazijnland"]["status"] == "feit" and "Spain" in labels["Magazijnland"]["quote"]
+    assert labels["Verzendland (verzendt vanuit)"]["status"] == "onbekend"     # niet op de pagina: niet ingevuld
+    annotated = view.with_register({"results": [dict(card)]})
+    assert annotated["results"][0]["register"]["name"] == "BigBuy" and annotated["register_matches"] == 1
+    assert annotated["results"][0]["model_label"] == "A · Directe dropshipping"

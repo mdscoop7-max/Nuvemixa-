@@ -103,9 +103,32 @@ def web_research():
                                 payload["kind"], payload["meta"]["candidates"], payload["unique_companies"],
                                 payload["verified_count"], payload["meta"]["elapsed_ms"],
                                 " (cache)" if payload.get("cached") else "")
-        return reply({"ok": True, **payload, "usage": usage()})
+        return reply({"ok": True, **with_register(payload), "usage": usage()})
     finally:
         _busy.release()
+
+
+MODEL_LABELS = {"A": "A · Directe dropshipping", "B": "B · Potentiële dropship-/resellerpartner",
+                "C": "C · Affiliatepartner"}
+
+
+def with_register(payload):
+    """Live gevonden bedrijven naast het bestaande partnerregister leggen: zelfde domein of naam = 'ook in register'.
+    Registergegevens blijven herkenbaar als registergegevens (handmatig onderzocht, met datum)."""
+    import nv_partners
+    by_domain, by_name = {}, {}
+    for partner in nv_partners.all_partners():
+        host = (partner.get("url") or "").split("/")[2] if "://" in (partner.get("url") or "") else ""
+        info = {"name": partner["name"], "models": [MODEL_LABELS.get(m, m) for m in partner["models"]],
+                "status": nv_partners.STATUS.get(partner["status"], partner["status"]), "checked": nv_partners.CHECKED}
+        if host:
+            by_domain.setdefault(engine.registrable(host), info)
+        by_name.setdefault(" ".join(partner["name"].casefold().split()), info)
+    for card in payload.get("results", []):
+        card["register"] = by_domain.get(card.get("domain")) or by_name.get(" ".join(card.get("name", "").casefold().split()))
+        card["model_label"] = MODEL_LABELS.get(card.get("model"), "")
+    payload["register_matches"] = sum(1 for card in payload.get("results", []) if card.get("register"))
+    return payload
 
 
 def view_context(section):

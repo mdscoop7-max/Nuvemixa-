@@ -346,3 +346,18 @@ def test_variants_of_one_supplier_are_one_offer_and_price_differences_stay_on_on
     nedis = next(o for o in rows[0]["offers"] if o["supplier"] == "Nedis")
     assert nedis["variants"] == 9 and nedis["price"]["amount"] == 12.99
     assert rows[0]["same_product_note"] == "Zelfde product bij meerdere aanbieders met verschillende prijzen."
+
+
+def test_supplier_rows_keep_establishment_warehouse_and_delivery_countries_apart():
+    cards = [{"name": "BigBuy", "domain": "bigbuy.eu", "home": "https://bigbuy.eu/", "url": "https://bigbuy.eu/d",
+              "country": "", "role": "Dropshippingleverancier", "verified": True, "signals": ["dropshipping"], "facts": [],
+              "warehouse_countries": ["ES"], "ships_from": ["ES"], "ships_to": ["EU", "GB"], "model": "A",
+              "commercial": {"monthly_fee": "€69/month"}}]
+    catalog = [{"name": "Lifebay", "origin": "AU", "own_website": "https://lifebay.com.au", "website": "https://syncee.com/s/1",
+                "warehouse_label": "Australia"}]
+    rows = {r["name"]: r for r in job.merge_suppliers(catalog, cards, [{"offers": [{"supplier": "Lifebay"}]}])}
+    big = rows["BigBuy"]
+    assert big["country"] == "" and big["warehouse"] == "Spanje" and big["ships_from"] == "Spanje"
+    assert big["ships_to"] == "EU, Verenigd Koninkrijk" and big["model"] == "A" and big["commercial"]["monthly_fee"] == "€69/month"
+    assert rows["Lifebay"]["country"] == "AU" and rows["Lifebay"]["warehouse"] == "Australia"
+    assert rows["Lifebay"]["warehouse_source"] == "productvermelding platform"

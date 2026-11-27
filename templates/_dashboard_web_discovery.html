@@ -3,7 +3,7 @@
 <h2 id="nv-wd-title">{{ wd.title }}</h2>
 <p>AI zoekt open op het web, in het Engels en in de taal van het gekozen land. Daarna opent NUVEMIXA <strong>zelf</strong> elke gevonden pagina: alleen wat daar letterlijk staat telt als bewijs. Eén resultaat per bedrijf. Er wordt niets opgeslagen, niets verstuurd en geen bedrijf benaderd.</p>
 {% if not wd.configured %}<div class="notice" role="alert">AI-configuratie ontbreekt (<code>OPENAI_API_KEY</code> op Render). Er wordt niets verzonden.</div>{% endif %}
-<form id="nv-wd-form" method="post" action="{{ url_for('nv_manage.web_research') }}" class="nv-admin-form" novalidate data-save-url="{{ url_for('nv_manage.save_candidate') if wd.can_save else '' }}">
+<form id="nv-wd-form" method="post" action="{{ url_for('nv_manage.web_research') }}" class="nv-admin-form" novalidate data-prefill="{{ request.args.get('q', '')[:100] if wd.section == 'partners' else '' }}" data-save-url="{{ url_for('nv_manage.save_candidate') if wd.can_save else '' }}">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <input type="hidden" name="exclude" id="nv-wd-exclude" value="">
 <label>Product, productgroep of niche <input name="term" data-history="{{ wd.section }}:webzoeken" required minlength="2" maxlength="100" placeholder="Bijvoorbeeld: yogamat, slimme stekker, NIVEA dagcrème"></label>
