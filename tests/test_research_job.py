@@ -112,6 +112,18 @@ def test_unrelated_and_other_use_products_are_removed_with_a_reason(monkeypatch)
     assert seen["task"] == "category_filter" and seen["payload"]["shop_category"] == "Home & Living"
 
 
+def test_exact_versus_related_products():
+    """Live 27-11: 'magnetische powerbank' toonde ook gewone powerbanks via het algemene woord 'power bank'."""
+    phrases = ["magnetische powerbank", "magnetic power bank"]
+    assert job.exact_match("UGREEN MagFlow Air Magnetic Power Bank (10000mAh, Qi2 15W)", phrases)
+    assert job.exact_match("FS5 - Magnetic Powerbank - 5.000 mAh", phrases)
+    assert not job.exact_match("UGREEN Nexode Power Bank 25000mAh 200W", phrases)
+    assert job.exact_match("Yoga Mat 6mm TPE", ["yogamat"]) and not job.exact_match("Yoga Block", ["yogamat"])
+    rows = job.group_products([{**offer("Magnetic Power Bank 5000", "A", 10), "exact": True},
+                               {**offer("Power Bank 20000", "B", 12), "exact": False}], lambda price: None)
+    assert {r["title"]: r["match"] for r in rows} == {"Magnetic Power Bank 5000": "exact", "Power Bank 20000": "related"}
+
+
 def test_ai_filter_that_rejects_almost_everything_is_ignored(monkeypatch):
     monkeypatch.setattr(nv_openai, "chat_json", lambda *a, **k: {"reject": [0, 1, 2, 3]})
     items = [offer(f"Kitchen Organizer {n}", "S", n) for n in range(4)]
@@ -283,3 +295,20 @@ def test_research_page_has_one_combined_search_and_only_five_categories(administ
     assert 'id="nv-wd-form"' not in text                     # geen tweede, losse zoekfunctie meer
     assert "Huisdieren" not in text
     assert 'data-start="/dashboard/onderzoek/start"' in text and 'data-can-save="1"' in text
+
+
+def test_save_buttons_can_tell_success_from_refusal(administrator, monkeypatch, tmp_path):
+    """De knoppen in het onderzoeksresultaat lezen het echte resultaat (niet alleen HTTP 200)."""
+    import nuvemixa_admin_store as admin_store
+    monkeypatch.setattr(admin_store, "ADMIN_DB", tmp_path / "admin.sqlite3")
+    monkeypatch.setattr(admin_store, "database_path", lambda: tmp_path / "admin.sqlite3")
+    good = {"_csrf_token": CSRF_TOKEN, "titel": "Mobile Kitchen Organizer Cart with Wheels",
+            "bron_url": "https://syncee.com/product/1/cart", "bron_naam": "Syncee", "leverancier": "Primebay",
+            "categorie": "home-living"}
+    saved = administrator.post("/dashboard/concepten/nieuw", data=good)
+    assert saved.status_code == 303 and "open=" in saved.headers["Location"]
+    refused = administrator.post("/dashboard/concepten/nieuw", data={**good, "titel": "x"})
+    assert refused.status_code == 303 and "open=" not in refused.headers["Location"]
+    import nv_concepts
+    concept = nv_concepts.list_concepts()[0]
+    assert concept["categorie"] == "Home & Living" and concept["inkoop"] is None   # geen prijs ingevuld of verzonnen

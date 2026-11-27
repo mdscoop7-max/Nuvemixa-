@@ -19,12 +19,20 @@
   }
   function money(p) { return p ? p.currency + " " + p.amount.toFixed(2).replace(".", ",") : "Prijs onbekend"; }
   function regionName(code) { return {nl: "Nederland", eu: "Europese Unie", international: "Internationaal (buiten de EU)", unknown: "Land niet bevestigd"}[code]; }
-  function post(url, fields, button, done) {
+  // Controleert het echte resultaat: de server stuurt ook bij een geweigerde invoer een gewone pagina terug.
+  // Concept: succes = doorverwijzing naar het nieuwe concept (open=...). Kandidaat: bevestigingstekst op de pagina.
+  function post(url, fields, button, done, kind) {
     var fd = new FormData(); fd.set("_csrf_token", box.dataset.csrf);
     Object.keys(fields).forEach(function (k) { fd.set(k, fields[k]); });
     button.disabled = true; button.textContent = "Bezig…";
     fetch(url, {method: "POST", body: fd, credentials: "same-origin"})
-      .then(function (r) { button.textContent = r.ok ? done : "Opslaan mislukt (HTTP " + r.status + ")"; })
+      .then(function (r) { return r.text().then(function (t) { return {r: r, t: t}; }); })
+      .then(function (x) {
+        var ok = x.r.ok && (kind === "concept" ? /[?&]open=\d+/.test(x.r.url) : !/staat al in de leverancierslijst|Opslaan is nu niet gelukt/i.test(x.t));
+        var dup = /staat al in de leverancierslijst/i.test(x.t);
+        button.textContent = ok ? done : dup ? "Stond al op de kandidatenlijst" : "Niet opgeslagen: controleer de gegevens";
+        if (!ok && !dup) button.disabled = false;
+      })
       .catch(function () { button.textContent = "Opslaan mislukt"; button.disabled = false; });
   }
 
@@ -55,7 +63,7 @@
       var b = el("button", "Bewaar als concept"); b.type = "button";
       b.addEventListener("click", function () {
         post(box.dataset.concept, {titel: p.title.slice(0, 120), bron_url: first.url || "", bron_naam: (first.source || "").slice(0, 80),
-          leverancier: (first.supplier || "").slice(0, 120), categorie: category || ""}, b, "Bewaard als conceptproduct");
+          leverancier: (first.supplier || "").slice(0, 120), categorie: category || ""}, b, "Bewaard als conceptproduct", "concept");
       });
       actions.appendChild(b);
     }
@@ -77,7 +85,7 @@
       var b = el("button", "Bewaar als kandidaat"); b.type = "button";
       b.addEventListener("click", function () {
         post(box.dataset.candidate, {name: s.name.slice(0, 120), url: s.page || s.website || "", model: s.dropship ? "A" : "B",
-          notes: "Onderzoek " + new Date().toISOString().slice(0, 10) + ": " + (s.verified ? "gecontroleerd" : "aanwijzing") + " · " + s.sources.join(", ") + " · " + (s.role || "")}, b, "Bewaard op kandidatenlijst");
+          notes: "Onderzoek " + new Date().toISOString().slice(0, 10) + ": " + (s.verified ? "gecontroleerd" : "aanwijzing") + " · " + s.sources.join(", ") + " · " + (s.role || "")}, b, "Bewaard op kandidatenlijst", "candidate");
       });
       links.appendChild(b);
     }
@@ -97,7 +105,7 @@
     body.textContent = "";
     title.textContent = "Onderzoek: “" + r.term + "”";
     var ai = r.ai;
-    var summary = el("p", r.counts.products + " product(en) (" + r.counts.offers + " vermeldingen) · " + r.counts.suppliers +
+    var summary = el("p", (r.counts.exact_products != null ? r.counts.exact_products + " passend, " : "") + r.counts.products + " product(en) totaal (" + r.counts.offers + " vermeldingen) · " + r.counts.suppliers +
       " unieke leverancier(s), waarvan " + r.counts.verified_suppliers + " gecontroleerd · categorie " + r.category_label +
       " (" + r.category_source + ") · " + r.filter_label + " · " + r.elapsed_s + " s");
     summary.className = "nv-rj-meta"; body.appendChild(summary);
@@ -108,12 +116,21 @@
     body.appendChild(el("p", aiText, "nv-rj-meta"));
     if (r.fallback) body.appendChild(el("p", r.fallback, "nv-rj-meta"));
 
-    body.appendChild(el("h3", "Producten (" + r.products.length + ")"));
-    if (r.products.length) {
+    var exact = r.products.filter(function (p) { return p.match !== "related"; });
+    var related = r.products.filter(function (p) { return p.match === "related"; });
+    body.appendChild(el("h3", "Passende producten (" + exact.length + ")"));
+    if (exact.length) {
       var g = el("div", null, "nv-rj-grid");
-      r.products.forEach(function (p) { g.appendChild(productCard(p, r.category)); });
+      exact.forEach(function (p) { g.appendChild(productCard(p, r.category)); });
       body.appendChild(g);
-    } else body.appendChild(el("p", "Geen passend product gevonden in de catalogi en Syncee. Zie de leveranciers hieronder; die zijn op het open web gezocht.", "nv-rj-meta"));
+    } else body.appendChild(el("p", "Geen product waarvan de naam de volledige zoekterm bevat. " + (related.length ? "Bekijk de verwante producten hieronder of " : "") + "zie de leveranciers hieronder; die zijn op het open web gezocht.", "nv-rj-meta"));
+    if (related.length) {
+      var rel = el("details");
+      rel.appendChild(el("summary", "Verwante producten (" + related.length + "): passen alleen op een algemener zoekwoord"));
+      var rg = el("div", null, "nv-rj-grid");
+      related.forEach(function (p) { rg.appendChild(productCard(p, r.category)); });
+      rel.appendChild(rg); body.appendChild(rel);
+    }
 
     [["nl", "Leveranciers in Nederland"], ["eu", "Leveranciers in de EU"], ["unknown", "Leveranciers, land niet bevestigd"], ["international", "Internationale leveranciers (buiten de EU)"]].forEach(function (sec) {
       var list = r.suppliers[sec[0]] || [];
