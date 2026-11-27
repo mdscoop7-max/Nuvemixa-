@@ -181,6 +181,8 @@
 {% elif section == "internationaal" %}
 {% include "_dashboard_web_discovery.html" %}
 {% include "_dashboard_international.html" %}
+{% elif section == "trends" %}
+{% include "_dashboard_trends.html" %}
 {% elif section == "onderzoek" %}
 {% include "_dashboard_web_discovery.html" %}
 {% include "_dashboard_research_job.html" %}
@@ -242,49 +244,9 @@
     <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
 
-  <form action="{{ url_for('control') }}" method="get" class="nv-admin-form nv-rblock nv-rblock--platforms" data-research-search data-search-phases="Zoekopdracht analyseren...|Geselecteerde bronnen doorzoeken...|Publicaties en trends controleren...|AI analyseert resultaten...|Zoekresultaten voorbereiden..." aria-labelledby="nv-rb2">
-    <h3 id="nv-rb2" class="nv-rblock__title"><span>2</span> Onderzoeksplatforms</h3>
-    <input type="hidden" name="section" value="onderzoek">
-    <input type="hidden" name="research_run" value="1">
-    <input type="hidden" name="research_block" value="platforms">
-    <input type="hidden" name="research_mode" value="trends">
-    <input type="hidden" name="research_country" value="{{ ro.country }}">
-    <input type="hidden" name="research_supplier_filter" value="all">
-    <input type="hidden" name="research_ai" value="{{ '1' if ro.ai_enabled else '0' }}">
-    <div class="nv-pform">
-      <label>Webshopcategorie
-        <select name="research_category">
-          {% for slug, name in ro.platform_categories.items() %}<option value="{{ slug }}" {% if ro.block == 'platforms' and ro.category == slug %}selected{% endif %}>{{ name }}</option>{% endfor %}
-        </select>
-      </label>
-      <label class="nv-pform__query">Zoekopdracht
-        <input type="search" name="research_term" maxlength="100" required placeholder="Bijvoorbeeld Automatische kattenvoerbak"
-               value="{{ request.args.get('research_term', '') if ro.block == 'platforms' else '' }}">
-      </label>
-      <fieldset class="nv-pperiod">
-        <legend>Trendperiode</legend>
-        {% for value, name in ro.periods.items() %}<label><input type="radio" name="research_period" value="{{ value }}" {% if ro.period == value %}checked{% endif %}><span>{{ name }}</span></label>{% endfor %}
-      </fieldset>
-      <button type="submit">Zoeken</button>
-    </div>
-    <fieldset class="nv-research-platforms nv-pgrid">
-      <legend class="nv-psrc-legend">Onderzoeksbronnen <small><span class="nv-dot nv-dot--live"></span> doorzocht · <span class="nv-dot nv-dot--link"></span> alleen externe zoeklink</small></legend>
-      {% for platform in ro.platforms %}{% set kind = plat_kind.get(platform, ("link", "Alleen bronlink")) %}
-      <label class="nv-pchip nv-pchip--{{ kind[0] }}"><input type="checkbox" name="research_platform" value="{{ platform }}"
-        {% if platform in ro.selected_platforms %}checked{% endif %}><span><b>{{ plat_name.get(platform, platform) }}</b><small>{{ 'Doorzocht' if kind[0] == 'live' else ('Doorzocht · zoekinteresse' if kind[0] == 'trend' else 'Externe zoeklink') }}</small></span></label>
-      {% endfor %}
-    </fieldset>
-    <p class="nv-rnote">Google, TikTok, Instagram, Facebook, YouTube en Pinterest zijn <strong>niet via een API gekoppeld</strong>: daarvoor krijg je alleen een zoeklink, geen live trenddata. De periode geldt alleen voor bronnen met een publicatie- of trenddatum; leverancierscatalogi worden nooit door de periode beperkt.</p>
-    <p class="nv-search-progress" role="status"><span hidden></span></p>
-  </form>
-
-  <div class="nv-rblock nv-rblock--info" aria-labelledby="nv-rb3">
-    <h3 id="nv-rb3" class="nv-rblock__title"><span>3</span> Tijdsfilter</h3>
-    <ul class="nv-rperiod">
-      <li><b>7 / 14 / 30 dagen</b> — alleen publicaties en trendartikelen met een publicatiedatum binnen die periode.</li>
-      <li><b>Slim</b> — viral en trends 14 dagen, niche- en productonderzoek 30 dagen, leveranciers zonder tijdsbeperking.</li>
-      <li>Productcatalogi en leveranciers hebben geen betrouwbare datum en worden <strong>nooit</strong> door de periode verwijderd.</li>
-    </ul>
+  <div class="nv-rblock nv-rblock--info" aria-labelledby="nv-rb2">
+    <h3 id="nv-rb2" class="nv-rblock__title"><span>2</span> Trends zonder artikelnaam?</h3>
+    <p>Wil je weten wélke producten nu aandacht krijgen, zonder vooraf een artikel te kiezen? Gebruik <a href="{{ url_for('control', section='trends') }}">Onderzoeksplatforms &amp; trends</a>: kies een categorie en periode, AI zoekt zelf.</p>
     {% if product_discovery and product_discovery.period %}<p class="nv-rperiod-used">Gebruikt bij deze zoekopdracht: <strong>{{ product_discovery.period.label }}</strong>{% if product_discovery.period.removed %} · {{ product_discovery.period.removed }} oudere publicaties weggelaten{% endif %}{% if product_discovery.period.undated %} · {{ product_discovery.period.undated }} zonder datum niet als trend getoond{% endif %}</p>{% endif %}
   </div>
   </div>

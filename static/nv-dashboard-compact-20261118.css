@@ -345,3 +345,16 @@ details.nv-srcrep ul{margin:.35rem 0 0 1rem;padding:0}
 .nv-live-vars{list-style:none;padding:0;margin:.4rem 0 0;display:flex;flex-wrap:wrap;gap:.35rem .9rem;font-size:.82rem}
 .nv-live-vars li.ok{color:#0a6b5d}.nv-live-vars li.todo{color:#8a5a00}
 .nv-live-vars code{overflow-wrap:anywhere}
+
+/* Zoekgeschiedenis als lijst onder de zoekbalk (27-11-2026): alleen zichtbaar bij focus of typen. */
+.nv-hist{position:relative;display:block;width:100%}
+.nv-hist>input{width:100%}
+.nv-hist__list{position:absolute;left:0;right:0;top:100%;z-index:40;margin-top:2px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.12);padding:4px;max-height:320px;overflow:auto}
+.nv-hist__list[hidden]{display:none}
+.nv-hist__row{display:flex;align-items:center;border-radius:6px}
+.nv-hist__row.is-active,.nv-hist__row:hover{background:#eff6ff}
+.nv-hist__pick{flex:1;text-align:left;background:none;border:0;padding:7px 8px;font:inherit;color:inherit;cursor:pointer;min-height:0;box-shadow:none}
+.nv-hist__del{background:none;border:0;padding:4px 10px;font-size:1.1em;color:#64748b;cursor:pointer;min-height:0;box-shadow:none}
+.nv-hist__del:hover{color:#b91c1c}
+.nv-hist__clear{display:block;width:100%;text-align:right;background:none;border:0;border-top:1px solid #e2e8f0;margin-top:4px;padding:6px 8px;font-size:.82em;color:#64748b;cursor:pointer;min-height:0;box-shadow:none}
+.nv-history{display:none!important}

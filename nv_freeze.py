@@ -18,6 +18,7 @@ _TRUE = {"1", "true", "yes", "on"}
 
 # Routes (Flask-endpointnamen) die in de dashboarddatabase schrijven.
 WRITE_ENDPOINTS = frozenset({
+    "nv_manage.history_change",
     "admin_add_research_note",
     "admin_add_supplier",
     "admin_create_customer",
@@ -42,6 +43,7 @@ AI_ENDPOINTS = frozenset({
     "nv_manage.supplier_ai_search",
     "nv_manage.web_research",
     "nv_manage.research_start",
+    "nv_manage.trends_start",
     "nv_manage.supplier_search",
 })
 # Routes die zelf stil overslaan (publieke bezoekmeting, met CORS-antwoord).

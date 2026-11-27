@@ -33,14 +33,19 @@ def test_period_only_filters_dated_publications_never_products_or_suppliers():
     assert untouched["news"]
 
 
-def test_three_blocks_and_honest_platform_labels(administrator):
+def test_research_page_and_separate_trends_page_with_honest_platform_labels(administrator):
+    """Sinds 27-11-2026 staat trendonderzoek (zonder artikelnaam) in een eigen menu: Onderzoeksplatforms & trends."""
     html = administrator.get("/dashboard?section=onderzoek").get_data(as_text=True)
-    for text in ("1</span> Product zoeken", "2</span> Onderzoeksplatforms", "3</span> Tijdsfilter",
-                 'name="research_period"', "Slim", "14 dagen", "Trendperiode", "Onderzoeksbronnen",
-                 "Alle categorieën", "Overig / Algemeen", "Smart Home", "Lifestyle &amp; Sport"):
-        assert text in html, text
-    assert html.count("Externe zoeklink") >= 6 and "niet via een API gekoppeld" in html
-    assert html.count(">Doorzocht<") >= 2
+    assert "1</span> Product zoeken" in html and "2</span> Trends zonder artikelnaam?" in html
+    assert "section=trends" in html and "nv-rblock--platforms" not in html
+    trends = administrator.get("/dashboard?section=trends").get_data(as_text=True)
+    form = trends.split('id="nv-tr-form"')[1].split("</form>")[0]
+    assert 'type="search"' not in form and "research_term" not in form          # geen artikelzoekbalk
+    for text in ("Alle categorieën", "Gadgets", "Smart Home", "Beauty &amp; Care", "Home &amp; Living",
+                 "Lifestyle &amp; Sport", "Slim", "7 dagen", "14 dagen", "30 dagen", ">Zoeken<"):
+        assert text in form, text
+    assert trends.count("Externe zoeklink") >= 6 and "Geen trenddatum: niet als trendbewijs" in trends
+    assert "Huisdieren" not in form
 
 
 def test_platform_block_searches_selected_sources_with_period(administrator, monkeypatch):

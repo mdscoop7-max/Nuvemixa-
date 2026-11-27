@@ -1,0 +1,46 @@
+{% if trends_view %}{% set tv = trends_view %}
+<section class="panel nv-tr" id="nv-tr" aria-labelledby="nv-tr-title"
+         data-start="{{ url_for('nv_manage.trends_start') }}" data-status="{{ url_for('nv_manage.trends_status') }}"
+         data-csrf="{{ csrf_token() }}" data-concept="{{ url_for('nv_manage.concept_new') }}" data-can-save="{{ '1' if tv.can_save else '' }}">
+  <h2 id="nv-tr-title">Onderzoeksplatforms &amp; trends</h2>
+  <p class="nv-tr-intro">Geen artikelnaam nodig. Kies een webshopcategorie en periode: AI zoekt zelf welke producten in die periode aandacht krijgen, op basis van gedateerde bronnen. Elk resultaat toont de bron en datum; er worden geen percentages, views of verkoopcijfers verzonnen.</p>
+  <form id="nv-tr-form" class="nv-admin-form nv-tr-form" novalidate>
+    <label>Webshopcategorie
+      <select name="trend_category">{% for key, label in tv.categories %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+    </label>
+    <fieldset class="nv-pperiod"><legend>Trendperiode</legend>
+      {% for key, label in tv.periods %}<label><input type="radio" name="trend_period" value="{{ key }}" {{ 'checked' if loop.first }}><span>{{ label }}</span></label>{% endfor %}
+    </fieldset>
+    <button type="submit" id="nv-tr-submit">Zoeken</button>
+  </form>
+  <details class="nv-tr-platforms"><summary>Onderzoeksplatforms en wat er werkelijk wordt doorzocht</summary>
+    <ul>{% for name, how in tv.platforms %}<li><b>{{ name }}</b> · {{ how }}</li>{% endfor %}</ul>
+    <p><small>TikTok Creative Center en Pinterest Trends vereisen een account en hebben geen gratis openbare API; ze zijn niet aangesloten en worden alleen als handmatige link getoond.</small></p>
+  </details>
+  <div id="nv-tr-progress" class="nv-tr-progress" hidden><span class="nv-tr-spinner" aria-hidden="true"></span><strong id="nv-tr-status">Bezig…</strong><span id="nv-tr-timer" class="nv-tr-timer">0 s</span></div>
+  <ol id="nv-tr-steps" class="nv-tr-steps"></ol>
+  <div id="nv-tr-error" class="notice" role="alert" hidden></div>
+  <div id="nv-tr-body" aria-live="polite"></div>
+</section>
+<style>
+.nv-tr .nv-tr-form{display:grid;gap:12px;grid-template-columns:minmax(200px,280px) 1fr auto;align-items:end}
+.nv-tr .nv-tr-platforms{margin:10px 0;font-size:.9em}.nv-tr .nv-tr-platforms ul{margin:6px 0;padding-left:18px}
+.nv-tr .nv-tr-progress{display:flex;gap:10px;align-items:center;margin:12px 0}
+.nv-tr .nv-tr-spinner{width:18px;height:18px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:nv-tr-spin 1s linear infinite}
+.nv-tr.done .nv-tr-spinner{display:none}.nv-tr .nv-tr-timer{margin-left:auto;font-variant-numeric:tabular-nums}
+.nv-tr .nv-tr-steps{margin:0 0 10px;padding-left:20px;font-size:.9em}
+.nv-tr .nv-tr-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start}
+.nv-tr .nv-tr-card{border:1px solid rgba(128,128,128,.4);border-radius:12px;padding:12px 14px;overflow-wrap:anywhere}
+.nv-tr .nv-tr-card h4{margin:2px 0 6px}
+.nv-tr .nv-tr-badge{display:inline-block;font-size:.78em;padding:1px 8px;border-radius:999px;border:1px solid currentColor;margin:0 6px 4px 0}
+.nv-tr .nv-tr-meta{font-size:.88em;opacity:.85;margin:2px 0}
+.nv-tr .nv-tr-ev{margin:6px 0;padding-left:18px;font-size:.88em}
+.nv-tr .nv-tr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.nv-tr table{width:100%;border-collapse:collapse;font-size:.88em}.nv-tr th,.nv-tr td{text-align:left;padding:4px 6px;border-bottom:1px solid rgba(128,128,128,.25);vertical-align:top}
+.nv-tr .nv-tr-table{overflow-x:auto}
+@keyframes nv-tr-spin{to{transform:rotate(360deg)}}
+@media (max-width:640px){.nv-tr .nv-tr-form{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.nv-tr .nv-tr-spinner{animation:none}}
+</style>
+<script src="{{ url_for('static', filename='nv-trends.js') }}?v={{ nv_static_version('nv-trends.js') }}" defer></script>
+{% endif %}

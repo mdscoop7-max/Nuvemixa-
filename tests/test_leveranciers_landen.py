@@ -47,7 +47,8 @@ def test_live_margin_and_search_history_scripts():
     margin = (ROOT / "static/nv-margin-live.js").read_text(encoding="utf-8")
     assert "NIET als € 0" in margin and "missing.push" in margin
     history = (ROOT / "static/nv-search-history.js").read_text(encoding="utf-8")
-    assert "localStorage" in history and "input.value = ''" in history
+    # Sinds 27-11-2026: permanente geschiedenis per gebruiker op de server, lijst onder de zoekbalk.
+    assert "/dashboard/zoekgeschiedenis" in history and "input.value = ''" in history and "Alles wissen" in history
     page = (ROOT / "templates/dashboard.html").read_text(encoding="utf-8")
     assert "margin_form('onderzoek', 'nv-margin-live'" in page and "nv-search-history.js" in page
     assert "margin_form('calculator', 'nv-calc-live'" in page and "nv-margin-core.js" in page
@@ -71,6 +72,7 @@ def test_catalog_changes_are_cached_and_invalidated_on_save(monkeypatch):
 
 def test_search_history_keeps_ten_and_covers_partner_search():
     history = (ROOT / "static/nv-search-history.js").read_text(encoding="utf-8")
-    assert "const MAX = 10;" in history and "params.get(input.name)" in history
+    import nv_search_history
+    assert nv_search_history.MAX_ITEMS == 20 and "params.get(input.name)" in history
     partners = (ROOT / "templates/_dashboard_partners.html").read_text(encoding="utf-8")
-    assert 'input type="search" name="q"' in partners
+    assert 'input type="search" name="q" data-history="partners:q"' in partners

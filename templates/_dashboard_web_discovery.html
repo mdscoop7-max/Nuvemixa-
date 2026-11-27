@@ -6,7 +6,7 @@
 <form id="nv-wd-form" method="post" action="{{ url_for('nv_manage.web_research') }}" class="nv-admin-form" novalidate data-save-url="{{ url_for('nv_manage.save_candidate') if wd.can_save else '' }}">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <input type="hidden" name="exclude" id="nv-wd-exclude" value="">
-<label>Product, productgroep of niche <input name="term" required minlength="2" maxlength="100" placeholder="Bijvoorbeeld: yogamat, slimme stekker, NIVEA dagcrème"></label>
+<label>Product, productgroep of niche <input name="term" data-history="{{ wd.section }}:webzoeken" required minlength="2" maxlength="100" placeholder="Bijvoorbeeld: yogamat, slimme stekker, NIVEA dagcrème"></label>
 <label>Wat zoek je? <select name="kind">{% for key, label in wd.kinds %}<option value="{{ key }}" {{ 'selected' if key == wd.kind }}>{{ label }}</option>{% endfor %}</select></label>
 <label>Webshopcategorie <select name="category"><option value="">Alle vijf categorieën</option>{% for key, label in wd.categories %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
 <label>Regio <select name="scope">{% for key, label in wd.scopes %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>

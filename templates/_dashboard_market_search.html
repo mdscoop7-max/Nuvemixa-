@@ -88,7 +88,7 @@
     <input type="hidden" name="section" value="{{ 'viral' if viral_page else 'internationaal' }}">
     <input type="hidden" name="mrun" value="1">
     <div class="nv-market-searchbar">
-      <input type="search" name="mq" maxlength="100" required value="{{ m.form.q }}"
+      <input type="search" name="mq" data-history="internationaal:mq" maxlength="100" required value="{{ m.form.q }}"
         placeholder="{{ 'Zoek een viral product, productcategorie, niche of trend...' if viral_page else 'Zoek een product, niche, markt of leverancier wereldwijd...' }}"
         aria-label="{{ 'Zoek viral producten' if viral_page else 'Zoek internationaal' }}">
       <button type="submit" class="nv-blue-action">{{ 'Zoek viral producten' if viral_page else 'Start internationaal onderzoek' }}</button>
