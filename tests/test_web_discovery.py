@@ -105,6 +105,13 @@ def test_prompt_uses_language_of_target_country_and_category(ai):
     assert json.loads(data["input"])["target_country"] == "DE"
 
 
+def test_china_is_searched_in_english_with_factory_queries(ai):
+    calls, _ = ai
+    wd.search("powerbank", "wholesale", "gadgets", "CN", "international")
+    text = calls[0]["instructions"]
+    assert "Search in English." in text and "Chinese" not in text and "manufacturer China" in text
+
+
 def test_country_filter_and_exclude_list_give_other_companies(ai):
     _, state = ai
     state["reply"] = response([row("https://www.powerhandel.de/b2b"), row("https://grossiste-energie.fr/powerbank")])

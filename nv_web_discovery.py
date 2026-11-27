@@ -63,9 +63,12 @@ LANGUAGES = {"NL": "Dutch", "BE": "Dutch and French", "DE": "German", "AT": "Ger
              "PT": "Portuguese", "SE": "Swedish", "DK": "Danish", "FI": "Finnish", "NO": "Norwegian", "CZ": "Czech",
              "SK": "Slovak", "HU": "Hungarian", "RO": "Romanian", "BG": "Bulgarian", "GR": "Greek", "HR": "Croatian",
              "SI": "Slovenian", "LT": "Lithuanian", "LV": "Latvian", "EE": "Estonian", "TR": "Turkish",
-             "CN": "English and Chinese", "HK": "English and Chinese", "TW": "English and Chinese",
+             # Live 27-11: in het Chinees vond AI voor 'powerbank' (CN) alleen 2 marktplaatspagina's. Chinese
+             # fabrikanten/exporteurs richten zich met Engelstalige sites op Europese kopers.
+             "CN": "English", "HK": "English", "TW": "English",
              "KR": "English and Korean", "JP": "English and Japanese"}
 SCOPES = {"all": "Wereldwijd", "eu": "Binnen de EU", "international": "Buiten de EU"}
+EXPORT_COUNTRIES = {"CN": "China", "HK": "Hong Kong", "TW": "Taiwan", "TR": "Turkey", "IN": "India"}
 
 # Letterlijke signalen op de bedrijfspagina, in de talen van de doelmarkten.
 SIGNALS = {
@@ -252,6 +255,10 @@ def instructions(kind, category, country, scope):
                               "international": "Focus on companies outside the European Union (for example China, "
                                                "Turkey, the UK and the US). "}.get(scope, ""))
     langs = f"Search in English and in {language}. " if language and language != "English" else "Search in English. "
+    if country in EXPORT_COUNTRIES:
+        langs += ("Exporters there mostly have English websites: search e.g. '<product> manufacturer "
+                  f"{EXPORT_COUNTRIES[country]}', '<product> factory OEM' and '<product> wholesale supplier'. "
+                  "Prefer the factories' own websites over marketplace listings. ")
     return (
         f"You research {goal} for NUVEMIXA, a Dutch web shop selling to the Netherlands and Europe. "
         f"Product category: {CATEGORY_EN.get(category, 'any of: gadgets, smart home, beauty & care, home & living, lifestyle & sport')}. "
