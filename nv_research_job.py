@@ -73,7 +73,7 @@ def parse(form):
 def cache_key(values):
     raw = json.dumps([values["term"].casefold(), values["category"], values["mode"], values["country"],
                       values["filter"]], ensure_ascii=False)
-    return "research:v1:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
+    return "research:v2:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
 
 
 def fresh_seconds(values):
@@ -284,9 +284,14 @@ def merge_suppliers(catalog_suppliers, web_cards, products):
         domain = _domain(company.get("own_website"))
         key = domain or "name:" + norm_title(company.get("name"))
         country = company.get("origin") or ""
+        country_note = ""
+        if not country and domain:  # live 27-11: Primebay (primebay.com.au) stond als 'land niet bevestigd'
+            country = web.country_from_domain(domain) or ""
+            country_note = f"afgeleid uit domein {domain}" if country else ""
         put(key, {"name": company.get("name") or "", "domain": domain, "website": company.get("own_website")
                   or company.get("website") or "", "country": country, "region": region_of(country),
                   "role": company.get("role") or company.get("kind") or "", "verified": True,
+                  "country_note": country_note,
                   "dropship": company.get("dropshipping") is True,
                   "evidence": "Gegevens uit de productvermelding van het platform (" +
                               ("Syncee" if "syncee" in str(company.get("website")) else "catalogus") + ")",
@@ -300,11 +305,34 @@ def merge_suppliers(catalog_suppliers, web_cards, products):
                   "verified": bool(card.get("verified")), "dropship": "dropshipping" in card.get("signals", []),
                   "evidence": quote, "status": card.get("status", ""), "facts": card.get("facts", [])},
             "AI-webonderzoek")
+    # Live 27-11: Lifebay stond twee keer (één keer met eigen website, één keer alleen via Syncee): zelfde naam = zelfde
+    # bedrijf, tenzij beide een ander eigen domein hebben.
+    by_name = {}
+    for key, row in list(merged.items()):
+        name = norm_title(row["name"])
+        other = by_name.get(name)
+        if other is None:
+            by_name[name] = key
+            continue
+        first = merged[other]
+        if first.get("domain") and row.get("domain") and first["domain"] != row["domain"]:
+            continue
+        keep, drop = (other, key) if first.get("domain") or not row.get("domain") else (key, other)
+        target, source = merged[keep], merged.pop(drop)
+        for field, value in source.items():
+            if field == "sources":
+                target["sources"] += [s for s in value if s not in target["sources"]]
+            elif value and not target.get(field):
+                target[field] = value
+        target["verified"] = target.get("verified") or source.get("verified")
+        by_name[name] = keep
     rows = list(merged.values())
     for row in rows:
         row["products"] = sum(1 for p in products for o in p["offers"]
                               if norm_title(o.get("supplier")) == norm_title(row["name"]))
-    return rows
+    # Live 27-11: Ferm Living en Naturexplore stonden als leverancier terwijl al hun producten waren weggefilterd.
+    # Een catalogus-/platformleverancier zonder passend product is voor deze zoekopdracht niet relevant.
+    return [row for row in rows if row["products"] or "AI-webonderzoek" in row["sources"]]
 
 
 def apply_filter(rows, supplier_filter):
@@ -506,7 +534,7 @@ def research_status():
     if not allowed("research"):
         abort(403)
     key = request.args.get("key", "")
-    if not re.fullmatch(r"research:v1:[0-9a-f]{40}", key):
+    if not re.fullmatch(r"research:v[0-9]+:[0-9a-f]{40}", key):
         abort(400)
     row = store.load(key)
     if row is None:
