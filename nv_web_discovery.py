@@ -433,6 +433,93 @@ def matching_terms(lower, tokens, keywords):
     return hits
 
 
+# ------------------------------------------------------------------ land, logistiek en voorwaarden -----------------
+# Landnamen zoals ze op leverancierspagina's staan (EN/NL/DE/FR) -> ISO-code. Alleen wat letterlijk op de pagina staat.
+COUNTRY_WORDS = {
+    "netherlands": "NL", "the netherlands": "NL", "nederland": "NL", "holland": "NL", "niederlande": "NL", "pays-bas": "NL",
+    "belgium": "BE", "belgië": "BE", "belgie": "BE", "belgien": "BE", "belgique": "BE",
+    "germany": "DE", "duitsland": "DE", "deutschland": "DE", "allemagne": "DE",
+    "france": "FR", "frankrijk": "FR", "frankreich": "FR", "spain": "ES", "spanje": "ES", "spanien": "ES", "españa": "ES",
+    "italy": "IT", "italië": "IT", "italien": "IT", "italia": "IT", "poland": "PL", "polen": "PL", "polska": "PL",
+    "austria": "AT", "oostenrijk": "AT", "österreich": "AT", "portugal": "PT", "ireland": "IE", "ierland": "IE",
+    "sweden": "SE", "zweden": "SE", "denmark": "DK", "denemarken": "DK", "finland": "FI", "czech republic": "CZ",
+    "czechia": "CZ", "tsjechië": "CZ", "hungary": "HU", "hongarije": "HU", "romania": "RO", "roemenië": "RO",
+    "bulgaria": "BG", "bulgarije": "BG", "greece": "GR", "griekenland": "GR", "croatia": "HR", "slovenia": "SI",
+    "slovakia": "SK", "lithuania": "LT", "latvia": "LV", "estonia": "EE", "luxembourg": "LU", "luxemburg": "LU",
+    "united kingdom": "GB", "uk": "GB", "great britain": "GB", "verenigd koninkrijk": "GB", "england": "GB",
+    "switzerland": "CH", "zwitserland": "CH", "schweiz": "CH", "norway": "NO", "noorwegen": "NO", "turkey": "TR",
+    "türkiye": "TR", "turkije": "TR", "united states": "US", "usa": "US", "verenigde staten": "US", "canada": "CA",
+    "china": "CN", "hong kong": "HK", "taiwan": "TW", "india": "IN", "japan": "JP", "south korea": "KR",
+    "australia": "AU", "australië": "AU", "uae": "AE", "united arab emirates": "AE",
+}
+REGION_WORDS = {"europe": "EU", "european union": "EU", "europa": "EU", "the eu": "EU", "eu": "EU", "eu-landen": "EU",
+                "worldwide": "WERELDWIJD", "wereldwijd": "WERELDWIJD", "weltweit": "WERELDWIJD", "international": "INTL"}
+_COUNTRY_RE = "(?:" + "|".join(sorted((re.escape(w) for w in [*COUNTRY_WORDS, *REGION_WORDS]), key=len, reverse=True)) + r")\b"
+_JOIN = r"(?:\s*,\s*|\s+(?:and|en|und|et|&)\s+)"   # alleen losse woorden: 'Poland'/'Nederland' bevatten 'and' 
+LOGISTICS = {
+    "warehouse": re.compile(r"(?:warehouses?|fulfil?ment cent(?:er|re)s?|magazijn(?:en)?|lager|entrepôts?|stock(?:ed)?)"
+                            r"\s+(?:located\s+|based\s+)?(?:in|op|à|en)\s+(?:the\s+)?((?:" + _COUNTRY_RE +
+                            r")(?:" + _JOIN + r"(?:the\s+)?(?:" + _COUNTRY_RE + r"))*)", re.I),
+    "ships_from": re.compile(r"(?:ships?|shipped|shipping|dispatch(?:ed)?|verzonden|verzenden|verzending|versand)\s+"
+                             r"(?:directly\s+|direct\s+)?(?:from|vanuit|uit|aus|depuis)\s+(?:our\s+|onze\s+)?(?:warehouses?\s+in\s+)?"
+                             r"(?:the\s+)?((?:" + _COUNTRY_RE + r")(?:" + _JOIN + r"(?:the\s+)?(?:"
+                             + _COUNTRY_RE + r"))*)", re.I),
+    "ships_to": re.compile(r"(?:ships?|shipping|deliver(?:s|y|ies)?|levert|levering|leveren|bezorg(?:t|en)|versand|"
+                           r"livr(?:e|aison))\s+(?:to|naar|in|nach|vers|en)\s+(?:all\s+of\s+|heel\s+|alle\s+|the\s+)?((?:"
+                           + _COUNTRY_RE + r")(?:" + _JOIN + r"(?:the\s+)?(?:" + _COUNTRY_RE + r"))*)", re.I),
+}
+COMMERCIAL = {
+    "commission": re.compile(r"(?:commission|commissie|provisie|provision)[^.%]{0,40}?(\d{1,2}(?:[.,]\d)?\s?%)|"
+                             r"(\d{1,2}(?:[.,]\d)?\s?%)\s+(?:affiliate\s+)?(?:commission|commissie|provisie|provision)", re.I),
+    "monthly_fee": re.compile(r"((?:€|eur|\$|usd|£)\s?\d{1,4}(?:[.,]\d{2})?\s?(?:/|per|a|p\.?)\s?(?:month|maand|mo|monat))",
+                              re.I),
+    "minimum": re.compile(r"((?:moq|minimum order(?: quantity)?|minimale afname|mindestbestellmenge)[:\s]*"
+                          r"(?:of\s+)?(?:€|eur|\$)?\s?\d{1,6}(?:\s?(?:pcs|pieces|stuks|units|items|euro|eur))?)", re.I),
+}
+
+
+def _countries(group):
+    found = []
+    for word in re.split(_JOIN, group, flags=re.I):
+        word = re.sub(r"^the\s+", "", word.strip().casefold())
+        code = COUNTRY_WORDS.get(word) or REGION_WORDS.get(word)
+        if code and code not in found:
+            found.append(code)
+    return found
+
+
+def logistics_facts(text):
+    """Magazijnland, verzendland en leverlanden: alleen als de pagina het letterlijk zegt (met citaat)."""
+    out = {}
+    for field, pattern in LOGISTICS.items():
+        match = pattern.search(text or "")
+        if match:
+            countries = _countries(match.group(1))
+            if countries:
+                out[field] = {"countries": countries, "quote": snippet(text, match, 180)}
+    return out
+
+
+def commercial_facts(text):
+    out = {}
+    for field, pattern in COMMERCIAL.items():
+        match = pattern.search(text or "")
+        if match:
+            value = next(group for group in match.groups() if group)
+            out[field] = {"value": " ".join(value.split()), "quote": snippet(text, match, 180)}
+    return out
+
+
+def partner_model(strong, signals=None):
+    """A = directe dropshipping, C = affiliate, B = potentiële reseller-/groothandelspartner (zoals het register)."""
+    if "dropshipping" in strong:
+        return "A"
+    affiliate = "affiliate" in (signals or {}).get("partnerprogramma", "").casefold()
+    if "partnerprogramma" in strong and affiliate and not ({"groothandel", "fabrikant"} & set(strong)):
+        return "C"
+    return "B" if strong else ""
+
+
 def hint_reason(kind, strong, signals, hits):
     """Waarom een bedrijf geen 'Gecontroleerd' krijgt, in gewone taal."""
     wanted = " of ".join(SIGNAL_LABELS[name] for name in REQUIRED[kind])
@@ -516,9 +603,26 @@ def verify(candidate, term, tokens, kind, category, deadline):
                           **({} if quote in shown else {"quote": quote})})
     facts.append({"label": "Koppelingen", "value": ", ".join(integrations) + " genoemd op de pagina"
                   if integrations else UNCONFIRMED, "status": "feit" if integrations else "onbekend"})
+    logistics = logistics_facts(text)
+    for field, label in (("warehouse", "Magazijnland"), ("ships_from", "Verzendland (verzendt vanuit)"),
+                         ("ships_to", "Levert naar")):
+        found = logistics.get(field)
+        facts.append({"label": label, "value": ", ".join(COUNTRY_NAMES.get(c, c) for c in found["countries"])
+                      + " (genoemd op de pagina)" if found else UNCONFIRMED,
+                      "status": "feit" if found else "onbekend", **({"quote": found["quote"]} if found else {})})
+    commercial = commercial_facts(text)
+    for field, label in (("commission", "Commissie"), ("monthly_fee", "Maandelijkse kosten"),
+                         ("minimum", "Minimumafname")):
+        if field in commercial:
+            facts.append({"label": label, "value": commercial[field]["value"] + " (genoemd op de pagina)",
+                          "status": "feit", "quote": commercial[field]["quote"]})
     for label in ("Prijzen en marge", "Levertijd naar NL", "Voorwaarden"):
         facts.append({"label": label, "value": UNCONFIRMED + " (navragen bij het bedrijf)", "status": "onbekend"})
     return {
+        "warehouse_countries": (logistics.get("warehouse") or {}).get("countries", []),
+        "ships_from": (logistics.get("ships_from") or {}).get("countries", []),
+        "ships_to": (logistics.get("ships_to") or {}).get("countries", []),
+        "model": partner_model(strong, signals), "commercial": {k: v["value"] for k, v in commercial.items()},
         "name": clean(name, 80), "domain": domain, "url": final, "home": f"https://{host}/",
         "contact": contact_link(html, final), "country": country or "", "region": (
             "eu" if country in EU else "international" if country else "unknown"),

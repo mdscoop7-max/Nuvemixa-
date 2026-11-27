@@ -26,6 +26,12 @@
     var el = document.createElement("article");
     el.className = "nv-ai-card";
     el.appendChild(text("span", item.status, "nv-wd-badge " + (item.verified ? "ok" : "hint")));
+    el.appendChild(text("span", "Live gevonden", "nv-wd-badge"));
+    if (item.model_label) el.appendChild(text("span", "Model " + item.model_label, "nv-wd-badge"));
+    if (item.register) {
+      el.appendChild(text("span", "Ook in register: " + item.register.models.join(", ") + " · " + item.register.status +
+        " (handmatig onderzocht " + item.register.checked + ")", "nv-wd-badge"));
+    }
     el.appendChild(text("h3", item.name));
     var list = document.createElement("dl");
     (item.facts || []).forEach(function (fact) {
@@ -117,5 +123,12 @@
       });
   }
   form.addEventListener("submit", function (event) { event.preventDefault(); run(false); });
+  // Partners: zoekterm uit het register direct ook live laten zoeken (één klik, geen automatische AI-kosten).
+  if (form.dataset.prefill) {
+    var live = text("button", "Zoek ook live met AI naar “" + form.dataset.prefill + "”", "nv-blue-action");
+    live.type = "button";
+    live.addEventListener("click", function () { form.elements.term.value = form.dataset.prefill; run(false); });
+    form.parentNode.insertBefore(live, form);
+  }
   more.addEventListener("click", function () { run(true); });
 })();

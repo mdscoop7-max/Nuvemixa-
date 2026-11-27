@@ -73,7 +73,7 @@ def parse(form):
 def cache_key(values):
     raw = json.dumps([values["term"].casefold(), values["category"], values["mode"], values["country"],
                       values["filter"]], ensure_ascii=False)
-    return "research:v4:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
+    return "research:v5:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
 
 
 def fresh_seconds(values):
@@ -326,7 +326,10 @@ def merge_suppliers(catalog_suppliers, web_cards, products):
                   "dropship": company.get("dropshipping") is True,
                   "evidence": "Gegevens uit de productvermelding van het platform (" +
                               ("Syncee" if "syncee" in str(company.get("website")) else "catalogus") + ")",
-                  "status": "Uit catalogus/platform"}, "Syncee" if "syncee" in str(company.get("website")) else "Catalogus")
+                  "status": "Uit catalogus/platform",
+                  "warehouse": company.get("warehouse_label") or "", "warehouse_source": "productvermelding platform"
+                  if company.get("warehouse_label") else ""},
+            "Syncee" if "syncee" in str(company.get("website")) else "Catalogus")
     for card in web_cards:
         key = card["domain"]
         quote = next((fact.get("quote") for fact in card.get("facts", []) if fact.get("quote")), "")
@@ -334,7 +337,14 @@ def merge_suppliers(catalog_suppliers, web_cards, products):
                   "contact": card.get("contact", ""), "country": card.get("country", ""),
                   "region": region_of(card.get("country", "")), "role": card.get("role", ""),
                   "verified": bool(card.get("verified")), "dropship": "dropshipping" in card.get("signals", []),
-                  "evidence": quote, "status": card.get("status", ""), "facts": card.get("facts", [])},
+                  "evidence": quote, "status": card.get("status", ""), "facts": card.get("facts", []),
+                  "warehouse": ", ".join(web.COUNTRY_NAMES.get(c, c) for c in card.get("warehouse_countries", [])),
+                  "warehouse_source": "genoemd op de bedrijfspagina" if card.get("warehouse_countries") else "",
+                  "ships_from": ", ".join(web.COUNTRY_NAMES.get(c, c) for c in card.get("ships_from", [])),
+                  "ships_to": ", ".join(web.COUNTRY_NAMES.get(c, c) if c not in ("EU", "WERELDWIJD", "INTL")
+                                        else {"EU": "EU", "WERELDWIJD": "wereldwijd", "INTL": "internationaal"}[c]
+                                        for c in card.get("ships_to", [])),
+                  "model": card.get("model", ""), "commercial": card.get("commercial", {})},
             "AI-webonderzoek")
     # Live 27-11: Lifebay stond twee keer (één keer met eigen website, één keer alleen via Syncee): zelfde naam = zelfde
     # bedrijf, tenzij beide een ander eigen domein hebben.
@@ -474,6 +484,7 @@ def run(key, values, created_at):
             "term": values["term"], "category": category, "category_label": CATS.get(category, "Niet herkend"),
             "category_source": "gekozen" if values["category"] else ("AI" if info["ai"] and category else "herkend"),
             "filter": values["filter"], "filter_label": FILTERS[values["filter"]], "mode": values["mode"],
+            "sales_country": web.COUNTRY_NAMES.get(values["country"], values["country"]),
             "queries": info["queries"], "ai": {
                 "used": info["ai"], "message": info["message"], "keywords_en": info["keywords_en"],
                 "keywords_nl": info["keywords_nl"],

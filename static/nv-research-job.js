@@ -90,6 +90,16 @@
     c.appendChild(el("h4", s.name));
     c.appendChild(el("p", [s.role, s.country ? s.country + (s.country_note ? " (" + s.country_note + ")" : "") : "land niet bevestigd", s.products ? s.products + " product(en) hierboven" : ""].filter(Boolean).join(" · "), "nv-rj-meta"));
     if (s.status && !s.verified) c.appendChild(el("p", s.status, "nv-rj-meta"));
+    // Internationaal: vestiging, magazijn, verzendland en leverlanden apart; alleen wat de bron zegt.
+    var geo = el("dl", null, "nv-rj-geo");
+    [["Vestigingsland", s.country ? s.country + (s.country_note ? " (" + s.country_note + ")" : "") : "niet bevestigd"],
+     ["Magazijnland", s.warehouse ? s.warehouse + (s.warehouse_source ? " (" + s.warehouse_source + ")" : "") : "niet bevestigd"],
+     ["Verzendt vanuit", s.ships_from || "niet bevestigd"], ["Levert naar", s.ships_to || "niet bevestigd"]]
+      .forEach(function (row) { geo.appendChild(el("dt", row[0])); geo.appendChild(el("dd", row[1], row[1] === "niet bevestigd" ? "nv-rj-unknown" : "")); });
+    c.appendChild(geo);
+    var com = s.commercial || {};
+    var bits = [com.commission ? "commissie " + com.commission : "", com.monthly_fee ? "kosten " + com.monthly_fee : "", com.minimum ? com.minimum : ""].filter(Boolean);
+    if (bits.length) c.appendChild(el("p", "Op de pagina: " + bits.join(" · "), "nv-rj-meta"));
     if (s.evidence) c.appendChild(el("blockquote", (s.sources.indexOf("AI-webonderzoek") >= 0 ? "Op de pagina: “" + s.evidence + "”" : s.evidence)));
     var links = el("div", null, "nv-rj-actions");
     [[s.page, "Gecontroleerde pagina"], [s.contact, "Contact / B2B"], [s.website, s.domain || "Website"]].forEach(function (x) { var a = link(x[0], x[1]); if (a) links.appendChild(a); });
@@ -118,7 +128,7 @@
     title.textContent = "Onderzoek: “" + r.term + "”";
     var ai = r.ai;
     var summary = el("p", (r.counts.exact_products != null ? r.counts.exact_products + " passend, " : "") + r.counts.products + " product(en) totaal (" + r.counts.offers + " vermeldingen) · " + r.counts.suppliers +
-      " unieke leverancier(s), waarvan " + r.counts.verified_suppliers + " gecontroleerd · categorie " + r.category_label +
+      " unieke leverancier(s), waarvan " + r.counts.verified_suppliers + " gecontroleerd · verkoopland " + (r.sales_country || "Nederland") + " · categorie " + r.category_label +
       " (" + r.category_source + ") · " + r.filter_label + " · " + r.elapsed_s + " s");
     summary.className = "nv-rj-meta"; body.appendChild(summary);
     var aiText = ai.used ? "AI-zoekwoorden: " + ai.keywords_en.concat(ai.keywords_nl).join(", ") + ". AI-bijdrage: " +
