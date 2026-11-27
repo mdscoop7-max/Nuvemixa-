@@ -267,7 +267,8 @@ def test_identical_search_comes_from_cache_without_ai_call(ai):
 
 
 # ------------------------------------------------------------------ dashboard -----------------------------------
-@pytest.mark.parametrize("section", ["onderzoek", "leveranciers", "partners", "internationaal"])
+# Productonderzoek gebruikt sinds 27-11 het gecombineerde proces (test_research_job.py), geen los blok.
+@pytest.mark.parametrize("section", ["leveranciers", "partners", "internationaal"])
 def test_component_is_on_each_research_section(administrator, section):
     page = administrator.get(f"/dashboard?section={section}")
     assert page.status_code == 200

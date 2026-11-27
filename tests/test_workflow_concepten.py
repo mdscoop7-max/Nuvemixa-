@@ -49,8 +49,9 @@ def test_onderzoeksresultaat_naar_concept_neemt_alleen_bekende_gegevens_over(adm
     assert c["status"] == "nieuw" and c["sku"].startswith("NV-")
 
 
-def test_leveranciersresultaat_wordt_ongepubliceerd_huisdierenconcept(administrator, storage_tmp, monkeypatch):
-    title = "Automatic Cat Feeder"
+# 27-11-2026: Huisdieren is geen webshop-hoofdmenu meer in het dashboard; zelfde controle met Home & Living.
+def test_leveranciersresultaat_wordt_ongepubliceerd_conceptproduct(administrator, storage_tmp, monkeypatch):
+    title = "Rotating Kitchen Organizer"
 
     def fetch(url, **kwargs):
         if url == SYNCEE_PRODUCT:
@@ -60,7 +61,7 @@ def test_leveranciersresultaat_wordt_ongepubliceerd_huisdierenconcept(administra
 
     monkeypatch.setattr(requests, "get", fetch)
     response = administrator.get("/dashboard", query_string={
-        "section": "onderzoek", "research_run": 1, "research_term": "Automatische kattenvoerbak",
+        "section": "onderzoek", "research_run": 1, "research_term": "Rotating kitchen organizer",
         "research_mode": "dropship", "research_platform": "Productcatalogi", "research_supplier_filter": "all",
     })
     assert response.status_code == 200
@@ -71,9 +72,9 @@ def test_leveranciersresultaat_wordt_ongepubliceerd_huisdierenconcept(administra
     assert saved.status_code == 303
     concept, = nc.list_concepts()
     assert concept["status"] == "nieuw"
-    assert (concept["titel"], concept["categorie"], concept["bron_url"]) == (title, "Huisdieren", SYNCEE_PRODUCT)
+    assert (concept["titel"], concept["categorie"], concept["bron_url"]) == (title, "Home & Living", SYNCEE_PRODUCT)
     assert concept["inkoop"] is None and concept["verkoop"] is None
-    assert title in administrator.get("/dashboard?section=concepten&concept_q=kattenvoerbak").get_data(as_text=True)
+    assert title in administrator.get("/dashboard?section=concepten&concept_q=kitchen").get_data(as_text=True)
     assert title not in administrator.get("/dashboard?section=concepten&concept_q=yogamat").get_data(as_text=True)
 
 

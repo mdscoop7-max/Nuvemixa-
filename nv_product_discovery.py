@@ -80,7 +80,8 @@ COUNTRIES = {
 
 MANUAL_PLATFORMS = ("Google", "TikTok", "Instagram", "Facebook", "YouTube Shorts", "Pinterest Trends")
 PLATFORMS = ("Productcatalogi", "Publicaties", "Google Trends", *MANUAL_PLATFORMS)
-RESEARCH_CATEGORIES = {"pets": "Huisdieren"}
+# Alleen de vijf bestaande webshop-hoofdmenu's (27-11-2026: Huisdieren is geen hoofdmenu van de webshop).
+RESEARCH_CATEGORIES = {}
 MODES = {
     "products": "Producten zoeken",
     "trends": "Trends en nichekansen",

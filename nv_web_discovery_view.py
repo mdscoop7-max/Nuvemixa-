@@ -19,8 +19,8 @@ from nv_permissions import allowed
 DAILY_VARIABLE = "NUVEMIXA_WEB_RESEARCH_DAILY_LIMIT"
 DEFAULT_DAILY = 25          # extra rem per dag; het centrale AI-maandbudget (nv_openai) blijft de echte grens
 COOLDOWN_SECONDS = 8
-SECTION_KIND = {"onderzoek": "products", "leveranciers": "suppliers", "partners": "partners",
-                "internationaal": "suppliers"}
+# Productonderzoek gebruikt sinds 27-11 het gecombineerde proces (nv_research_job) in het hoofdformulier.
+SECTION_KIND = {"leveranciers": "suppliers", "partners": "partners", "internationaal": "suppliers"}
 SECTION_TITLE = {
     "onderzoek": "Live webonderzoek: producten en niches bij leveranciers",
     "leveranciers": "Leveranciers, dropshipping en groothandels zoeken (live web + controle)",

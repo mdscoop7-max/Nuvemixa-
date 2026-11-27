@@ -1260,6 +1260,7 @@ from nv_international import dashboard_market
 from nv_supplier_finder import directories as supplier_directories
 import nv_supplier_ai
 import nv_web_discovery_view
+import nv_research_job  # noqa: F401  (routes: gecombineerd onderzoeksproces)
 from nv_viral_research import viral_dashboard
 from nv_market_search import search_view as market_search_view
 
@@ -2171,6 +2172,22 @@ def admin_supplier_feed_preview():
 
 
 
+def margin_fx_context(args):
+    """'Bereken marge' vanuit onderzoek: oorspronkelijke prijs + valuta -> euro met ECB-koers en datum (nooit geschat)."""
+    amount, currency = args.get("margin_amount", ""), args.get("margin_currency", "")
+    if not amount or not currency:
+        return None
+    import nv_fx
+    try:
+        conversion = nv_fx.to_eur(amount, currency)
+    except ValueError:
+        return {"error": "Ongeldig bedrag of valuta; vul de inkoopprijs zelf in."}
+    except nv_fx.RateUnavailable:
+        return {"error": f"Geen actuele ECB-koers voor {currency[:3].upper()} beschikbaar; vul de inkoopprijs zelf in "
+                         "euro in. Er is niet omgerekend."}
+    return {**conversion, "text": nv_fx.describe(conversion)}
+
+
 @app.route("/control")
 
 @app.route("/catalogus-overzicht")
@@ -2595,6 +2612,8 @@ def control():
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
         web_discovery=nv_web_discovery_view.view_context(section),
+        research_job={'can_save': bool(is_admin)} if section == 'onderzoek' else None,
+        margin_fx=margin_fx_context(request.args) if section in ('onderzoek', 'calculator') else None,
         ai_status=__import__('nv_ai_search').safe_status(),
         nv_supplier_rows=nv_product_rows.suppliers,
         nv_supplier_summary=nv_product_rows.summary,
