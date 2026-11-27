@@ -115,13 +115,28 @@ def test_country_filter_and_exclude_list_give_other_companies(ai):
     assert [card["domain"] for card in more["results"]] == ["powerhandel.de"]
 
 
-def test_blocked_site_is_shown_only_when_cited_and_never_as_verified(ai):
+def test_blocked_site_is_shown_as_not_verifiable_never_as_verified(ai):
     _, state = ai
     state["reply"] = response([row("https://blocked-one.com/a"), row("https://blocked-two.com/b")],
                               cited=["https://blocked-one.com/a"])
     result = wd.search("powerbank", "suppliers", "gadgets")
-    assert [card["domain"] for card in result["results"]] == ["blocked-one.com"]
-    assert result["results"][0]["verified"] is False and "blokkeert" in result["results"][0]["status"]
+    assert sorted(card["domain"] for card in result["results"]) == ["blocked-one.com", "blocked-two.com"]
+    for card in result["results"]:
+        assert card["verified"] is False and "blokkeert" in card["status"]
+
+
+def test_translated_keywords_from_ai_count_for_relevance_only(ai):
+    _, state = ai
+    PAGES["https://earbud-wholesale.com/tws"] = "<p>TWS earbuds wholesale for retailers, MOQ 100.</p>"
+    reply = response([row("https://earbud-wholesale.com/tws", "Earbud Wholesale")])
+    text = json.loads(reply["output"][2]["content"][0]["text"])
+    text["keywords"] = ["wireless earbuds", "TWS earbuds", "<script>"]
+    reply["output"][2]["content"][0]["text"] = json.dumps(text)
+    state["reply"] = reply
+    result = wd.search("draadloze oordopjes", "wholesale", "gadgets")
+    card = result["results"][0]
+    assert card["verified"] and card["relevant"]               # Nederlandse term staat er niet, de vertaling wel
+    assert "<script>" not in result["meta"]["keywords"] and "tws earbuds" in result["meta"]["keywords"]
 
 
 def test_products_need_the_term_on_the_page(ai):
