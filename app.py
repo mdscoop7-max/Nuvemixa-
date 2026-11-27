@@ -1317,6 +1317,8 @@ def nv_static_version(filename):
 
 
 app.jinja_env.globals["nv_static_version"] = nv_static_version
+import nv_platforms  # noqa: E402  centraal register van onderzoeksplatforms
+app.jinja_env.globals["platforms_view"] = nv_platforms.view
 
 
 @app.context_processor

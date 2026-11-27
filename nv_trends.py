@@ -445,10 +445,42 @@ def reply(payload, status=200):
     return response
 
 
+def known_suppliers(trends):
+    """Leveranciers per trendproduct, alleen uit een al bewaard productonderzoek (permanente cache) met dezelfde
+    instellingen als 'Onderzoek dit product'. Eén databasevraag, geen AI. Niet onderzocht = eerlijk 'nog niet'."""
+    import nv_research_job as job
+    keys = {}
+    for t in trends:
+        values = {"term": web.clean(t["name"], 100), "category": t["category"], "mode": "products", "country": "NL",
+                  "filter": "all"}
+        keys[job.cache_key(values)] = t
+    if not keys:
+        return trends
+    rows = []
+    try:
+        with store.connect() as db:
+            store._sqlite(db)
+            rows = db.execute("SELECT cache_key, payload, created_at FROM research_cache WHERE state = 'done' AND "
+                              "cache_key IN (" + ",".join("?" * len(keys)) + ")", tuple(keys)).fetchall()
+    except Exception:  # noqa: BLE001 - zonder opslag: geen leveranciersregel, kaart blijft werken
+        return trends
+    for key, payload, created in rows:
+        result = (json.loads(payload) or {}).get("result") or {}
+        names = [s["name"] for part in ("nl", "eu", "international", "unknown")
+                 for s in (result.get("suppliers") or {}).get(part, [])]
+        keys[key]["suppliers"] = {"count": len(names), "names": names[:4],
+                                  "verified": (result.get("counts") or {}).get("verified_suppliers", 0),
+                                  "checked": datetime.fromtimestamp(float(created), timezone.utc).strftime("%d-%m-%Y")}
+    return trends
+
+
 def public(row, key):
     payload = row["payload"]
+    result = present(payload.get("result"), payload.get("values") or {})
+    if result and row["state"] == "done":
+        result = {**result, "trends": known_suppliers([dict(t) for t in result["trends"]])}
     return {"ok": True, "key": key, "state": row["state"], "steps": payload.get("steps", []),
-            "result": present(payload.get("result"), payload.get("values") or {}), "error": payload.get("error"),
+            "result": result, "error": payload.get("error"),
             "storage": row["storage"], "age_s": round(time.time() - row["created_at"])}
 
 
@@ -547,7 +579,8 @@ def trends_start():
                   + ". Geen nieuwe AI-aanroep."}]
         store.save(key, "done", {"values": values, "steps": steps, "result": result}, source["created_at"], wait=False)
         return reply({"ok": True, "key": key, "state": "done", "steps": steps, "cached": True,
-                      "result": present(result, values), "storage": "database (op de achtergrond)",
+                      "result": {**present(result, values), "trends": known_suppliers(
+                          [dict(t) for t in present(result, values)["trends"]])}, "storage": "database (op de achtergrond)",
                       "age_s": round(now - source["created_at"])})
     store.save(key, "running", {"values": values, "steps": [{"t": 0, "text": "Trendonderzoek gestart"}]}, now, wait=False)
     _pool.submit(run, key, values, now)

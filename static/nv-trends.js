@@ -9,6 +9,7 @@
 
   function el(tag, text, cls) { var e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
   function link(href, text) { if (!/^https:\/\//.test(href || "")) return null; var a = el("a", text); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer nofollow"; return a; }
+  var NICHE = {"gadgets": "Gadgets en elektronica", "smart-home": "Smart home", "beauty-care": "Beauty en persoonlijke verzorging", "home-living": "Huis en wonen", "lifestyle-sport": "Fitness en sport"};
   var CAT = {"gadgets": "Gadgets", "smart-home": "Smart Home", "beauty-care": "Beauty & Care", "home-living": "Home & Living", "lifestyle-sport": "Lifestyle & Sport"};
 
   function card(t, r) {
@@ -23,6 +24,16 @@
       var cap = el("figcaption", "Afbeelding uit het artikel van " + t.image.source + " (" + t.image.date + ")");
       fig.appendChild(cap); c.appendChild(fig);
     }
+    // Geen betrouwbare productafbeelding: neutrale plaatsaanduiding, nooit een willekeurige foto.
+    function placeholder() {
+      var ph = el("div", null, "nv-tr-ph"); ph.setAttribute("role", "img");
+      ph.setAttribute("aria-label", "Geen betrouwbare productafbeelding beschikbaar");
+      ph.appendChild(el("b", (t.name || "?").slice(0, 1).toUpperCase()));
+      ph.appendChild(el("small", "Geen betrouwbare productafbeelding"));
+      return ph;
+    }
+    if (!c.querySelector(".nv-tr-img")) c.appendChild(placeholder());
+    else c.querySelector(".nv-tr-img img").addEventListener("error", function () { c.insertBefore(placeholder(), c.querySelector("h4")); });
     c.appendChild(el("h4", t.name));
     if (t.category_note) c.appendChild(el("p", t.category_note, "nv-tr-meta"));
     c.appendChild(el("p", t.reason, "nv-tr-meta"));
@@ -36,12 +47,19 @@
       ul.appendChild(li);
     });
     c.appendChild(ul);
+    var sup = t.suppliers;
+    c.appendChild(el("p", sup ? "Beschikbare leveranciers: " + sup.count + (sup.count ? " (" + sup.names.join(", ") + (sup.count > sup.names.length ? ", …" : "") + ")" : "") +
+      " · uit productonderzoek van " + sup.checked + (sup.verified ? ", " + sup.verified + " gecontroleerd" : "") :
+      "Beschikbare leveranciers: nog niet onderzocht. Klik op Onderzoek dit product.", "nv-tr-meta nv-tr-sup"));
     var actions = el("div", null, "nv-tr-actions");
     var go = el("a", "Onderzoek dit product"); go.className = "nv-blue-action";
     go.href = "/dashboard?" + new URLSearchParams({section: "onderzoek", research_term: t.name.slice(0, 100), research_category: t.category, autorun: "1"}).toString();
     actions.appendChild(go);
     var m = el("a", "Bereken marge"); m.href = "/dashboard?" + new URLSearchParams({section: "onderzoek", margin_product: t.name.slice(0, 120)}).toString() + "#nv-product-margin";
     actions.appendChild(m);
+    var vk = el("a", "Bewaar als viral-kandidaat");
+    vk.href = "/dashboard?" + new URLSearchParams({section: "viral", viral_title: t.name.slice(0, 120), viral_niche: NICHE[t.category] || ""}).toString() + "#nv-vt-add";
+    actions.appendChild(vk);
     if (canSave) {
       var b = el("button", "Bewaar als concept"); b.type = "button";
       b.addEventListener("click", function () {

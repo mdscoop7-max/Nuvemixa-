@@ -1,0 +1,39 @@
+/* Platformkaarten (nv_platforms) in de bestaande dashboardstijl: witte kaarten, #d6e0ee-randen, blauw #0755c4. */
+.nv-pcs{margin:14px 0 0;min-width:0}
+.nv-pcs__head h3{margin:0 0 4px;font-size:1.05rem}
+.nv-pcs__lead{margin:0 0 8px;font-size:.86rem;color:#4a5b70;line-height:1.45}
+.nv-pcs__legend{display:block;margin-top:4px}
+.nv-pcs__controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;margin:6px 0 8px;padding:10px 12px;border:1px solid #d6e0ee;border-radius:12px;background:#f7faff}
+.nv-pcs__controls label{display:grid;gap:4px;font-size:.82rem;font-weight:600;color:#253e5b}
+.nv-pcs__controls select{min-height:36px;border:1px solid #c3d3e8;border-radius:8px;padding:4px 8px;background:#fff;max-width:100%}
+.nv-pcs__periods{display:flex;flex-wrap:wrap;gap:6px}
+.nv-pcs__periods label{display:inline-flex;cursor:pointer}
+.nv-pcs__periods input{position:absolute;opacity:0;pointer-events:none}
+.nv-pcs__periods span{display:inline-block;padding:6px 12px;border:1px solid #c3d3e8;border-radius:999px;background:#fff;font-weight:600;font-size:.82rem}
+.nv-pcs__periods input:checked+span{background:#0755c4;border-color:#0755c4;color:#fff}
+.nv-pcs__periods input:focus-visible+span{outline:3px solid #ed9b2e;outline-offset:1px}
+.nv-pcs__state{margin:4px 0 8px;font-size:.82rem;color:#4a5b70}
+.nv-pcs__group{border:1px solid #d6e0ee;border-radius:12px;background:#fff;margin:0 0 10px;min-width:0}
+.nv-pcs__group>summary{cursor:pointer;padding:10px 14px;font-weight:700;color:#173a63;list-style-position:inside}
+.nv-pcs__group>summary small{font-weight:500;color:#5b6d82;margin-left:4px}
+.nv-pcs__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px;padding:0 12px 12px}
+.nv-pc{position:relative;display:flex;gap:10px;align-items:flex-start;min-width:0;padding:10px 10px 28px;border:1px solid #d6e0ee;border-radius:12px;background:#fff;color:#1d2f45;text-decoration:none;transition:border-color .15s,box-shadow .15s,transform .15s}
+.nv-pc:hover{border-color:#8ab4ea;box-shadow:0 6px 18px #0c315414;transform:translateY(-1px)}
+.nv-pc:focus-visible{outline:3px solid #ed9b2e;outline-offset:2px}
+.nv-pc__logo{position:relative;flex:none;width:44px;height:44px;border-radius:10px;border:1px solid #e3ebf5;background:#fff;display:grid;place-items:center;overflow:hidden}
+.nv-pc__logo img{position:absolute;inset:6px;width:30px;height:30px;object-fit:contain;background:#fff}
+.nv-pc__init{font-weight:800;font-size:1.1rem;color:#0755c4;background:#eaf2fd;width:100%;height:100%;display:grid;place-items:center}
+.nv-pc__body{display:grid;gap:3px;min-width:0}
+.nv-pc__name{font-size:.93rem;line-height:1.2;color:#10263f}
+.nv-pc__desc{font-size:.8rem;line-height:1.35;color:#41536a}
+.nv-pc__tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.nv-pc__tag{font-style:normal;font-size:.7rem;font-weight:600;line-height:1.2;padding:2px 7px;border-radius:999px;border:1px solid #d6e0ee;color:#334a63;background:#f6f9fd;white-space:nowrap}
+.nv-pc__tag--auto{border-color:#9fd3b0;background:#eaf7ee;color:#11652f}
+.nv-pc__tag--link{border-color:#c9d6e6;background:#f2f5f9;color:#41536a}
+.nv-pc__tag--free{color:#11652f}.nv-pc__tag--limited{color:#8a5a00}.nv-pc__tag--paid{color:#a12a2a}
+.nv-pc__meta,.nv-pc__period{font-size:.72rem;line-height:1.35;color:#5b6d82;overflow-wrap:anywhere}
+.nv-pc__period{color:#2f5f97}
+.nv-pc__open{position:absolute;right:10px;bottom:8px;font-size:.76rem;font-weight:700;color:#0755c4}
+.nv-pcs--compact .nv-pc__meta{display:none}
+@media (max-width:520px){.nv-pcs__grid{grid-template-columns:1fr;padding:0 8px 10px}.nv-pcs__group>summary{padding:10px}}
+@media (prefers-reduced-motion:reduce){.nv-pc{transition:none}.nv-pc:hover{transform:none}}
