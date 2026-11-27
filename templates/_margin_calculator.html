@@ -15,7 +15,8 @@
   <input type="hidden" name="margin_method" value="unified">
   {% if show_product %}<label>Product <input name="margin_product" maxlength="120" value="{{ args.get('margin_product', '')[:120] }}"></label>{% endif %}
   <label>Inkoopprijs excl. btw (€) <input name="purchase_cost" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" required
-    value="{{ args.get('purchase_cost', '') if filled else '' }}"></label>
+    value="{{ args.get('purchase_cost', '') if filled else (margin_fx.eur if margin_fx and margin_fx.eur is defined else '') }}"></label>
+  {% if margin_fx %}<p class="nv-mfx" role="note"><small>{% if margin_fx.error %}{{ margin_fx.error }}{% else %}Omgerekend: {{ margin_fx.text }}. Controleer of de leveranciersprijs exclusief btw is; bankkosten en koersverschillen zitten hier niet in.{% endif %}</small></p>{% endif %}
   <fieldset class="nv-pperiod nv-marginbar">
     <legend>Gewenste winstmarge</legend>
     {% set chosen = args.get('target_margin', '25') %}

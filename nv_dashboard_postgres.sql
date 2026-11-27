@@ -114,4 +114,14 @@ CREATE TABLE IF NOT EXISTS ai_usage (
     calls integer NOT NULL DEFAULT 0
 );
 
+-- Permanente zoekcache en taakstatus van het onderzoeksproces (nv_research_store). Geen DELETE nodig:
+-- een nieuwe zoekopdracht met dezelfde sleutel overschrijft de rij. De applicatierol heeft SELECT, INSERT en UPDATE nodig.
+CREATE TABLE IF NOT EXISTS research_cache (
+    cache_key text PRIMARY KEY,
+    state text NOT NULL CHECK (state IN ('running', 'done', 'failed')),
+    payload text NOT NULL,
+    created_at double precision NOT NULL,
+    updated_at double precision NOT NULL
+);
+
 COMMIT;

@@ -1,0 +1,38 @@
+{% if research_job %}
+{# Gecombineerd onderzoeksproces (nv_research_job). Het bestaande formulier 'Product zoeken' start deze taak;
+   dit blok toont voortgang en het samengevoegde resultaat van catalogi, Syncee, AI-webonderzoek en register. #}
+<section class="panel nv-rj" id="nv-rj" hidden aria-live="polite"
+         data-start="{{ url_for('nv_manage.research_start') }}" data-status="{{ url_for('nv_manage.research_status') }}"
+         data-csrf="{{ csrf_token() }}" data-concept="{{ url_for('nv_manage.concept_new') }}"
+         data-candidate="{{ url_for('nv_manage.save_candidate') }}" data-can-save="{{ '1' if research_job.can_save else '' }}">
+  <h2 id="nv-rj-title">Onderzoek</h2>
+  <div class="nv-rj-progress"><span class="nv-rj-spinner" aria-hidden="true"></span><strong id="nv-rj-status">Bezig…</strong><span id="nv-rj-timer" class="nv-rj-timer">0 s</span></div>
+  <ol id="nv-rj-steps" class="nv-rj-steps"></ol>
+  <div id="nv-rj-error" class="notice" role="alert" hidden></div>
+  <div id="nv-rj-body"></div>
+</section>
+<style>
+.nv-rj .nv-rj-progress{display:flex;gap:10px;align-items:center;margin:8px 0}
+.nv-rj .nv-rj-spinner{width:18px;height:18px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:nv-rj-spin 1s linear infinite;display:inline-block}
+.nv-rj.done .nv-rj-spinner{display:none}
+.nv-rj .nv-rj-timer{margin-left:auto;font-variant-numeric:tabular-nums}
+.nv-rj .nv-rj-steps{margin:0 0 10px;padding-left:20px;font-size:.9em}
+.nv-rj h3{margin:18px 0 8px}
+.nv-rj .nv-rj-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start}
+.nv-rj .nv-rj-card{border:1px solid rgba(128,128,128,.4);border-radius:12px;padding:12px 14px;overflow-wrap:anywhere}
+.nv-rj .nv-rj-card h4{margin:0 0 6px;font-size:1em}
+.nv-rj .nv-rj-meta{font-size:.88em;opacity:.85;margin:2px 0}
+.nv-rj .nv-rj-offers{margin:6px 0;padding-left:18px;font-size:.92em}
+.nv-rj .nv-rj-badge{display:inline-block;font-size:.78em;padding:1px 8px;border-radius:999px;border:1px solid currentColor;margin:0 6px 4px 0}
+.nv-rj .nv-rj-badge.ok{color:#137333}.nv-rj .nv-rj-badge.hint{color:#9a6700}
+.nv-rj blockquote{margin:4px 0;padding-left:8px;border-left:3px solid rgba(128,128,128,.5);font-size:.85em;opacity:.85}
+.nv-rj table{width:100%;border-collapse:collapse;font-size:.9em}
+.nv-rj th,.nv-rj td{text-align:left;padding:4px 6px;border-bottom:1px solid rgba(128,128,128,.25);vertical-align:top}
+.nv-rj .nv-rj-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.nv-rj .nv-rj-actions button,.nv-rj .nv-rj-actions a{font-size:.88em}
+.nv-rj .nv-rj-table-wrap{overflow-x:auto}
+@keyframes nv-rj-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.nv-rj .nv-rj-spinner{animation:none}}
+</style>
+<script src="{{ url_for('static', filename='nv-research-job.js') }}?v={{ nv_static_version('nv-research-job.js') }}" defer></script>
+{% endif %}

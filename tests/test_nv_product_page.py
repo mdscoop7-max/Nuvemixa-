@@ -43,9 +43,10 @@ class ProductResearchPageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         form = html.split('name="research_category"', 1)[1].split("</select>", 1)[0]
-        for name in ("Gadgets", "Smart Home", "Beauty &amp; Care", "Home &amp; Living", "Lifestyle &amp; Sport", "Huisdieren", "All products"):
+        for name in ("Gadgets", "Smart Home", "Beauty &amp; Care", "Home &amp; Living", "Lifestyle &amp; Sport", "All products"):
             self.assertIn(f">{name}</option>", form)
-        self.assertEqual(form.count("<option "), 7)
+        self.assertEqual(form.count("<option "), 6)
+        self.assertNotIn("Huisdieren", form)   # geen webshop-hoofdmenu (27-11-2026)
         self.assertIn('value="smart-home" selected', form)
         self.assertIn('value="BE" selected', html)
         self.assertIn('value="niche" selected', html)

@@ -41,6 +41,7 @@ AI_ENDPOINTS = frozenset({
     "nv_manage.research_suggestion",
     "nv_manage.supplier_ai_search",
     "nv_manage.web_research",
+    "nv_manage.research_start",
     "nv_manage.supplier_search",
 })
 # Routes die zelf stil overslaan (publieke bezoekmeting, met CORS-antwoord).

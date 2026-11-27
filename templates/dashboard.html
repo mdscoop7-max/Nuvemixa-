@@ -183,6 +183,7 @@
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
 {% include "_dashboard_web_discovery.html" %}
+{% include "_dashboard_research_job.html" %}
 <section class="panel nv-research-panel">
   <h2>Productonderzoek</h2>
   <p class="nv-ai-state nv-ai-state--{{ ai_status.state if ai_status else 'off' }}" role="note"><strong>{{ ai_status.label if ai_status else 'AI niet beschikbaar' }}</strong> · {{ ai_status.message if ai_status else '' }}</p>
