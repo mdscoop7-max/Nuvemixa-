@@ -20,6 +20,10 @@
       if (cat && form.elements.research_category && [].some.call(form.elements.research_category.options, function (o) { return o.value === cat; })) {
         form.elements.research_category.value = cat;
       }
+      var land = start.get("research_country");
+      if (land && form.elements.research_country && [].some.call(form.elements.research_country.options, function (o) { return o.value === land; })) {
+        form.elements.research_country.value = land;
+      }
       if (typeof form.requestSubmit === "function") form.requestSubmit(); else form.dispatchEvent(new Event("submit", {cancelable: true}));
     }, 300);
   }

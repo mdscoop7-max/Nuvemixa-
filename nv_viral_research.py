@@ -236,7 +236,16 @@ def viral_dashboard():
                 row["ready"] and row["name"].casefold() == supplier for row in offers):
             dossier["stage"] = 1
             dossier["supplier_gate"] = True
-    return dict(records=records, filters=filters, dossier=dossier, research_ai=research_enabled(), countries=COUNTRIES, niches=NICHES, platforms=PLATFORMS,
+    try:
+        import nv_trends
+        trend_feed = nv_trends.viral_view()
+    except Exception:  # noqa: BLE001 - Viral Product Finder blijft werken zonder trendkoppeling
+        current_app.logger.exception("Trendkoppeling Viral Product Finder mislukt")
+        trend_feed = {"error": "De koppeling met Onderzoeksplatforms & trends is tijdelijk niet beschikbaar."}
+    return dict(records=records, filters=filters, dossier=dossier, research_ai=research_enabled(), trend_feed=trend_feed,
+                prefill={"title": request.args.get("viral_title", "").strip()[:120],
+                         "niche": request.args.get("viral_niche", "") if request.args.get("viral_niche") in NICHES else ""},
+                countries=COUNTRIES, niches=NICHES, platforms=PLATFORMS,
                 factors=FACTORS, checks=CHECKS, amounts=AMOUNTS, detail=detail, error=error,
                 currencies={code:row[1] for code,row in MARKETS.items()}|{"AU":"AUD","ES":"EUR","SE":"SEK","JP":"JPY"},
                 today=date.today().isoformat())

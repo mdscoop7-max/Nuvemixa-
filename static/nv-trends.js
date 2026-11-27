@@ -15,7 +15,16 @@
     var c = el("article", null, "nv-tr-card");
     c.appendChild(el("span", t.status, "nv-tr-badge"));
     c.appendChild(el("span", CAT[t.category] || t.category, "nv-tr-badge"));
+    if (t.image && /^https:\/\//.test(t.image.url)) {
+      var fig = el("figure", null, "nv-tr-img"), img = el("img");
+      img.src = t.image.url; img.alt = t.name; img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", function () { fig.remove(); });
+      fig.appendChild(img);
+      var cap = el("figcaption", "Afbeelding uit het artikel van " + t.image.source + " (" + t.image.date + ")");
+      fig.appendChild(cap); c.appendChild(fig);
+    }
     c.appendChild(el("h4", t.name));
+    if (t.category_note) c.appendChild(el("p", t.category_note, "nv-tr-meta"));
     c.appendChild(el("p", t.reason, "nv-tr-meta"));
     c.appendChild(el("p", "Periode: " + r.period_label + " · bron(nen) van " + t.first + (t.last !== t.first ? " t/m " + t.last : "") +
       " · regio: " + t.regions.join(", ") + " · platform: " + t.platforms.join(", ") + " · gecontroleerd " + r.checked, "nv-tr-meta"));
@@ -53,8 +62,9 @@
   function render(r) {
     body.textContent = "";
     body.appendChild(el("p", r.trends.length + " product(en) met trendbewijs · " + r.category_label + " · " + r.period_label +
-      " (vanaf " + r.since + ") · " + r.items_in_period + " gedateerde bronitems in de periode · " + r.elapsed_s + " s", "nv-tr-meta"));
-    body.appendChild(el("p", "Stijgende interesse = trending zoekonderwerp (Google Trends). Veelbesproken = in meerdere recente publicaties. " +
+      " (vanaf " + r.since + ")" + (r.derived_from ? " · afgeleid uit bewaard onderzoek " + r.derived_from + ", geen nieuwe AI-kosten" :
+      " · " + r.items_in_period + " gedateerde bronitems in de periode · " + r.elapsed_s + " s"), "nv-tr-meta"));
+    body.appendChild(el("p", "Stijgende interesse = trending zoekonderwerp (Google Trends). Veelbesproken = in meerdere recente publicaties. Alleen aanbieding = alleen in kortingsartikelen genoemd. " +
       "Dit zijn geen verkoopcijfers. Hetzelfde product kan in 7, 14 en 30 dagen voorkomen als het in die hele periode aandacht krijgt.", "nv-tr-meta"));
     if (r.ai_message) body.appendChild(el("p", r.ai_message, "nv-tr-meta"));
     if (r.trends.length) {
@@ -62,6 +72,8 @@
       r.trends.forEach(function (t) { g.appendChild(card(t, r)); });
       body.appendChild(g);
     } else body.appendChild(el("p", "Onvoldoende gegevens: in deze periode noemden de aangesloten bronnen geen producten in deze categorie.", "nv-tr-meta"));
+    if (r.moved && r.moved.length) body.appendChild(el("p", "Hoort bij een andere webshopcategorie en is daarom niet getoond: " +
+      r.moved.map(function (m) { return m.name + " (" + m.category + ")"; }).join(", ") + ".", "nv-tr-meta"));
     if (r.empty_categories.length) body.appendChild(el("p", "Onvoldoende gegevens voor: " + r.empty_categories.join(", ") + ".", "nv-tr-meta"));
     var d = el("details"); d.open = true;
     d.appendChild(el("summary", "Bronstatus (" + r.sources.length + ")"));

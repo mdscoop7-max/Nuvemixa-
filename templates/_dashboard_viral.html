@@ -3,8 +3,9 @@
 {% for code, label in items %}<option value="{{ code }}"{% if code == active %} selected{% endif %}>{{ label }}</option>{% endfor %}
 {% endmacro %}
 {% macro csrf() %}<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+{% include "_dashboard_viral_trends.html" %}
 {% if market_search %}{% include "_dashboard_market_search.html" %}{% endif %}
-<details class="panel nv-manual-block"{% if v.detail or v.filters.values()|select|list %} open{% endif %}><summary><strong>Handmatige registratie en eerste bronvondsten</strong></summary>
+<details class="panel nv-manual-block"{% if v.detail or v.filters.values()|select|list or v.prefill.title %} open{% endif %}><summary><strong>Handmatige registratie en eerste bronvondsten</strong></summary>
 <section>
 <h2>Kandidaten en trendsignalen</h2>
 <p>Registreer controleerbare waarnemingen uit openbare pagina’s en toegestane exports. De score is een onderbouwde beoordeling. Groei vereist twee vergelijkbare metingen van dezelfde bron, platform, maatstaf en periode.</p>
@@ -30,12 +31,13 @@
 <button type="submit">Filter toepassen</button>
 <p class="nv-search-progress" role="status"><span hidden></span></p>
 </form>
-<details><summary>Kandidaat toevoegen</summary>
+<details id="nv-vt-add"{% if v.prefill.title %} open{% endif %}><summary>Kandidaat toevoegen</summary>
 <form method="post" action="{{ url_for('nv_manage.save_viral') }}" class="nv-admin-form">
 {{ csrf() }}
-<label>Productnaam<input name="title" maxlength="120" required></label>
+<label>Productnaam<input name="title" maxlength="120" required value="{{ v.prefill.title }}"></label>
 <label>Land<select name="country">{{ options(v.countries.items()) }}</select></label>
-<label>Niche<select name="niche">{% for niche in v.niches %}<option>{{ niche }}</option>{% endfor %}</select></label>
+<label>Niche<select name="niche">{% for niche in v.niches %}<option{% if v.prefill.niche == niche %} selected{% endif %}>{{ niche }}</option>{% endfor %}</select></label>
+{% if v.prefill.title %}<p><small>Overgenomen uit Onderzoeksplatforms &amp; trends. Controleer naam, land en niche voordat je opslaat; er wordt niets automatisch opgeslagen.</small></p>{% endif %}
 <label>Subniche of nieuw idee<input name="new_niche" maxlength="120"></label>
 <button type="submit">Kandidaat toevoegen</button>
 </form></details>
