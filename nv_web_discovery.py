@@ -367,7 +367,11 @@ def fetch_page(url, deadline):
             if size >= VERIFY_BYTES or time.monotonic() > deadline:
                 break
         encoding = reply.encoding or "utf-8"
-    return final, b"".join(body).decode(encoding if encoding.lower() != "iso-8859-1" else "utf-8", "replace")
+    raw = b"".join(body)
+    try:
+        return final, raw.decode(encoding if encoding.lower() != "iso-8859-1" else "utf-8", "replace")
+    except LookupError:  # onbekende tekencodering in de headers
+        return final, raw.decode("utf-8", "replace")
 
 
 def blocked_card(candidate):
@@ -435,7 +439,7 @@ def verify(candidate, term, tokens, kind, category, deadline):
     url = candidate["url"]
     try:
         final, html = fetch_page(url, deadline)
-    except (requests.RequestException, ValueError, OSError, UnicodeError) as exc:
+    except Exception as exc:  # noqa: BLE001 - elke ophaalfout (ook urllib3-time-outs) = niet bereikbaar
         if re.fullmatch(r"HTTP (?:401|403|429|503)", str(exc)):  # site bestaat, maar weigert automatische controle
             return blocked_card(candidate), None
         return None, f"{candidate['domain']}: niet bereikbaar ({clean(exc, 40)})"
@@ -476,9 +480,11 @@ def verify(candidate, term, tokens, kind, category, deadline):
     else:
         country_text, country_status = UNCONFIRMED, "onbekend"
     integrations = [label for label, pattern in INTEGRATIONS if re.search(pattern, text, re.I)]
-    match_token = hits[0] if hits else None
-    relevance = (snippet(text, re.search(re.escape(match_token), text, re.I)) if match_token
-                 else snippet(text, hint))
+    found = None
+    if hits:  # 'yogamat' kan als 'Yoga Mat' of 'yoga-mat' op de pagina staan: spaties/streepjes ertussen toestaan
+        loose = r"[\s\-_/]*".join(re.escape(char) for char in compact(hits[0]))
+        found = re.search(loose, text, re.I)
+    relevance = snippet(text, found or hint) if (found or hint) else clean(text, 220)
     name = candidate.get("name") or page_title(html) or domain
     facts = [
         {"label": "Rol", "value": role, "status": "feit" if role[0:4] != "Webw" else "onbekend"},
@@ -587,8 +593,8 @@ def search(term, kind="suppliers", category="", country="", scope="all", exclude
     for job in done:
         try:
             card, reason = job.result()
-        except Exception:  # noqa: BLE001 - één kapotte pagina mag de zoekopdracht niet breken
-            card, reason = None, f"{jobs[job]['domain']}: controle mislukt"
+        except Exception as exc:  # noqa: BLE001 - één kapotte pagina mag de zoekopdracht niet breken
+            card, reason = None, f"{jobs[job]['domain']}: controle mislukt ({type(exc).__name__})"
         if card:
             cards.append(card)
         elif reason:

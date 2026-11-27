@@ -177,6 +177,17 @@ def test_relevance_ignores_spacing_and_generic_ai_words():
     assert wd.matching_terms("power banks", wd.term_tokens("mat"), []) == []      # te kort: geen toevalstreffer
 
 
+def test_quote_is_found_when_article_matches_only_without_spaces(ai):
+    """Live 27-11: deze combinatie gaf 'controle mislukt' (citaat zocht 'yogamat' letterlijk)."""
+    _, state = ai
+    PAGES["https://yoga-wholesale.de/"] = "<p>Wholesale Yoga Mats für Studios, MOQ 20.</p>"
+    state["reply"] = response([row("https://yoga-wholesale.de/", "Yoga Wholesale")])
+    result = wd.search("yogamat", "wholesale", "lifestyle-sport", "DE")
+    card = result["results"][0]
+    assert card["verified"] and not result["skipped"]
+    assert "Yoga Mats" in next(fact["quote"] for fact in card["facts"] if fact["label"] == "Past bij zoekopdracht")
+
+
 def test_cache_period_depends_on_research_type():
     assert wd.cache_seconds("products") == 12 * 3600
     for kind in ("suppliers", "dropship", "wholesale", "partners"):
