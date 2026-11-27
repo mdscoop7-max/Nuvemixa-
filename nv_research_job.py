@@ -73,7 +73,7 @@ def parse(form):
 def cache_key(values):
     raw = json.dumps([values["term"].casefold(), values["category"], values["mode"], values["country"],
                       values["filter"]], ensure_ascii=False)
-    return "research:v3:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
+    return "research:v4:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
 
 
 def fresh_seconds(values):
@@ -248,17 +248,27 @@ def relevant_products(products, term, keywords, category, use_ai):
 
 
 def group_products(products, fx_rates):
-    """Hetzelfde product bij meerdere aanbieders -> één kaart met aanbieders (titel + prijs gelijk)."""
+    """Hetzelfde product -> één kaart; per aanbieder één regel (laagste prijs, aantal varianten).
+
+    Live 27-11: 'SmartLife Slimme Stekker' stond met 8x Nedis (varianten) en een prijsverschil gaf een tweede kaart."""
     groups = {}
     for item in products:
         price = item.get("price")
-        key = (norm_title(item["title"]), price["amount"] if price else None, price["currency"] if price else None)
-        group = groups.setdefault(key, {"title": item["title"], "image": item.get("image", ""), "offers": [],
-                                        "exact": item.get("exact", False)})
-        if any(offer["url"] == item["url"] for offer in group["offers"]):
+        group = groups.setdefault(norm_title(item["title"]), {"title": item["title"], "image": item.get("image", ""),
+                                                              "offers": [], "exact": item.get("exact", False)})
+        group["exact"] = group["exact"] or item.get("exact", False)
+        same = next((o for o in group["offers"] if norm_title(o.get("supplier")) == norm_title(item.get("supplier"))),
+                    None)
+        if same is not None:
+            same["variants"] = same.get("variants", 1) + (0 if same["url"] == item["url"] else 1)
+            cheaper = price and (not same.get("price") or (price["currency"] == same["price"]["currency"]
+                                                           and price["amount"] < same["price"]["amount"]))
+            if cheaper:
+                same.update(price=price, url=item["url"], eur=fx_rates(price))
             continue
         offer = {k: item.get(k) for k in ("supplier", "url", "source", "own_website", "warehouse", "price",
                                           "dropship", "shipping_nl", "lead_time", "query")}
+        offer["variants"] = 1
         if price:
             offer["eur"] = fx_rates(price)
         group["offers"].append(offer)
@@ -266,8 +276,11 @@ def group_products(products, fx_rates):
     for row in rows:
         row["offer_count"] = len(row["offers"])
         row["match"] = "exact" if row.get("exact") else "related"
-        row["same_product_note"] = ("Zelfde product en prijs bij meerdere aanbieders: mogelijk dezelfde leverancier "
-                                    "of hetzelfde magazijn." if len(row["offers"]) > 1 else "")
+        prices = {(o["price"]["amount"], o["price"]["currency"]) for o in row["offers"] if o.get("price")}
+        row["same_product_note"] = ("" if len(row["offers"]) < 2 else
+                                    "Zelfde product en prijs bij meerdere aanbieders: mogelijk dezelfde leverancier of "
+                                    "hetzelfde magazijn." if len(prices) == 1 else
+                                    "Zelfde product bij meerdere aanbieders met verschillende prijzen.")
     return rows
 
 
@@ -384,7 +397,7 @@ def run(key, values, created_at):
 
     def step(text, **extra):
         steps.append({"t": round(time.time() - created_at, 1), "text": text, **extra})
-        store.save(key, "running", {"values": values, "steps": steps}, created_at)
+        store.save(key, "running", {"values": values, "steps": steps}, created_at, wait=False)
 
     try:
         step("AI analyseert de artikelnaam en maakt zoekwoorden")
@@ -545,7 +558,7 @@ def research_start():
     import nv_web_discovery_view as view
     if nv_openai.configured() and not view.reserve():
         return reply({"ok": False, "message": "Daglimiet voor live onderzoek bereikt. Er is niets verzonden."}, 429)
-    store.save(key, "running", {"values": values, "steps": [{"t": 0, "text": "Onderzoek gestart"}]}, now)
+    store.save(key, "running", {"values": values, "steps": [{"t": 0, "text": "Onderzoek gestart"}]}, now, wait=False)
     _pool.submit(run, key, values, now)
     return reply({"ok": True, "key": key, "state": "running", "steps": [{"t": 0, "text": "Onderzoek gestart"}],
                   "cached": False})

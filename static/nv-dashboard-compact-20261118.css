@@ -358,3 +358,13 @@ details.nv-srcrep ul{margin:.35rem 0 0 1rem;padding:0}
 .nv-hist__del:hover{color:#b91c1c}
 .nv-hist__clear{display:block;width:100%;text-align:right;background:none;border:0;border-top:1px solid #e2e8f0;margin-top:4px;padding:6px 8px;font-size:.82em;color:#64748b;cursor:pointer;min-height:0;box-shadow:none}
 .nv-history{display:none!important}
+/* Live 27-11: de algemene knopstijl maakte van de geschiedenisregels grote blauwe knoppen. Hier expliciet een
+   rustige lijst zoals bij Google (hogere specificiteit, alleen binnen .nv-hist). */
+.nv-hist .nv-hist__list button{all:unset;box-sizing:border-box;cursor:pointer;font:inherit;line-height:1.3}
+.nv-hist .nv-hist__list .nv-hist__pick{flex:1;padding:7px 10px;color:#0f172a;text-align:left;border-radius:6px}
+.nv-hist .nv-hist__list .nv-hist__pick::before{content:"\21BA";margin-right:8px;color:#94a3b8}
+.nv-hist .nv-hist__list .nv-hist__del{padding:4px 10px;color:#64748b;font-size:1.05em;border-radius:6px}
+.nv-hist .nv-hist__list .nv-hist__del:hover,.nv-hist .nv-hist__list .nv-hist__del:focus-visible{color:#b91c1c;background:#fee2e2}
+.nv-hist .nv-hist__list .nv-hist__clear{display:block;width:100%;padding:6px 10px;margin-top:4px;border-top:1px solid #e2e8f0;color:#64748b;font-size:.82em;text-align:right}
+.nv-hist .nv-hist__list .nv-hist__clear:hover{color:#0f172a}
+.nv-hist .nv-hist__list button:focus-visible{outline:2px solid #2563eb;outline-offset:1px}
