@@ -290,7 +290,8 @@ def run_search(values, rows):
     started = time.perf_counter()
     details = None
     response = domains = None
-    first = 1 if nv_openai.search_model() in _filters_refused else 0
+    # gpt-4.1-mini (standaard) weigert web_search.filters met HTTP 400; die variant alleen bij een ander model.
+    first = 1 if nv_openai.search_model() in _filters_refused or nv_openai.search_model().startswith("gpt-4.1") else 0
     for variant in range(first, len(REQUEST_VARIANTS)):
         try:
             response, domains = call_openai(values, rows, variant)

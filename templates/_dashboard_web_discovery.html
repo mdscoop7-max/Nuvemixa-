@@ -1,0 +1,52 @@
+{% if web_discovery %}{% set wd = web_discovery %}
+<section class="panel nv-ai-search nv-wd" id="nv-wd" aria-labelledby="nv-wd-title">
+<h2 id="nv-wd-title">{{ wd.title }}</h2>
+<p>AI zoekt open op het web, in het Engels en in de taal van het gekozen land. Daarna opent NUVEMIXA <strong>zelf</strong> elke gevonden pagina: alleen wat daar letterlijk staat telt als bewijs. Eén resultaat per bedrijf. Er wordt niets opgeslagen, niets verstuurd en geen bedrijf benaderd.</p>
+{% if not wd.configured %}<div class="notice" role="alert">AI-configuratie ontbreekt (<code>OPENAI_API_KEY</code> op Render). Er wordt niets verzonden.</div>{% endif %}
+<form id="nv-wd-form" method="post" action="{{ url_for('nv_manage.web_research') }}" class="nv-admin-form" novalidate>
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="exclude" id="nv-wd-exclude" value="">
+<label>Product, productgroep of niche <input name="term" required minlength="2" maxlength="100" placeholder="Bijvoorbeeld: yogamat, slimme stekker, NIVEA dagcrème"></label>
+<label>Wat zoek je? <select name="kind">{% for key, label in wd.kinds %}<option value="{{ key }}" {{ 'selected' if key == wd.kind }}>{{ label }}</option>{% endfor %}</select></label>
+<label>Webshopcategorie <select name="category"><option value="">Alle vijf categorieën</option>{% for key, label in wd.categories %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+<label>Regio <select name="scope">{% for key, label in wd.scopes %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+<label>Land {% if wd.country_required %}(verplicht){% else %}(optioneel){% endif %} <select name="country" {{ 'required' if wd.country_required }}><option value="">{{ 'Kies een land' if wd.country_required else 'Geen voorkeur' }}</option>{% for code, name in wd.countries %}<option value="{{ code }}">{{ name }}</option>{% endfor %}</select></label>
+<button type="submit" id="nv-wd-submit" {% if not wd.configured %}disabled{% endif %}>Live zoeken met AI</button>
+<p class="nv-ai-usage">Vandaag {{ wd.usage.used }} van {{ wd.usage.limit }} live zoekopdrachten. Een identieke zoekopdracht binnen 12 uur komt uit de cache en kost niets. Alle AI-kosten vallen onder hetzelfde bewaakte maandbudget als de andere AI-functies.</p>
+</form>
+<div id="nv-wd-progress" class="nv-ai-progress" hidden aria-live="polite">
+<div class="nv-ai-head"><span class="nv-ai-spinner" aria-hidden="true"></span><strong id="nv-wd-status">Bezig…</strong><span id="nv-wd-timer" class="nv-ai-timer">0 s</span></div>
+</div>
+<div id="nv-wd-error" class="notice" role="alert" hidden></div>
+<p id="nv-wd-summary" class="nv-wd-summary" hidden></p>
+<div id="nv-wd-results" class="nv-ai-results" aria-live="polite"></div>
+<details id="nv-wd-hints" class="nv-wd-hints" hidden><summary>Aanwijzingen, niet gecontroleerd (<span>0</span>)</summary><p>Pagina's die wel bij het product passen maar waarop geen zakelijk signaal staat, of die automatische controle blokkeren. Zelf beoordelen.</p><div class="nv-ai-results"></div></details>
+<p><button type="button" id="nv-wd-more" class="nv-blue-action" hidden>Meer andere bedrijven zoeken</button></p>
+<details id="nv-wd-skipped" hidden><summary>Niet getoond en waarom</summary><ul></ul></details>
+</section>
+<style>
+.nv-wd form{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:end}
+.nv-wd form label:first-of-type,.nv-wd button[type=submit],.nv-wd .nv-ai-usage{grid-column:1/-1}
+.nv-wd-summary{margin:12px 0 0;font-weight:600}
+.nv-wd .nv-ai-usage{font-size:.85em;margin:0}
+.nv-wd .nv-ai-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.nv-wd .nv-ai-spinner{width:18px;height:18px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:nv-wd-spin 1s linear infinite;display:inline-block}
+.nv-wd .nv-ai-progress.done .nv-ai-spinner{display:none}
+.nv-wd .nv-ai-timer{margin-left:auto;font-variant-numeric:tabular-nums}
+.nv-wd .nv-ai-results{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:14px;align-items:start}
+.nv-wd .nv-ai-card{border:1px solid rgba(128,128,128,.4);border-radius:12px;padding:14px;overflow-wrap:anywhere}
+.nv-wd .nv-ai-card h3{margin:0 0 6px}
+#nv-wd .nv-ai-card dl{display:block;margin:0}
+#nv-wd .nv-ai-card dt{display:block;font-weight:600;margin-top:8px;font-size:.9em}#nv-wd .nv-ai-card dd{display:block;margin:2px 0 0}
+.nv-wd .nv-ai-card .nv-unconfirmed{opacity:.75;font-style:italic}
+@keyframes nv-wd-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.nv-wd .nv-ai-spinner{animation:none}}
+.nv-wd .nv-ai-card .nv-wd-badge{display:inline-block;font-size:.8em;padding:2px 8px;border-radius:999px;border:1px solid currentColor;margin-bottom:6px}
+.nv-wd .nv-ai-card .nv-wd-badge.ok{color:#137333}.nv-wd .nv-ai-card .nv-wd-badge.hint{color:#9a6700}
+.nv-wd .nv-ai-card blockquote{margin:4px 0 0;padding-left:8px;border-left:3px solid rgba(128,128,128,.5);font-size:.85em;opacity:.85}
+.nv-wd .nv-ai-card .nv-wd-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.nv-wd .nv-wd-hints{margin-top:14px}
+.nv-wd #nv-wd-skipped{margin-top:10px;font-size:.9em}
+</style>
+<script src="{{ url_for('static', filename='nv-web-discovery.js') }}?v={{ nv_static_version('nv-web-discovery.js') }}" defer></script>
+{% endif %}

@@ -176,10 +176,13 @@
 {% elif section == "concepten" %}
 {% include "_dashboard_concepten.html" %}
 {% elif section == "partners" %}
+{% include "_dashboard_web_discovery.html" %}
 {% include "_dashboard_partners.html" %}
 {% elif section == "internationaal" %}
+{% include "_dashboard_web_discovery.html" %}
 {% include "_dashboard_international.html" %}
 {% elif section == "onderzoek" %}
+{% include "_dashboard_web_discovery.html" %}
 <section class="panel nv-research-panel">
   <h2>Productonderzoek</h2>
   <p class="nv-ai-state nv-ai-state--{{ ai_status.state if ai_status else 'off' }}" role="note"><strong>{{ ai_status.label if ai_status else 'AI niet beschikbaar' }}</strong> · {{ ai_status.message if ai_status else '' }}</p>
@@ -756,7 +759,7 @@
     <p class="nv-search-progress" role="status"><span hidden></span></p>
   </form>
 </section>
-{% include "_dashboard_supplier_ai.html" %}
+{% include "_dashboard_web_discovery.html" %}
 <section class="panel"><h2>Leveranciersfeed controleren</h2>
 <p>Upload een leveranciers-CSV met de kolommen <code>sku,name,price,stock</code>. NUVEMIXA controleert alleen het formaat; er wordt niets geïmporteerd of gepubliceerd.</p>
 <form method="post" action="{{ url_for('admin_supplier_feed_preview') }}" enctype="multipart/form-data" class="nv-admin-feed-form">

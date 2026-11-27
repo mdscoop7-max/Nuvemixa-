@@ -1259,6 +1259,7 @@ from nv_merchant_audit import audit as merchant_audit
 from nv_international import dashboard_market
 from nv_supplier_finder import directories as supplier_directories
 import nv_supplier_ai
+import nv_web_discovery_view
 from nv_viral_research import viral_dashboard
 from nv_market_search import search_view as market_search_view
 
@@ -2593,6 +2594,7 @@ def control():
         supplier_rows=supplier_rows,
         supplier_directory=supplier_directories('NL') if section == 'leveranciers' else (),
         supplier_ai=nv_supplier_ai.view_context() if section == 'leveranciers' else None,
+        web_discovery=nv_web_discovery_view.view_context(section),
         ai_status=__import__('nv_ai_search').safe_status(),
         nv_supplier_rows=nv_product_rows.suppliers,
         nv_supplier_summary=nv_product_rows.summary,

@@ -62,15 +62,16 @@ def test_leveranciers_page_shows_the_search_bar_and_missing_configuration(admini
     page = administrator.get("/dashboard?section=leveranciers")
     assert page.status_code == 200
     text = page.get_data(as_text=True)
-    assert 'id="nv-ai-form"' in text and "Zoeken met AI" in text and "AI-configuratie ontbreekt" in text
-    assert "disabled" in text.split('id="nv-ai-submit"')[1][:80]
-    assert "Alleen Europese leveranciers" in text and "Zoekwoord" in text and "Productcategorie" in text
+    # Sinds 27-11-2026 vervangen door het open webonderzoek (nv_web_discovery); de oude route blijft bestaan.
+    assert 'id="nv-wd-form"' in text and "Live zoeken met AI" in text and "AI-configuratie ontbreekt" in text
+    assert "disabled" in text.split('id="nv-wd-submit"')[1][:80]
+    assert "Regio" in text and "Webshopcategorie" in text and "Groothandels en fabrikanten" in text
 
 
 def test_page_with_configuration_enables_the_button(administrator, configured):
     text = administrator.get("/dashboard?section=leveranciers").get_data(as_text=True)
     assert "AI-configuratie ontbreekt" not in text
-    assert "disabled" not in text.split('id="nv-ai-submit"')[1][:40]
+    assert "disabled" not in text.split('id="nv-wd-submit"')[1][:40]
 
 
 def test_missing_configuration_sends_nothing(administrator, monkeypatch):
