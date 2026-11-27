@@ -10,6 +10,11 @@ on:
       - 'nv_research_safety.py'
       - 'nv_product_margin.py'
       - 'app.py'
+      # 27-11-2026: ook het gecombineerde onderzoeksproces, webonderzoek, valuta en alle tests
+      - 'nv_*.py'
+      - 'tests/**'
+      - 'static/nv-research-job.js'
+      - 'static/nv-web-discovery.js'
       - 'nv_market_search.py'
       - 'nv_source_guard.py'
       - 'nv_2fa_postgres.py'
@@ -38,6 +43,11 @@ on:
       - 'nv_research_safety.py'
       - 'nv_product_margin.py'
       - 'app.py'
+      # 27-11-2026: ook het gecombineerde onderzoeksproces, webonderzoek, valuta en alle tests
+      - 'nv_*.py'
+      - 'tests/**'
+      - 'static/nv-research-job.js'
+      - 'static/nv-web-discovery.js'
       - 'nv_market_search.py'
       - 'nv_source_guard.py'
       - 'nv_2fa_postgres.py'
