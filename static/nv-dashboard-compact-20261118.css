@@ -368,3 +368,11 @@ details.nv-srcrep ul{margin:.35rem 0 0 1rem;padding:0}
 .nv-hist .nv-hist__list .nv-hist__clear{display:block;width:100%;padding:6px 10px;margin-top:4px;border-top:1px solid #e2e8f0;color:#64748b;font-size:.82em;text-align:right}
 .nv-hist .nv-hist__list .nv-hist__clear:hover{color:#0f172a}
 .nv-hist .nv-hist__list button:focus-visible{outline:2px solid #2563eb;outline-offset:1px}
+/* Live 27-11 (2): '.nv-admin-form button' zet achtergrond/kleur met !important (nv-dashboard-fixes). Binnen de
+   geschiedenislijst daarom expliciet !important met hogere specificiteit; geldt alleen voor .nv-hist__list. */
+.nv-admin-form .nv-hist .nv-hist__list button,.nv-hist .nv-hist__list button{background:transparent!important;color:#0f172a!important;border:0!important;box-shadow:none!important;min-height:0!important;font-weight:400!important;border-radius:6px!important;display:block!important;width:auto!important}
+.nv-admin-form .nv-hist .nv-hist__list .nv-hist__pick,.nv-hist .nv-hist__list .nv-hist__pick{flex:1!important;padding:7px 10px!important;text-align:left!important}
+.nv-admin-form .nv-hist .nv-hist__list .nv-hist__del,.nv-hist .nv-hist__list .nv-hist__del{padding:4px 10px!important;color:#64748b!important}
+.nv-admin-form .nv-hist .nv-hist__list .nv-hist__del:hover,.nv-hist .nv-hist__list .nv-hist__del:hover{color:#b91c1c!important;background:#fee2e2!important}
+.nv-admin-form .nv-hist .nv-hist__list .nv-hist__clear,.nv-hist .nv-hist__list .nv-hist__clear{width:100%!important;text-align:right!important;color:#64748b!important;font-size:.82em!important;padding:6px 10px!important;border-top:1px solid #e2e8f0!important;border-radius:0!important}
+.nv-admin-form .nv-hist .nv-hist__row:hover .nv-hist__pick,.nv-admin-form .nv-hist .nv-hist__row.is-active .nv-hist__pick{background:#eff6ff!important}
