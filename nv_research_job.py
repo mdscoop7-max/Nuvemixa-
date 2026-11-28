@@ -76,8 +76,20 @@ def cache_key(values):
     return "research:v5:" + hashlib.sha256(raw.encode()).hexdigest()[:40]
 
 
-def fresh_seconds(values):
-    return web.cache_seconds("products" if values["mode"] in PRODUCT_MODES else "suppliers")
+AI_MISSING_SECONDS = 3600
+
+
+def fresh_seconds(values, row=None):
+    """Cacheduur. Zonder AI-deel (daggrens of budget bereikt) maximaal 1 uur: anders blijft een onvolledig resultaat
+    tot 12-24 uur staan nadat AI weer werkt (live 27-11). De catalogusresultaten waren wel echt."""
+    normal = web.cache_seconds("products" if values["mode"] in PRODUCT_MODES else "suppliers")
+    result = ((row or {}).get("payload") or {}).get("result") or {}
+    ai_message = str((result.get("ai") or {}).get("message") or "")
+    web_message = " ".join(str(s.get("status") or "") for s in result.get("sources") or []
+                           if isinstance(s, dict) and s.get("name") == "AI-webonderzoek")
+    if ai_message.startswith("AI niet beschikbaar") or "AI niet beschikbaar" in web_message:
+        return min(normal, AI_MISSING_SECONDS)
+    return normal
 
 
 # ------------------------------------------------------------------ stap 1: AI-plan ---------------------------------
@@ -590,7 +602,7 @@ def research_start():
     key = cache_key(values)
     row = store.load(key)
     now = time.time()
-    if row and row["state"] == "done" and now - row["created_at"] < fresh_seconds(values):
+    if row and row["state"] == "done" and now - row["created_at"] < fresh_seconds(values, row):
         return reply(public(row, key))
     if row and row["state"] == "running" and now - row["updated_at"] < RUNNING_STALE:
         return reply(public(row, key))

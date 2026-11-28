@@ -106,18 +106,22 @@ SUPPLIERS = {
         "facts": {
             "subscription": F("Gratis: geen maandabonnement voor het platform en de integraties; eigen merklabel "
                               "vanaf $19,90 per jaar plus kosten per bestelling", "https://eprolo.com/"),
-            "kvk": F("Niet gevraagd bij aanmelding: alleen een e-mailadres", "https://eprolo.com/eprolo-api/"),
+            "kvk": F("Volgens EPROLO is alleen een e-mailadres nodig om te registreren (geen KvK genoemd); het "
+                     "registratieformulier zelf is niet ingevuld", "https://eprolo.com/eprolo-api/"),
             "dropshipping": F("Ja: producten importeren, bestellingen synchroniseren, EPROLO verpakt en verzendt",
                               "https://eprolo.com/"),
             "categories": F("Breed (107 niches); sterk in mode; ook print-on-demand", "https://eprolo.com/"),
             "country": F("Hongkong (Hong Kong Eprolo Technology Limited, bedrijfsnummer 75529645)",
                          "https://eprolo.com/project/terms-and-conditions/"),
-            "eu_warehouses": F("Volgens EPROLO 26+ magazijnen o.a. in China, VS, VK en EU; de verzendpagina (2020) "
-                               "noemt alleen China en VS: per product controleren", "https://eprolo.com/about-us"),
+            "eu_warehouses": F("Ja, als 3PL-opslag voor eigen ingekochte voorraad (met opslagkosten): VK, DE, CZ, FR, "
+                               "IT, ES, FI, SE, IE, NL, PL, BE, NO; lokaal 2-5 dagen. De openbare catalogus heeft alleen "
+                               "een 'US Warehouse'-collectie: welke catalogusproducten zonder eigen voorraad uit een EU-"
+                               "magazijn komen is niet openbaar (per product controleren na registratie)",
+                               "https://eprolo.com/warehousing-and-fulfillment/"),
             "ship_nl_be": F("Wereldwijd via o.a. Netherlands Post en Singapore Post; terugbetaling als levering naar "
                             "Europa langer dan 30 dagen duurt", "https://eprolo.com/shipping-methods"),
-            "delivery": F("Meestal 5-15 dagen; verzendkosten per product op de productpagina",
-                          "https://eprolo.com/about-us"),
+            "delivery": F("Meestal 5-15 dagen; naar Europa uit China 6-10 dagen, uit een EU-magazijn 2-5 dagen; "
+                          "verzendkosten per product op de productpagina", "https://eprolo.com/warehousing-and-fulfillment/"),
             "returns": F("Kleding: 7 dagen retour zonder opgaaf van reden; overige producten: " + NB.lower(),
                          "https://eprolo.com/about-us"),
             "return_address": F("Niet gepubliceerd; het bedrijfsadres is volgens EPROLO uitdrukkelijk géén retouradres",
