@@ -83,11 +83,15 @@ def test_periods_7_14_30_only_send_items_inside_the_period(monkeypatch):
     monkeypatch.setattr(nv_openai, "chat_json", fake_chat)
     for period, expected in (("7", 1), ("14", 2), ("30", 3), ("slim", 2)):
         values = {"category": "home-living", "period": period}
+        before = datetime.now(timezone.utc)
         trends.run(trends.cache_key(values), values, time.time())
+        after = datetime.now(timezone.utc)
         assert len(sent["calls"][-1]) == expected, period
         result = store.load(trends.cache_key(values))["payload"]["result"]
         assert result["days"] == trends.PERIODS[period][1]
-        assert result["since"] == (NOW - timedelta(days=result["days"])).date().isoformat()
+        # Middernachtbestendig (CI 28-11 00:00 UTC): 'since' is berekend tijdens run()
+        assert result["since"] in {(moment - timedelta(days=result["days"])).date().isoformat()
+                                   for moment in (before, after)}
 
 
 def test_shorter_period_and_single_category_are_derived_from_todays_cache_without_ai(administrator, monkeypatch):
